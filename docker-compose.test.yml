@@ -1,0 +1,18 @@
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    env_file: .env.docker
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: pg_isready
+      start_period: 5s
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  postgres_data:

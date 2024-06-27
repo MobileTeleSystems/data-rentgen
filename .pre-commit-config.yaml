@@ -1,0 +1,163 @@
+default_language_version:
+  python: python3.12
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-ast
+      - id: check-merge-conflict
+      - id: check-yaml
+        args: [--unsafe]
+      - id: debug-statements
+      - id: detect-private-key
+      - id: end-of-file-fixer
+        types: [python]
+      - id: fix-byte-order-marker
+      - id: fix-encoding-pragma
+        args: [--remove]
+      - id: mixed-line-ending
+        args: [--fix=lf]
+        types: [python]
+      - id: trailing-whitespace
+
+  - repo: https://github.com/pre-commit/pygrep-hooks
+    rev: v1.10.0
+    hooks:
+      - id: python-check-blanket-noqa
+      - id: python-check-mock-methods
+      - id: python-no-eval
+      - id: python-no-log-warn
+      - id: python-use-type-annotations
+      - id: text-unicode-replacement-char
+
+  - repo: https://github.com/Lucas-C/pre-commit-hooks
+    rev: v1.5.5
+    hooks:
+      - id: forbid-tabs
+      - id: remove-tabs
+        args: [--whitespaces-count, '2']
+      - id: chmod
+        args: ['644']
+        exclude_types: [shell]
+        exclude: ^(.*__main__\.py|arrakis/backend/export_openapi_schema\.py|arrakis/backend/scripts/manage_admins\.py)$
+      - id: chmod
+        args: ['755']
+        types: [shell]
+      - id: chmod
+        args: ['755']
+        files: ^(.*__main__\.py)$
+      - id: insert-license
+        files: .*\.py$
+        exclude: ^(arrakis/backend/dependencies/stub.py|docs/.*\.py|tests/.*\.py)$
+        args:
+          - --license-filepath
+          - .spdx-license-header.txt
+          - --use-current-year
+          - --no-extra-eol
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.16.0
+    hooks:
+      - id: pyupgrade
+        args: [--py37-plus, --keep-runtime-typing]
+
+  - repo: https://github.com/asottile/add-trailing-comma
+    rev: v3.1.0
+    hooks:
+      - id: add-trailing-comma
+
+  - repo: https://github.com/pycqa/autoflake
+    rev: v2.3.1
+    hooks:
+      - id: autoflake
+        args: [--in-place]
+
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 24.4.2
+    hooks:
+      - id: black
+
+  - repo: https://github.com/asottile/blacken-docs
+    rev: 1.16.0
+    hooks:
+      - id: blacken-docs
+        additional_dependencies:
+          - black==24.4.2
+
+  - repo: https://github.com/pycqa/bandit
+    rev: 1.7.9
+    hooks:
+      - id: bandit
+        args:
+          - --aggregate=file
+          - -iii
+          - -ll
+        require_serial: true
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.13.2
+    hooks:
+      - id: isort
+        name: isort
+
+  - repo: https://github.com/IamTheFij/docker-pre-commit
+    rev: v3.0.1
+    hooks:
+      - id: docker-compose-check
+
+  - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
+    rev: v2.13.0
+    hooks:
+      - id: pretty-format-yaml
+        args: [--autofix, --indent, '2', --offset, '2']
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.3.0
+    hooks:
+      - id: codespell
+        args: [-w]
+        additional_dependencies:
+          - tomli
+
+  - repo: https://github.com/sbrunner/hooks
+    rev: 1.0.0
+    hooks:
+      - id: poetry-check
+        additional_dependencies:
+          - poetry
+      - id: poetry-lock
+        additional_dependencies:
+          - poetry
+
+  - repo: local
+    hooks:
+      - id: flake8
+        name: flake8
+        entry: flake8
+        language: python
+        types: [python]
+        files: ^arrakis/.*$
+        pass_filenames: true
+
+      - id: mypy
+        name: mypy
+        entry: mypy ./arrakis --config-file ./pyproject.toml
+        language: python
+        types: [python]
+        require_serial: true
+        pass_filenames: false
+
+  - repo: meta
+    hooks:
+      - id: check-hooks-apply
+      - id: check-useless-excludes
+
+
+ci:
+  skip:
+    - flake8 # checked with Github Actions
+    - mypy # checked with Github Actions
+    - docker-compose-check # cannot run on pre-commit.ci
+    - chmod # failing in pre-commit.ci

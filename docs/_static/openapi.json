@@ -1,0 +1,9 @@
+{
+  "openapi": "3.1.0",
+  "version": "unknown",
+  "info": {
+    "title": "Generated in CI",
+    "version": "unknown"
+  },
+  "paths": {}
+}

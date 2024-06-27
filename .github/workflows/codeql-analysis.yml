@@ -1,0 +1,59 @@
+name: Code analysis
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+    branches-ignore:
+      - master
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  # flake8-commas is failing on Python 3.12
+  DEFAULT_PYTHON: '3.11'
+
+jobs:
+  linters:
+    name: Linters
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+
+      - name: Install poetry
+        uses: snok/install-poetry@v1
+
+      - name: Cache poetry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-python-${{ env.DEFAULT_PYTHON }}-codeql-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-python-${{ env.DEFAULT_PYTHON }}-codeql-${{ hashFiles('**/poetry.lock') }}
+            ${{ runner.os }}-python-${{ env.DEFAULT_PYTHON }}-codeql-
+            ${{ runner.os }}-python-
+
+      - name: Install dependencies
+        run: |
+          poetry install --no-root --all-extras --with dev --without docs,test
+
+      - name: Run flake8
+        run: poetry run flake8 arrakis/
+
+      - name: Run mypy
+        run: poetry run mypy ./arrakis --config-file ./pyproject.toml
