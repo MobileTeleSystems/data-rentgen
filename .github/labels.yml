@@ -1,0 +1,69 @@
+# config for https://github.com/marketplace/actions/github-labeler
+
+  - name: attention:help wanted
+    description: Extra attention is needed
+    color: bfdadc
+    from_name: help wanted
+
+  - name: attention:invalid
+    description: This doesn't seem right
+    color: ea2357
+    from_name: invalid
+
+  - name: ci:skip-changelog
+    description: Add this label to skip changelog file check
+    color: 04990f
+
+  - name: component:backend
+    description: Backend-related changes
+    color: '5319e7'
+
+  - name: component:client
+    description: Client-related changes
+    color: 75f526
+
+  - name: kind:bug
+    description: Something isn't working
+    color: d73a4a
+    from_name: bug
+
+  - name: kind:feature
+    description: New feature or request
+    color: 389a3f
+
+  - name: kind:improvement
+    description: Improvement of some existing feature
+    color: 1a92c2
+    from_name: enhancement
+
+  - name: kind:question
+    description: Further information is requested
+    color: 0e857c
+    from_name: question
+
+  - name: resolution:duplicate
+    description: This issue or pull request already exists
+    color: cfd3d7
+    from_name: duplicate
+
+  - name: resolution:wontfix
+    description: This will not be worked on
+    color: ec103b
+    from_name: wontfix
+
+  - name: type:ci
+    description: CI-related changes
+    color: cdb0bd
+
+  - name: type:dependency
+    description: Dependency-related changes
+    color: 214efe
+
+  - name: type:documentation
+    description: Improvements or additions to documentation
+    color: 6b9f54
+    from_name: documentation
+
+  - name: type:tests
+    description: Tests-related changes
+    color: 5cca5b

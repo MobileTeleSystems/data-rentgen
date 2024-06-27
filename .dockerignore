@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.envx
+*.cover
+.coverage
+.coverage.*
+.cache
+*.log
+.git
+.mypy_cache
+.pytest_cache
+.idea
+.vscode
+.venv/
+venv/

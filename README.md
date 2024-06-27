@@ -1,2 +1,0 @@
-# arrakis
-NextGen DataLineage service
