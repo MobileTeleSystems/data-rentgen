@@ -6,7 +6,7 @@
 _raw_version = "0.0.1"
 
 # version always contain only release number like 0.0.1
-__version__ = ".".join(_raw_version.split(".")[:3])  # noqa: WPS410
+__version__ = ".".join(_raw_version.split(".")[:3])
 
 # version tuple always contains only integer parts, like (0, 0, 1)
 __version_tuple__ = tuple(map(int, __version__.split(".")))

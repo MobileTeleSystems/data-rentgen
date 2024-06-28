@@ -23,6 +23,17 @@ if not config.get_main_option("sqlalchemy.url"):
 
 target_metadata = (Base.metadata,)
 
+PARTITION_PREFIXES = ["run_y", "operation_y", "interaction_y"]
+
+
+def include_all_except_partitions(object, name, type_, reflected, compare_to):
+    if type_ == "table":
+        for prefix in PARTITION_PREFIXES:
+            if name.startswith(prefix):
+                return False
+
+    return True
+
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
@@ -42,6 +53,7 @@ def run_migrations_offline() -> None:
         target_metadata=target_metadata,  # type: ignore[arg-type]
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        include_object=include_all_except_partitions,
     )
 
     with context.begin_transaction():
@@ -49,7 +61,11 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
-    context.configure(connection=connection, target_metadata=target_metadata)  # type: ignore[arg-type]
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        include_object=include_all_except_partitions,
+    )  # type: ignore[arg-type]
 
     with context.begin_transaction():
         context.run_migrations()

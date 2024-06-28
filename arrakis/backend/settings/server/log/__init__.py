@@ -3,7 +3,6 @@
 
 import textwrap
 from pathlib import Path
-from typing import Optional
 
 from pydantic import BaseModel, Field
 from typing_extensions import Literal
@@ -75,7 +74,7 @@ class LoggingSettings(BaseModel):
         ),
     )
 
-    custom_config_path: Optional[Path] = Field(
+    custom_config_path: Path | None = Field(
         default=None,
         description=textwrap.dedent(
             """

@@ -3,3 +3,5 @@
 from arrakis.backend.middlewares.monitoring.metrics import (
     apply_monitoring_metrics_middleware,
 )
+
+__all__ = ["apply_monitoring_metrics_middleware"]

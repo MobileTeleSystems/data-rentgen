@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import textwrap
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from pydantic import AnyHttpUrl, BaseModel, Field
 
@@ -88,11 +88,11 @@ class LogoSettings(BaseModel):
         default="ffffff",
         description="Background color in HEX RGB format, without ``#`` prefix",
     )
-    alt_text: Optional[str] = Field(
+    alt_text: str | None = Field(
         default="Arrakis logo",
         description="Alternative text for ``<img>`` tag",
     )
-    href: Optional[AnyHttpUrl] = Field(  # type: ignore[assignment]
+    href: AnyHttpUrl | None = Field(  # type: ignore[assignment]
         default="https://github.com/MobileTeleSystems/arrakis",
         description="Clicking on logo will redirect to this URL",
     )
