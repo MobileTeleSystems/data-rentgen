@@ -2,17 +2,18 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+from __future__ import annotations
+
 import os
 import sys
 from pathlib import Path
-from typing import List, Optional
 
 import uvicorn
 
 here = Path(__file__).resolve()
 
 
-def main(prog_name: Optional[str] = None, args: Optional[List[str]] = None):
+def main(prog_name: str | None = None, args: list[str] | None = None):
     """Run uvicorn and pass the command line arguments to it."""
     if args is None:
         args = sys.argv.copy()

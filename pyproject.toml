@@ -60,6 +60,7 @@ coloredlogs = {version = "^15.0.1", optional = true}
 pyyaml = {version = "^6.0.1", optional = true}
 asgi-correlation-id = {version = "^4.3.1", optional = true}
 uuid6 = {version = "^2024.1.12", optional = true}
+python-dateutil = {version = "^2.9.0.post0", optional = true}
 
 [tool.poetry.extras]
 backend = [
@@ -76,6 +77,7 @@ backend = [
   "asgi-correlation-id",
   "uuid6",
   "pydantic-settings",
+  "python-dateutil",
 ]
 postgres = [
   "asyncpg",
@@ -103,7 +105,8 @@ bandit = "^1.7.9"
 sqlalchemy = {extras = ["mypy"], version = "^2.0.31"}
 wemake-python-styleguide = "^0.19.2"
 flake8-pyproject = "^1.2.3"
-types-pyyaml = "^6.0.12.20240311"
+types-pyyaml = "^6.0.12"
+types-python-dateutil = "^2.9.0"
 
 [tool.poetry.group.docs.dependencies]
 autodoc-pydantic = "^2.2.0"
@@ -376,18 +379,18 @@ ignore = [
   "E704",
 # WPS220 Found too deep nesting: 34 > 20
   "WPS220",
+# Found wrong metadata variable: __all__
+  "WPS410",
+# constant 'UUID' imported as non constant 'UUIDv7'
+  "N811",
 ]
 
 per-file-ignores = [
-# F401 imported but unused
-# WPS410 Found wrong metadata variable: __all__
-  "__init__.py:F401,WPS410",
 # WPS102 Found incorrect module name pattern
-# WPS432 Found magic number: 256
-  "*migrations/*.py:WPS102,WPS432",
+# WPS432 Found magic number: 255
+  "*db/*.py:WPS102,WPS432",
 # WPS237 Found a too complex `f` string
   "*exceptions/*.py:WPS237",
-  "*exceptions/__init__.py:F40,WPS410",
 # TAE001 too few type annotations
 # WPS231 Found function with too much cognitive complexity
 # S101 Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.

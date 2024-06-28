@@ -40,19 +40,22 @@ venv-install: ##@Env Install requirements to venv
 
 
 
-db: db-start db-upgrade ##@DB Prepare database (in docker)
+db: db-start db-upgrade db-partitions ##@DB Prepare database (in docker)
 
 db-start: ##@DB Start database
 	docker compose -f docker-compose.test.yml up -d --wait db $(DOCKER_COMPOSE_ARGS)
 
 db-revision: ##@DB Generate migration file
-	${POETRY} run python -m arrakis.backend.db.migrations revision --autogenerate
+	${POETRY} run python -m arrakis.backend.db.migrations revision --autogenerate $(ARGS)
 
 db-upgrade: ##@DB Run migrations to head
-	${POETRY} run python -m arrakis.backend.db.migrations upgrade head
+	${POETRY} run python -m arrakis.backend.db.migrations upgrade head $(ARGS)
 
 db-downgrade: ##@DB Downgrade head migration
-	${POETRY} run python -m arrakis.backend.db.migrations downgrade head-1
+	${POETRY} run python -m arrakis.backend.db.migrations downgrade head-1 $(ARGS)
+
+db-partitions: ##@DB Create partitions
+	${POETRY} run python -m arrakis.backend.db.scripts.create_partitions $(ARGS)
 
 
 test: db-start ##@Test Run tests

@@ -5,10 +5,10 @@ from __future__ import annotations
 from abc import ABC
 from typing import Generic, TypeVar
 
-from sqlalchemy import ScalarResult, Select, delete, func, insert, select, update
+from sqlalchemy import ScalarResult, Select, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import ColumnElement, SQLColumnExpression
-from sqlalchemy.sql.dml import ReturningDelete, ReturningInsert, ReturningUpdate
+from sqlalchemy.sql.dml import ReturningInsert, ReturningUpdate
 
 from arrakis.backend.db.models import Base
 from arrakis.commons.dto.pagination import Pagination
@@ -31,18 +31,6 @@ class Repository(ABC, Generic[Model]):
     def model_type(cls) -> type[Model]:
         # Get `User` from `UserRepository(Repository[User])`
         return cls.__orig_bases__[0].__args__[0]  # type: ignore[attr-defined]
-
-    async def _get_by_id(
-        self,
-        id: int,
-        *where: ColumnElement,
-    ) -> Model | None:
-        model_type = self.model_type()
-        query: Select = select(model_type).filter_by(id=id)
-        if where:
-            query = query.where(*where)
-
-        return await self._session.scalar(query)
 
     async def _get(
         self,
@@ -68,13 +56,6 @@ class Repository(ABC, Generic[Model]):
     ) -> Model | None:
         model_type = self.model_type()
         query: ReturningUpdate[tuple[Model]] = update(model_type).where(*where).values(**changes).returning(model_type)
-        return await self._session.scalar(query)
-
-    async def _delete(self, id: int) -> Model | None:
-        model_type = self.model_type()
-        query: ReturningDelete[tuple[Model]] = (
-            delete(model_type).where(model_type.id == id).returning(model_type)  # type: ignore[attr-defined]
-        )
         return await self._session.scalar(query)
 
     async def _paginate(
