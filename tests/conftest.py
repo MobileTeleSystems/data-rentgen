@@ -2,10 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 pytest_plugins = [
     "tests.fixtures.event_loop",
-    "tests.fixtures.settings",
-    "tests.fixtures.test_app",
-    "tests.fixtures.test_client",
-    "tests.fixtures.alembic",
+    "tests.fixtures.db_settings",
     "tests.fixtures.async_engine",
     "tests.fixtures.async_session",
+    "tests.test_database.fixtures.alembic",
+    "tests.test_server.fixtures.server_app_settings",
+    "tests.test_server.fixtures.test_server_app",
+    "tests.test_server.fixtures.test_client",
 ]

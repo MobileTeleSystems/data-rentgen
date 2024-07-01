@@ -1,0 +1,37 @@
+FROM python:3.12-slim as prod
+LABEL maintainer="DataOps.ETL"
+
+
+WORKDIR /app
+ENV PYTHONPATH=/app
+
+RUN pip install poetry \
+    && poetry config virtualenvs.create false
+
+COPY ./pyproject.toml ./poetry.lock* ./
+
+RUN poetry install \
+        --no-root \
+        --all-extras \
+        --without dev,test,docs
+
+COPY ./docker/server.sh ./docker/
+RUN chmod +x ./docker/*.sh
+
+COPY ./arrakis/ ./arrakis/
+
+# Swagger UI
+ADD https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/swagger-ui-bundle.js /app/arrakis/server/static/swagger/swagger-ui-bundle.js
+ADD https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/swagger-ui.css /app/arrakis/server/static/swagger/swagger-ui.css
+
+# Redoc
+ADD https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js /app/arrakis/server/static/redoc/redoc.standalone.js
+
+ENV ARRAKIS__SERVER__OPENAPI__SWAGGER__JS_URL=/static/swagger/swagger-ui-bundle.js \
+    ARRAKIS__SERVER__OPENAPI__SWAGGER__CSS_URL=/static/swagger/swagger-ui.css \
+    ARRAKIS__SERVER__OPENAPI__REDOC__JS_URL=/static/redoc/redoc.standalone.js \
+    ARRAKIS__SERVER__STATIC_FILES__DIRECTORY=/app/arrakis/server/static
+
+EXPOSE 8000
+ENTRYPOINT ["/app/docker/server.sh"]
+HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD ["curl", "-f", "http://localhost:8000/monitoring/ping"]

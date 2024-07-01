@@ -14,8 +14,8 @@ Arrakis
     :target: https://github.com/MobileTeleSystems/arrakis/blob/develop/LICENSE.txt
 .. |PyPI Python Version| image:: https://img.shields.io/pypi/pyversions/data-arrakis.svg
     :target: https://badge.fury.io/py/data-arrakis
-.. |Docker image| image:: https://img.shields.io/docker/v/mtsrus/arrakis-backend?sort=semver&label=docker
-    :target: https://hub.docker.com/r/mtsrus/arrakis-backend
+.. |Docker image| image:: https://img.shields.io/docker/v/mtsrus/arrakis-server?sort=semver&label=docker
+    :target: https://hub.docker.com/r/mtsrus/arrakis-server
 .. |Documentation| image:: https://readthedocs.org/projects/data-arrakis/badge/?version=stable
     :target: https://data-arrakis.readthedocs.io/
 .. |Build Status| image:: https://github.com/MobileTeleSystems/arrakis/workflows/Tests/badge.svg

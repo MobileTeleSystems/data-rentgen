@@ -12,19 +12,19 @@ from sqlalchemy.ext.asyncio import create_async_engine
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncEngine
 
-    from arrakis.backend.settings import Settings
+    from arrakis.db.settings import DatabaseSettings
 
 
 @contextlib.asynccontextmanager
-async def get_async_engine(settings: Settings) -> AsyncGenerator[AsyncEngine, None]:
+async def get_async_engine(db_settings: DatabaseSettings) -> AsyncGenerator[AsyncEngine, None]:
     """Create test engine"""
-    connection_url = settings.database.url
+    connection_url = db_settings.url
     engine = create_async_engine(connection_url)
     yield engine
     await engine.dispose()
 
 
 @pytest_asyncio.fixture(scope="session")
-async def async_engine(settings: Settings):
-    async with get_async_engine(settings) as result:
+async def async_engine(db_settings: DatabaseSettings):
+    async with get_async_engine(db_settings) as result:
         yield result
