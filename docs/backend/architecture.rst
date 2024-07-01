@@ -1,4 +1,4 @@
-.. _backend-architecture:
+.. _architecture:
 
 Architecture
 ============
@@ -10,22 +10,22 @@ Architecture
         skinparam linetype polyline
         left to right direction
 
-        agent "ETL Process"
-        actor "User"
+        agent "OpenLineage client" as CLIENT
+        actor "User" as USER
 
         frame "Arrakis" {
-            queue "Message broker"
-            component "Message consumer"
-            database "Database"
-            component "REST API"
+            queue "Message broker" as BROKER
+            component "Events consumer" as CONSUMER
+            database "Database" as DB
+            component "REST API server" as SERVER
         }
 
-        [ETL Process] --> [Message broker]
+        [CLIENT] --> [BROKER]
 
-        [Message broker] --> [Message consumer]
-        [Message consumer] --> [Database]
+        [BROKER] --> [CONSUMER]
+        [CONSUMER] --> [DB]
 
-        [User] --> [REST API]
-        [REST API] --> [Database]
+        [USER] --> [SERVER]
+        [SERVER] --> [DB]
 
     @enduml

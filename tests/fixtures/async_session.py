@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 
 @pytest_asyncio.fixture(scope="session")
-async def async_session_factory(async_engine: AsyncEngine):
+async def async_session_maker(async_engine: AsyncEngine):
     yield async_sessionmaker(
         bind=async_engine,
         class_=AsyncSession,
@@ -21,8 +21,8 @@ async def async_session_factory(async_engine: AsyncEngine):
 
 
 @pytest_asyncio.fixture
-async def async_session(async_session_factory: async_sessionmaker[AsyncSession]):
-    session: AsyncSession = async_session_factory()
+async def async_session(async_session_maker: async_sessionmaker[AsyncSession]):
+    session: AsyncSession = async_session_maker()
     try:
         yield session
         await session.commit()

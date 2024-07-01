@@ -13,10 +13,8 @@
     :caption: Backend
     :hidden:
 
-    backend/install
     backend/architecture
-    backend/configuration/index
-    backend/openapi
+    backend/server/index
 
 .. toctree::
     :maxdepth: 2

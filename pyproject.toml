@@ -46,37 +46,37 @@ include = [
 python = "^3.10"
 pydantic = "^2.7.4"
 typing-extensions = "^4.12.2"
+pydantic-settings = {version = "^2.3.4", optional = true}
+alembic = {version = "^1.13.2", optional = true}
+sqlalchemy = {version = "^2.0.31", optional = true}
+sqlalchemy-utils = {version = "^0.41.2", optional = true}
+pyyaml = {version = "^6.0.1", optional = true}
+python-json-logger = {version = "^2.0.7", optional = true}
+coloredlogs = {version = "^15.0.1", optional = true}
+uuid6 = {version = "^2024.1.12", optional = true}
+python-dateutil = {version = "^2.9.0.post0", optional = true}
 fastapi = {version = "^0.111.0", optional = true}
 starlette = {version = "^0.37.2", optional = true}
 starlette-exporter = {version = "^0.23.0", optional = true}
 uvicorn = {version = "^0.30.1", optional = true}
-pydantic-settings = {version = "^2.3.4", optional = true}
-alembic = {version = "^1.13.2", optional = true}
-sqlalchemy = {version = "^2.0.31", optional = true}
 asyncpg = {version = "^0.29.0", optional = true}
-sqlalchemy-utils = {version = "^0.41.2", optional = true}
-python-json-logger = {version = "^2.0.7", optional = true}
-coloredlogs = {version = "^15.0.1", optional = true}
-pyyaml = {version = "^6.0.1", optional = true}
 asgi-correlation-id = {version = "^4.3.1", optional = true}
-uuid6 = {version = "^2024.1.12", optional = true}
-python-dateutil = {version = "^2.9.0.post0", optional = true}
 
 [tool.poetry.extras]
-backend = [
+server = [
   "fastapi",
   "starlette",
   "uvicorn",
+  "starlette-exporter",
+  "asgi-correlation-id",
+  "pydantic-settings",
   "alembic",
   "sqlalchemy",
   "sqlalchemy-utils",
   "pyyaml",
   "python-json-logger",
   "coloredlogs",
-  "starlette-exporter",
-  "asgi-correlation-id",
   "uuid6",
-  "pydantic-settings",
   "python-dateutil",
 ]
 postgres = [
@@ -136,7 +136,8 @@ replace = 'ver = Version.parse("{new_version}")'
 
 [tool.pytest.ini_options]
 markers = [
-    "backend: tests for backend (require running database)",
+    "server: tests for server (require running database)",
+    "db: tests for db",
 ]
 
 [tool.coverage.paths]

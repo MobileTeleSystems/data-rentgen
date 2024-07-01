@@ -1,0 +1,105 @@
+# SPDX-FileCopyrightText: 2024 MTS PJSC
+# SPDX-License-Identifier: Apache-2.0
+
+from __future__ import annotations
+
+from datetime import datetime
+
+from sqlalchemy import UUID as SQL_UUID
+from sqlalchemy import BigInteger, DateTime, PrimaryKeyConstraint, String
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy_utils import ChoiceType
+from uuid6 import UUID
+
+from arrakis.db.models.base import Base
+from arrakis.db.models.job import Job
+from arrakis.db.models.runner import Runner
+from arrakis.db.models.status import Status
+from arrakis.db.models.user import User
+
+
+# no foreign keys to avoid scanning all the partitions
+class Run(Base):
+    __tablename__ = "run"
+    __table_args__ = (
+        PrimaryKeyConstraint("started_at", "id"),
+        {"postgresql_partition_by": "RANGE (started_at)"},
+    )
+
+    id: Mapped[UUID] = mapped_column(SQL_UUID)
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        doc="Start time of the run",
+    )
+
+    job_id: Mapped[int] = mapped_column(
+        BigInteger,
+        index=True,
+        nullable=False,
+        doc="Job the run is associated with",
+    )
+    job: Mapped[Job] = relationship(Job, lazy="selectin", foreign_keys=[job_id])
+
+    runner_id: Mapped[int] = mapped_column(
+        BigInteger,
+        index=True,
+        nullable=False,
+        doc="Runner the run is running on, e.g. Airflow, Yarn",
+    )
+    runner: Mapped[Runner] = relationship(Runner, lazy="selectin", foreign_keys=[runner_id])
+
+    status: Mapped[Status] = mapped_column(
+        ChoiceType(Status),
+        nullable=False,
+        default=Status.STARTED,
+        doc="Run status info",
+    )
+
+    name: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+        doc="Name of the run, e.g. Spark applicationId",
+    )
+
+    parent_run_id: Mapped[int] = mapped_column(
+        BigInteger,
+        index=True,
+        nullable=True,
+        doc="Parent of current run, e.g. Airflow task run which started Spark application",
+    )
+    parent: Mapped[Run] = relationship("Run", lazy="selectin", foreign_keys=[parent_run_id])
+
+    attempt: Mapped[str | None] = mapped_column(
+        String(64),
+        nullable=True,
+        doc="Attempt number of the run",
+    )
+    description: Mapped[str | None] = mapped_column(
+        String,
+        nullable=True,
+        doc="Run description, e.g. Airflow task docstring",
+    )
+    log_url: Mapped[str | None] = mapped_column(
+        String,
+        nullable=True,
+        doc="Log url of the run, if any",
+    )
+
+    started_by_user_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        nullable=True,
+        doc="User who started the run",
+    )
+    started_by_user: Mapped[User | None] = relationship("User", lazy="selectin", foreign_keys=[started_by_user_id])
+
+    ended_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        doc="End time of the run",
+    )
+    ended_reason: Mapped[str | None] = mapped_column(
+        String,
+        nullable=True,
+        doc="End reason of the run, e.g. exception string",
+    )

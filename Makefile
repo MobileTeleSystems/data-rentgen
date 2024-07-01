@@ -46,16 +46,16 @@ db-start: ##@DB Start database
 	docker compose -f docker-compose.test.yml up -d --wait db $(DOCKER_COMPOSE_ARGS)
 
 db-revision: ##@DB Generate migration file
-	${POETRY} run python -m arrakis.backend.db.migrations revision --autogenerate $(ARGS)
+	${POETRY} run python -m arrakis.db.migrations revision --autogenerate $(ARGS)
 
 db-upgrade: ##@DB Run migrations to head
-	${POETRY} run python -m arrakis.backend.db.migrations upgrade head $(ARGS)
+	${POETRY} run python -m arrakis.db.migrations upgrade head $(ARGS)
 
 db-downgrade: ##@DB Downgrade head migration
-	${POETRY} run python -m arrakis.backend.db.migrations downgrade head-1 $(ARGS)
+	${POETRY} run python -m arrakis.db.migrations downgrade head-1 $(ARGS)
 
 db-partitions: ##@DB Create partitions
-	${POETRY} run python -m arrakis.backend.db.scripts.create_partitions $(ARGS)
+	${POETRY} run python -m arrakis.db.scripts.create_partitions $(ARGS)
 
 
 test: db-start ##@Test Run tests
@@ -70,16 +70,17 @@ cleanup: ##@Test Cleanup tests dependencies
 
 
 dev: db-start ##@Application Run development server (without docker)
-	${POETRY} run python -m arrakis.backend $(ARGS)
+	${POETRY} run python -m arrakis.server $(ARGS)
 
 prod-build: ##@Application Build docker image
-	docker build --progress=plain --network=host -t mtsrus/arrakis-backend:develop -f ./docker/Dockerfile.backend $(ARGS) .
+	docker build --progress=plain --network=host -t mtsrus/arrakis-server:develop -f ./docker/Dockerfile.server $(ARGS) .
 
 prod: ##@Application Run production server (with docker)
 	docker compose up -d
 
 prod-stop: ##@Application Stop production server
 	docker compose down $(ARGS)
+
 
 .PHONY: docs
 

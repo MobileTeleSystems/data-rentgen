@@ -41,16 +41,16 @@ repos:
       - id: chmod
         args: ['644']
         exclude_types: [shell]
-        exclude: ^(.*__main__\.py|arrakis/backend/export_openapi_schema\.py|arrakis/backend/db/scripts/create_partitions\.py)$
+        exclude: ^(.*__main__\.py|arrakis/server/scripts/export_openapi_schema\.py|arrakis/db/scripts/create_partitions\.py)$
       - id: chmod
         args: ['755']
         types: [shell]
       - id: chmod
         args: ['755']
-        files: ^(.*__main__\.py|arrakis/backend/export_openapi_schema\.py|arrakis/backend/db/scripts/create_partitions\.py)$
+        files: ^(.*__main__\.py|arrakis/server/scripts/export_openapi_schema\.py|arrakis/db/scripts/create_partitions\.py)$
       - id: insert-license
         files: .*\.py$
-        exclude: ^(arrakis/backend/dependencies/stub.py|docs/.*\.py|tests/.*\.py)$
+        exclude: ^(arrakis/server/dependencies/stub.py|docs/.*\.py|tests/.*\.py)$
         args:
           - --license-filepath
           - .spdx-license-header.txt
