@@ -6,6 +6,8 @@ pytest_plugins = [
     "tests.fixtures.async_engine",
     "tests.fixtures.async_session",
     "tests.test_database.fixtures.alembic",
+    "tests.test_consumer.fixtures.consumer_app_settings",
+    "tests.test_consumer.fixtures.test_broker",
     "tests.test_server.fixtures.server_app_settings",
     "tests.test_server.fixtures.test_server_app",
     "tests.test_server.fixtures.test_client",

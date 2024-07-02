@@ -9,6 +9,12 @@ filters:
     (): asgi_correlation_id.CorrelationIdFilter
     uuid_length: 32
     default_value: '-'
+  faststream:
+    (): faststream.log.logging.ExtendedFilter
+    default_context:
+      topic: ''
+      group_id: ''
+    message_id_ln: 10
 
 formatters:
   json:
@@ -16,12 +22,21 @@ formatters:
     # Add correlation_id to log records
     fmt: '%(processName)s %(process)d %(threadName)s %(thread)d %(name)s %(lineno)d %(levelname)s %(message)s %(correlation_id)s'
     timestamp: true
+  kafka_json:
+    (): pythonjsonlogger.jsonlogger.JsonFormatter
+    fmt: '%(processName)s:%(process)d %(name)s:%(lineno)d [%(levelname)s] %(topic)s %(group_id)s %(message_id)s %(message)s'
+    timestamp: true
 
 handlers:
   main:
     class: logging.StreamHandler
     formatter: json
     filters: [correlation_id]
+    stream: ext://sys.stdout
+  faststream:
+    class: logging.StreamHandler
+    formatter: kafka_json
+    filters: [faststream]
     stream: ext://sys.stdout
 
 loggers:
@@ -32,4 +47,16 @@ loggers:
   uvicorn:
     handlers: [main]
     level: INFO
+    propagate: false
+  arrakis.consumer:
+    handlers: [faststream]
+    level: INFO
+    propagate: false
+  aiokafka:
+    handlers: [faststream]
+    level: INFO
+    propagate: false
+  aiokafka.conn:
+    handlers: [faststream]
+    level: ERROR
     propagate: false

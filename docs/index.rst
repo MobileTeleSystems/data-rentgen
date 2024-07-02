@@ -14,6 +14,7 @@
     :hidden:
 
     backend/architecture
+    backend/consumer/index
     backend/server/index
 
 .. toctree::
