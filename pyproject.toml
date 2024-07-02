@@ -61,6 +61,7 @@ starlette-exporter = {version = "^0.23.0", optional = true}
 uvicorn = {version = "^0.30.1", optional = true}
 asyncpg = {version = "^0.29.0", optional = true}
 asgi-correlation-id = {version = "^4.3.1", optional = true}
+faststream = {extras = ["kafka"], version = "^0.5.14", optional = true}
 
 [tool.poetry.extras]
 server = [
@@ -69,6 +70,18 @@ server = [
   "uvicorn",
   "starlette-exporter",
   "asgi-correlation-id",
+  "pydantic-settings",
+  "alembic",
+  "sqlalchemy",
+  "sqlalchemy-utils",
+  "pyyaml",
+  "python-json-logger",
+  "coloredlogs",
+  "uuid6",
+  "python-dateutil",
+]
+consumer = [
+  "faststream",
   "pydantic-settings",
   "alembic",
   "sqlalchemy",
@@ -137,6 +150,7 @@ replace = 'ver = Version.parse("{new_version}")'
 [tool.pytest.ini_options]
 markers = [
     "server: tests for server (require running database)",
+    "consumer: tests for consumer (require running database)",
     "db: tests for db",
 ]
 

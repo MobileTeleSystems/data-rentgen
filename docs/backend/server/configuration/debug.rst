@@ -62,7 +62,7 @@ This is done by adding a specific filter to logging handler:
 .. dropdown:: ``logging.yml``
 
     .. literalinclude:: ../../../../arrakis/logging/presets/plain.yml
-        :emphasize-lines: 6-12,17-18,25
+        :emphasize-lines: 6-12,23-24,35
 
 Resulting logs look like:
 

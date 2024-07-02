@@ -58,7 +58,13 @@ db-partitions: ##@DB Create partitions
 	${POETRY} run python -m arrakis.db.scripts.create_partitions $(ARGS)
 
 
-test: db-start ##@Test Run tests
+broker: broker-start ##@Broker Prepare broker (in docker)
+
+broker-start: ##Broker Start broker
+	docker compose -f docker-compose.test.yml up -d --wait kafka $(DOCKER_COMPOSE_ARGS)
+
+
+test: db-start broker-start ##@Test Run tests
 	${POETRY} run pytest $(PYTEST_ARGS)
 
 check-fixtures: ##@Test Check declared fixtures
@@ -69,11 +75,15 @@ cleanup: ##@Test Cleanup tests dependencies
 
 
 
-dev: db-start ##@Application Run development server (without docker)
+dev-server: db-start ##@Application Run development server (without docker)
 	${POETRY} run python -m arrakis.server $(ARGS)
+
+dev-consumer: broker-start ##@Application Run development broker (without docker)
+	${POETRY} run python -m arrakis.consumer $(ARGS)
 
 prod-build: ##@Application Build docker image
 	docker build --progress=plain --network=host -t mtsrus/arrakis-server:develop -f ./docker/Dockerfile.server $(ARGS) .
+	docker build --progress=plain --network=host -t mtsrus/arrakis-consumer:develop -f ./docker/Dockerfile.consumer $(ARGS) .
 
 prod: ##@Application Run production server (with docker)
 	docker compose up -d

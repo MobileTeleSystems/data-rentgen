@@ -1,4 +1,4 @@
-.. _install-server:
+.. _install-consumer:
 
 Install & run
 =============
@@ -15,20 +15,17 @@ Requirements
 Installation process
 ~~~~~~~~~~~~~~~~~~~~
 
-Docker will download backend image of Postgres and REST API server, and run them.
+Docker will download backend image of Kafka, POstgres and Arrakis Kafka consumer, and run them.
 Options can be set via ``.env`` file or ``environment`` section in ``docker-compose.yml``
 
 .. dropdown:: ``docker-compose.yml``
 
     .. literalinclude:: ../../../docker-compose.yml
-        :emphasize-lines: 1-32,56-57
+        :emphasize-lines: 1-15,34-
 
 .. dropdown:: ``.env.docker``
 
     .. literalinclude:: ../../../.env.docker
-        :emphasize-lines: 1-4,21-26
-
-After containers are ready, open http://localhost:8000/docs.
 
 Without docker
 --------------
@@ -46,11 +43,11 @@ Install ``data-arrakis`` package with following *extra* dependencies:
 
 .. code-block:: console
 
-    $ pip install data-arrakis[server,postgres]
+    $ pip install data-arrakis[consumer,postgres]
 
 Available *extras* are:
 
-* ``server`` - REST API server requirements, like FastAPI and so on.
+* ``consumer`` - Kafka consumer requirements, like FastStream and so on.
 * ``postgres`` - requirements required to use Postgres as data storage.
 
 Run database
@@ -83,16 +80,28 @@ options and commands are just the same.
 
     This command should be executed after each upgrade to new Arrakis version.
 
-Run REST API server
-~~~~~~~~~~~~~~~~~~~
+Run Kafka
+~~~~~~~~~
 
-To start REST API server you need to execute following command:
+Start Kafka instance somewhere, and set up connection options using environment variables:
+
+.. code-block:: bash
+
+    ARRAKIS__KAFKA__BOOTSTRAP_SERVERS=kafka1:9092,kafka2:9092
+    ARRAKIS__KAFKA__SECURITY__TYPE=scram-sha256
+    ARRAKIS__KAFKA__SECURITY__USER=user
+    ARRAKIS__KAFKA__SECURITY__PASSWORD=password
+
+See :ref:`Kafka settings <configuration-kafka>` for more options.
+
+Run Kafka consumer
+~~~~~~~~~~~~~~~~~~
+
+To start Kafka consumer, you need to execute following command:
 
 .. code-block:: console
 
-    $ python -m arrakis.server --host 0.0.0.0 --port 8000
+    $ python -m arrakis.consumer
 
-This is a thin wrapper around `uvicorn <https://www.uvicorn.org/#command-line-options>`_ cli,
+This is a thin wrapper around `FastStream <https://faststream.airt.ai/latest/getting-started/cli/>`_ cli,
 options and commands are just the same.
-
-After server is started and ready, open http://localhost:8000/docs.

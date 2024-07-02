@@ -1,0 +1,23 @@
+FROM python:3.12-slim as prod
+LABEL maintainer="DataOps.ETL"
+
+WORKDIR /app
+ENV PYTHONPATH=/app
+
+RUN pip install poetry \
+    && poetry config virtualenvs.create false
+
+COPY ./pyproject.toml ./poetry.lock* ./
+
+RUN --mount=type=cache,target=/root/.cache/pypoetry \
+    poetry install \
+        --no-root \
+        --extras consumer \
+        --without dev,test,docs
+
+COPY ./docker/consumer.sh ./docker/
+RUN chmod +x ./docker/*.sh
+
+COPY ./arrakis/ ./arrakis/
+
+ENTRYPOINT ["/app/docker/consumer.sh"]

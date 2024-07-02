@@ -1,7 +1,6 @@
 FROM python:3.12-slim as prod
 LABEL maintainer="DataOps.ETL"
 
-
 WORKDIR /app
 ENV PYTHONPATH=/app
 
@@ -10,9 +9,10 @@ RUN pip install poetry \
 
 COPY ./pyproject.toml ./poetry.lock* ./
 
-RUN poetry install \
+RUN --mount=type=cache,target=/root/.cache/pypoetry \
+    poetry install \
         --no-root \
-        --all-extras \
+        --extras server \
         --without dev,test,docs
 
 COPY ./docker/server.sh ./docker/
