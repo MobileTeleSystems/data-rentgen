@@ -3,7 +3,7 @@
 
 .. toctree::
     :maxdepth: 2
-    :caption: Arrakis
+    :caption: DataRentgen
     :hidden:
 
     self

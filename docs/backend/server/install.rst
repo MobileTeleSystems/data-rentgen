@@ -42,11 +42,11 @@ Requirements
 Installation process
 ~~~~~~~~~~~~~~~~~~~~
 
-Install ``data-arrakis`` package with following *extra* dependencies:
+Install ``data-rentgen`` package with following *extra* dependencies:
 
 .. code-block:: console
 
-    $ pip install data-arrakis[server,postgres]
+    $ pip install data-rentgen[server,postgres]
 
 Available *extras* are:
 
@@ -60,7 +60,7 @@ Start Postgres instance somewhere, and set up database url using environment var
 
 .. code-block:: bash
 
-    ARRAKIS__DATABASE__URL=postgresql+asyncpg://user:password@postgres-host:5432/database_name
+    DATA_RENTGEN__DATABASE__URL=postgresql+asyncpg://user:password@postgres-host:5432/database_name
 
 You can use virtually any database supported by `SQLAlchemy <https://docs.sqlalchemy.org/en/20/core/engines.html#database-urls>`_,
 but the only one we really tested is Postgres.
@@ -74,14 +74,14 @@ To apply migrations (database structure changes) you need to execute following c
 
 .. code-block:: console
 
-    $ python -m arrakis.db.migrations upgrade head
+    $ python -m data_rentgen.db.migrations upgrade head
 
 This is a thin wrapper around `alembic <https://alembic.sqlalchemy.org/en/latest/tutorial.html#running-our-first-migration>`_ cli,
 options and commands are just the same.
 
 .. note::
 
-    This command should be executed after each upgrade to new Arrakis version.
+    This command should be executed after each upgrade to new DataRentgen version.
 
 Run REST API server
 ~~~~~~~~~~~~~~~~~~~
@@ -90,7 +90,7 @@ To start REST API server you need to execute following command:
 
 .. code-block:: console
 
-    $ python -m arrakis.server --host 0.0.0.0 --port 8000
+    $ python -m data_rentgen.server --host 0.0.0.0 --port 8000
 
 This is a thin wrapper around `uvicorn <https://www.uvicorn.org/#command-line-options>`_ cli,
 options and commands are just the same.

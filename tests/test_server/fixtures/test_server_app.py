@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from fastapi import FastAPI
 
-from arrakis.server import application_factory
-from arrakis.server.settings import ServerApplicationSettings
+from data_rentgen.server import application_factory
+from data_rentgen.server.settings import ServerApplicationSettings
 
 
 @pytest.fixture(scope="session")

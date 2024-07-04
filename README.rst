@@ -1,34 +1,34 @@
 .. _readme:
 
-Arrakis
-=======
+DataRentgen
+===========
 
 |Repo Status| |PyPI| |PyPI License| |PyPI Python Version| |Docker image| |Documentation|
 |Build Status| |Coverage| |pre-commit.ci|
 
 .. |Repo Status| image:: https://www.repostatus.org/badges/latest/concept.svg
     :target: https://www.repostatus.org/#concept
-.. |PyPI| image:: https://img.shields.io/pypi/v/data-arrakis
-    :target: https://pypi.org/project/data-arrakis/
-.. |PyPI License| image:: https://img.shields.io/pypi/l/data-arrakis.svg
-    :target: https://github.com/MobileTeleSystems/arrakis/blob/develop/LICENSE.txt
-.. |PyPI Python Version| image:: https://img.shields.io/pypi/pyversions/data-arrakis.svg
-    :target: https://badge.fury.io/py/data-arrakis
-.. |Docker image| image:: https://img.shields.io/docker/v/mtsrus/arrakis-server?sort=semver&label=docker
-    :target: https://hub.docker.com/r/mtsrus/arrakis-server
-.. |Documentation| image:: https://readthedocs.org/projects/data-arrakis/badge/?version=stable
-    :target: https://data-arrakis.readthedocs.io/
-.. |Build Status| image:: https://github.com/MobileTeleSystems/arrakis/workflows/Tests/badge.svg
-    :target: https://github.com/MobileTeleSystems/arrakis/actions
-.. |Coverage| image:: https://codecov.io/gh/MobileTeleSystems/arrakis/graph/badge.svg?token=s0JztGZbq3
-    :target: https://codecov.io/gh/MobileTeleSystems/arrakis
-.. |pre-commit.ci| image:: https://results.pre-commit.ci/badge/github/MobileTeleSystems/arrakis/develop.svg
-    :target: https://results.pre-commit.ci/latest/github/MobileTeleSystems/arrakis/develop
+.. |PyPI| image:: https://img.shields.io/pypi/v/data-rentgen
+    :target: https://pypi.org/project/data-rentgen/
+.. |PyPI License| image:: https://img.shields.io/pypi/l/data-data_rentgen.svg
+    :target: https://github.com/MobileTeleSystems/data-rentgen/blob/develop/LICENSE.txt
+.. |PyPI Python Version| image:: https://img.shields.io/pypi/pyversions/data-data_rentgen.svg
+    :target: https://badge.fury.io/py/data-rentgen
+.. |Docker image| image:: https://img.shields.io/docker/v/mtsrus/data-rentgen-server?sort=semver&label=docker
+    :target: https://hub.docker.com/r/mtsrus/data-rentgen-server
+.. |Documentation| image:: https://readthedocs.org/projects/data-rentgen/badge/?version=stable
+    :target: https://data-data_rentgen.readthedocs.io/
+.. |Build Status| image:: https://github.com/MobileTeleSystems/data-rentgen/workflows/Tests/badge.svg
+    :target: https://github.com/MobileTeleSystems/data-rentgen/actions
+.. |Coverage| image:: https://codecov.io/gh/MobileTeleSystems/data-rentgen/graph/badge.svg?token=s0JztGZbq3
+    :target: https://codecov.io/gh/MobileTeleSystems/data-rentgen
+.. |pre-commit.ci| image:: https://results.pre-commit.ci/badge/github/MobileTeleSystems/data-rentgen/develop.svg
+    :target: https://results.pre-commit.ci/latest/github/MobileTeleSystems/data-rentgen/develop
 
-What is Arrakis?
-----------------
+What is DataRentgen?
+--------------------
 
-Arrakis is a DataLineage service compatible with `OpenLineage <https://openlineage.io/>`_ specification.
+DataRentgen is a DataLineage service compatible with `OpenLineage <https://openlineage.io/>`_ specification.
 
 **Note**: service is under active development, and is not ready to use.
 
@@ -52,4 +52,4 @@ Non-goals
 Documentation
 -------------
 
-See https://data-arrakis.readthedocs.io/
+See https://data-data_rentgen.readthedocs.io/

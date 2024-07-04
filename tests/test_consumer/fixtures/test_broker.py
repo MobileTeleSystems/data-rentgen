@@ -7,8 +7,8 @@ from typing import AsyncGenerator
 import pytest_asyncio
 from faststream.kafka import KafkaBroker, TestKafkaBroker
 
-from arrakis.consumer import broker_factory
-from arrakis.consumer.settings import ConsumerApplicationSettings
+from data_rentgen.consumer import broker_factory
+from data_rentgen.consumer.settings import ConsumerApplicationSettings
 
 
 @pytest_asyncio.fixture(scope="session")

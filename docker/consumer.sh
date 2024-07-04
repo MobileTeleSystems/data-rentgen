@@ -1,4 +1,4 @@
 #!/usr/bin/env bash
 set -e
 
-exec python -m arrakis.consumer "$@"
+exec python -m data_rentgen.consumer "$@"

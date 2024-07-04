@@ -13,4 +13,4 @@ Kafka consumer configuration
     logging
 
 
-.. autopydantic_settings:: arrakis.consumer.settings.ConsumerApplicationSettings
+.. autopydantic_settings:: data_rentgen.consumer.settings.ConsumerApplicationSettings

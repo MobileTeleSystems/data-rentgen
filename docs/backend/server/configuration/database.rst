@@ -3,4 +3,4 @@
 Database settings
 =================
 
-.. autopydantic_model:: arrakis.db.settings.DatabaseSettings
+.. autopydantic_model:: data_rentgen.db.settings.DatabaseSettings

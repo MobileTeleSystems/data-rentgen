@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncEngine
 
-    from arrakis.db.settings import DatabaseSettings
+    from data_rentgen.db.settings import DatabaseSettings
 
 
 @contextlib.asynccontextmanager

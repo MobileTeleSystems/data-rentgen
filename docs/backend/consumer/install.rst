@@ -15,7 +15,7 @@ Requirements
 Installation process
 ~~~~~~~~~~~~~~~~~~~~
 
-Docker will download backend image of Kafka, POstgres and Arrakis Kafka consumer, and run them.
+Docker will download backend image of Kafka, POstgres and DataRentgen Kafka consumer, and run them.
 Options can be set via ``.env`` file or ``environment`` section in ``docker-compose.yml``
 
 .. dropdown:: ``docker-compose.yml``
@@ -39,11 +39,11 @@ Requirements
 Installation process
 ~~~~~~~~~~~~~~~~~~~~
 
-Install ``data-arrakis`` package with following *extra* dependencies:
+Install ``data-rentgen`` package with following *extra* dependencies:
 
 .. code-block:: console
 
-    $ pip install data-arrakis[consumer,postgres]
+    $ pip install data-rentgen[consumer,postgres]
 
 Available *extras* are:
 
@@ -57,7 +57,7 @@ Start Postgres instance somewhere, and set up database url using environment var
 
 .. code-block:: bash
 
-    ARRAKIS__DATABASE__URL=postgresql+asyncpg://user:password@postgres-host:5432/database_name
+    DATA_RENTGEN__DATABASE__URL=postgresql+asyncpg://user:password@postgres-host:5432/database_name
 
 You can use virtually any database supported by `SQLAlchemy <https://docs.sqlalchemy.org/en/20/core/engines.html#database-urls>`_,
 but the only one we really tested is Postgres.
@@ -71,14 +71,14 @@ To apply migrations (database structure changes) you need to execute following c
 
 .. code-block:: console
 
-    $ python -m arrakis.db.migrations upgrade head
+    $ python -m data_rentgen.db.migrations upgrade head
 
 This is a thin wrapper around `alembic <https://alembic.sqlalchemy.org/en/latest/tutorial.html#running-our-first-migration>`_ cli,
 options and commands are just the same.
 
 .. note::
 
-    This command should be executed after each upgrade to new Arrakis version.
+    This command should be executed after each upgrade to new DataRentgen version.
 
 Run Kafka
 ~~~~~~~~~
@@ -87,10 +87,10 @@ Start Kafka instance somewhere, and set up connection options using environment 
 
 .. code-block:: bash
 
-    ARRAKIS__KAFKA__BOOTSTRAP_SERVERS=kafka1:9092,kafka2:9092
-    ARRAKIS__KAFKA__SECURITY__TYPE=scram-sha256
-    ARRAKIS__KAFKA__SECURITY__USER=user
-    ARRAKIS__KAFKA__SECURITY__PASSWORD=password
+    DATA_RENTGEN__KAFKA__BOOTSTRAP_SERVERS=kafka1:9092,kafka2:9092
+    DATA_RENTGEN__KAFKA__SECURITY__TYPE=scram-sha256
+    DATA_RENTGEN__KAFKA__SECURITY__USER=user
+    DATA_RENTGEN__KAFKA__SECURITY__PASSWORD=password
 
 See :ref:`Kafka settings <configuration-kafka>` for more options.
 
@@ -101,7 +101,7 @@ To start Kafka consumer, you need to execute following command:
 
 .. code-block:: console
 
-    $ python -m arrakis.consumer
+    $ python -m data_rentgen.consumer
 
 This is a thin wrapper around `FastStream <https://faststream.airt.ai/latest/getting-started/cli/>`_ cli,
 options and commands are just the same.

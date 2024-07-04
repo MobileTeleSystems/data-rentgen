@@ -53,7 +53,7 @@ jobs:
           poetry install --no-root --all-extras --with dev --without docs,test
 
       - name: Run flake8
-        run: poetry run flake8 arrakis/
+        run: poetry run flake8 data_rentgen/
 
       - name: Run mypy
-        run: poetry run mypy ./arrakis --config-file ./pyproject.toml
+        run: poetry run mypy ./data_rentgen --config-file ./pyproject.toml

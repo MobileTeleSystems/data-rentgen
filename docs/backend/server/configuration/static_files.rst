@@ -5,4 +5,4 @@ Serving static files
 
 These settings used to control serving static files by a server.
 
-.. autopydantic_model:: arrakis.server.settings.static_files.StaticFilesSettings
+.. autopydantic_model:: data_rentgen.server.settings.static_files.StaticFilesSettings

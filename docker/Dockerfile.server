@@ -18,19 +18,19 @@ RUN --mount=type=cache,target=/root/.cache/pypoetry \
 COPY ./docker/server.sh ./docker/
 RUN chmod +x ./docker/*.sh
 
-COPY ./arrakis/ ./arrakis/
+COPY ./data_rentgen/ ./data_rentgen/
 
 # Swagger UI
-ADD https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/swagger-ui-bundle.js /app/arrakis/server/static/swagger/swagger-ui-bundle.js
-ADD https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/swagger-ui.css /app/arrakis/server/static/swagger/swagger-ui.css
+ADD https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/swagger-ui-bundle.js /app/data_rentgen/server/static/swagger/swagger-ui-bundle.js
+ADD https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/swagger-ui.css /app/data_rentgen/server/static/swagger/swagger-ui.css
 
 # Redoc
-ADD https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js /app/arrakis/server/static/redoc/redoc.standalone.js
+ADD https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js /app/data_rentgen/server/static/redoc/redoc.standalone.js
 
-ENV ARRAKIS__SERVER__OPENAPI__SWAGGER__JS_URL=/static/swagger/swagger-ui-bundle.js \
-    ARRAKIS__SERVER__OPENAPI__SWAGGER__CSS_URL=/static/swagger/swagger-ui.css \
-    ARRAKIS__SERVER__OPENAPI__REDOC__JS_URL=/static/redoc/redoc.standalone.js \
-    ARRAKIS__SERVER__STATIC_FILES__DIRECTORY=/app/arrakis/server/static
+ENV DATA_RENTGEN__SERVER__OPENAPI__SWAGGER__JS_URL=/static/swagger/swagger-ui-bundle.js \
+    DATA_RENTGEN__SERVER__OPENAPI__SWAGGER__CSS_URL=/static/swagger/swagger-ui.css \
+    DATA_RENTGEN__SERVER__OPENAPI__REDOC__JS_URL=/static/redoc/redoc.standalone.js \
+    DATA_RENTGEN__SERVER__STATIC_FILES__DIRECTORY=/app/data_rentgen/server/static
 
 EXPOSE 8000
 ENTRYPOINT ["/app/docker/server.sh"]

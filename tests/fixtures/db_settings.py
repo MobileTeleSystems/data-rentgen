@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import pytest
 
-from arrakis.db.settings import DatabaseSettings
+from data_rentgen.db.settings import DatabaseSettings
 
 
 @pytest.fixture(scope="session", params=[{}])

@@ -3,10 +3,10 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "data-arrakis"
+name = "data-rentgen"
 version = "0.0.1"
 license = "Apache-2.0"
-description = "Arrakis REST API + client"
+description = "DataRentgen REST API + Kafka consumer"
 authors = ["DataOps.ETL <onetools@mts.ru>"]
 readme = "README.rst"
 classifiers = [
@@ -27,20 +27,20 @@ classifiers = [
 ]
 keywords = ["Lineage", "FastAPI", "REST", "FastStream"]
 packages = [
-    { include = "arrakis" },
+    { include = "data_rentgen" },
 ]
 include = [
-    {path = "arrakis/py.typed"},
-    {path = "arrakis/**/*.yml"},
-    {path = "arrakis/**/*.ini"},
+    {path = "data_rentgen/py.typed"},
+    {path = "data_rentgen/**/*.yml"},
+    {path = "data_rentgen/**/*.ini"},
 ]
 
 [tool.poetry.urls]  # Optional
-"Homepage" = "https://github.com/MobileTeleSystems/arrakis"
-"Documentation" = "https://data-arrakis.readthedocs.io/"
-"Source" = "https://github.com/MobileTeleSystems/arrakis"
-"CI/CD" = "https://github.com/MobileTeleSystems/arrakis/actions"
-"Tracker" = "https://github.com/MobileTeleSystems/arrakis/issues"
+"Homepage" = "https://github.com/MobileTeleSystems/data-rentgen"
+"Documentation" = "https://data-data_rentgen.readthedocs.io/"
+"Source" = "https://github.com/MobileTeleSystems/data-rentgen"
+"CI/CD" = "https://github.com/MobileTeleSystems/data-rentgen/actions"
+"Tracker" = "https://github.com/MobileTeleSystems/data-rentgen/issues"
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -137,9 +137,9 @@ sphinx-last-updated-by-git = "^0.3.7"
 # sphinx-plantuml = "^1.0.0"
 
 [tool.poetry.plugins."tricoder_package_spy.register"]
-"data-arrakis" = "arrakis"
+"data-rentgen" = "data_rentgen"
 
-[tool.poetry_bumpversion.file."arrakis/__init__.py"]
+[tool.poetry_bumpversion.file."data_rentgen/__init__.py"]
 search = '_raw_version = "{current_version}"'
 replace = '_raw_version = "{new_version}"'
 
@@ -155,7 +155,7 @@ markers = [
 ]
 
 [tool.coverage.paths]
-source = ["arrakis"]
+source = ["data_rentgen"]
 
 [tool.coverage.run]
 branch = true
@@ -192,7 +192,7 @@ exclude = "(\\.eggs|\\.git|\\.mypy_cache|\\.tox|\\.venv|_build|buck-out|build|di
 
 [tool.isort]
 profile = "black"
-known_first_party = ["arrakis", "tests"]
+known_first_party = ["data_rentgen", "tests"]
 
 [tool.mypy]
 python_version = "3.10"
@@ -419,8 +419,8 @@ per-file-ignores = [
 ]
 
 [tool.towncrier]
-name = "Arrakis"
-package = "arrakis"
+name = "DataRentgen"
+package = "data_rentgen"
 filename = "docs/changelog/NEXT_RELEASE.rst"
 directory = "docs/changelog/next_release/"
 title_format = "{version} ({project_date})"
