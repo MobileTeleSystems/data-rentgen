@@ -16,14 +16,14 @@ from alembic.script import ScriptDirectory
 from sqlalchemy import engine_from_config, pool
 from sqlalchemy_utils.functions import create_database, database_exists, drop_database
 
-from arrakis.db.models import Base
+from data_rentgen.db.models import Base
 
 if TYPE_CHECKING:
     from sqlalchemy import MetaData
 
-    from arrakis.db.settings import DatabaseSettings
+    from data_rentgen.db.settings import DatabaseSettings
 
-PROJECT_PATH = Path(__file__).parent.parent.parent.parent.joinpath("arrakis").resolve()
+PROJECT_PATH = Path(__file__).parent.parent.parent.parent.joinpath("data_rentgen").resolve()
 
 
 @pytest.fixture

@@ -46,16 +46,16 @@ db-start: ##@DB Start database
 	docker compose -f docker-compose.test.yml up -d --wait db $(DOCKER_COMPOSE_ARGS)
 
 db-revision: ##@DB Generate migration file
-	${POETRY} run python -m arrakis.db.migrations revision --autogenerate $(ARGS)
+	${POETRY} run python -m data_rentgen.db.migrations revision --autogenerate $(ARGS)
 
 db-upgrade: ##@DB Run migrations to head
-	${POETRY} run python -m arrakis.db.migrations upgrade head $(ARGS)
+	${POETRY} run python -m data_rentgen.db.migrations upgrade head $(ARGS)
 
 db-downgrade: ##@DB Downgrade head migration
-	${POETRY} run python -m arrakis.db.migrations downgrade head-1 $(ARGS)
+	${POETRY} run python -m data_rentgen.db.migrations downgrade head-1 $(ARGS)
 
 db-partitions: ##@DB Create partitions
-	${POETRY} run python -m arrakis.db.scripts.create_partitions $(ARGS)
+	${POETRY} run python -m data_rentgen.db.scripts.create_partitions $(ARGS)
 
 
 broker: broker-start ##@Broker Prepare broker (in docker)
@@ -76,14 +76,14 @@ cleanup: ##@Test Cleanup tests dependencies
 
 
 dev-server: db-start ##@Application Run development server (without docker)
-	${POETRY} run python -m arrakis.server $(ARGS)
+	${POETRY} run python -m data_rentgen.server $(ARGS)
 
 dev-consumer: broker-start ##@Application Run development broker (without docker)
-	${POETRY} run python -m arrakis.consumer $(ARGS)
+	${POETRY} run python -m data_rentgen.consumer $(ARGS)
 
 prod-build: ##@Application Build docker image
-	docker build --progress=plain --network=host -t mtsrus/arrakis-server:develop -f ./docker/Dockerfile.server $(ARGS) .
-	docker build --progress=plain --network=host -t mtsrus/arrakis-consumer:develop -f ./docker/Dockerfile.consumer $(ARGS) .
+	docker build --progress=plain --network=host -t mtsrus/data-rentgen-server:develop -f ./docker/Dockerfile.server $(ARGS) .
+	docker build --progress=plain --network=host -t mtsrus/data-rentgen-consumer:develop -f ./docker/Dockerfile.consumer $(ARGS) .
 
 prod: ##@Application Run production server (with docker)
 	docker compose up -d

@@ -3,4 +3,4 @@
 Logging settings
 ================
 
-.. autopydantic_model:: arrakis.logging.settings.LoggingSettings
+.. autopydantic_model:: data_rentgen.logging.settings.LoggingSettings

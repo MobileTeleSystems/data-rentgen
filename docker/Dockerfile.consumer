@@ -18,6 +18,6 @@ RUN --mount=type=cache,target=/root/.cache/pypoetry \
 COPY ./docker/consumer.sh ./docker/
 RUN chmod +x ./docker/*.sh
 
-COPY ./arrakis/ ./arrakis/
+COPY ./data_rentgen/ ./data_rentgen/
 
 ENTRYPOINT ["/app/docker/consumer.sh"]

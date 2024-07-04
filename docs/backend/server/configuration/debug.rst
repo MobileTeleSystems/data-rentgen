@@ -13,7 +13,7 @@ You can change this by setting:
 
 .. code-block:: console
 
-    $ export ARRAKIS__SERVER__DEBUG=False
+    $ export DATA_RENTGEN__SERVER__DEBUG=False
     $ # start REST API server
     $ curl -XPOST http://localhost:8000/failing/endpoint ...
     {
@@ -26,7 +26,7 @@ You can change this by setting:
 
 .. code-block:: console
 
-    $ export ARRAKIS__SERVER__DEBUG=True
+    $ export DATA_RENTGEN__SERVER__DEBUG=True
     $ # start REST API server
     $ curl -XPOST http://localhost:8000/failing/endpoint ...
     Traceback (most recent call last):
@@ -52,7 +52,7 @@ Server can add ``X-Request-ID`` header to responses, which allows to match reque
 
 This is done by ``request_id`` middleware, which is enabled by default and can configured as described below:
 
-.. autopydantic_model:: arrakis.server.settings.request_id.RequestIDSettings
+.. autopydantic_model:: data_rentgen.server.settings.request_id.RequestIDSettings
 
 Print request ID  to backend logs
 ---------------------------------
@@ -61,7 +61,7 @@ This is done by adding a specific filter to logging handler:
 
 .. dropdown:: ``logging.yml``
 
-    .. literalinclude:: ../../../../arrakis/logging/presets/plain.yml
+    .. literalinclude:: ../../../../data_rentgen/logging/presets/plain.yml
         :emphasize-lines: 6-12,23-24,35
 
 Resulting logs look like:
@@ -80,7 +80,7 @@ If client got ``X-Request-ID`` header from backend, it is printed to logs with `
 >>> logging.basicConfig(level=logging.DEBUG)
 >>> client.ping()
 DEBUG:urllib3.connectionpool:http://localhost:8000 "GET /monitoring/ping HTTP/1.1" 200 15
-DEBUG:arrakis.client.base:Request ID: '018c15e97a068ae09484f8c25e2799dd'
+DEBUG:data_rentgen.client.base:Request ID: '018c15e97a068ae09484f8c25e2799dd'
 
 Also, if REST API response was not successful, ``Request ID`` is added to exception message:
 
@@ -96,7 +96,7 @@ Server can add ``X-Application-Version`` header to responses, which allows to de
 
 This is done by ``application_version`` middleware, which is enabled by default and can configured as described below:
 
-.. autopydantic_model:: arrakis.server.settings.application_version.ApplicationVersionSettings
+.. autopydantic_model:: data_rentgen.server.settings.application_version.ApplicationVersionSettings
 
 
 Use ``X-Application-Version`` header on client
@@ -107,4 +107,4 @@ If client got ``X-Application-Version`` header from REST API, it is compared wit
 If versions do not match, a warning is shown:
 
 >>> client.ping()
-UserWarning: Arrakis client version '0.0.9' does not match backend version '1.0.0'. Please upgrade.
+UserWarning: DataRentgen client version '0.0.9' does not match backend version '1.0.0'. Please upgrade.

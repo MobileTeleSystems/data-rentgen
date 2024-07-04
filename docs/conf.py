@@ -23,7 +23,7 @@ sys.path.insert(0, os.fspath(PROJECT_ROOT_DIR))
 
 # -- Project information -----------------------------------------------------
 
-project = "arrakis"
+project = "DataRentgen"
 copyright = "2024 MTS PJSC"
 author = "DataOps.ETL"
 
@@ -61,9 +61,9 @@ extensions = [
 
 swagger = [
     {
-        "name": "Arrakis REST API",
+        "name": "DataRentgen REST API",
         "page": "openapi",
-        "id": "arrakis-api",
+        "id": "data-rentgen-api",
         "options": {
             "url": "_static/openapi.json",
         },
@@ -156,11 +156,11 @@ todo_include_todos = False
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "arrakis-doc"
+htmlhelp_basename = "data-rentgen-doc"
 
 
 # which is the equivalent to:
-issues_uri = "https://github.com/MobileTeleSystems/arrakis/issues/{issue}"
-issues_pr_uri = "https://github.com/MobileTeleSystems/arrakis/pulls/{pr}"
-issues_commit_uri = "https://github.com/MobileTeleSystems/arrakis/commit/{commit}"
+issues_uri = "https://github.com/MobileTeleSystems/data-rentgen/issues/{issue}"
+issues_pr_uri = "https://github.com/MobileTeleSystems/data-rentgen/pulls/{pr}"
+issues_commit_uri = "https://github.com/MobileTeleSystems/data-rentgen/commit/{commit}"
 issues_user_uri = "https://github.com/{user}"

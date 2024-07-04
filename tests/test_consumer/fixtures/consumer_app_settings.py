@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 import pytest
 
-from arrakis.consumer.settings import ConsumerApplicationSettings
+from data_rentgen.consumer.settings import ConsumerApplicationSettings
 
 
 @pytest.fixture(scope="session", params=[{}])

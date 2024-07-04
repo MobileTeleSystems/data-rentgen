@@ -15,7 +15,7 @@ services:
       retries: 3
 
   server:
-    image: mtsrus/arrakis-server:develop
+    image: mtsrus/data-rentgen-server:develop
     restart: unless-stopped
     env_file: .env.docker
     ports:
@@ -46,7 +46,7 @@ services:
       retries: 5
 
   consumer:
-    image: mtsrus/arrakis-consumer:develop
+    image: mtsrus/data-rentgen-consumer:develop
     restart: unless-stopped
     env_file: .env.docker
     depends_on:

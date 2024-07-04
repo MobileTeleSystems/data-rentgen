@@ -7,7 +7,7 @@ from alembic.autogenerate import compare_metadata
 from alembic.runtime.migration import MigrationContext
 from sqlalchemy import Connection, MetaData, create_engine
 
-from arrakis.db.models import Base
+from data_rentgen.db.models import Base
 
 pytestmark = [pytest.mark.db]
 

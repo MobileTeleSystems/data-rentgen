@@ -13,6 +13,6 @@ from httpx import ASGITransport, AsyncClient
 async def test_client(test_server_app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(
         transport=ASGITransport(app=test_server_app),
-        base_url="http://arrakis",
+        base_url="http://data-rentgen",
     ) as result:
         yield result

@@ -17,5 +17,5 @@ REST API server configuration
     debug
 
 
-.. autopydantic_settings:: arrakis.server.settings.ServerApplicationSettings
-.. autopydantic_settings:: arrakis.server.settings.ServerSettings
+.. autopydantic_settings:: data_rentgen.server.settings.ServerApplicationSettings
+.. autopydantic_settings:: data_rentgen.server.settings.ServerSettings

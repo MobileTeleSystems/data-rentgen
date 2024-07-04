@@ -13,7 +13,7 @@ Architecture
         agent "OpenLineage client" as CLIENT
         actor "User" as USER
 
-        frame "Arrakis" {
+        frame "DataRentgen" {
             queue "Message broker" as BROKER
             component "Events consumer" as CONSUMER
             database "Database" as DB

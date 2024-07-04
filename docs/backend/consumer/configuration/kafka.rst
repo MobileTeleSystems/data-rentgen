@@ -3,5 +3,5 @@
 Kafka settings
 ==============
 
-.. autopydantic_model:: arrakis.consumer.settings.kafka.KafkaSettings
-.. autopydantic_model:: arrakis.consumer.settings.security.KafkaSecuritySettings
+.. autopydantic_model:: data_rentgen.consumer.settings.kafka.KafkaSettings
+.. autopydantic_model:: data_rentgen.consumer.settings.security.KafkaSecuritySettings
