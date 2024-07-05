@@ -27,6 +27,7 @@ class Schema(Base):
         SQL_UUID,
         nullable=False,
         index=True,
+        unique=True,
         default=_get_digest,
         doc="Schema SHA-1 digest based on fields content. Currently this is in form of UUID",
     )
