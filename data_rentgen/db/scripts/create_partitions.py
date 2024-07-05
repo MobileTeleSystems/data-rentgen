@@ -29,10 +29,13 @@ logger = logging.getLogger(__name__)
 PARTITIONED_TABLES = [Run.__tablename__, Operation.__tablename__, Interaction.__tablename__]
 
 
-class Granularity(Enum):
+class Granularity(str, Enum):
     DAY = "day"
     MONTH = "month"
     YEAR = "year"
+
+    def __str__(self) -> str:
+        return self.value
 
     def round(self, input: date) -> date:
         if self == Granularity.DAY:

@@ -25,7 +25,7 @@ help: ##@Help Show this help
 
 
 
-venv-init: venv-cleanup  venv-install##@Env Init venv and install poetry dependencies
+venv: venv-cleanup  venv-install##@Env Init venv and install poetry dependencies
 
 venv-cleanup: ##@Env Cleanup venv
 	@rm -rf .venv || true

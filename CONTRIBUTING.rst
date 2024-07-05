@@ -41,7 +41,7 @@ Secondly, create virtualenv and install dependencies:
 
 .. code:: bash
 
-    make venv-init
+    make venv
 
 If you already have venv, but need to install dependencies required for development:
 

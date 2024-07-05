@@ -26,7 +26,7 @@ def _default_uuid(context: DefaultExecutionContext):
     return generate_new_uuid(started_at)
 
 
-class InteractionType(str, Enum):  # noqa: WPS600
+class InteractionType(str, Enum):
     READ = "READ"
 
     CREATE = "CREATE"
@@ -38,6 +38,9 @@ class InteractionType(str, Enum):  # noqa: WPS600
 
     DROP = "DROP"
     TRUNCATE = "TRUNCATE"
+
+    def __str__(self) -> str:
+        return self.value
 
 
 # no foreign keys to avoid scanning all the partitions

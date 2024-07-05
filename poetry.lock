@@ -3426,11 +3426,11 @@ test = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 
 [extras]
-consumer = ["alembic", "coloredlogs", "faststream", "pydantic-settings", "python-dateutil", "python-json-logger", "pyyaml", "sqlalchemy", "sqlalchemy-utils", "uuid6"]
+consumer = ["alembic", "coloredlogs", "faststream", "packaging", "pydantic-settings", "python-dateutil", "python-json-logger", "pyyaml", "sqlalchemy", "sqlalchemy-utils", "uuid6"]
 postgres = ["asyncpg"]
 server = ["alembic", "asgi-correlation-id", "coloredlogs", "fastapi", "pydantic-settings", "python-dateutil", "python-json-logger", "pyyaml", "sqlalchemy", "sqlalchemy-utils", "starlette", "starlette-exporter", "uuid6", "uvicorn"]
 
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "51328bbfdd7d1bbd23e11d63e19e3e2ead1c8eeba66f00cd209aa4efe832ec2d"
+content-hash = "4b80ca8f263d432008987b55dc60ecca89858f25acc2143398b93bc514078375"
