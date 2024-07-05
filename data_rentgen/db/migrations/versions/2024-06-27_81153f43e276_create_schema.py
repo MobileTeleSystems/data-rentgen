@@ -26,7 +26,7 @@ def upgrade() -> None:
         sa.Column("fields", sa.JSON(), nullable=False),
         sa.PrimaryKeyConstraint("id", name=op.f("pk__schema")),
     )
-    op.create_index(op.f("ix__schema__digest"), "schema", ["digest"], unique=False)
+    op.create_index(op.f("ix__schema__digest"), "schema", ["digest"], unique=True)
 
 
 def downgrade() -> None:
