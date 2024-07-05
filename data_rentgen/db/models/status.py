@@ -6,7 +6,7 @@ from __future__ import annotations
 from enum import Enum
 
 
-class Status(str, Enum):  # noqa: WPS600
+class Status(str, Enum):
     STARTED = "STARTED"
     SUCCEEDED = "SUCCEEDED"
     KILLED = "KILLED"
@@ -17,3 +17,6 @@ class Status(str, Enum):  # noqa: WPS600
 
     UNKNOWN = "UNKNOWN"
     """No data about run status"""
+
+    def __str__(self) -> str:
+        return self.value

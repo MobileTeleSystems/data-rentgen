@@ -62,6 +62,7 @@ uvicorn = {version = "^0.30.1", optional = true}
 asyncpg = {version = "^0.29.0", optional = true}
 asgi-correlation-id = {version = "^4.3.1", optional = true}
 faststream = {extras = ["kafka"], version = "^0.5.14", optional = true}
+packaging = {version = "^24.1", optional = true}
 
 [tool.poetry.extras]
 server = [
@@ -91,6 +92,7 @@ consumer = [
   "coloredlogs",
   "uuid6",
   "python-dateutil",
+  "packaging",
 ]
 postgres = [
   "asyncpg",
@@ -398,14 +400,20 @@ ignore = [
   "WPS410",
 # constant 'UUID' imported as non constant 'UUIDv7'
   "N811",
+# Found subclassing a builtin: str
+  "WPS600",
+# Found underscored number: 5_000_000
+  "WPS303",
 ]
 
 per-file-ignores = [
 # WPS102 Found incorrect module name pattern
 # WPS432 Found magic number: 255
-  "*db/*.py:WPS102,WPS432",
+  "data_rentgen/db/*.py:WPS102,WPS432",
 # WPS237 Found a too complex `f` string
-  "*exceptions/*.py:WPS237",
+  "data_rentgen/server/exceptions/*.py:WPS237",
+# N815 variable 'openlineageAdapterVersion' in class scope should not be mixedCase
+  "data_rentgen/consumer/openlineage/*.py:N815",
 # TAE001 too few type annotations
 # WPS231 Found function with too much cognitive complexity
 # S101 Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
