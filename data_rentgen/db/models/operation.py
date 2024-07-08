@@ -36,7 +36,12 @@ class Operation(Base):
         nullable=False,
         doc="Run operation is a part of",
     )
-    run: Mapped[Run] = relationship(Run, lazy="selectin", foreign_keys=[run_id])
+    run: Mapped[Run] = relationship(
+        Run,
+        primaryjoin="Operation.run_id == Run.id",
+        lazy="noload",
+        foreign_keys=[run_id],
+    )
 
     status: Mapped[Status] = mapped_column(
         ChoiceType(Status),

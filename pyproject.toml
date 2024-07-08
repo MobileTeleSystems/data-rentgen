@@ -218,7 +218,6 @@ remove-unused-variables = true
 docstring_style = "sphinx"
 
 [tool.codespell]
-ignore-words-list = "selectin"
 exclude-file = "poetry.lock"
 
 [tool.flake8]

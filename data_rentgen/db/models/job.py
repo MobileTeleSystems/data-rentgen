@@ -23,7 +23,7 @@ class Job(Base):
         nullable=False,
         doc="Where dataset's data is actually stored (database, filesystem)",
     )
-    location: Mapped[Location] = relationship(Location, lazy="selectin")
+    location: Mapped[Location] = relationship(Location, lazy="noload")
 
     name: Mapped[str] = mapped_column(
         String(255),

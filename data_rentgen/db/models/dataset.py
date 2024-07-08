@@ -23,7 +23,7 @@ class Dataset(Base):
         nullable=False,
         doc="Where dataset's data is actually stored (database, filesystem)",
     )
-    storage: Mapped[Storage] = relationship(Storage, lazy="selectin")
+    storage: Mapped[Storage] = relationship(Storage, lazy="noload")
 
     name: Mapped[str] = mapped_column(
         String(255),
@@ -44,4 +44,4 @@ class Dataset(Base):
         nullable=True,
         doc="Where dataset's data is actually stored, e.g. LOCATION of a TABLE",
     )
-    alias_for_dataset: Mapped[Dataset] = relationship("Dataset", lazy="selectin")
+    alias_for_dataset: Mapped[Dataset] = relationship("Dataset", lazy="noload")

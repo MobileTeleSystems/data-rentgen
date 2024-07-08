@@ -20,7 +20,7 @@ class Storage(Base):
         index=True,
         nullable=False,
     )
-    location: Mapped[Location] = relationship(Location, lazy="selectin")
+    location: Mapped[Location] = relationship(Location, lazy="noload")
 
     # bucket or database name
     namespace: Mapped[str | None] = mapped_column(String(255), nullable=True)
