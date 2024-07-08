@@ -403,6 +403,10 @@ ignore = [
   "WPS600",
 # Found underscored number: 5_000_000
   "WPS303",
+# Found complex default value: Depends(some)
+  "WPS404",
+# Do not perform function calls in argument defaults: Depends(some)
+  "B008",
 ]
 
 per-file-ignores = [

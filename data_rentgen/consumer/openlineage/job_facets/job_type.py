@@ -37,6 +37,7 @@ class OpenLineageJobType(str, Enum):
     def _missing_(cls, value):  # noqa: WPS120
         if value in {"SQL_JOB", "RDD_JOB"}:
             return cls.JOB
+        return None
 
 
 class OpenLineageJobProcessingType(str, Enum):

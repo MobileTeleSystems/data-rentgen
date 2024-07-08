@@ -3,13 +3,16 @@
 
 import logging
 
+from fast_depends import dependency_provider
 from faststream import FastStream
 from faststream.kafka import KafkaBroker
+from sqlalchemy.ext.asyncio import AsyncSession
 
 import data_rentgen
 from data_rentgen.consumer.handlers import router
 from data_rentgen.consumer.settings import ConsumerApplicationSettings
 from data_rentgen.consumer.settings.security import get_broker_security
+from data_rentgen.db.factory import create_session_factory
 from data_rentgen.logging.setup_logging import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -22,6 +25,7 @@ def broker_factory(settings: ConsumerApplicationSettings) -> KafkaBroker:
         logger=logger,
     )
     broker.include_router(router)
+    dependency_provider.override(AsyncSession, create_session_factory(settings.database))
     return broker
 
 

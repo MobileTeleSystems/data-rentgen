@@ -5,13 +5,12 @@ from __future__ import annotations
 from abc import ABC
 from typing import Generic, TypeVar
 
-from sqlalchemy import ScalarResult, Select, func, insert, select, update
+from sqlalchemy import ScalarResult, Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql import ColumnElement, SQLColumnExpression
-from sqlalchemy.sql.dml import ReturningInsert, ReturningUpdate
 
 from data_rentgen.db.models import Base
-from data_rentgen.server.dto.pagination import Pagination
+from data_rentgen.dto import PaginationDTO
 
 Model = TypeVar("Model", bound=Base)
 
@@ -40,31 +39,13 @@ class Repository(ABC, Generic[Model]):
         query: Select = select(model_type).where(*where)
         return await self._session.scalar(query)
 
-    async def _create(
-        self,
-        data: dict,
-    ) -> Model:
-        model_type = self.model_type()
-        query: ReturningInsert[tuple[Model]] = insert(model_type).values(**data).returning(model_type)
-        result = await self._session.scalars(query)
-        return result.one()
-
-    async def _update(
-        self,
-        where: list[ColumnElement],
-        changes: dict,
-    ) -> Model | None:
-        model_type = self.model_type()
-        query: ReturningUpdate[tuple[Model]] = update(model_type).where(*where).values(**changes).returning(model_type)
-        return await self._session.scalar(query)
-
     async def _paginate(
         self,
         order_by: list[SQLColumnExpression],
         page: int,
         page_size: int,
         where: list[SQLColumnExpression] | None = None,
-    ) -> Pagination[Model]:
+    ) -> PaginationDTO[Model]:
         model_type = self.model_type()
         query: Select = select(model_type)
         if where:
@@ -76,7 +57,7 @@ class Repository(ABC, Generic[Model]):
         total_count: int = await self._session.scalar(  # type: ignore[assignment]
             select(func.count()).select_from(query.subquery()),
         )
-        return Pagination[model_type](  # type: ignore[valid-type]
+        return PaginationDTO[model_type](  # type: ignore[valid-type]
             items=list(items_result.all()),
             total_count=total_count,
             page=page,

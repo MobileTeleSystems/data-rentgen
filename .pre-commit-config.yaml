@@ -48,7 +48,7 @@ repos:
         files: ^(.*__main__\.py|data_rentgen/server/scripts/export_openapi_schema\.py|data_rentgen/db/scripts/create_partitions\.py)$
       - id: insert-license
         files: .*\.py$
-        exclude: ^(data_rentgen/server/dependencies/stub.py|docs/.*\.py|tests/.*\.py)$
+        exclude: ^(data_rentgen/dependencies/stub.py|docs/.*\.py|tests/.*\.py)$
         args:
           - --license-filepath
           - .spdx-license-header.txt
