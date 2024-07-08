@@ -21,7 +21,7 @@ class Job(Base):
         ForeignKey("location.id", ondelete="CASCADE"),
         index=True,
         nullable=False,
-        doc="Where dataset's data is actually stored (database, filesystem)",
+        doc="Where job is located (Airflow instance, Spark cluster)",
     )
     location: Mapped[Location] = relationship(Location, lazy="noload")
 

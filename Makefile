@@ -67,6 +67,9 @@ broker-start: ##Broker Start broker
 test: db-start broker-start ##@Test Run tests
 	${POETRY} run pytest $(PYTEST_ARGS)
 
+test-ci: db ##@Test Run CI tests
+	${POETRY} run coverage run -m pytest
+
 check-fixtures: ##@Test Check declared fixtures
 	${POETRY} run pytest --dead-fixtures $(PYTEST_ARGS)
 

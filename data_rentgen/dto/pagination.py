@@ -10,7 +10,7 @@ T = TypeVar("T")
 
 
 @dataclass
-class Pagination(Generic[T]):
+class PaginationDTO(Generic[T]):
     items: list[T]
     page: int
     page_size: int

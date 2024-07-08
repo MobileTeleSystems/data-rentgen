@@ -5,7 +5,9 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing_extensions import Annotated
 
-from data_rentgen.server.dependencies import Stub
+from data_rentgen.db.repositories.job import JobRepository
+from data_rentgen.db.repositories.location import LocationRepository
+from data_rentgen.dependencies import Stub
 
 
 class UnitOfWork:
@@ -14,6 +16,8 @@ class UnitOfWork:
         session: Annotated[AsyncSession, Depends(Stub(AsyncSession))],
     ):
         self._session = session
+        self.location = LocationRepository(session)
+        self.job = JobRepository(session)
 
     async def __aenter__(self):
         return self
