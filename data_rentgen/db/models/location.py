@@ -2,10 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from sqlalchemy import BigInteger, Index, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from data_rentgen.db.models.base import Base
+
+if TYPE_CHECKING:
+    from data_rentgen.db.models.address import Address
 
 
 class Location(Base):
@@ -22,4 +27,10 @@ class Location(Base):
     name: Mapped[str] = mapped_column(
         String(255),
         doc="Location name, e.g. cluster name",
+    )
+
+    addresses: Mapped[list[Address]] = relationship(
+        "Address",
+        lazy="noload",
+        back_populates="location",
     )

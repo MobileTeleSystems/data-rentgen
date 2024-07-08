@@ -79,9 +79,9 @@ def get_parser() -> ArgumentParser:
     )
     parser.add_argument(
         "--granularity",
-        type=lambda x: Granularity[x].value,
+        type=lambda x: Granularity(x).value,
         choices=[item.value for item in Granularity],
-        default=Granularity.MONTH,
+        default=Granularity.MONTH.value,
         nargs="?",
         help="Granularity of partitions, default is month.",
     )
@@ -132,10 +132,10 @@ async def main(args: list[str]) -> None:
 
     parser = get_parser()
     params = parser.parse_args(args)
-    if params.end is None:
-        params.end = params.start + params.granularity.to_range()
-
     granularity = Granularity(params.granularity)
+    if params.end is None:
+        params.end = params.start + granularity.to_range()
+
     start, end = granularity.round(params.start.date()), granularity.round(params.end.date())
     if start > end:
         raise ValueError("Start date must be less than end date.")

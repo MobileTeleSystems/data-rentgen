@@ -66,7 +66,8 @@ class Interaction(Base):
     )
     operation: Mapped[Operation] = relationship(
         Operation,
-        lazy="selectin",
+        primaryjoin="Interaction.operation_id == Operation.id",
+        lazy="noload",
         foreign_keys=[operation_id],
     )
 
@@ -76,7 +77,12 @@ class Interaction(Base):
         nullable=False,
         doc="Dataset the interaction is performed against",
     )
-    dataset: Mapped[Dataset] = relationship(Dataset, lazy="selectin", foreign_keys=[dataset_id])
+    dataset: Mapped[Dataset] = relationship(
+        Dataset,
+        primaryjoin="Interaction.dataset_id == Dataset.id",
+        lazy="noload",
+        foreign_keys=[dataset_id],
+    )
 
     type: Mapped[InteractionType] = mapped_column(
         ChoiceType(InteractionType),
@@ -97,7 +103,12 @@ class Interaction(Base):
         nullable=True,
         doc="Schema the interaction is performed with, if any",
     )
-    schema: Mapped[Schema | None] = relationship(Schema, lazy="selectin", foreign_keys=[schema_id])
+    schema: Mapped[Schema | None] = relationship(
+        Schema,
+        primaryjoin="Interaction.schema_id == Schema.id",
+        lazy="noload",
+        foreign_keys=[schema_id],
+    )
 
     connect_as_user_id: Mapped[int | None] = mapped_column(
         BigInteger,
@@ -105,7 +116,12 @@ class Interaction(Base):
         nullable=True,
         doc="Username used for dataset access",
     )
-    as_user: Mapped[User | None] = relationship(User, lazy="selectin", foreign_keys=[connect_as_user_id])
+    as_user: Mapped[User | None] = relationship(
+        User,
+        primaryjoin="Interaction.connect_as_user_id == User.id",
+        lazy="noload",
+        foreign_keys=[connect_as_user_id],
+    )
 
     num_bytes: Mapped[int | None] = mapped_column(
         BigInteger,

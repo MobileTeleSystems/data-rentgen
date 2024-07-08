@@ -39,7 +39,12 @@ class Run(Base):
         nullable=False,
         doc="Job the run is associated with",
     )
-    job: Mapped[Job] = relationship(Job, lazy="selectin", foreign_keys=[job_id])
+    job: Mapped[Job] = relationship(
+        Job,
+        primaryjoin="Run.job_id == Job.id",
+        lazy="noload",
+        foreign_keys=[job_id],
+    )
 
     runner_id: Mapped[int] = mapped_column(
         BigInteger,
@@ -47,7 +52,12 @@ class Run(Base):
         nullable=False,
         doc="Runner the run is running on, e.g. Airflow, Yarn",
     )
-    runner: Mapped[Runner] = relationship(Runner, lazy="selectin", foreign_keys=[runner_id])
+    runner: Mapped[Runner] = relationship(
+        Runner,
+        primaryjoin="Run.runner_id == Runner.id",
+        lazy="noload",
+        foreign_keys=[runner_id],
+    )
 
     status: Mapped[Status] = mapped_column(
         ChoiceType(Status),
@@ -68,7 +78,12 @@ class Run(Base):
         nullable=True,
         doc="Parent of current run, e.g. Airflow task run which started Spark application",
     )
-    parent: Mapped[Run] = relationship("Run", lazy="selectin", foreign_keys=[parent_run_id])
+    parent: Mapped[Run] = relationship(
+        "Run",
+        primaryjoin="Run.parent_run_id == Run.id",
+        lazy="noload",
+        foreign_keys=[parent_run_id],
+    )
 
     attempt: Mapped[str | None] = mapped_column(
         String(64),
@@ -91,7 +106,12 @@ class Run(Base):
         nullable=True,
         doc="User who started the run",
     )
-    started_by_user: Mapped[User | None] = relationship("User", lazy="selectin", foreign_keys=[started_by_user_id])
+    started_by_user: Mapped[User | None] = relationship(
+        "User",
+        primaryjoin="Run.started_by_user_id == User.id",
+        lazy="noload",
+        foreign_keys=[started_by_user_id],
+    )
 
     ended_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),

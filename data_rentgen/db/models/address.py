@@ -22,7 +22,11 @@ class Address(Base):
         doc="Location the address is associated with",
     )
 
-    location: Mapped[list[Location]] = relationship(Location, lazy="selectin", back_populates="addresses")
+    location: Mapped[Location] = relationship(
+        Location,
+        lazy="noload",
+        back_populates="addresses",
+    )
 
     url: Mapped[str] = mapped_column(
         String(255),
