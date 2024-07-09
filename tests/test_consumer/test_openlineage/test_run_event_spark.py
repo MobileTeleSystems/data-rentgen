@@ -9,11 +9,11 @@ from data_rentgen.consumer.openlineage.dataset import (
     OpenLineageOutputDataset,
 )
 from data_rentgen.consumer.openlineage.dataset_facets import (
-    OpenLineageDatasetFacetsDict,
+    OpenLineageDatasetFacets,
     OpenLineageDatasetLifecycleStateChange,
     OpenLineageDatasourceDatasetFacet,
     OpenLineageLifecycleStateChangeDatasetFacet,
-    OpenLineageOutputDatasetFacetsDict,
+    OpenLineageOutputDatasetFacets,
     OpenLineageOutputStatisticsOutputDatasetFacet,
     OpenLineageSchemaDatasetFacet,
     OpenLineageSchemaField,
@@ -23,7 +23,7 @@ from data_rentgen.consumer.openlineage.dataset_facets import (
 )
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
-    OpenLineageJobFacetsDict,
+    OpenLineageJobFacets,
     OpenLineageJobIntegrationType,
     OpenLineageJobProcessingType,
     OpenLineageJobType,
@@ -40,7 +40,7 @@ from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageParentRunFacet,
     OpenLineageProcessingEngineName,
     OpenLineageProcessingEngineRunFacet,
-    OpenLineageRunFacetsDict,
+    OpenLineageRunFacets,
     OpenLineageSparkApplicationDetailsRunFacet,
     OpenLineageSparkDeployMode,
     OpenLineageSparkJobDetailsRunFacet,
@@ -51,12 +51,12 @@ RunEventAdapter = TypeAdapter(OpenLineageRunEvent)
 
 def test_run_event_spark_application_start():
     json = {
-        "eventTime": "2024-06-23T09:55:36.109Z",
+        "eventTime": "2024-07-05T09:04:48.7949Z",
         "producer": "https://github.com/OpenLineage/OpenLineage/tree/1.18.0/integration/spark",
         "schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/RunEvent",
         "eventType": "START",
         "run": {
-            "runId": "01904485-d04b-793d-ad79-1caae613574b",
+            "runId": "01908224-8410-79a2-8de6-a769ad6944c9",
             "facets": {
                 "spark_properties": {
                     "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.18.0/integration/spark",
@@ -106,21 +106,12 @@ def test_run_event_spark_application_start():
     }
 
     assert RunEventAdapter.validate_python(json) == OpenLineageRunEvent(
-        eventTime=datetime(
-            year=2024,
-            month=6,
-            day=23,
-            hour=9,
-            minute=55,
-            second=36,
-            microsecond=109000,
-            tzinfo=timezone.utc,
-        ),
+        eventTime=datetime(2024, 7, 5, 9, 4, 48, 794900, tzinfo=timezone.utc),
         eventType=OpenLineageRunEventType.START,
         job=OpenLineageJob(
             namespace="spark_integration",
             name="spark_session",
-            facets=OpenLineageJobFacetsDict(
+            facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
                     processingType=None,
                     integration=OpenLineageJobIntegrationType.SPARK,
@@ -129,8 +120,8 @@ def test_run_event_spark_application_start():
             ),
         ),
         run=OpenLineageRun(
-            runId=UUID("01904485-d04b-793d-ad79-1caae613574b"),
-            facets=OpenLineageRunFacetsDict(
+            runId=UUID("01908224-8410-79a2-8de6-a769ad6944c9"),
+            facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("3.4.3"),
                     name=OpenLineageProcessingEngineName.SPARK,
@@ -154,12 +145,12 @@ def test_run_event_spark_application_start():
 
 def test_run_event_spark_application_stop():
     json = {
-        "eventTime": "2024-06-23T09:56:24.373Z",
+        "eventTime": "2024-07-05T09:07:15.646Z",
         "producer": "https://github.com/OpenLineage/OpenLineage/tree/1.18.0/integration/spark",
         "schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/RunEvent",
         "eventType": "COMPLETE",
         "run": {
-            "runId": "01904485-d04b-793d-ad79-1caae613574b",
+            "runId": "01908224-8410-79a2-8de6-a769ad6944c9",
             "facets": {
                 "spark_properties": {
                     "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.18.0/integration/spark",
@@ -198,21 +189,12 @@ def test_run_event_spark_application_stop():
     }
 
     assert RunEventAdapter.validate_python(json) == OpenLineageRunEvent(
-        eventTime=datetime(
-            year=2024,
-            month=6,
-            day=23,
-            hour=9,
-            minute=56,
-            second=24,
-            microsecond=373000,
-            tzinfo=timezone.utc,
-        ),
+        eventTime=datetime(2024, 7, 5, 9, 7, 15, 646000, tzinfo=timezone.utc),
         eventType=OpenLineageRunEventType.COMPLETE,
         job=OpenLineageJob(
             namespace="spark_integration",
             name="spark_session",
-            facets=OpenLineageJobFacetsDict(
+            facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
                     processingType=None,
                     integration=OpenLineageJobIntegrationType.SPARK,
@@ -221,8 +203,8 @@ def test_run_event_spark_application_stop():
             ),
         ),
         run=OpenLineageRun(
-            runId=UUID("01904485-d04b-793d-ad79-1caae613574b"),
-            facets=OpenLineageRunFacetsDict(
+            runId=UUID("01908224-8410-79a2-8de6-a769ad6944c9"),
+            facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("3.4.3"),
                     name=OpenLineageProcessingEngineName.SPARK,
@@ -237,7 +219,7 @@ def test_run_event_spark_application_stop():
 
 def test_run_event_spark_job_running():
     json = {
-        "eventTime": "2024-07-04T15:19:18.498Z",
+        "eventTime": "2024-07-05T09:07:09.849Z",
         "producer": "https://github.com/OpenLineage/OpenLineage/tree/1.18.0/integration/spark",
         "schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/RunEvent",
         "eventType": "RUNNING",
@@ -247,7 +229,7 @@ def test_run_event_spark_job_running():
                 "parent": {
                     "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.18.0/integration/spark",
                     "_schemaURL": "https://openlineage.io/spec/facets/1-0-1/ParentRunFacet.json#/$defs/ParentRunFacet",
-                    "run": {"runId": "01904485-d04b-793d-ad79-1caae613574b"},
+                    "run": {"runId": "01908224-8410-79a2-8de6-a769ad6944c9"},
                     "job": {"namespace": "spark_integration", "name": "spark_session"},
                 },
                 "spark_properties": {
@@ -419,21 +401,12 @@ def test_run_event_spark_job_running():
     }
 
     assert RunEventAdapter.validate_python(json) == OpenLineageRunEvent(
-        eventTime=datetime(
-            year=2024,
-            month=7,
-            day=4,
-            hour=15,
-            minute=19,
-            second=18,
-            microsecond=498000,
-            tzinfo=timezone.utc,
-        ),
+        eventTime=datetime(2024, 7, 5, 9, 7, 9, 849000, tzinfo=timezone.utc),
         eventType=OpenLineageRunEventType.RUNNING,
         job=OpenLineageJob(
             namespace="spark_integration",
             name="spark_session.execute_save_into_data_source_command",
-            facets=OpenLineageJobFacetsDict(
+            facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
                     processingType=OpenLineageJobProcessingType.BATCH,
                     integration=OpenLineageJobIntegrationType.SPARK,
@@ -443,14 +416,14 @@ def test_run_event_spark_job_running():
         ),
         run=OpenLineageRun(
             runId=UUID("01907e54-1606-7d8e-90b4-54d26da1c0e2"),
-            facets=OpenLineageRunFacetsDict(
+            facets=OpenLineageRunFacets(
                 parent=OpenLineageParentRunFacet(
                     job=OpenLineageParentJob(
                         namespace="spark_integration",
                         name="spark_session",
                     ),
                     run=OpenLineageParentRun(
-                        runId=UUID("01904485-d04b-793d-ad79-1caae613574b"),
+                        runId=UUID("01908224-8410-79a2-8de6-a769ad6944c9"),
                     ),
                 ),
                 processing_engine=OpenLineageProcessingEngineRunFacet(
@@ -468,7 +441,7 @@ def test_run_event_spark_job_running():
             OpenLineageInputDataset(
                 namespace="hdfs://test-hadoop:9820",
                 name="/user/hive/warehouse/mydatabase.db/source_table",
-                facets=OpenLineageDatasetFacetsDict(
+                facets=OpenLineageDatasetFacets(
                     dataSource=OpenLineageDatasourceDatasetFacet(
                         name="hdfs://test-hadoop:9820",
                         uri="hdfs://test-hadoop:9820",
@@ -500,7 +473,7 @@ def test_run_event_spark_job_running():
             OpenLineageOutputDataset(
                 namespace="clickhouse://localhost:8123",
                 name="mydb.myschema.mytable",
-                facets=OpenLineageDatasetFacetsDict(
+                facets=OpenLineageDatasetFacets(
                     dataSource=OpenLineageDatasourceDatasetFacet(
                         name="clickhouse://localhost:8123",
                         uri="clickhouse://localhost:8123",
@@ -516,7 +489,7 @@ def test_run_event_spark_job_running():
                         lifecycleStateChange=OpenLineageDatasetLifecycleStateChange.OVERWRITE,
                     ),
                 ),
-                outputFacets=OpenLineageOutputDatasetFacetsDict(
+                outputFacets=OpenLineageOutputDatasetFacets(
                     outputStatistics=OpenLineageOutputStatisticsOutputDatasetFacet(
                         rowCount=10_000,
                         size=5_000_000,

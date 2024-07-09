@@ -4,9 +4,12 @@
 from data_rentgen.dto.job import JobDTO
 from data_rentgen.dto.location import LocationDTO
 from data_rentgen.dto.pagination import PaginationDTO
+from data_rentgen.dto.run import RunDTO, RunDTOStatus
 
 __all__ = [
     "LocationDTO",
     "JobDTO",
     "PaginationDTO",
+    "RunDTO",
+    "RunDTOStatus",
 ]

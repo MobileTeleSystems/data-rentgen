@@ -55,7 +55,7 @@ db-downgrade: ##@DB Downgrade head migration
 	${POETRY} run python -m data_rentgen.db.migrations downgrade head-1 $(ARGS)
 
 db-partitions: ##@DB Create partitions
-	${POETRY} run python -m data_rentgen.db.scripts.create_partitions $(ARGS)
+	${POETRY} run python -m data_rentgen.db.scripts.create_partitions --start 2024-07-01
 
 
 broker: broker-start ##@Broker Prepare broker (in docker)
@@ -64,10 +64,10 @@ broker-start: ##Broker Start broker
 	docker compose -f docker-compose.test.yml up -d --wait kafka $(DOCKER_COMPOSE_ARGS)
 
 
-test: db-start broker-start ##@Test Run tests
+test: db broker-start ##@Test Run tests
 	${POETRY} run pytest $(PYTEST_ARGS)
 
-test-ci: db ##@Test Run CI tests
+test-ci: db broker-start ##@Test Run CI tests
 	${POETRY} run coverage run -m pytest
 
 check-fixtures: ##@Test Check declared fixtures

@@ -66,7 +66,7 @@ DB structure
         * started_at: Datetime
         ----
         * job_id
-        * runner_id
+        runner_id
         status
         name
         parent_run_id
@@ -119,7 +119,7 @@ DB structure
     Dataset "alias_of_dataset_id" |o--o{ Dataset
 
     Run ||--o{ Job
-    Run ||--o{ Runner
+    Run |o--o{ Runner
     Run "started_by_user_id" ||--o{ User
     Run "parent_run_id" |o--o{ Run
 

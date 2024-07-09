@@ -7,6 +7,7 @@ from typing_extensions import Annotated
 
 from data_rentgen.db.repositories.job import JobRepository
 from data_rentgen.db.repositories.location import LocationRepository
+from data_rentgen.db.repositories.run import RunRepository
 from data_rentgen.dependencies import Stub
 
 
@@ -18,6 +19,7 @@ class UnitOfWork:
         self._session = session
         self.location = LocationRepository(session)
         self.job = JobRepository(session)
+        self.run = RunRepository(session)
 
     async def __aenter__(self):
         return self

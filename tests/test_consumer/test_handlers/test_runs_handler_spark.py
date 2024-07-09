@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -6,9 +7,12 @@ from faststream.kafka import KafkaBroker
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
+from uuid6 import UUID
 
 from data_rentgen.db.models.job import Job
 from data_rentgen.db.models.location import Location
+from data_rentgen.db.models.run import Run
+from data_rentgen.db.models.status import Status
 
 RESOURCES_PATH = Path(__file__).parent.parent.joinpath("resources").resolve()
 
@@ -51,3 +55,16 @@ async def test_runs_handler_spark(
     assert len(jobs) == 1
     assert jobs[0].name == "spark_session"
     assert jobs[0].location_id == job_location.id
+
+    run_query = select(Run).order_by(Run.id)
+    run_scalars = await async_session.scalars(run_query)
+    runs = run_scalars.all()
+    assert len(runs) == 1
+
+    application_run = runs[0]
+    assert application_run.id == UUID("01908224-8410-79a2-8de6-a769ad6944c9")
+    assert application_run.created_at == datetime(2024, 7, 5, 9, 5, 49, 584000, tzinfo=timezone.utc)
+    assert application_run.job_id == jobs[0].id
+    assert application_run.status == Status.SUCCEEDED
+    assert application_run.started_at == datetime(2024, 7, 5, 9, 4, 48, 794900, tzinfo=timezone.utc)
+    assert application_run.ended_at == datetime(2024, 7, 5, 9, 7, 15, 646000, tzinfo=timezone.utc)

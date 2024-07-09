@@ -1,8 +1,9 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import TypedDict
+from pydantic import Field
 
+from data_rentgen.consumer.openlineage.base import OpenLineageBase
 from data_rentgen.consumer.openlineage.dataset_facets.base import (
     OpenLineageDatasetFacet,
 )
@@ -51,38 +52,37 @@ __all__ = [
     "OpenLineageSymlinksDatasetFacet",
     "OpenLineageSymlinkType",
     "OpenLineageSymlinkIdentifier",
-    "OpenLineageDatasetFacetsDict",
-    "OpenLineageInputDatasetFacetsDict",
-    "OpenLineageOutputDatasetFacetsDict",
+    "OpenLineageDatasetFacets",
+    "OpenLineageInputDatasetFacets",
+    "OpenLineageOutputDatasetFacets",
 ]
 
 
-class OpenLineageDatasetFacetsDict(TypedDict, total=False):
+class OpenLineageDatasetFacets(OpenLineageBase):
     """All possible dataset facets.
     See [Dataset](https://github.com/OpenLineage/OpenLineage/blob/main/spec/OpenLineage.json).
     """
 
-    documentation: OpenLineageDocumentationDatasetFacet
-    dataQualityMetrics: OpenLineageDataQualityMetricsInputDatasetFacet
-    dataSource: OpenLineageDatasourceDatasetFacet
-    lifecycleStateChange: OpenLineageLifecycleStateChangeDatasetFacet
-    outputStatistics: OpenLineageOutputStatisticsOutputDatasetFacet
-    schema: OpenLineageSchemaDatasetFacet
-    storage: OpenLineageStorageDatasetFacet
-    symlinks: OpenLineageSymlinksDatasetFacet
+    documentation: OpenLineageDocumentationDatasetFacet | None = None
+    dataQualityMetrics: OpenLineageDataQualityMetricsInputDatasetFacet | None = None
+    dataSource: OpenLineageDatasourceDatasetFacet | None = None
+    lifecycleStateChange: OpenLineageLifecycleStateChangeDatasetFacet | None = None
+    datasetSchema: OpenLineageSchemaDatasetFacet | None = Field(default=None, alias="schema")
+    storage: OpenLineageStorageDatasetFacet | None = None
+    symlinks: OpenLineageSymlinksDatasetFacet | None = None
 
 
-class OpenLineageInputDatasetFacetsDict(TypedDict, total=False):
+class OpenLineageInputDatasetFacets(OpenLineageBase):
     """All possible input dataset facets.
     See [InputDataset](https://github.com/OpenLineage/OpenLineage/blob/main/spec/OpenLineage.json).
     """
 
-    dataQualityMetrics: OpenLineageDataQualityMetricsInputDatasetFacet
+    dataQualityMetrics: OpenLineageDataQualityMetricsInputDatasetFacet | None = None
 
 
-class OpenLineageOutputDatasetFacetsDict(TypedDict, total=False):
+class OpenLineageOutputDatasetFacets(OpenLineageBase):
     """All possible output dataset facets.
     See [InputDataset](https://github.com/OpenLineage/OpenLineage/blob/main/spec/OpenLineage.json).
     """
 
-    outputStatistics: OpenLineageOutputStatisticsOutputDatasetFacet
+    outputStatistics: OpenLineageOutputStatisticsOutputDatasetFacet | None = None

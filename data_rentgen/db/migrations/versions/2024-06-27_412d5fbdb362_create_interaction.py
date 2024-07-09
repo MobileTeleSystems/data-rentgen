@@ -20,8 +20,8 @@ depends_on = None
 def upgrade() -> None:
     op.create_table(
         "interaction",
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("started_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("operation_id", sa.BigInteger(), nullable=False),
         sa.Column("dataset_id", sa.BigInteger(), nullable=False),
         sa.Column("type", sa.String(length=255), nullable=False),
@@ -31,8 +31,8 @@ def upgrade() -> None:
         sa.Column("num_bytes", sa.BigInteger(), nullable=True),
         sa.Column("num_rows", sa.BigInteger(), nullable=True),
         sa.Column("num_files", sa.BigInteger(), nullable=True),
-        sa.PrimaryKeyConstraint("started_at", "id", name=op.f("pk__interaction")),
-        postgresql_partition_by="RANGE (started_at)",
+        sa.PrimaryKeyConstraint("created_at", "id", name=op.f("pk__interaction")),
+        postgresql_partition_by="RANGE (created_at)",
     )
     op.create_index(op.f("ix__interaction__connect_as_user_id"), "interaction", ["connect_as_user_id"], unique=False)
     op.create_index(op.f("ix__interaction__dataset_id"), "interaction", ["dataset_id"], unique=False)

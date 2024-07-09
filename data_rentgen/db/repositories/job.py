@@ -2,18 +2,21 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 
-from data_rentgen.db.models import Job, Location
+from data_rentgen.db.models import Job
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.dto import JobDTO
 
 
 class JobRepository(Repository[Job]):
-    async def get_or_create(self, job: JobDTO, location: Location) -> Job:
-        statement = select(Job).where(Job.location_id == location.id, Job.name == job.name)
+    async def get_or_create(self, job: JobDTO, location_id: int) -> Job:
+        statement = select(Job).where(Job.location_id == location_id, Job.name == job.name)
         result = await self._session.scalar(statement)
         if not result:
-            result = Job(location_id=location.id, name=job.name)
-            self._session.add(result)
-            await self._session.flush()
-        return result
+            result = await self._session.scalar(
+                insert(Job).on_conflict_do_nothing().returning(Job),
+                {"location_id": location_id, "name": job.name},
+                execution_options={"populate_existing": True},
+            )
+        return result  # type: ignore[return-value]
