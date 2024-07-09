@@ -22,8 +22,8 @@ from data_rentgen.db.utils.uuid import generate_new_uuid
 
 
 def _default_uuid(context: DefaultExecutionContext):
-    started_at: datetime = context.get_current_parameters()["started_at"]
-    return generate_new_uuid(started_at)
+    created_at: datetime = context.get_current_parameters()["created_at"]
+    return generate_new_uuid(created_at)
 
 
 class InteractionType(str, Enum):
@@ -47,16 +47,16 @@ class InteractionType(str, Enum):
 class Interaction(Base):
     __tablename__ = "interaction"
     __table_args__ = (
-        PrimaryKeyConstraint("started_at", "id"),
-        {"postgresql_partition_by": "RANGE (started_at)"},
+        PrimaryKeyConstraint("created_at", "id"),
+        {"postgresql_partition_by": "RANGE (created_at)"},
     )
 
-    id: Mapped[UUID] = mapped_column(SQL_UUID, default=_default_uuid)
-    started_at: Mapped[datetime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        doc="Start time of the interaction. Used only for partitioning",
+        doc="Timestamp component of UUID, used for table partitioning",
     )
+    id: Mapped[UUID] = mapped_column(SQL_UUID, default=_default_uuid)
 
     operation_id: Mapped[UUID] = mapped_column(
         BigInteger,

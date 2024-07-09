@@ -5,9 +5,9 @@ from pydantic import Field
 
 from data_rentgen.consumer.openlineage.base import OpenLineageBase
 from data_rentgen.consumer.openlineage.dataset_facets import (
-    OpenLineageDatasetFacetsDict,
-    OpenLineageInputDatasetFacetsDict,
-    OpenLineageOutputDatasetFacetsDict,
+    OpenLineageDatasetFacets,
+    OpenLineageInputDatasetFacets,
+    OpenLineageOutputDatasetFacets,
 )
 
 
@@ -18,7 +18,7 @@ class OpenLineageDataset(OpenLineageBase):
 
     namespace: str = Field(json_schema_extra={"format": "uri"})
     name: str
-    facets: OpenLineageDatasetFacetsDict = Field(default_factory=OpenLineageDatasetFacetsDict)  # type: ignore[arg-type]
+    facets: OpenLineageDatasetFacets = Field(default_factory=OpenLineageDatasetFacets)
 
 
 class OpenLineageInputDataset(OpenLineageDataset):
@@ -26,7 +26,7 @@ class OpenLineageInputDataset(OpenLineageDataset):
     See [InputDataset](https://github.com/OpenLineage/OpenLineage/blob/main/spec/OpenLineage.json).
     """
 
-    inputFacets: OpenLineageInputDatasetFacetsDict = Field(default_factory=OpenLineageInputDatasetFacetsDict)  # type: ignore[arg-type]
+    inputFacets: OpenLineageInputDatasetFacets = Field(default_factory=OpenLineageInputDatasetFacets)
 
 
 class OpenLineageOutputDataset(OpenLineageDataset):
@@ -34,4 +34,4 @@ class OpenLineageOutputDataset(OpenLineageDataset):
     See [OutputDataset](https://github.com/OpenLineage/OpenLineage/blob/main/spec/OpenLineage.json).
     """
 
-    outputFacets: OpenLineageOutputDatasetFacetsDict = Field(default_factory=OpenLineageOutputDatasetFacetsDict)  # type: ignore[arg-type]
+    outputFacets: OpenLineageOutputDatasetFacets = Field(default_factory=OpenLineageOutputDatasetFacets)

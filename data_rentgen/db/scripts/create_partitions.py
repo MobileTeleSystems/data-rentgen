@@ -74,6 +74,7 @@ def get_parser() -> ArgumentParser:
     parser.add_argument(
         "--end",
         type=isoparse,
+        default=datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0) + relativedelta(months=1),
         nargs="?",
         help="End date for partitions, default is the first day of next month.",
     )
@@ -140,7 +141,7 @@ async def main(args: list[str]) -> None:
     if start > end:
         raise ValueError("Start date must be less than end date.")
 
-    logger.info("Creating partitions from %s to %s with granularity %s", start, end, granularity.value)
+    logger.info("Creating partitions from %s to %s with %s granularity", start, end, granularity.value)
 
     db_settings = DatabaseSettings()
     session_factory = create_session_factory(db_settings)

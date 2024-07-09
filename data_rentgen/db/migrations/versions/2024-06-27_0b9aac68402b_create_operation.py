@@ -21,16 +21,17 @@ depends_on = None
 def upgrade() -> None:
     op.create_table(
         "operation",
+        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("started_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("run_id", sa.BigInteger(), nullable=False),
         sa.Column("status", sa.String(length=255), nullable=False),
         sa.Column("name", sa.String(length=255), nullable=True),
         sa.Column("type", sa.String(length=64), nullable=True),
         sa.Column("description", sa.String(), nullable=True),
+        sa.Column("started_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("ended_at", sa.DateTime(timezone=True), nullable=True),
-        sa.PrimaryKeyConstraint("started_at", "id", name=op.f("pk__operation")),
-        postgresql_partition_by="RANGE (started_at)",
+        sa.PrimaryKeyConstraint("created_at", "id", name=op.f("pk__operation")),
+        postgresql_partition_by="RANGE (created_at)",
     )
     op.create_index(op.f("ix__operation__run_id"), "operation", ["run_id"], unique=False)
 

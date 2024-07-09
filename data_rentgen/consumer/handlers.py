@@ -5,13 +5,16 @@ from faststream import Depends
 from faststream.kafka import KafkaRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.consumer.extractors import extract_job, extract_job_location
-from data_rentgen.consumer.openlineage.job import OpenLineageJob
-from data_rentgen.consumer.openlineage.job_facets.job_type import OpenLineageJobType
+from data_rentgen.consumer.extractors import (
+    extract_job,
+    extract_parent_run,
+    extract_run,
+)
+from data_rentgen.consumer.openlineage.job_facets import OpenLineageJobType
 from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
-from data_rentgen.consumer.openlineage.run_facets.parent_run import OpenLineageParentJob
-from data_rentgen.db.models.job import Job
+from data_rentgen.db.models import Job, Run
 from data_rentgen.dependencies import Stub
+from data_rentgen.dto import JobDTO, RunDTO
 from data_rentgen.services.uow import UnitOfWork
 
 router = KafkaRouter()
@@ -23,19 +26,36 @@ def get_unit_of_work(session: AsyncSession = Depends(Stub(AsyncSession))) -> Uni
 
 @router.subscriber("input.runs")
 async def runs_handler(event: OpenLineageRunEvent, unit_of_work: UnitOfWork = Depends(get_unit_of_work)):
-    job_type_facet = event.job.facets.get("jobType", None)
-    if job_type_facet and job_type_facet.jobType in {OpenLineageJobType.DAG, OpenLineageJobType.JOB}:
-        # completely ignore Airflow DAGs.
+    if event.job.facets.jobType and event.job.facets.jobType.jobType == OpenLineageJobType.JOB:
         # temporary ignore Spark jobs
         return
 
-    await lookup_job(event.job, unit_of_work)
-
-
-async def lookup_job(job: OpenLineageJob | OpenLineageParentJob, unit_of_work: UnitOfWork) -> Job:
-    job_raw = extract_job(job)
-    job_location_raw = extract_job_location(job)
+    async with unit_of_work:
+        parent_run = await get_or_create_parent_run(event, unit_of_work)
 
     async with unit_of_work:
-        job_location = await unit_of_work.location.get_or_create(job_location_raw)
-        return await unit_of_work.job.get_or_create(job_raw, job_location)
+        raw_job = extract_job(event.job)
+        job = await get_or_create_job(raw_job, unit_of_work)
+
+    async with unit_of_work:
+        raw_run = extract_run(event)
+        await create_or_update_run(raw_run, job, parent_run, unit_of_work)
+
+
+async def get_or_create_parent_run(event: OpenLineageRunEvent, unit_of_work: UnitOfWork) -> Run | None:
+    if not event.run.facets.parent:
+        return None
+
+    raw_parent_run = extract_parent_run(event.run.facets.parent)
+    parent_job = await get_or_create_job(raw_parent_run.job, unit_of_work)
+    return await unit_of_work.run.get_or_create_minimal(raw_parent_run, parent_job.id)
+
+
+async def get_or_create_job(job: JobDTO, unit_of_work: UnitOfWork) -> Job:
+    matching_location = await unit_of_work.location.get_or_create(job.location)
+    return await unit_of_work.job.get_or_create(job, matching_location.id)
+
+
+async def create_or_update_run(run: RunDTO, job: Job, parent_run: Run | None, unit_of_work: UnitOfWork) -> Run:
+    parent_run_id = parent_run.id if parent_run else None
+    return await unit_of_work.run.create_or_update(run, job.id, parent_run_id)

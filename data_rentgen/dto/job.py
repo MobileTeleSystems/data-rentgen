@@ -3,7 +3,10 @@
 
 from dataclasses import dataclass
 
+from data_rentgen.dto.location import LocationDTO
+
 
 @dataclass
 class JobDTO:
     name: str
+    location: LocationDTO

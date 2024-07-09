@@ -8,4 +8,4 @@ from dataclasses import dataclass
 class LocationDTO:
     type: str
     name: str
-    urls: list[str]
+    addresses: list[str]

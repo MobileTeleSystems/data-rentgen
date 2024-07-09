@@ -23,12 +23,12 @@ class Operation(Base):
         {"postgresql_partition_by": "RANGE (started_at)"},
     )
 
-    id: Mapped[UUID] = mapped_column(SQL_UUID)
-    started_at: Mapped[datetime] = mapped_column(
+    created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
-        doc="Start time of the operation",
+        doc="Timestamp component of UUID, used for table partitioning",
     )
+    id: Mapped[UUID] = mapped_column(SQL_UUID)
 
     run_id: Mapped[UUID] = mapped_column(
         BigInteger,
@@ -68,6 +68,11 @@ class Operation(Base):
         doc="Operation description, e.g. documentation",
     )
 
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        doc="Start time of the operation",
+    )
     ended_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,

@@ -1,8 +1,7 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import TypedDict
-
+from data_rentgen.consumer.openlineage.base import OpenLineageBase
 from data_rentgen.consumer.openlineage.job_facets.base import OpenLineageJobFacet
 from data_rentgen.consumer.openlineage.job_facets.documentation import (
     OpenLineageDocumentationJobFacet,
@@ -18,17 +17,17 @@ __all__ = [
     "OpenLineageJobFacet",
     "OpenLineageDocumentationJobFacet",
     "OpenLineageJobTypeJobFacet",
-    "OpenLineageJobFacetsDict",
+    "OpenLineageJobFacets",
     "OpenLineageJobProcessingType",
     "OpenLineageJobIntegrationType",
     "OpenLineageJobType",
 ]
 
 
-class OpenLineageJobFacetsDict(TypedDict, total=False):
+class OpenLineageJobFacets(OpenLineageBase):
     """All possible job facets.
     See [Job](https://github.com/OpenLineage/OpenLineage/blob/main/spec/OpenLineage.json).
     """
 
-    documentation: OpenLineageDocumentationJobFacet
-    jobType: OpenLineageJobTypeJobFacet
+    documentation: OpenLineageDocumentationJobFacet | None = None
+    jobType: OpenLineageJobTypeJobFacet | None = None

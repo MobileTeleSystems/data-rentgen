@@ -5,12 +5,11 @@ from urllib.parse import urlparse
 
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.run_facets import OpenLineageParentJob
-from data_rentgen.dto import LocationDTO
-from data_rentgen.dto.job import JobDTO
+from data_rentgen.dto import JobDTO, LocationDTO
 
 
 def extract_job(job: OpenLineageJob | OpenLineageParentJob) -> JobDTO:
-    return JobDTO(name=job.name)
+    return JobDTO(name=job.name, location=extract_job_location(job))
 
 
 def extract_job_location(job: OpenLineageJob | OpenLineageParentJob) -> LocationDTO:
@@ -20,5 +19,5 @@ def extract_job_location(job: OpenLineageJob | OpenLineageParentJob) -> Location
     return LocationDTO(
         type=scheme,
         name=netloc,
-        urls=[f"{scheme}://{netloc}"],
+        addresses=[f"{scheme}://{netloc}"],
     )

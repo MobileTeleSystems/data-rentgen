@@ -4,7 +4,7 @@
 from pydantic import Field
 
 from data_rentgen.consumer.openlineage.base import OpenLineageBase
-from data_rentgen.consumer.openlineage.job_facets import OpenLineageJobFacetsDict
+from data_rentgen.consumer.openlineage.job_facets import OpenLineageJobFacets
 
 
 class OpenLineageJob(OpenLineageBase):
@@ -14,4 +14,4 @@ class OpenLineageJob(OpenLineageBase):
 
     namespace: str
     name: str
-    facets: OpenLineageJobFacetsDict = Field(default_factory=OpenLineageJobFacetsDict)  # type: ignore[arg-type]
+    facets: OpenLineageJobFacets = Field(default_factory=OpenLineageJobFacets)
