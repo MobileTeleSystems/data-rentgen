@@ -65,6 +65,7 @@ async def job(
         await async_session.execute(query)
         await async_session.commit()
 
+
 @pytest_asyncio.fixture(params=[(5, {})])
 async def jobs(
     request: pytest.FixtureRequest,

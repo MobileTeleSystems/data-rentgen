@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2024 MTS PJSC
+# SPDX-License-Identifier: Apache-2.0
 from fastapi import Query
 from pydantic import BaseModel, Field
 
@@ -17,4 +19,5 @@ class JobResponseV1(BaseModel):
 
 class JobPaginateQueryV1(PaginateQueryV1):
     """Query params for Jobs paginate request."""
+
     job_id: list[int] = Field(Query([]), description="Job id")

@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2024 MTS PJSC
+# SPDX-License-Identifier: Apache-2.0
 from typing import Generic, List, Optional, TypeVar
 
 from pydantic import BaseModel, Field
