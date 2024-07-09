@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import data_rentgen
-from data_rentgen.db.factory import create_session_factory
+from data_rentgen.db.factory import session_generator
 from data_rentgen.logging.setup_logging import setup_logging
 from data_rentgen.server.api.handlers import apply_exception_handlers
 from data_rentgen.server.api.router import api_router
@@ -34,7 +34,7 @@ def application_factory(settings: ServerApplicationSettings) -> FastAPI:
     application.dependency_overrides.update(
         {
             ServerApplicationSettings: lambda: settings,
-            AsyncSession: create_session_factory(settings.database),  # type: ignore[dict-item]
+            AsyncSession: session_generator(settings.database),  # type: ignore[dict-item]
         },
     )
     return application
