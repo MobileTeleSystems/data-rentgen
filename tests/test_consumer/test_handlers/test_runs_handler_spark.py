@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from uuid6 import UUID
 
-from data_rentgen.db.models import Job, Location, Run, Status
+from data_rentgen.db.models import Job, Location, Operation, OperationType, Run, Status
 
 RESOURCES_PATH = Path(__file__).parent.parent.joinpath("resources").resolve()
 
@@ -68,3 +68,20 @@ async def test_runs_handler_spark(
     assert application_run.external_id == "local-1719136537510"
     assert application_run.running_log_url == "http://127.0.0.1:4040"
     assert application_run.persistent_log_url is None
+
+    operation_query = select(Operation).order_by(Operation.id)
+    operation_scalars = await async_session.scalars(operation_query)
+    operations = operation_scalars.all()
+    assert len(operations) == 1
+
+    job_operation = operations[0]
+    assert job_operation.id == UUID("01908225-1fd7-746b-910c-70d24f2898b1")
+    assert job_operation.created_at == datetime(2024, 7, 5, 9, 6, 29, 463000, tzinfo=timezone.utc)
+    assert job_operation.run_id == application_run.id
+    assert job_operation.name == "spark_session.execute_save_into_data_source_command"
+    assert job_operation.type == OperationType.BATCH
+    assert job_operation.status == Status.SUCCEEDED
+    assert job_operation.started_at == datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
+    assert job_operation.ended_at == datetime(2024, 7, 5, 9, 7, 15, 642000, tzinfo=timezone.utc)
+    assert job_operation.position == 3
+    assert job_operation.description == "Hive -> Clickhouse"

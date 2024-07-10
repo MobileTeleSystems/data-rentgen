@@ -4,9 +4,10 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 
 from sqlalchemy import UUID as SQL_UUID
-from sqlalchemy import BigInteger, DateTime, PrimaryKeyConstraint, String
+from sqlalchemy import DateTime, Integer, PrimaryKeyConstraint, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
 from uuid6 import UUID
@@ -16,11 +17,19 @@ from data_rentgen.db.models.run import Run
 from data_rentgen.db.models.status import Status
 
 
+class OperationType(str, Enum):
+    BATCH = "BATCH"
+    STREAMING = "STREAMING"
+
+    def __str__(self) -> str:
+        return str(self.value)
+
+
 class Operation(Base):
     __tablename__ = "operation"
     __table_args__ = (
-        PrimaryKeyConstraint("started_at", "id"),
-        {"postgresql_partition_by": "RANGE (started_at)"},
+        PrimaryKeyConstraint("created_at", "id"),
+        {"postgresql_partition_by": "RANGE (created_at)"},
     )
 
     created_at: Mapped[datetime] = mapped_column(
@@ -31,7 +40,7 @@ class Operation(Base):
     id: Mapped[UUID] = mapped_column(SQL_UUID)
 
     run_id: Mapped[UUID] = mapped_column(
-        BigInteger,
+        SQL_UUID,
         index=True,
         nullable=False,
         doc="Run operation is a part of",
@@ -50,25 +59,31 @@ class Operation(Base):
         doc="Operation status info",
     )
 
-    name: Mapped[str | None] = mapped_column(
+    name: Mapped[str] = mapped_column(
         String(255),
-        nullable=True,
-        doc="Name of the operation, e.g. Spark jobDescription",
+        nullable=False,
+        doc="Name of the operation, e.g. job name",
     )
 
-    type: Mapped[str | None] = mapped_column(
-        String(64),
-        nullable=True,
+    type: Mapped[OperationType] = mapped_column(
+        ChoiceType(OperationType),
+        nullable=False,
         doc="Type of the operation, e.g. BATCH, STREAMING",
+    )
+
+    position: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+        doc="Sequentinal position of operation within the run, e.g. Spark jobId",
     )
 
     description: Mapped[str | None] = mapped_column(
         String,
         nullable=True,
-        doc="Operation description, e.g. documentation",
+        doc="Description of the operation, e.g. Spark jobDescription or jobCallSite",
     )
 
-    started_at: Mapped[datetime] = mapped_column(
+    started_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
         doc="Start time of the operation",
