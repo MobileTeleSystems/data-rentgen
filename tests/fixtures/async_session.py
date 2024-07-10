@@ -23,7 +23,7 @@ async def async_session_maker(async_engine: AsyncEngine):
     )
 
 
-@pytest_asyncio.fixture
+@pytest_asyncio.fixture()
 async def async_session(async_session_maker: async_sessionmaker[AsyncSession]):
     session: AsyncSession = async_session_maker()
 

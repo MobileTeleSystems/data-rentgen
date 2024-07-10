@@ -24,17 +24,11 @@ def job_factory(**kwargs):
 @pytest_asyncio.fixture(params=[{}])
 async def new_job(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[Job, None]:
     params = request.param
     item = job_factory(**params)
 
     yield item
-
-    query = delete(Job).where(Job.id == item.id)
-    async with async_session_maker() as session:
-        await session.execute(query)
-        await session.commit()
 
 
 @pytest_asyncio.fixture(params=[{}])
@@ -54,16 +48,10 @@ async def job(
 
         # remove current object from async_session. this is required to compare object against new state fetched
         # from database, and also to remove it from cache
-        job_id = item.id
         await async_session.refresh(item)
         async_session.expunge(item)
 
     yield item
-
-    query = delete(Job).where(Job.id == job_id)
-    async with async_session_maker() as async_session:
-        await async_session.execute(query)
-        await async_session.commit()
 
 
 @pytest_asyncio.fixture(params=[(5, {})])
@@ -84,15 +72,8 @@ async def jobs(
 
         # remove current object from async_session. this is required to compare object against new state fetched
         # from database, and also to remove it from cache
-        job_ids = []
         for item in items:
-            job_ids.append(item.id)
             await async_session.refresh(item)
             async_session.expunge(item)
 
     yield items
-
-    query = delete(Job).where(Job.id.in_(job_ids))
-    async with async_session_maker() as async_session:
-        await async_session.execute(query)
-        await async_session.commit()

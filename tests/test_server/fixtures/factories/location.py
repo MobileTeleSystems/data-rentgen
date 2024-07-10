@@ -45,6 +45,7 @@ async def location(
     yield item
 
     query = delete(Location).where(Location.id == location_id)
+    # Add teardown cause fixture async_session doesn't used
     async with async_session_maker() as async_session:
         await async_session.execute(query)
         await async_session.commit()
