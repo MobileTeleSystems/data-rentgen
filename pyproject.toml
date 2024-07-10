@@ -37,7 +37,7 @@ include = [
 
 [tool.poetry.urls]  # Optional
 "Homepage" = "https://github.com/MobileTeleSystems/data-rentgen"
-"Documentation" = "https://data-_rentgen.readthedocs.io/"
+"Documentation" = "https://data-rentgen.readthedocs.io/"
 "Source" = "https://github.com/MobileTeleSystems/data-rentgen"
 "CI/CD" = "https://github.com/MobileTeleSystems/data-rentgen/actions"
 "Tracker" = "https://github.com/MobileTeleSystems/data-rentgen/issues"

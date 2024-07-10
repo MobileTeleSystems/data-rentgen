@@ -10,14 +10,14 @@ Data.Rentgen
     :target: https://www.repostatus.org/#concept
 .. |PyPI| image:: https://img.shields.io/pypi/v/data-rentgen
     :target: https://pypi.org/project/data-rentgen/
-.. |PyPI License| image:: https://img.shields.io/pypi/l/data-_rentgen.svg
+.. |PyPI License| image:: https://img.shields.io/pypi/l/data-rentgen.svg
     :target: https://github.com/MobileTeleSystems/data-rentgen/blob/develop/LICENSE.txt
-.. |PyPI Python Version| image:: https://img.shields.io/pypi/pyversions/data-_rentgen.svg
+.. |PyPI Python Version| image:: https://img.shields.io/pypi/pyversions/data-rentgen.svg
     :target: https://badge.fury.io/py/data-rentgen
 .. |Docker image| image:: https://img.shields.io/docker/v/mtsrus/data-rentgen-server?sort=semver&label=docker
     :target: https://hub.docker.com/r/mtsrus/data-rentgen-server
 .. |Documentation| image:: https://readthedocs.org/projects/data-rentgen/badge/?version=stable
-    :target: https://data-_rentgen.readthedocs.io/
+    :target: https://data-rentgen.readthedocs.io/
 .. |Build Status| image:: https://github.com/MobileTeleSystems/data-rentgen/workflows/Tests/badge.svg
     :target: https://github.com/MobileTeleSystems/data-rentgen/actions
 .. |Coverage| image:: https://codecov.io/gh/MobileTeleSystems/data-rentgen/graph/badge.svg?token=s0JztGZbq3
@@ -52,4 +52,4 @@ Non-goals
 Documentation
 -------------
 
-See https://data-_rentgen.readthedocs.io/
+See https://data-rentgen.readthedocs.io/
