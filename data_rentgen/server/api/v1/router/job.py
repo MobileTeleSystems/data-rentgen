@@ -5,6 +5,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from data_rentgen.server.errors import get_error_responses
+from data_rentgen.server.errors.schemas import InvalidRequestSchema
 from data_rentgen.server.schemas.v1 import (
     JobPaginateQueryV1,
     JobResponseV1,
@@ -12,7 +13,7 @@ from data_rentgen.server.schemas.v1 import (
 )
 from data_rentgen.services import UnitOfWork
 
-router = APIRouter(prefix="/job", tags=["Jobs"], responses=get_error_responses())
+router = APIRouter(prefix="/job", tags=["Jobs"], responses=get_error_responses(include={InvalidRequestSchema}))
 
 
 @router.get("", summary="Paginated list of Jobs")

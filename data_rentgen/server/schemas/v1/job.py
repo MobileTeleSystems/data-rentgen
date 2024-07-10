@@ -20,4 +20,4 @@ class JobResponseV1(BaseModel):
 class JobPaginateQueryV1(PaginateQueryV1):
     """Query params for Jobs paginate request."""
 
-    job_id: list[int] = Field(Query([]), description="Job id")
+    job_id: list[int] = Field(Query(min_length=1), description="Job id")

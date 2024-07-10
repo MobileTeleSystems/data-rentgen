@@ -13,20 +13,7 @@ async def test_get_job_empty(
 ):
     response = await test_client.get("v1/job")
 
-    assert response.status_code == HTTPStatus.OK
-    assert response.json() == {
-        "meta": {
-            "page": 1,
-            "page_size": 20,
-            "total_count": 0,
-            "pages_count": 1,
-            "has_next": False,
-            "has_previous": False,
-            "next_page": None,
-            "previous_page": None,
-        },
-        "items": [],
-    }
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
 async def test_get_job_missing(
