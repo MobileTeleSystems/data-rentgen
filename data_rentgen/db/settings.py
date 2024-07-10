@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class DatabaseSettings(BaseSettings):
-    """DataRentgen backend database settings.
+    """Data.Rentgen backend database settings.
 
     .. note::
 

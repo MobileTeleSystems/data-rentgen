@@ -23,7 +23,7 @@ sys.path.insert(0, os.fspath(PROJECT_ROOT_DIR))
 
 # -- Project information -----------------------------------------------------
 
-project = "DataRentgen"
+project = "Data.Rentgen"
 copyright = "2024 MTS PJSC"
 author = "DataOps.ETL"
 
@@ -61,7 +61,7 @@ extensions = [
 
 swagger = [
     {
-        "name": "DataRentgen REST API",
+        "name": "Data.Rentgen REST API",
         "page": "openapi",
         "id": "data-rentgen-api",
         "options": {

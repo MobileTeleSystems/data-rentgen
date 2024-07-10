@@ -7,7 +7,7 @@ from data_rentgen.consumer.settings.security import KafkaSecuritySettings
 
 
 class KafkaSettings(BaseModel):
-    """DataRentgen consumer Kafka-specific settings.
+    """Data.Rentgen consumer Kafka-specific settings.
 
     Examples
     --------

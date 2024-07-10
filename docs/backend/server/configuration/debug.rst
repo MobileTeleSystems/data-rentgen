@@ -107,4 +107,4 @@ If client got ``X-Application-Version`` header from REST API, it is compared wit
 If versions do not match, a warning is shown:
 
 >>> client.ping()
-UserWarning: DataRentgen client version '0.0.9' does not match backend version '1.0.0'. Please upgrade.
+UserWarning: Data.Rentgen client version '0.0.9' does not match backend version '1.0.0'. Please upgrade.

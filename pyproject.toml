@@ -6,7 +6,7 @@ build-backend = "poetry.core.masonry.api"
 name = "data-rentgen"
 version = "0.0.1"
 license = "Apache-2.0"
-description = "DataRentgen REST API + Kafka consumer"
+description = "Data.Rentgen REST API + Kafka consumer"
 authors = ["DataOps.ETL <onetools@mts.ru>"]
 readme = "README.rst"
 classifiers = [
@@ -430,7 +430,7 @@ per-file-ignores = [
 ]
 
 [tool.towncrier]
-name = "DataRentgen"
+name = "Data.Rentgen"
 package = "data_rentgen"
 filename = "docs/changelog/NEXT_RELEASE.rst"
 directory = "docs/changelog/next_release/"

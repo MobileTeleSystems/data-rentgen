@@ -76,7 +76,7 @@ class LogoSettings(BaseModel):
 
         DATA_RENTGEN__SERVER__OPENAPI__LOGO__URL=/static/logo.svg
         DATA_RENTGEN__SERVER__OPENAPI__LOGO__BACKGROUND_COLOR=ffffff
-        DATA_RENTGEN__SERVER__OPENAPI__LOGO__ALT_TEXT=DataRentgen logo
+        DATA_RENTGEN__SERVER__OPENAPI__LOGO__ALT_TEXT=Data.Rentgen logo
         DATA_RENTGEN__SERVER__OPENAPI__LOGO__HREF=http://mycompany.domain.com
     """
 
@@ -89,7 +89,7 @@ class LogoSettings(BaseModel):
         description="Background color in HEX RGB format, without ``#`` prefix",
     )
     alt_text: str | None = Field(
-        default="DataRentgen logo",
+        default="Data.Rentgen logo",
         description="Alternative text for ``<img>`` tag",
     )
     href: AnyHttpUrl | None = Field(  # type: ignore[assignment]

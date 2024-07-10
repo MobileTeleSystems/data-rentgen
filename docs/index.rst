@@ -3,7 +3,7 @@
 
 .. toctree::
     :maxdepth: 2
-    :caption: DataRentgen
+    :caption: Data.Rentgen
     :hidden:
 
     self

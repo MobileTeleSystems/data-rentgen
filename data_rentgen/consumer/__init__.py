@@ -32,8 +32,8 @@ def broker_factory(settings: ConsumerApplicationSettings) -> KafkaBroker:
 def application_factory(settings: ConsumerApplicationSettings) -> FastStream:
     return FastStream(
         broker=broker_factory(settings),
-        title="DataRentgen",
-        description="DataRentgen is a nextgen DataLineage service",
+        title="Data.Rentgen",
+        description="Data.Rentgen is a nextgen DataLineage service",
         version=data_rentgen.__version__,
         logger=logger,
     )

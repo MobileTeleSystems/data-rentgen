@@ -1,7 +1,7 @@
 .. _readme:
 
-DataRentgen
-===========
+Data.Rentgen
+============
 
 |Repo Status| |PyPI| |PyPI License| |PyPI Python Version| |Docker image| |Documentation|
 |Build Status| |Coverage| |pre-commit.ci|
@@ -25,10 +25,10 @@ DataRentgen
 .. |pre-commit.ci| image:: https://results.pre-commit.ci/badge/github/MobileTeleSystems/data-rentgen/develop.svg
     :target: https://results.pre-commit.ci/latest/github/MobileTeleSystems/data-rentgen/develop
 
-What is DataRentgen?
+What is Data.Rentgen?
 --------------------
 
-DataRentgen is a DataLineage service compatible with `OpenLineage <https://openlineage.io/>`_ specification.
+Data.Rentgen is a DataLineage service compatible with `OpenLineage <https://openlineage.io/>`_ specification.
 
 **Note**: service is under active development, and is not ready to use.
 

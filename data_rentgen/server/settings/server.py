@@ -14,7 +14,7 @@ from data_rentgen.server.settings.static_files import StaticFilesSettings
 
 
 class ServerSettings(BaseModel):
-    """DataRentgen REST API server-specific settings.
+    """Data.Rentgen REST API server-specific settings.
 
     Examples
     --------

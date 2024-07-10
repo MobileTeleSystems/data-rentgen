@@ -10,7 +10,7 @@ from data_rentgen.logging.settings import LoggingSettings
 
 
 class ConsumerApplicationSettings(BaseSettings):
-    """DataRentgen Kafka consumer settings.
+    """Data.Rentgen Kafka consumer settings.
 
     Application can be configured in 2 ways:
 

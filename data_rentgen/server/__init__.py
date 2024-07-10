@@ -15,8 +15,8 @@ from data_rentgen.server.settings import ServerApplicationSettings
 
 def application_factory(settings: ServerApplicationSettings) -> FastAPI:
     application = FastAPI(
-        title="DataRentgen",
-        description="DataRentgen is a nextgen DataLineage service",
+        title="Data.Rentgen",
+        description="Data.Rentgen is a nextgen DataLineage service",
         version=data_rentgen.__version__,
         debug=settings.server.debug,
         # will be set up by middlewares

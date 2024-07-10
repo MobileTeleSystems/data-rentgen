@@ -17,7 +17,7 @@ Please follow `instruction <https://docs.github.com/en/get-started/quickstart/se
 Create a fork
 ~~~~~~~~~~~~~
 
-If you are not a member of a development team building DataRentgen, you should create a fork before making any changes.
+If you are not a member of a development team building Data.Rentgen, you should create a fork before making any changes.
 
 Please follow `instruction <https://docs.github.com/en/get-started/quickstart/fork-a-repo>`_.
 
@@ -242,7 +242,7 @@ After pull request is created, it get a corresponding number, e.g. 123 (``pr_num
 Write release notes
 ~~~~~~~~~~~~~~~~~~~
 
-DataRentgen uses `towncrier <https://pypi.org/project/towncrier/>`_
+Data.Rentgen uses `towncrier <https://pypi.org/project/towncrier/>`_
 for changelog management.
 
 To submit a change note about your PR, add a text file into the

@@ -81,7 +81,7 @@ options and commands are just the same.
 
 .. note::
 
-    This command should be executed after each upgrade to new DataRentgen version.
+    This command should be executed after each upgrade to new Data.Rentgen version.
 
 Run REST API server
 ~~~~~~~~~~~~~~~~~~~

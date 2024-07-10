@@ -10,7 +10,7 @@ from typing_extensions import Literal
 
 
 class LoggingSettings(BaseSettings):
-    """DataRentgen backend logging Settings.
+    """Data.Rentgen backend logging Settings.
 
     Examples
     --------

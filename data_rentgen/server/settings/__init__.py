@@ -10,7 +10,7 @@ from data_rentgen.server.settings.server import ServerSettings
 
 
 class ServerApplicationSettings(BaseSettings):
-    """DataRentgen REST API settings.
+    """Data.Rentgen REST API settings.
 
     Application can be configured in 2 ways:
 

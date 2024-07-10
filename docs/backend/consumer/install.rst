@@ -15,7 +15,7 @@ Requirements
 Installation process
 ~~~~~~~~~~~~~~~~~~~~
 
-Docker will download backend image of Kafka, POstgres and DataRentgen Kafka consumer, and run them.
+Docker will download backend image of Kafka, POstgres and Data.Rentgen Kafka consumer, and run them.
 Options can be set via ``.env`` file or ``environment`` section in ``docker-compose.yml``
 
 .. dropdown:: ``docker-compose.yml``
@@ -78,7 +78,7 @@ options and commands are just the same.
 
 .. note::
 
-    This command should be executed after each upgrade to new DataRentgen version.
+    This command should be executed after each upgrade to new Data.Rentgen version.
 
 Run Kafka
 ~~~~~~~~~
