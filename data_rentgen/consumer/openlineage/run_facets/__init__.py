@@ -2,6 +2,13 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from data_rentgen.consumer.openlineage.base import OpenLineageBase
+from data_rentgen.consumer.openlineage.run_facets.airflow import (
+    OpenLineageAirflowDagInfo,
+    OpenLineageAirflowDagRunInfo,
+    OpenLineageAirflowRunFacet,
+    OpenLineageAirflowTaskInfo,
+    OpenLineageAirflowTaskInstanceInfo,
+)
 from data_rentgen.consumer.openlineage.run_facets.base import OpenLineageRunFacet
 from data_rentgen.consumer.openlineage.run_facets.parent_run import (
     OpenLineageParentJob,
@@ -28,6 +35,11 @@ __all__ = [
     "OpenLineageProcessingEngineName",
     "OpenLineageProcessingEngineRunFacet",
     "OpenLineageRunFacets",
+    "OpenLineageAirflowRunFacet",
+    "OpenLineageAirflowTaskInstanceInfo",
+    "OpenLineageAirflowTaskInfo",
+    "OpenLineageAirflowDagRunInfo",
+    "OpenLineageAirflowDagInfo",
     "OpenLineageSparkDeployMode",
     "OpenLineageSparkApplicationDetailsRunFacet",
     "OpenLineageSparkJobDetailsRunFacet",
@@ -43,3 +55,4 @@ class OpenLineageRunFacets(OpenLineageBase):
     processing_engine: OpenLineageProcessingEngineRunFacet | None = None
     spark_applicationDetails: OpenLineageSparkApplicationDetailsRunFacet | None = None
     spark_jobDetails: OpenLineageSparkJobDetailsRunFacet | None = None
+    airflow: OpenLineageAirflowRunFacet | None = None

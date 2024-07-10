@@ -12,12 +12,20 @@ from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobType,
     OpenLineageJobTypeJobFacet,
 )
+from data_rentgen.consumer.openlineage.job_facets.documentation import (
+    OpenLineageDocumentationJobFacet,
+)
 from data_rentgen.consumer.openlineage.run import OpenLineageRun
 from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEvent,
     OpenLineageRunEventType,
 )
 from data_rentgen.consumer.openlineage.run_facets import (
+    OpenLineageAirflowDagInfo,
+    OpenLineageAirflowDagRunInfo,
+    OpenLineageAirflowRunFacet,
+    OpenLineageAirflowTaskInfo,
+    OpenLineageAirflowTaskInstanceInfo,
     OpenLineageParentJob,
     OpenLineageParentRun,
     OpenLineageParentRunFacet,
@@ -39,6 +47,11 @@ def test_run_event_airflow_dag_start():
             "name": "mydag",
             "namespace": "airflow://airflow-host:8081",
             "facets": {
+                "documentation": {
+                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.9.0",
+                    "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/DocumentationJobFacet",
+                    "description": "some description",
+                },
                 "airflow": {
                     "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.9.0",
                     "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/BaseFacet",
@@ -98,6 +111,9 @@ def test_run_event_airflow_dag_start():
                     processingType=OpenLineageJobProcessingType.BATCH,
                     integration=OpenLineageJobIntegrationType.AIRFLOW,
                     jobType=OpenLineageJobType.DAG,
+                ),
+                documentation=OpenLineageDocumentationJobFacet(
+                    description="some description",
                 ),
             ),
             # unknown facets are ignored
@@ -340,6 +356,20 @@ def test_run_event_airflow_task_start():
                     version=Version("2.9.2"),
                     name=OpenLineageProcessingEngineName.AIRFLOW,
                     openlineageAdapterVersion=Version("1.9.0"),
+                ),
+                airflow=OpenLineageAirflowRunFacet(
+                    taskInstance=OpenLineageAirflowTaskInstanceInfo(
+                        try_number=1,
+                    ),
+                    task=OpenLineageAirflowTaskInfo(
+                        task_id="mytask",
+                    ),
+                    dagRun=OpenLineageAirflowDagRunInfo(
+                        run_id="manual__2024-07-05T09:04:12.162809+00:00",
+                    ),
+                    dag=OpenLineageAirflowDagInfo(
+                        dag_id="mydag",
+                    ),
                 ),
                 # unknown facets are ignored
             ),

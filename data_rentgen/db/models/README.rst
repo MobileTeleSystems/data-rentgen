@@ -53,26 +53,17 @@ DB structure
         * name
     }
 
-    entity Runner {
-        * id: BigInteger
-        ----
-        * location_id
-        * type
-        version
-    }
-
     entity Run {
         * id: UUIDv7
         * started_at: Datetime
         ----
         * job_id
-        runner_id
         status
         name
         parent_run_id
         attempt
-        description
-        log_url
+        persistent_log_url
+        running_log_url
         started_by_user_id
         ended_at
         ended_reason
@@ -119,7 +110,6 @@ DB structure
     Dataset "alias_of_dataset_id" |o--o{ Dataset
 
     Run ||--o{ Job
-    Run |o--o{ Runner
     Run "started_by_user_id" ||--o{ User
     Run "parent_run_id" |o--o{ Run
 

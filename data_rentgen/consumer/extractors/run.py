@@ -8,7 +8,7 @@ from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEventType,
 )
 from data_rentgen.consumer.openlineage.run_facets import OpenLineageParentRunFacet
-from data_rentgen.dto import RunDTO, RunDTOStatus
+from data_rentgen.dto import RunDTO, RunStatusDTO
 
 
 def extract_parent_run(parent_facet: OpenLineageParentRunFacet) -> RunDTO:
@@ -26,6 +26,8 @@ def extract_run(event: OpenLineageRunEvent) -> RunDTO:
         job=extract_job(event.job),
     )
     enrich_run_status(run, event)
+    enrich_run_identifiers(run, event)
+    enrich_run_logs(run, event)
     return run
 
 
@@ -33,16 +35,39 @@ def enrich_run_status(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
     match event.eventType:
         case OpenLineageRunEventType.START:
             run.started_at = event.eventTime
-            run.status = RunDTOStatus.STARTED
+            run.status = RunStatusDTO.STARTED
         case OpenLineageRunEventType.RUNNING:
-            run.status = RunDTOStatus.STARTED
+            run.status = RunStatusDTO.STARTED
         case OpenLineageRunEventType.COMPLETE:
             run.ended_at = event.eventTime
-            run.status = RunDTOStatus.SUCCEEDED
+            run.status = RunStatusDTO.SUCCEEDED
         case OpenLineageRunEventType.FAIL:
             run.ended_at = event.eventTime
-            run.status = RunDTOStatus.FAILED
+            run.status = RunStatusDTO.FAILED
         case OpenLineageRunEventType.ABORT:
             run.ended_at = event.eventTime
-            run.status = RunDTOStatus.KILLED
+            run.status = RunStatusDTO.KILLED
+        case OpenLineageRunEventType.OTHER:
+            # OTHER is used only to update run statistics
+            pass
+    return run
+
+
+def enrich_run_identifiers(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
+    spark_application_details = event.run.facets.spark_applicationDetails
+    if spark_application_details:
+        run.external_id = spark_application_details.applicationId
+
+    airflow_task_run_facet = event.run.facets.airflow
+    if airflow_task_run_facet:
+        run.external_id = airflow_task_run_facet.dagRun.run_id
+        run.attempt = str(airflow_task_run_facet.taskInstance.try_number)
+    return run
+
+
+def enrich_run_logs(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
+    spark_application_details = event.run.facets.spark_applicationDetails
+    if spark_application_details:
+        run.running_log_url = spark_application_details.proxyUrl or spark_application_details.uiWebUrl
+        run.persistent_log_url = spark_application_details.historyUrl
     return run

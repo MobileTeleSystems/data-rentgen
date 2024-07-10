@@ -5,8 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
 from uuid6 import UUID
 
-from data_rentgen.db.models import Run
-from data_rentgen.db.models.status import Status
+from data_rentgen.db.models import Run, Status
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.dto import RunDTO
 
@@ -38,6 +37,10 @@ class RunRepository(Repository[Run]):
             "parent_run_id": parent_run_id,
             "started_at": run.started_at,
             "ended_at": run.ended_at,
+            "external_id": run.external_id,
+            "attempt": run.attempt,
+            "persistent_log_url": run.persistent_log_url,
+            "running_log_url": run.running_log_url,
         }
 
         insert_statement = insert(Run)

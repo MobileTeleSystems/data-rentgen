@@ -13,7 +13,6 @@ from uuid6 import UUID
 
 from data_rentgen.db.models.base import Base
 from data_rentgen.db.models.job import Job
-from data_rentgen.db.models.runner import Runner
 from data_rentgen.db.models.status import Status
 from data_rentgen.db.models.user import User
 
@@ -52,7 +51,7 @@ class Run(Base):
         nullable=True,
         doc="Parent of current run, e.g. Airflow task run which started Spark application",
     )
-    parent: Mapped[Run | None] = relationship(
+    parent_run: Mapped[Run | None] = relationship(
         "Run",
         primaryjoin="Run.parent_run_id == Run.id",
         lazy="noload",
@@ -66,41 +65,28 @@ class Run(Base):
         doc="Run status info",
     )
 
-    runner_id: Mapped[int] = mapped_column(
-        BigInteger,
-        index=True,
-        nullable=True,
-        doc="Runner the run is running on, e.g. Airflow, Yarn",
-    )
-    runner: Mapped[Runner | None] = relationship(
-        Runner,
-        primaryjoin="Run.runner_id == Runner.id",
-        lazy="noload",
-        foreign_keys=[runner_id],
-    )
-
-    name: Mapped[str | None] = mapped_column(
+    external_id: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True,
-        doc="Name of the run, e.g. Spark applicationId",
+        doc="External ID of the run, e.g. Spark applicationId",
     )
     attempt: Mapped[str | None] = mapped_column(
         String(64),
         nullable=True,
         doc="Attempt number of the run",
     )
-    description: Mapped[str | None] = mapped_column(
+    persistent_log_url: Mapped[str | None] = mapped_column(
         String,
         nullable=True,
-        doc="Run description, e.g. Airflow task docstring",
+        doc="Persistent log url of the run, like Spark history server url, optional",
     )
-    log_url: Mapped[str | None] = mapped_column(
+    running_log_url: Mapped[str | None] = mapped_column(
         String,
         nullable=True,
-        doc="Log url of the run, if any",
+        doc="Log url of the run in progress, like Spark session UI url, optional",
     )
 
-    started_at: Mapped[datetime] = mapped_column(
+    started_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
         doc="Start time of the run",
