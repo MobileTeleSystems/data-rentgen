@@ -9,10 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from uuid6 import UUID
 
-from data_rentgen.db.models.job import Job
-from data_rentgen.db.models.location import Location
-from data_rentgen.db.models.run import Run
-from data_rentgen.db.models.status import Status
+from data_rentgen.db.models import Job, Location, Run, Status
 
 RESOURCES_PATH = Path(__file__).parent.parent.joinpath("resources").resolve()
 
@@ -68,3 +65,6 @@ async def test_runs_handler_spark(
     assert application_run.status == Status.SUCCEEDED
     assert application_run.started_at == datetime(2024, 7, 5, 9, 4, 48, 794900, tzinfo=timezone.utc)
     assert application_run.ended_at == datetime(2024, 7, 5, 9, 7, 15, 646000, tzinfo=timezone.utc)
+    assert application_run.external_id == "local-1719136537510"
+    assert application_run.running_log_url == "http://127.0.0.1:4040"
+    assert application_run.persistent_log_url is None

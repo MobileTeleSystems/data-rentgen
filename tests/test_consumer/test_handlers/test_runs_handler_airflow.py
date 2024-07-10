@@ -9,10 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from uuid6 import UUID
 
-from data_rentgen.db.models.job import Job
-from data_rentgen.db.models.location import Location
-from data_rentgen.db.models.run import Run
-from data_rentgen.db.models.status import Status
+from data_rentgen.db.models import Job, Location, Run, Status
 
 RESOURCES_PATH = Path(__file__).parent.parent.joinpath("resources").resolve()
 
@@ -79,3 +76,5 @@ async def test_runs_handler_airflow(
     assert task_run.status == Status.SUCCEEDED
     assert task_run.started_at == datetime(2024, 7, 5, 9, 4, 20, 783845, tzinfo=timezone.utc)
     assert task_run.ended_at == datetime(2024, 7, 5, 9, 7, 37, 858423, tzinfo=timezone.utc)
+    assert task_run.external_id == "manual__2024-07-05T09:04:12.162809+00:00"
+    assert task_run.attempt == "1"

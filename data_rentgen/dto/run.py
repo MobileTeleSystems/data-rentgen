@@ -12,7 +12,7 @@ from uuid6 import UUID
 from data_rentgen.dto.job import JobDTO
 
 
-class RunDTOStatus(str, Enum):
+class RunStatusDTO(str, Enum):
     STARTED = "STARTED"
     SUCCEEDED = "SUCCEEDED"
     KILLED = "KILLED"
@@ -22,9 +22,13 @@ class RunDTOStatus(str, Enum):
 
 @dataclass
 class RunDTO:
+    created_at: datetime
     id: UUID
     job: JobDTO
-    created_at: datetime
-    status: RunDTOStatus | None = None
+    status: RunStatusDTO | None = None
     started_at: datetime | None = None
     ended_at: datetime | None = None
+    external_id: str | None = None
+    attempt: str | None = None
+    persistent_log_url: str | None = None
+    running_log_url: str | None = None

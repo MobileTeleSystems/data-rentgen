@@ -9,7 +9,6 @@ from data_rentgen.db.models.job import Job
 from data_rentgen.db.models.location import Location
 from data_rentgen.db.models.operation import Operation
 from data_rentgen.db.models.run import Run
-from data_rentgen.db.models.runner import Runner
 from data_rentgen.db.models.schema import Schema
 from data_rentgen.db.models.status import Status
 from data_rentgen.db.models.storage import Storage
@@ -24,7 +23,6 @@ __all__ = [
     "Location",
     "Operation",
     "Run",
-    "Runner",
     "Schema",
     "Status",
     "Storage",
