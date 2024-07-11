@@ -22,4 +22,5 @@ async def paginate_jobs(
     unit_of_work: Annotated[UnitOfWork, Depends()],
 ) -> PageResponseV1[JobResponseV1]:
     pagination = await unit_of_work.job.paginate(**pagination_args.model_dump())
+
     return PageResponseV1[JobResponseV1].from_pagination(pagination)

@@ -49,3 +49,34 @@ async def location(
     async with async_session_maker() as async_session:
         await async_session.execute(query)
         await async_session.commit()
+
+
+@pytest_asyncio.fixture(params=[(5, {})])
+async def locations(
+    request: pytest.FixtureRequest,
+    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+) -> AsyncGenerator[list[Location], None]:
+    size, params = request.param
+    items = [location_factory(**params) for _ in range(size)]
+
+    async with async_session_maker() as async_session:
+        for item in items:
+            del item.id
+            async_session.add(item)
+        # this is not required for backend tests, but needed by client tests
+        await async_session.commit()
+
+        # remove current object from async_session. this is required to compare object against new state fetched
+        # from database, and also to remove it from cache
+        for item in items:
+            await async_session.refresh(item)
+            async_session.expunge(item)
+
+    yield items
+
+    for item in items:
+        query = delete(Location).where(Location.id == item.id)
+        # Add teardown cause fixture async_session doesn't used
+        async with async_session_maker() as async_session:
+            await async_session.execute(query)
+            await async_session.commit()

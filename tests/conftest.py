@@ -11,6 +11,7 @@ pytest_plugins = [
     "tests.test_server.fixtures.server_app_settings",
     "tests.test_server.fixtures.test_server_app",
     "tests.test_server.fixtures.test_client",
+    "tests.test_server.fixtures.factories.address",
     "tests.test_server.fixtures.factories.job",
     "tests.test_server.fixtures.factories.location",
 ]
