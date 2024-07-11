@@ -32,28 +32,19 @@ async def test_runs_handler_airflow(
         await test_broker.publish(event, "input.runs")
 
     # both Spark application & jobs are in the same cluster/host, thus the same location
-    location_query = select(Location).options(selectinload(Location.addresses))
-    location_scalars = await async_session.scalars(location_query)
-    locations = location_scalars.all()
-
-    assert len(locations) == 1
-    job_location = locations[0]
-
-    assert job_location.type == "airflow"
-    assert job_location.name == "airflow-host:8081"
-    assert len(job_location.addresses) == 1
-    assert job_location.addresses[0].url == "airflow://airflow-host:8081"
-
-    job_query = select(Job).order_by(Job.name)
+    job_query = select(Job).order_by(Job.name).options(selectinload(Job.location).selectinload(Location.addresses))
     job_scalars = await async_session.scalars(job_query)
     jobs = job_scalars.all()
 
     assert len(jobs) == 2
     assert jobs[0].name == "mydag"
-    assert jobs[1].name == "mydag.mytask"
+    assert jobs[0].location.type == "airflow"
+    assert jobs[0].location.name == "airflow-host:8081"
+    assert len(jobs[0].location.addresses) == 1
+    assert jobs[0].location.addresses[0].url == "airflow://airflow-host:8081"
 
-    for job in jobs:
-        assert job.location_id == job_location.id
+    assert jobs[1].name == "mydag.mytask"
+    assert jobs[1].location == jobs[0].location
 
     run_query = select(Run).order_by(Run.id)
     run_scalars = await async_session.scalars(run_query)

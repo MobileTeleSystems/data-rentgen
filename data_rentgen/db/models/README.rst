@@ -30,20 +30,21 @@ DB structure
         * name
     }
 
-    entity Storage {
-        * id: BigInteger
-        ----
-        * location_id
-        name
-    }
-
     entity Dataset {
         * id: BigInteger
         ----
-        * storage_id
+        * location_id
         * name
         format
-        alias_for_dataset_id
+        schema_id
+    }
+
+    entity DatasetSymlink {
+        * id: BigInteger
+        ----
+        * from_dataset_id
+        * to_dataset_id
+        type
     }
 
     entity Job {
@@ -104,10 +105,12 @@ DB structure
     }
 
     Address ||--o{ Location
-    Storage ||--o{ Location
 
-    Dataset ||--o{ Storage
-    Dataset "alias_of_dataset_id" |o--o{ Dataset
+    Dataset ||--o{ Location
+    Dataset |o--o{ Schema
+
+    DatasetSymlink "from_dataset_id" ||--o{ Dataset
+    DatasetSymlink "to_dataset_id" ||--o{ Dataset
 
     Run ||--o{ Job
     Run "started_by_user_id" ||--o{ User
