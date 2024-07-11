@@ -4,8 +4,12 @@
 from dataclasses import dataclass
 
 
-@dataclass
+@dataclass(slots=True)
 class LocationDTO:
     type: str
     name: str
     addresses: list[str]
+
+    @property
+    def full_name(self) -> str:
+        return f"{self.type}://{self.name}"

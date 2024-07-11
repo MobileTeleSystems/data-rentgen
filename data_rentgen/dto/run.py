@@ -20,7 +20,7 @@ class RunStatusDTO(str, Enum):
     UNKNOWN = "UNKNOWN"
 
 
-@dataclass
+@dataclass(slots=True)
 class RunDTO:
     created_at: datetime
     id: UUID

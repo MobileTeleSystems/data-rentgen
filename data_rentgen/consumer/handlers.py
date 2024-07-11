@@ -6,6 +6,8 @@ from faststream.kafka import KafkaRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.consumer.extractors import (
+    extract_dataset_symlinks,
+    extract_datasets,
     extract_job,
     extract_operation,
     extract_parent_run,
@@ -13,9 +15,23 @@ from data_rentgen.consumer.extractors import (
 )
 from data_rentgen.consumer.openlineage.job_facets import OpenLineageJobType
 from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
-from data_rentgen.db.models import Job, Operation, Run
+from data_rentgen.db.models import (
+    Dataset,
+    DatasetSymlink,
+    DatasetSymlinkType,
+    Job,
+    Operation,
+    Run,
+)
 from data_rentgen.dependencies import Stub
-from data_rentgen.dto import JobDTO, OperationDTO, RunDTO
+from data_rentgen.dto import (
+    DatasetDTO,
+    DatasetSymlinkDTO,
+    DatasetSymlinkTypeDTO,
+    JobDTO,
+    OperationDTO,
+    RunDTO,
+)
 from data_rentgen.services.uow import UnitOfWork
 
 router = KafkaRouter()
@@ -54,6 +70,46 @@ async def handle_operation(event: OpenLineageRunEvent, unit_of_work: UnitOfWork)
         raw_operation = extract_operation(event)
         await create_or_update_operation(raw_operation, run, unit_of_work)
 
+    async with unit_of_work:
+        datasets = await handle_datasets(event, unit_of_work)
+        await handle_dataset_symlinks(event, datasets, unit_of_work)
+
+
+async def handle_datasets(event: OpenLineageRunEvent, unit_of_work: UnitOfWork) -> dict[str, Dataset]:
+    raw_datasets: list[DatasetDTO] = []
+    for input in event.inputs:
+        raw_datasets.extend(extract_datasets(input))
+    for output in event.outputs:
+        raw_datasets.extend(extract_datasets(output))
+
+    result: dict[str, Dataset] = {}
+    for raw_dataset in raw_datasets:
+        dataset = await get_or_create_dataset(raw_dataset, unit_of_work)
+        result[raw_dataset.full_name] = dataset
+    return result
+
+
+async def handle_dataset_symlinks(
+    event: OpenLineageRunEvent,
+    datasets: dict[str, Dataset],
+    unit_of_work: UnitOfWork,
+) -> None:
+    dataset_symlinks: list[DatasetSymlinkDTO] = []
+    for input in event.inputs:
+        dataset_symlinks.extend(extract_dataset_symlinks(input))
+    for output in event.outputs:
+        dataset_symlinks.extend(extract_dataset_symlinks(output))
+
+    for dataset_symlink in dataset_symlinks:
+        from_dataset = datasets[dataset_symlink.from_dataset.full_name]
+        to_dataset = datasets[dataset_symlink.to_dataset.full_name]
+        await get_or_create_dataset_symlink(
+            from_dataset,
+            to_dataset,
+            dataset_symlink.type,
+            unit_of_work,
+        )
+
 
 async def get_or_create_parent_run(event: OpenLineageRunEvent, unit_of_work: UnitOfWork) -> Run | None:
     if not event.run.facets.parent:
@@ -77,3 +133,21 @@ async def create_or_update_run(run: RunDTO, job: Job, parent_run: Run | None, un
 async def create_or_update_operation(operation: OperationDTO, run: Run | None, unit_of_work: UnitOfWork) -> Operation:
     run_id = run.id if run else None
     return await unit_of_work.operation.create_or_update(operation, run_id)
+
+
+async def get_or_create_dataset(dataset: DatasetDTO, unit_of_work: UnitOfWork) -> Dataset:
+    matching_location = await unit_of_work.location.get_or_create(dataset.location)
+    return await unit_of_work.dataset.create_or_update(dataset, matching_location.id)
+
+
+async def get_or_create_dataset_symlink(
+    from_dataset: Dataset,
+    to_dataset: Dataset,
+    symlink_type: DatasetSymlinkTypeDTO,
+    unit_of_work: UnitOfWork,
+) -> DatasetSymlink:
+    return await unit_of_work.dataset.create_or_update_symlink(
+        from_dataset.id,
+        to_dataset.id,
+        DatasetSymlinkType(symlink_type),
+    )

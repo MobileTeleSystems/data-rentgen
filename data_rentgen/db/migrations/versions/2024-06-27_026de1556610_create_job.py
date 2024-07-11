@@ -3,7 +3,7 @@
 """Create job
 
 Revision ID: 026de1556610
-Revises: 2cb695c0a318
+Revises: c2c583123133
 Create Date: 2024-06-27 19:11:39.585904
 
 """
@@ -13,7 +13,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "026de1556610"
-down_revision = "2cb695c0a318"
+down_revision = "c2c583123133"
 branch_labels = None
 depends_on = None
 

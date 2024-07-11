@@ -28,5 +28,6 @@ class Job(Base):
     name: Mapped[str] = mapped_column(
         String(255),
         index=True,
+        nullable=False,
         doc="Job name, e.g. Airflow DAG name + task name, or Spark applicationName",
     )

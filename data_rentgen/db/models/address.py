@@ -31,5 +31,6 @@ class Address(Base):
     url: Mapped[str] = mapped_column(
         String(255),
         index=True,
+        nullable=False,
         doc="Address in URL format",
     )

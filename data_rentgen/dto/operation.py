@@ -29,7 +29,7 @@ class OperationStatusDTO(str, Enum):
         return str(self.value)
 
 
-@dataclass
+@dataclass(slots=True)
 class OperationDTO:
     created_at: datetime
     id: UUID
