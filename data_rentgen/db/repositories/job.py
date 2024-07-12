@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Job, Location
@@ -22,9 +21,7 @@ class JobRepository(Repository[Job]):
         statement = select(Job).where(Job.location_id == location_id, Job.name == job.name)
         result = await self._session.scalar(statement)
         if not result:
-            result = await self._session.scalar(
-                insert(Job).on_conflict_do_nothing().returning(Job),
-                {"location_id": location_id, "name": job.name},
-                execution_options={"populate_existing": True},
-            )
-        return result  # type: ignore[return-value]
+            result = Job(location_id=location_id, name=job.name)
+            self._session.add(result)
+            await self._session.flush([result])
+        return result
