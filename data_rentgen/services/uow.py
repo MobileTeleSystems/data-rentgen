@@ -10,6 +10,7 @@ from data_rentgen.db.repositories.job import JobRepository
 from data_rentgen.db.repositories.location import LocationRepository
 from data_rentgen.db.repositories.operation import OperationRepository
 from data_rentgen.db.repositories.run import RunRepository
+from data_rentgen.db.repositories.schema import SchemaRepository
 from data_rentgen.dependencies import Stub
 
 
@@ -24,6 +25,7 @@ class UnitOfWork:
         self.run = RunRepository(session)
         self.operation = OperationRepository(session)
         self.dataset = DatasetRepository(session)
+        self.schema = SchemaRepository(session)
 
     async def __aenter__(self):
         return self
