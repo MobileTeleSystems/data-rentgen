@@ -3,7 +3,7 @@
 import http
 from typing import Any, List, Union
 
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from typing_extensions import Literal
 
 from data_rentgen.server.errors.base import BaseErrorSchema
@@ -17,8 +17,7 @@ class InvalidRequestBaseErrorSchema(BaseModel):
     ctx: dict = Field(default_factory=dict, alias="context")
     input: Any = Field(default=None)
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 @register_error_response(

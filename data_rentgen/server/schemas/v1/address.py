@@ -1,10 +1,9 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class AddressResponseV1(BaseModel):
     url: str = Field(description="Address(URL) of Location")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

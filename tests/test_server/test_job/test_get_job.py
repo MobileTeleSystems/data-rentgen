@@ -2,10 +2,11 @@ from http import HTTPStatus
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import select
 
-from data_rentgen.db.models import Address, Job, Location
+from data_rentgen.db.models import Job, Location
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
@@ -45,21 +46,15 @@ async def test_get_job_missing(
 async def test_get_job(
     test_client: AsyncClient,
     job: Job,
-    async_session_maker: async_sessionmaker[AsyncSession],
+    async_session: AsyncSession,
 ):
     response = await test_client.get(
         f"v1/job?job_id={job.id}",
     )
-    session: AsyncSession = async_session_maker()
-    raw_location = await session.scalar(select(Location).where(Location.id == job.location_id))
-    raw_addresses = await session.scalar(select(Address).where(Address.location_id == job.location_id))
-    location = {
-        "addresses": [
-            {"url": raw_addresses.url},
-        ],
-        "name": raw_location.name,
-        "type": raw_location.type,
-    }
+
+    query = select(Job).where(Job.id == job.id).options(selectinload(Job.location).selectinload(Location.addresses))
+
+    job = await async_session.scalar(query)
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
@@ -76,8 +71,14 @@ async def test_get_job(
         "items": [
             {
                 "id": job.id,
-                "location": location,
                 "name": job.name,
+                "location": {
+                    "type": job.location.type,
+                    "name": job.location.name,
+                    "addresses": [
+                        {"url": job.location.addresses[0].url},
+                    ],
+                },
             },
         ],
     }
@@ -86,21 +87,21 @@ async def test_get_job(
 async def test_get_jobs(
     test_client: AsyncClient,
     jobs: list[Job],
-    async_session_maker: async_sessionmaker[AsyncSession],
+    async_session: AsyncSession,
 ):
-    jobs = sorted(jobs, key=lambda js: js.id)
     response = await test_client.get(
         f"v1/job?job_id={jobs[0].id}&job_id={jobs[1].id}",
     )
-    session: AsyncSession = async_session_maker()
-    for job in jobs:
-        raw_location = await session.scalar(select(Location).where(Location.id == job.location_id))
-        raw_addresses = await session.scalars(select(Address).where(Address.location_id == job.location_id))
-        job.location = {
-            "addresses": [{"url": address.url} for address in raw_addresses.all()],
-            "name": raw_location.name,
-            "type": raw_location.type,
-        }
+
+    query = (
+        select(Job)
+        .where(Job.id.in_([job.id for job in jobs]))
+        .order_by(Job.id)
+        .options(selectinload(Job.location).selectinload(Location.addresses))
+    )
+
+    scalars = await async_session.scalars(query)
+    jobs = list(scalars.all())
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
@@ -116,14 +117,14 @@ async def test_get_jobs(
         },
         "items": [
             {
-                "id": jobs[0].id,
-                "location": jobs[0].location,
-                "name": jobs[0].name,
-            },
-            {
-                "id": jobs[1].id,
-                "location": jobs[1].location,
-                "name": jobs[1].name,
-            },
+                "id": job.id,
+                "name": job.name,
+                "location": {
+                    "type": job.location.type,
+                    "name": job.location.name,
+                    "addresses": [{"url": address.url} for address in job.location.addresses],
+                },
+            }
+            for job in jobs[:2]
         ],
     }
