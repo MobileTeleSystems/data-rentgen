@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import Generic, TypeVar
+from typing import Generic, Tuple, TypeVar
 
 from sqlalchemy import ScalarResult, Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,18 +39,14 @@ class Repository(ABC, Generic[Model]):
         query: Select = select(model_type).where(*where)
         return await self._session.scalar(query)
 
-    async def _paginate(
+    async def _paginate_by_query(
         self,
         order_by: list[SQLColumnExpression],
         page: int,
         page_size: int,
-        where: list[SQLColumnExpression] | None = None,
+        query: Select[Tuple[Model]],
     ) -> PaginationDTO[Model]:
         model_type = self.model_type()
-        query: Select = select(model_type)
-        if where:
-            query = query.where(*where)
-
         items_result: ScalarResult[Model] = await self._session.scalars(
             query.order_by(*order_by).limit(page_size).offset((page - 1) * page_size),
         )
