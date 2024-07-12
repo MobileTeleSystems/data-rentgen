@@ -28,6 +28,7 @@ async def async_session(async_session_maker: async_sessionmaker[AsyncSession]):
     session: AsyncSession = async_session_maker()
 
     # start each test on fresh database
+    # TODO: Refactoring: change setup in this fixture. Now if you use it in test it's remove all data from db.
     for table in reversed(Base.metadata.sorted_tables):
         await session.execute(delete(table))
     await session.commit()
