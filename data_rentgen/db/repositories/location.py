@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Address, Location
@@ -24,19 +23,15 @@ class LocationRepository(Repository[Location]):
 
         result = await self._session.scalar(statement)
         if not result:
-            result = await self._session.scalar(
-                insert(Location).on_conflict_do_nothing().returning(Location),
-                {"type": location.type, "name": location.name},
-                execution_options={"populate_existing": True},
-            )
+            result = Location(type=location.type, name=location.name)
+            self._session.add(result)
+            await self._session.flush([result])
 
         existing_urls = {address.url for address in result.addresses}
         new_urls = set(location.addresses) - existing_urls
         if new_urls:
-            result = await self._session.scalar(
-                insert(Address).on_conflict_do_nothing().returning(Address),
-                [{"url": url, "location_id": result.id} for url in new_urls],
-                execution_options={"populate_existing": True},
-            )
+            addresses = [Address(url=url, location_id=result.id) for url in new_urls]
+            result.addresses.extend(addresses)
 
-        return result  # type: ignore[assignment]
+        await self._session.flush([result])
+        return result

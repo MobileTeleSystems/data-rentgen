@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert
 
 from data_rentgen.db.models import Dataset
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
@@ -18,22 +17,11 @@ class DatasetRepository(Repository[Dataset]):
         )
         result = await self._session.scalar(statement)
         if not result:
-            insert_statement = insert(Dataset)
-            insert_statement = insert_statement.on_conflict_do_update(
-                index_elements=[Dataset.location_id, Dataset.name],
-                set_={"format": dataset.format},
-            )
-            result = await self._session.scalar(
-                insert_statement.returning(Dataset),
-                {
-                    "location_id": location_id,
-                    "name": dataset.name,
-                    "format": dataset.format,
-                },
-                execution_options={"populate_existing": True},
-            )
+            result = Dataset(location_id=location_id, name=dataset.name, format=dataset.format)
+            self._session.add(result)
+            await self._session.flush([result])
 
-        return result  # type: ignore[return-value]
+        return result
 
     async def create_or_update_symlink(
         self,
@@ -47,19 +35,12 @@ class DatasetRepository(Repository[Dataset]):
         )
         result = await self._session.scalar(statement)
         if not result:
-            insert_statement = insert(DatasetSymlink)
-            insert_statement = insert_statement.on_conflict_do_update(
-                index_elements=[DatasetSymlink.from_dataset_id, DatasetSymlink.to_dataset_id],
-                set_={"type": symlink_type},
-            )
-            result = await self._session.scalar(
-                insert_statement.returning(DatasetSymlink),
-                {
-                    "from_dataset_id": from_dataset_id,
-                    "to_dataset_id": to_dataset_id,
-                    "type": symlink_type,
-                },
-                execution_options={"populate_existing": True},
-            )
+            result = DatasetSymlink(from_dataset_id=from_dataset_id, to_dataset_id=to_dataset_id, type=symlink_type)
+            self._session.add(result)
+            await self._session.flush([result])
 
-        return result  # type: ignore[return-value]
+        elif result.type:
+            result.type = symlink_type
+            await self._session.flush([result])
+
+        return result
