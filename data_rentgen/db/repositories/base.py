@@ -31,27 +31,6 @@ class Repository(ABC, Generic[Model]):
         # Get `User` from `UserRepository(Repository[User])`
         return cls.__orig_bases__[0].__args__[0]  # type: ignore[attr-defined]
 
-    async def by_query(
-        self,
-        order_by: list[SQLColumnExpression],
-        page: int,
-        page_size: int,
-        query: Select[Tuple[Model]],
-    ) -> PaginationDTO[Model]:
-        model_type = self.model_type()
-        items_result: ScalarResult[Model] = await self._session.scalars(
-            query.order_by(*order_by).limit(page_size).offset((page - 1) * page_size),
-        )
-        total_count: int = await self._session.scalar(  # type: ignore[assignment]
-            select(func.count()).select_from(query.subquery()),
-        )
-        return PaginationDTO[model_type](  # type: ignore[valid-type]
-            items=list(items_result.all()),
-            total_count=total_count,
-            page=page,
-            page_size=page_size,
-        )
-
     async def _get(
         self,
         *where: ColumnElement,
@@ -60,18 +39,14 @@ class Repository(ABC, Generic[Model]):
         query: Select = select(model_type).where(*where)
         return await self._session.scalar(query)
 
-    async def _paginate(
+    async def _paginate_by_query(
         self,
         order_by: list[SQLColumnExpression],
         page: int,
         page_size: int,
-        where: list[SQLColumnExpression] | None = None,
+        query: Select[Tuple[Model]],
     ) -> PaginationDTO[Model]:
         model_type = self.model_type()
-        query: Select = select(model_type)
-        if where:
-            query = query.where(*where)
-
         items_result: ScalarResult[Model] = await self._session.scalars(
             query.order_by(*order_by).limit(page_size).offset((page - 1) * page_size),
         )

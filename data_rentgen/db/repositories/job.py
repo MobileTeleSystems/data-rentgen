@@ -16,7 +16,7 @@ class JobRepository(Repository[Job]):
         query = (
             select(Job).where(Job.id.in_(job_id)).options(selectinload(Job.location).selectinload(Location.addresses))
         )
-        return await self.by_query(order_by=[Job.id], page=page, page_size=page_size, query=query)
+        return await self._paginate_by_query(order_by=[Job.id], page=page, page_size=page_size, query=query)
 
     async def get_or_create(self, job: JobDTO, location_id: int) -> Job:
         statement = select(Job).where(Job.location_id == location_id, Job.name == job.name)
