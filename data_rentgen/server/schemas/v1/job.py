@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 from fastapi import Query
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from data_rentgen.server.schemas.v1.location import LocationResponseV1
 from data_rentgen.server.schemas.v1.pagination import PaginateQueryV1
@@ -14,8 +14,7 @@ class JobResponseV1(BaseModel):
     location: LocationResponseV1 = Field(description="Corresponding Location")
     name: str = Field(description="Job name")
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class JobPaginateQueryV1(PaginateQueryV1):
