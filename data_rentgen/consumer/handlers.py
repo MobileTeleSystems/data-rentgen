@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from data_rentgen.consumer.extractors import (
     extract_dataset_symlinks,
     extract_datasets,
+    extract_interaction_schema,
     extract_job,
     extract_operation,
     extract_parent_run,
@@ -23,6 +24,7 @@ from data_rentgen.db.models import (
     Operation,
     Run,
 )
+from data_rentgen.db.models.schema import Schema
 from data_rentgen.dependencies import Stub
 from data_rentgen.dto import (
     DatasetDTO,
@@ -32,6 +34,7 @@ from data_rentgen.dto import (
     OperationDTO,
     RunDTO,
 )
+from data_rentgen.dto.schema import SchemaDTO
 from data_rentgen.services.uow import UnitOfWork
 
 router = KafkaRouter()
@@ -74,6 +77,9 @@ async def handle_operation(event: OpenLineageRunEvent, unit_of_work: UnitOfWork)
         datasets = await handle_datasets(event, unit_of_work)
         await handle_dataset_symlinks(event, datasets, unit_of_work)
 
+    async with unit_of_work:
+        await handle_interaction_schemas(event, unit_of_work)
+
 
 async def handle_datasets(event: OpenLineageRunEvent, unit_of_work: UnitOfWork) -> dict[str, Dataset]:
     raw_datasets: list[DatasetDTO] = []
@@ -109,6 +115,25 @@ async def handle_dataset_symlinks(
             dataset_symlink.type,
             unit_of_work,
         )
+
+
+async def handle_interaction_schemas(
+    event: OpenLineageRunEvent,
+    unit_of_work: UnitOfWork,
+) -> None:
+    schemas: list[SchemaDTO] = []
+    for input in event.inputs:
+        schema = extract_interaction_schema(input)
+        if schema:
+            schemas.append(schema)
+
+    for output in event.outputs:
+        schema = extract_interaction_schema(output)
+        if schema:
+            schemas.append(schema)
+
+    for raw_schema in schemas:
+        await get_or_create_schema(raw_schema, unit_of_work)
 
 
 async def get_or_create_parent_run(event: OpenLineageRunEvent, unit_of_work: UnitOfWork) -> Run | None:
@@ -151,3 +176,7 @@ async def get_or_create_dataset_symlink(
         to_dataset.id,
         DatasetSymlinkType(symlink_type),
     )
+
+
+async def get_or_create_schema(schema: SchemaDTO, unit_of_work: UnitOfWork) -> Schema:
+    return await unit_of_work.schema.get_or_create(schema)

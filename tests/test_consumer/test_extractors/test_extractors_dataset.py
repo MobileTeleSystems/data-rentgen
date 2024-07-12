@@ -1,7 +1,6 @@
 import pytest
 
 from data_rentgen.consumer.extractors import extract_dataset_symlinks, extract_datasets
-from data_rentgen.consumer.extractors.dataset import METASTORE, WAREHOUSE
 from data_rentgen.consumer.openlineage.dataset import OpenLineageDataset
 from data_rentgen.consumer.openlineage.dataset_facets import (
     OpenLineageDatasetFacets,

@@ -12,6 +12,7 @@ from data_rentgen.dto.operation import (
 )
 from data_rentgen.dto.pagination import PaginationDTO
 from data_rentgen.dto.run import RunDTO, RunStatusDTO
+from data_rentgen.dto.schema import SchemaDTO
 
 __all__ = [
     "DatasetDTO",
@@ -19,10 +20,11 @@ __all__ = [
     "DatasetSymlinkTypeDTO",
     "LocationDTO",
     "JobDTO",
-    "PaginationDTO",
-    "RunDTO",
-    "RunStatusDTO",
     "OperationDTO",
     "OperationStatusDTO",
     "OperationTypeDTO",
+    "PaginationDTO",
+    "RunDTO",
+    "RunStatusDTO",
+    "SchemaDTO",
 ]
