@@ -22,10 +22,9 @@ def upgrade() -> None:
         "interaction",
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("operation_id", sa.BigInteger(), nullable=False),
+        sa.Column("operation_id", sa.UUID(), nullable=False),
         sa.Column("dataset_id", sa.BigInteger(), nullable=False),
         sa.Column("type", sa.String(length=255), nullable=False),
-        sa.Column("ended_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("schema_id", sa.BigInteger(), nullable=True),
         sa.Column("connect_as_user_id", sa.BigInteger(), nullable=True),
         sa.Column("num_bytes", sa.BigInteger(), nullable=True),
@@ -34,15 +33,15 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("created_at", "id", name=op.f("pk__interaction")),
         postgresql_partition_by="RANGE (created_at)",
     )
-    op.create_index(op.f("ix__interaction__connect_as_user_id"), "interaction", ["connect_as_user_id"], unique=False)
     op.create_index(op.f("ix__interaction__dataset_id"), "interaction", ["dataset_id"], unique=False)
     op.create_index(op.f("ix__interaction__operation_id"), "interaction", ["operation_id"], unique=False)
     op.create_index(op.f("ix__interaction__schema_id"), "interaction", ["schema_id"], unique=False)
+    op.create_index(op.f("ix__interaction__connect_as_user_id"), "interaction", ["connect_as_user_id"], unique=False)
 
 
 def downgrade() -> None:
+    op.drop_index(op.f("ix__interaction__connect_as_user_id"), table_name="interaction")
     op.drop_index(op.f("ix__interaction__schema_id"), table_name="interaction")
     op.drop_index(op.f("ix__interaction__operation_id"), table_name="interaction")
     op.drop_index(op.f("ix__interaction__dataset_id"), table_name="interaction")
-    op.drop_index(op.f("ix__interaction__connect_as_user_id"), table_name="interaction")
     op.drop_table("interaction")

@@ -6,14 +6,18 @@ from faststream.kafka import KafkaRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.consumer.extractors import (
+    extract_dataset,
     extract_dataset_symlinks,
-    extract_datasets,
+    extract_input_interaction,
     extract_interaction_schema,
     extract_job,
     extract_operation,
+    extract_output_interaction,
     extract_parent_run,
     extract_run,
 )
+from data_rentgen.consumer.extractors.dataset import extract_dataset_aliases
+from data_rentgen.consumer.openlineage.dataset import OpenLineageDataset
 from data_rentgen.consumer.openlineage.job_facets import OpenLineageJobType
 from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
 from data_rentgen.db.models import (
@@ -24,17 +28,18 @@ from data_rentgen.db.models import (
     Operation,
     Run,
 )
+from data_rentgen.db.models.interaction import Interaction
 from data_rentgen.db.models.schema import Schema
 from data_rentgen.dependencies import Stub
 from data_rentgen.dto import (
     DatasetDTO,
-    DatasetSymlinkDTO,
     DatasetSymlinkTypeDTO,
+    InteractionDTO,
     JobDTO,
     OperationDTO,
     RunDTO,
+    SchemaDTO,
 )
-from data_rentgen.dto.schema import SchemaDTO
 from data_rentgen.services.uow import UnitOfWork
 
 router = KafkaRouter()
@@ -66,47 +71,50 @@ async def handle_run(event: OpenLineageRunEvent, unit_of_work: UnitOfWork) -> No
 
 
 async def handle_operation(event: OpenLineageRunEvent, unit_of_work: UnitOfWork) -> None:
+    # To avoid issues when parallel consumer instances create the same object, and then fail at the end,
+    # commit changes as soon as possible. Yes, this is quite slow, but it's fine for a prototype.
+    # TODO: rewrite this to create objects in bulk.
     async with unit_of_work:
         run = await get_or_create_parent_run(event, unit_of_work)
 
     async with unit_of_work:
         raw_operation = extract_operation(event)
-        await create_or_update_operation(raw_operation, run, unit_of_work)
+        operation = await create_or_update_operation(raw_operation, run, unit_of_work)
 
-    async with unit_of_work:
-        datasets = await handle_datasets(event, unit_of_work)
-        await handle_dataset_symlinks(event, datasets, unit_of_work)
-
-    async with unit_of_work:
-        await handle_interaction_schemas(event, unit_of_work)
-
-
-async def handle_datasets(event: OpenLineageRunEvent, unit_of_work: UnitOfWork) -> dict[str, Dataset]:
-    raw_datasets: list[DatasetDTO] = []
+    interaction_components = []
     for input in event.inputs:
-        raw_datasets.extend(extract_datasets(input))
+        async with unit_of_work:
+            dataset = await handle_dataset(input, unit_of_work)
+        async with unit_of_work:
+            schema = await handle_schema(input, unit_of_work)
+
+        interaction = extract_input_interaction(input)
+        interaction_components.append((interaction, operation, dataset, schema))
+
     for output in event.outputs:
-        raw_datasets.extend(extract_datasets(output))
+        async with unit_of_work:
+            dataset = await handle_dataset(output, unit_of_work)
+        async with unit_of_work:
+            schema = await handle_schema(output, unit_of_work)
 
-    result: dict[str, Dataset] = {}
-    for raw_dataset in raw_datasets:
-        dataset = await get_or_create_dataset(raw_dataset, unit_of_work)
-        result[raw_dataset.full_name] = dataset
-    return result
+        interaction = extract_output_interaction(output)
+        interaction_components.append((interaction, operation, dataset, schema))
+
+    # create interaction only as a last step, to avoid partial lineage graph. Operation should be either empty or not.
+    async with unit_of_work:
+        for interaction, operation, dataset, schema in interaction_components:  # noqa: WPS440
+            await create_or_update_interaction(interaction, operation, dataset, schema, unit_of_work)
 
 
-async def handle_dataset_symlinks(
-    event: OpenLineageRunEvent,
-    datasets: dict[str, Dataset],
-    unit_of_work: UnitOfWork,
-) -> None:
-    dataset_symlinks: list[DatasetSymlinkDTO] = []
-    for input in event.inputs:
-        dataset_symlinks.extend(extract_dataset_symlinks(input))
-    for output in event.outputs:
-        dataset_symlinks.extend(extract_dataset_symlinks(output))
+async def handle_dataset(dataset: OpenLineageDataset, unit_of_work: UnitOfWork) -> Dataset:
+    raw_dataset = extract_dataset(dataset)
+    result = await get_or_create_dataset(raw_dataset, unit_of_work)
+    datasets: dict[str, Dataset] = {raw_dataset.full_name: result}
 
-    for dataset_symlink in dataset_symlinks:
+    for raw_extra_dataset in extract_dataset_aliases(dataset):
+        datasets[raw_extra_dataset.full_name] = await get_or_create_dataset(raw_extra_dataset, unit_of_work)
+
+    for dataset_symlink in extract_dataset_symlinks(dataset):
         from_dataset = datasets[dataset_symlink.from_dataset.full_name]
         to_dataset = datasets[dataset_symlink.to_dataset.full_name]
         await get_or_create_dataset_symlink(
@@ -116,24 +124,15 @@ async def handle_dataset_symlinks(
             unit_of_work,
         )
 
+    return result
 
-async def handle_interaction_schemas(
-    event: OpenLineageRunEvent,
-    unit_of_work: UnitOfWork,
-) -> None:
-    schemas: list[SchemaDTO] = []
-    for input in event.inputs:
-        schema = extract_interaction_schema(input)
-        if schema:
-            schemas.append(schema)
 
-    for output in event.outputs:
-        schema = extract_interaction_schema(output)
-        if schema:
-            schemas.append(schema)
-
-    for raw_schema in schemas:
-        await get_or_create_schema(raw_schema, unit_of_work)
+async def handle_schema(dataset: OpenLineageDataset, unit_of_work: UnitOfWork) -> Schema | None:
+    schema = extract_interaction_schema(dataset)
+    if not schema:
+        return None
+    async with unit_of_work:
+        return await get_or_create_interaction_schema(schema, unit_of_work)
 
 
 async def get_or_create_parent_run(event: OpenLineageRunEvent, unit_of_work: UnitOfWork) -> Run | None:
@@ -178,5 +177,16 @@ async def get_or_create_dataset_symlink(
     )
 
 
-async def get_or_create_schema(schema: SchemaDTO, unit_of_work: UnitOfWork) -> Schema:
+async def get_or_create_interaction_schema(schema: SchemaDTO, unit_of_work: UnitOfWork) -> Schema:
     return await unit_of_work.schema.get_or_create(schema)
+
+
+async def create_or_update_interaction(
+    interaction: InteractionDTO,
+    operation: Operation,
+    dataset: Dataset,
+    schema: Schema | None,
+    unit_of_work: UnitOfWork,
+) -> Interaction:
+    schema_id = schema.id if schema else None
+    return await unit_of_work.interaction.create_or_update(interaction, operation.id, dataset.id, schema_id)

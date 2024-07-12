@@ -12,6 +12,7 @@ from uuid6 import UUID
 from data_rentgen.db.models import Job, Location, Operation, OperationType, Run, Status
 from data_rentgen.db.models.dataset import Dataset
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
+from data_rentgen.db.models.interaction import Interaction, InteractionType
 from data_rentgen.db.models.schema import Schema
 
 RESOURCES_PATH = Path(__file__).parent.parent.joinpath("resources").resolve()
@@ -127,7 +128,7 @@ async def test_runs_handler_spark(
     assert dataset_symlinks[1].to_dataset_id == hdfs_warehouse.id
     assert dataset_symlinks[1].type == DatasetSymlinkType.WAREHOUSE
 
-    schema_query = select(Schema)
+    schema_query = select(Schema).order_by(Schema.id)
     schema_scalars = await async_session.scalars(schema_query)
     schemas = schema_scalars.all()
     assert len(schemas) == 2
@@ -145,3 +146,30 @@ async def test_runs_handler_spark(
         {"name": "customer_id", "type": "decimal(20,0)"},
         {"name": "total_spent", "type": "float"},
     ]
+
+    interaction_query = select(Interaction).order_by(Interaction.dataset_id)
+    interaction_scalars = await async_session.scalars(interaction_query)
+    interactions = interaction_scalars.all()
+    assert len(interactions) == 2
+
+    clickhouse_interaction = interactions[1]
+    assert clickhouse_interaction.created_at == datetime(2024, 7, 5, 9, 6, 29, 463000, tzinfo=timezone.utc)
+    assert clickhouse_interaction.operation_id == job_operation.id
+    assert clickhouse_interaction.dataset_id == clickhouse_table.id
+    assert clickhouse_interaction.type == InteractionType.OVERWRITE
+    assert clickhouse_interaction.schema_id == clickhouse_schema.id
+    assert clickhouse_interaction.connect_as_user_id is None
+    assert clickhouse_interaction.num_bytes == 5_000_000
+    assert clickhouse_interaction.num_rows == 10_000
+    assert clickhouse_interaction.num_files is None
+
+    hive_interaction = interactions[0]
+    assert hive_interaction.created_at == datetime(2024, 7, 5, 9, 6, 29, 463000, tzinfo=timezone.utc)
+    assert hive_interaction.operation_id == job_operation.id
+    assert hive_interaction.dataset_id == hdfs_warehouse.id
+    assert hive_interaction.type == InteractionType.READ
+    assert hive_interaction.schema_id == hive_schema.id
+    assert hive_interaction.connect_as_user_id is None
+    assert hive_interaction.num_bytes is None
+    assert hive_interaction.num_rows is None
+    assert hive_interaction.num_files is None

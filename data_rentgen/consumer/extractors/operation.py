@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from data_rentgen.consumer.extractors.uuid import extract_created_at_from_uuid
 from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEvent,
     OpenLineageRunEventType,
@@ -11,7 +10,6 @@ from data_rentgen.dto import OperationDTO, OperationStatusDTO, OperationTypeDTO
 
 def extract_operation(event: OpenLineageRunEvent) -> OperationDTO:
     operation = OperationDTO(
-        created_at=extract_created_at_from_uuid(event.run.runId),
         id=event.run.runId,
         name=event.job.name,
         type=OperationTypeDTO(event.job.facets.jobType.processingType) if event.job.facets.jobType else None,

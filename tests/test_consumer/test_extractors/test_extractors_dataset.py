@@ -1,6 +1,10 @@
 import pytest
 
-from data_rentgen.consumer.extractors import extract_dataset_symlinks, extract_datasets
+from data_rentgen.consumer.extractors import (
+    extract_dataset,
+    extract_dataset_aliases,
+    extract_dataset_symlinks,
+)
 from data_rentgen.consumer.openlineage.dataset import OpenLineageDataset
 from data_rentgen.consumer.openlineage.dataset_facets import (
     OpenLineageDatasetFacets,
@@ -23,16 +27,15 @@ def test_extractors_extract_dataset_hdfs():
         name="/user/hive/warehouse/mydb.db/mytable",
     )
 
-    assert extract_datasets(dataset) == [
-        DatasetDTO(
-            location=LocationDTO(
-                type="hdfs",
-                name="test-hadoop:9820",
-                addresses=["hdfs://test-hadoop:9820"],
-            ),
-            name="/user/hive/warehouse/mydb.db/mytable",
+    assert extract_dataset(dataset) == DatasetDTO(
+        location=LocationDTO(
+            type="hdfs",
+            name="test-hadoop:9820",
+            addresses=["hdfs://test-hadoop:9820"],
         ),
-    ]
+        name="/user/hive/warehouse/mydb.db/mytable",
+    )
+    assert not extract_dataset_aliases(dataset)
     assert not extract_dataset_symlinks(dataset)
 
 
@@ -71,7 +74,8 @@ def test_extractors_extract_dataset_hdfs_with_table_symlink():
         name="mydb.mytable",
     )
 
-    assert extract_datasets(dataset) == [hdfs_dataset, hive_dataset]
+    assert extract_dataset(dataset) == hdfs_dataset
+    assert extract_dataset_aliases(dataset) == [hive_dataset]
     assert extract_dataset_symlinks(dataset) == [
         DatasetSymlinkDTO(from_dataset=hdfs_dataset, to_dataset=hive_dataset, type=DatasetSymlinkTypeDTO.METASTORE),
         DatasetSymlinkDTO(from_dataset=hive_dataset, to_dataset=hdfs_dataset, type=DatasetSymlinkTypeDTO.WAREHOUSE),
@@ -99,17 +103,16 @@ def test_extractors_extract_dataset_hdfs_with_format(storage_layer: str, file_fo
         ),
     )
 
-    assert extract_datasets(dataset) == [
-        DatasetDTO(
-            location=LocationDTO(
-                type="hdfs",
-                name="test-hadoop:9820",
-                addresses=["hdfs://test-hadoop:9820"],
-            ),
-            name="/user/hive/warehouse/mydb.db/mytable",
-            format=expected_format,
+    assert extract_dataset(dataset) == DatasetDTO(
+        location=LocationDTO(
+            type="hdfs",
+            name="test-hadoop:9820",
+            addresses=["hdfs://test-hadoop:9820"],
         ),
-    ]
+        name="/user/hive/warehouse/mydb.db/mytable",
+        format=expected_format,
+    )
+    assert not extract_dataset_aliases(dataset)
     assert not extract_dataset_symlinks(dataset)
 
 
@@ -118,16 +121,15 @@ def test_extractors_extract_dataset_s3():
         namespace="s3://bucket",
         name="warehouse/mydb.db/mytable",
     )
-    assert extract_datasets(dataset) == [
-        DatasetDTO(
-            location=LocationDTO(
-                type="s3",
-                name="bucket",
-                addresses=["s3://bucket"],
-            ),
-            name="warehouse/mydb.db/mytable",
+    assert extract_dataset(dataset) == DatasetDTO(
+        location=LocationDTO(
+            type="s3",
+            name="bucket",
+            addresses=["s3://bucket"],
         ),
-    ]
+        name="warehouse/mydb.db/mytable",
+    )
+    assert not extract_dataset_aliases(dataset)
     assert not extract_dataset_symlinks(dataset)
 
 
@@ -137,16 +139,15 @@ def test_extractors_extract_dataset_file():
         name="/warehouse/mydb.db/mytable",
     )
 
-    assert extract_datasets(dataset) == [
-        DatasetDTO(
-            location=LocationDTO(
-                type="file",
-                name="unknown",
-                addresses=["file://unknown"],
-            ),
-            name="/warehouse/mydb.db/mytable",
+    assert extract_dataset(dataset) == DatasetDTO(
+        location=LocationDTO(
+            type="file",
+            name="unknown",
+            addresses=["file://unknown"],
         ),
-    ]
+        name="/warehouse/mydb.db/mytable",
+    )
+    assert not extract_dataset_aliases(dataset)
     assert not extract_dataset_symlinks(dataset)
 
 
@@ -156,16 +157,15 @@ def test_extractors_extract_dataset_hive():
         name="mydb.mytable",
     )
 
-    assert extract_datasets(dataset) == [
-        DatasetDTO(
-            location=LocationDTO(
-                type="hive",
-                name="test-hadoop:9083",
-                addresses=["hive://test-hadoop:9083"],
-            ),
-            name="mydb.mytable",
+    assert extract_dataset(dataset) == DatasetDTO(
+        location=LocationDTO(
+            type="hive",
+            name="test-hadoop:9083",
+            addresses=["hive://test-hadoop:9083"],
         ),
-    ]
+        name="mydb.mytable",
+    )
+    assert not extract_dataset_aliases(dataset)
     assert not extract_dataset_symlinks(dataset)
 
 
@@ -205,7 +205,8 @@ def test_extractors_extract_dataset_hive_with_location_symlink():
         name="/warehouse/mydb.db/mytable",
     )
 
-    assert extract_datasets(dataset) == [hive_dataset, hdfs_dataset]
+    assert extract_dataset(dataset) == hive_dataset
+    assert extract_dataset_aliases(dataset) == [hdfs_dataset]
     assert extract_dataset_symlinks(dataset) == [
         DatasetSymlinkDTO(from_dataset=hive_dataset, to_dataset=hdfs_dataset, type=DatasetSymlinkTypeDTO.WAREHOUSE),
         DatasetSymlinkDTO(from_dataset=hdfs_dataset, to_dataset=hive_dataset, type=DatasetSymlinkTypeDTO.METASTORE),
@@ -218,16 +219,15 @@ def test_extractors_extract_dataset_postgres():
         name="mydb.myschema.mytable",
     )
 
-    assert extract_datasets(dataset) == [
-        DatasetDTO(
-            location=LocationDTO(
-                type="postgres",
-                name="192.168.1.1:5432",
-                addresses=["postgres://192.168.1.1:5432"],
-            ),
-            name="mydb.myschema.mytable",
+    assert extract_dataset(dataset) == DatasetDTO(
+        location=LocationDTO(
+            type="postgres",
+            name="192.168.1.1:5432",
+            addresses=["postgres://192.168.1.1:5432"],
         ),
-    ]
+        name="mydb.myschema.mytable",
+    )
+    assert not extract_dataset_aliases(dataset)
     assert not extract_dataset_symlinks(dataset)
 
 
@@ -237,16 +237,15 @@ def test_extractors_extract_dataset_kafka():
         name="mytopic",
     )
 
-    assert extract_datasets(dataset) == [
-        DatasetDTO(
-            location=LocationDTO(
-                type="kafka",
-                name="192.168.1.1:9092",
-                addresses=["kafka://192.168.1.1:9092", "kafka://192.168.1.2:9092"],
-            ),
-            name="mytopic",
+    assert extract_dataset(dataset) == DatasetDTO(
+        location=LocationDTO(
+            type="kafka",
+            name="192.168.1.1:9092",
+            addresses=["kafka://192.168.1.1:9092", "kafka://192.168.1.2:9092"],
         ),
-    ]
+        name="mytopic",
+    )
+    assert not extract_dataset_aliases(dataset)
     assert not extract_dataset_symlinks(dataset)
 
 
@@ -256,14 +255,13 @@ def test_extractors_extract_dataset_unknown():
         name="some.name",
     )
 
-    assert extract_datasets(dataset) == [
-        DatasetDTO(
-            location=LocationDTO(
-                type="unknown",
-                name="some-namespace",
-                addresses=["unknown://some-namespace"],
-            ),
-            name="some.name",
+    assert extract_dataset(dataset) == DatasetDTO(
+        location=LocationDTO(
+            type="unknown",
+            name="some-namespace",
+            addresses=["unknown://some-namespace"],
         ),
-    ]
+        name="some.name",
+    )
+    assert not extract_dataset_aliases(dataset)
     assert not extract_dataset_symlinks(dataset)

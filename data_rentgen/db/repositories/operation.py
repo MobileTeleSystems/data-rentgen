@@ -7,16 +7,21 @@ from sqlalchemy import select
 
 from data_rentgen.db.models import Operation, OperationType, Status
 from data_rentgen.db.repositories.base import Repository
+from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid
 from data_rentgen.dto import OperationDTO
 
 
 class OperationRepository(Repository[Operation]):
     async def create_or_update(self, operation: OperationDTO, run_id: UUID | None) -> Operation:
-        query = select(Operation).where(Operation.id == operation.id, Operation.created_at == operation.created_at)
+        created_at = extract_timestamp_from_uuid(operation.id)
+        query = select(Operation).where(
+            Operation.created_at == created_at,
+            Operation.id == operation.id,
+        )
         result = await self._session.scalar(query)
         if not result:
             result = Operation(
-                created_at=operation.created_at,
+                created_at=created_at,
                 id=operation.id,
                 run_id=run_id,
                 name=operation.name,
