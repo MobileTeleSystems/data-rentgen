@@ -22,7 +22,6 @@ class RunStatusDTO(str, Enum):
 
 @dataclass(slots=True)
 class RunDTO:
-    created_at: datetime
     id: UUID
     job: JobDTO
     status: RunStatusDTO | None = None

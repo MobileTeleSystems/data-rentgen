@@ -48,9 +48,8 @@ def extract_dataset_symlinks(dataset: OpenLineageDataset) -> list[DatasetSymlink
     return result
 
 
-def extract_datasets(dataset: OpenLineageDataset) -> list[DatasetDTO]:
-    result = [extract_dataset(dataset)]
-
+def extract_dataset_aliases(dataset: OpenLineageDataset) -> list[DatasetDTO]:
+    result = []
     if dataset.facets.symlinks:
         for identifier in dataset.facets.symlinks.identifiers:
             result.append(extract_dataset(identifier))

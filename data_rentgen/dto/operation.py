@@ -31,7 +31,6 @@ class OperationStatusDTO(str, Enum):
 
 @dataclass(slots=True)
 class OperationDTO:
-    created_at: datetime
     id: UUID
     name: str
     type: OperationTypeDTO | None = None

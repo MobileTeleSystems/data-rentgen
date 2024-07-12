@@ -46,7 +46,6 @@ def test_extractors_extract_operation_spark_job_no_details():
         run=OpenLineageRun(runId=operation_id),
     )
     assert extract_operation(operation) == OperationDTO(
-        created_at=datetime(2024, 7, 5, 9, 4, 13, 979000, tzinfo=timezone.utc),
         id=operation_id,
         name="mysession.execute_some_command",
         type=OperationTypeDTO.BATCH,
@@ -106,7 +105,6 @@ def test_extractors_extract_operation_spark_job_with_details(
         ),
     )
     assert extract_operation(operation) == OperationDTO(
-        created_at=datetime(2024, 7, 5, 9, 4, 13, 979000, tzinfo=timezone.utc),
         id=operation_id,
         name="mysession.execute_some_command",
         type=OperationTypeDTO.STREAMING,
@@ -142,7 +140,6 @@ def test_extractors_extract_operation_spark_job_finished(
 
     ended_at = now if expected_status else None
     assert extract_operation(operation) == OperationDTO(
-        created_at=datetime(2024, 7, 5, 9, 4, 13, 979000, tzinfo=timezone.utc),
         id=operation_id,
         name="mysession.execute_some_command",
         type=None,

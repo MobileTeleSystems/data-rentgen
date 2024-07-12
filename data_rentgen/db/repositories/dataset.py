@@ -20,8 +20,10 @@ class DatasetRepository(Repository[Dataset]):
         if not result:
             result = Dataset(location_id=location_id, name=dataset.name, format=dataset.format)
             self._session.add(result)
-            await self._session.flush([result])
+        elif dataset.format:
+            result.format = dataset.format
 
+        await self._session.flush([result])
         return result
 
     async def create_or_update_symlink(
@@ -38,12 +40,10 @@ class DatasetRepository(Repository[Dataset]):
         if not result:
             result = DatasetSymlink(from_dataset_id=from_dataset_id, to_dataset_id=to_dataset_id, type=symlink_type)
             self._session.add(result)
-            await self._session.flush([result])
-
-        elif result.type:
+        else:
             result.type = symlink_type
-            await self._session.flush([result])
 
+        await self._session.flush([result])
         return result
 
     async def paginate(self, page: int, page_size: int, dataset_id: list[int]) -> PaginationDTO[Dataset]:

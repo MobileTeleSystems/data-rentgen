@@ -5,7 +5,7 @@ from data_rentgen.db.models.address import Address
 from data_rentgen.db.models.base import Base
 from data_rentgen.db.models.dataset import Dataset
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
-from data_rentgen.db.models.interaction import Interaction
+from data_rentgen.db.models.interaction import Interaction, InteractionType
 from data_rentgen.db.models.job import Job
 from data_rentgen.db.models.location import Location
 from data_rentgen.db.models.operation import Operation, OperationType
@@ -21,6 +21,7 @@ __all__ = [
     "DatasetSymlink",
     "DatasetSymlinkType",
     "Interaction",
+    "InteractionType",
     "Job",
     "Location",
     "Operation",

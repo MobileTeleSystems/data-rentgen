@@ -228,7 +228,7 @@ i-control-code = false
 max-noqa-comments = 10
 max-annotation-complexity = 4
 max-returns = 6
-max-awaits = 5
+max-awaits = 7
 max-local-variables = 20
 max-name-length = 60
 # Max of expressions in a function

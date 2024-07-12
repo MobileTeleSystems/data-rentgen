@@ -3,6 +3,7 @@
 
 from data_rentgen.dto.dataset import DatasetDTO
 from data_rentgen.dto.dataset_symlink import DatasetSymlinkDTO, DatasetSymlinkTypeDTO
+from data_rentgen.dto.interaction import InteractionDTO, InteractionTypeDTO
 from data_rentgen.dto.job import JobDTO
 from data_rentgen.dto.location import LocationDTO
 from data_rentgen.dto.operation import (
@@ -19,6 +20,8 @@ __all__ = [
     "DatasetSymlinkDTO",
     "DatasetSymlinkTypeDTO",
     "LocationDTO",
+    "InteractionDTO",
+    "InteractionTypeDTO",
     "JobDTO",
     "OperationDTO",
     "OperationStatusDTO",

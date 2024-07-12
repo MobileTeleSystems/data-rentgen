@@ -8,7 +8,6 @@ from enum import Enum
 
 from sqlalchemy import UUID as SQL_UUID
 from sqlalchemy import BigInteger, DateTime, PrimaryKeyConstraint
-from sqlalchemy.engine.default import DefaultExecutionContext
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
 from uuid6 import UUID
@@ -18,12 +17,6 @@ from data_rentgen.db.models.dataset import Dataset
 from data_rentgen.db.models.operation import Operation
 from data_rentgen.db.models.schema import Schema
 from data_rentgen.db.models.user import User
-from data_rentgen.db.utils.uuid import generate_new_uuid
-
-
-def _default_uuid(context: DefaultExecutionContext):
-    created_at: datetime = context.get_current_parameters()["created_at"]
-    return generate_new_uuid(created_at)
 
 
 class InteractionType(str, Enum):
@@ -56,10 +49,10 @@ class Interaction(Base):
         nullable=False,
         doc="Timestamp component of UUID, used for table partitioning",
     )
-    id: Mapped[UUID] = mapped_column(SQL_UUID, default=_default_uuid)
+    id: Mapped[UUID] = mapped_column(SQL_UUID)
 
     operation_id: Mapped[UUID] = mapped_column(
-        BigInteger,
+        SQL_UUID,
         index=True,
         nullable=False,
         doc="Operation caused this interaction",
@@ -89,12 +82,6 @@ class Interaction(Base):
         nullable=False,
         default=InteractionType.APPEND,
         doc="Type of the interaction, e.g. READ, CREATE, APPEND",
-    )
-
-    ended_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True),
-        nullable=True,
-        doc="End time of the interaction",
     )
 
     schema_id: Mapped[int | None] = mapped_column(

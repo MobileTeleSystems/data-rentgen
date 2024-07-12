@@ -48,7 +48,6 @@ def test_extractors_extract_run_spark_app_yarn():
         ),
     )
     assert extract_run(run) == RunDTO(
-        created_at=datetime(2024, 7, 5, 9, 4, 13, 979000, tzinfo=timezone.utc),
         id=run_id,
         job=JobDTO(
             name="myjob",
@@ -88,7 +87,6 @@ def test_extractors_extract_run_spark_app_local():
     )
 
     assert extract_run(run) == RunDTO(
-        created_at=datetime(2024, 7, 5, 9, 4, 13, 979000, tzinfo=timezone.utc),
         id=run_id,
         job=JobDTO(
             name="myjob",
@@ -130,7 +128,6 @@ def test_extractors_extract_run_airflow_task():
     )
 
     assert extract_run(run) == RunDTO(
-        created_at=datetime(2024, 7, 5, 9, 4, 13, 979000, tzinfo=timezone.utc),
         id=run_id,
         job=JobDTO(
             name="mydag.mytask",
@@ -170,7 +167,6 @@ def test_extractors_extract_run_unknown(event_type: OpenLineageRunEventType, exp
 
     ended_at = now if expected_status else None
     assert extract_run(run) == RunDTO(
-        created_at=datetime(2024, 7, 5, 9, 4, 13, 979000, tzinfo=timezone.utc),
         id=run_id,
         job=JobDTO(
             name="myjob",
