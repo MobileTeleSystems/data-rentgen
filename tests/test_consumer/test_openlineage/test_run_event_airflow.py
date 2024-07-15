@@ -45,7 +45,7 @@ def test_run_event_airflow_dag_start():
         "eventType": "START",
         "job": {
             "name": "mydag",
-            "namespace": "airflow://airflow-host:8081",
+            "namespace": "http://airflow-host:8081",
             "facets": {
                 "documentation": {
                     "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.9.0",
@@ -104,7 +104,7 @@ def test_run_event_airflow_dag_start():
         eventTime=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
         eventType=OpenLineageRunEventType.START,
         job=OpenLineageJob(
-            namespace="airflow://airflow-host:8081",
+            namespace="http://airflow-host:8081",
             name="mydag",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
@@ -135,7 +135,7 @@ def test_run_event_airflow_dag_end():
         "eventType": "COMPLETE",
         "job": {
             "name": "mydag",
-            "namespace": "airflow://airflow-host:8081",
+            "namespace": "http://airflow-host:8081",
             "facets": {
                 "jobType": {
                     "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.9.0",
@@ -165,7 +165,7 @@ def test_run_event_airflow_dag_end():
         eventTime=datetime(2024, 7, 5, 9, 8, 5, 691973, tzinfo=timezone.utc),
         eventType=OpenLineageRunEventType.COMPLETE,
         job=OpenLineageJob(
-            namespace="airflow://airflow-host:8081",
+            namespace="http://airflow-host:8081",
             name="mydag",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
@@ -193,7 +193,7 @@ def test_run_event_airflow_task_start():
         "eventType": "START",
         "job": {
             "name": "mydag.mytask",
-            "namespace": "airflow://airflow-host:8081",
+            "namespace": "http://airflow-host:8081",
             "facets": {
                 "jobType": {
                     "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.9.0",
@@ -275,7 +275,7 @@ def test_run_event_airflow_task_start():
                 "parent": {
                     "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.9.0",
                     "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/ParentRunFacet",
-                    "job": {"name": "mydag", "namespace": "airflow://airflow-host:8081"},
+                    "job": {"name": "mydag", "namespace": "http://airflow-host:8081"},
                     "run": {"runId": "01908223-0782-79b8-9495-b1c38aaee839"},
                 },
                 "processing_engine": {
@@ -329,7 +329,7 @@ def test_run_event_airflow_task_start():
         eventTime=datetime(2024, 7, 5, 9, 4, 20, 783845, tzinfo=timezone.utc),
         eventType=OpenLineageRunEventType.START,
         job=OpenLineageJob(
-            namespace="airflow://airflow-host:8081",
+            namespace="http://airflow-host:8081",
             name="mydag.mytask",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
@@ -346,7 +346,7 @@ def test_run_event_airflow_task_start():
                 parent=OpenLineageParentRunFacet(
                     job=OpenLineageParentJob(
                         name="mydag",
-                        namespace="airflow://airflow-host:8081",
+                        namespace="http://airflow-host:8081",
                     ),
                     run=OpenLineageParentRun(
                         runId=UUID("01908223-0782-79b8-9495-b1c38aaee839"),
@@ -366,6 +366,8 @@ def test_run_event_airflow_task_start():
                     ),
                     dagRun=OpenLineageAirflowDagRunInfo(
                         run_id="manual__2024-07-05T09:04:12.162809+00:00",
+                        data_interval_start=datetime(2024, 7, 5, 9, 4, 12, 162809, tzinfo=timezone.utc),
+                        data_interval_end=datetime(2024, 7, 5, 9, 4, 12, 162809, tzinfo=timezone.utc),
                     ),
                     dag=OpenLineageAirflowDagInfo(
                         dag_id="mydag",
@@ -387,7 +389,7 @@ def test_run_event_airflow_task_complete():
         "eventType": "COMPLETE",
         "job": {
             "name": "mydag.mytask",
-            "namespace": "airflow://airflow-host:8081",
+            "namespace": "http://airflow-host:8081",
             "facets": {
                 "jobType": {
                     "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.9.0",
@@ -404,7 +406,7 @@ def test_run_event_airflow_task_complete():
                 "parent": {
                     "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.9.0",
                     "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/ParentRunFacet",
-                    "job": {"name": "mydag", "namespace": "airflow://airflow-host:8081"},
+                    "job": {"name": "mydag", "namespace": "http://airflow-host:8081"},
                     "run": {"runId": "01908223-0782-79b8-9495-b1c38aaee839"},
                 },
                 "unknownSourceAttribute": {
@@ -451,7 +453,7 @@ def test_run_event_airflow_task_complete():
         eventTime=datetime(2024, 7, 5, 9, 7, 37, 858423, tzinfo=timezone.utc),
         eventType=OpenLineageRunEventType.COMPLETE,
         job=OpenLineageJob(
-            namespace="airflow://airflow-host:8081",
+            namespace="http://airflow-host:8081",
             name="mydag.mytask",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
@@ -467,7 +469,7 @@ def test_run_event_airflow_task_complete():
                 parent=OpenLineageParentRunFacet(
                     job=OpenLineageParentJob(
                         name="mydag",
-                        namespace="airflow://airflow-host:8081",
+                        namespace="http://airflow-host:8081",
                     ),
                     run=OpenLineageParentRun(
                         runId=UUID("01908223-0782-79b8-9495-b1c38aaee839"),

@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+from datetime import datetime
+
 from data_rentgen.consumer.openlineage.base import OpenLineageBase
 from data_rentgen.consumer.openlineage.run_facets.base import OpenLineageRunFacet
 
@@ -19,6 +21,8 @@ class OpenLineageAirflowDagRunInfo(OpenLineageBase):
     """
 
     run_id: str
+    data_interval_start: datetime
+    data_interval_end: datetime
 
 
 class OpenLineageAirflowTaskInfo(OpenLineageBase):
@@ -35,6 +39,8 @@ class OpenLineageAirflowTaskInstanceInfo(OpenLineageBase):
     """
 
     try_number: int
+    map_index: int | None = None
+    log_url: str | None = None
 
 
 class OpenLineageAirflowRunFacet(OpenLineageRunFacet):

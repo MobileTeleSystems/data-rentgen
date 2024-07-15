@@ -20,13 +20,13 @@ def test_extractors_extract_job_spark_local():
 
 
 def test_extractors_extract_job_airflow():
-    job = OpenLineageJob(namespace="airflow://airflow-host:8081", name="mydag.mytask")
+    job = OpenLineageJob(namespace="http://airflow-host:8081", name="mydag.mytask")
     assert extract_job(job) == JobDTO(
         name="mydag.mytask",
         location=LocationDTO(
-            type="airflow",
+            type="http",
             name="airflow-host:8081",
-            addresses=["airflow://airflow-host:8081"],
+            addresses=["http://airflow-host:8081"],
         ),
     )
 
