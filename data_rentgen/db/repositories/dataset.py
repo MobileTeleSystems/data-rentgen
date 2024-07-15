@@ -2,11 +2,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 
-from data_rentgen.db.models import Dataset
+from data_rentgen.db.models import Dataset, Location
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
 from data_rentgen.db.repositories.base import Repository
-from data_rentgen.dto import DatasetDTO
+from data_rentgen.dto import DatasetDTO, PaginationDTO
 
 
 class DatasetRepository(Repository[Dataset]):
@@ -44,3 +45,11 @@ class DatasetRepository(Repository[Dataset]):
             await self._session.flush([result])
 
         return result
+
+    async def paginate(self, page: int, page_size: int, dataset_id: list[int]) -> PaginationDTO[Dataset]:
+        query = (
+            select(Dataset)
+            .where(Dataset.id.in_(dataset_id))
+            .options(selectinload(Dataset.location).selectinload(Location.addresses))
+        )
+        return await self._paginate_by_query(order_by=[Dataset.id], page=page, page_size=page_size, query=query)

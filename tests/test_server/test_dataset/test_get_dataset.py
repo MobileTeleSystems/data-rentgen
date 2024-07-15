@@ -6,25 +6,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import select
 
-from data_rentgen.db.models import Job, Location
+from data_rentgen.db.models import Dataset, Location
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
-async def test_get_job_empty(
-    test_client: AsyncClient,
-):
-    response = await test_client.get("v1/job")
+async def test_get_dataset_empty(test_client: AsyncClient):
+    response = await test_client.get(
+        "v1/dataset",
+    )
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
 
-async def test_get_job_missing(
+async def test_get_dataset_missing(
     test_client: AsyncClient,
-    new_job: Job,
+    new_dataset: Dataset,
 ):
     response = await test_client.get(
-        f"v1/job?job_id={new_job.id}",
+        f"v1/dataset?dataset_id={new_dataset.id}",
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -43,16 +43,16 @@ async def test_get_job_missing(
     }
 
 
-async def test_get_job(
-    test_client: AsyncClient,
-    job: Job,
-    async_session: AsyncSession,
-):
-    query = select(Job).where(Job.id == job.id).options(selectinload(Job.location).selectinload(Location.addresses))
-    job = await async_session.scalar(query)
+async def test_get_dataset(async_session: AsyncSession, test_client: AsyncClient, dataset: Dataset):
+    query = (
+        select(Dataset)
+        .where(Dataset.id == dataset.id)
+        .options(selectinload(Dataset.location).selectinload(Location.addresses))
+    )
+    dataset_from_db: Dataset = await async_session.scalar(query)
 
     response = await test_client.get(
-        f"v1/job?job_id={job.id}",
+        f"v1/dataset?dataset_id={dataset.id}",
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -69,13 +69,14 @@ async def test_get_job(
         },
         "items": [
             {
-                "id": job.id,
-                "name": job.name,
+                "id": dataset_from_db.id,
+                "format": dataset_from_db.format,
+                "name": dataset_from_db.name,
                 "location": {
-                    "type": job.location.type,
-                    "name": job.location.name,
+                    "name": dataset_from_db.location.name,
+                    "type": dataset_from_db.location.type,
                     "addresses": [
-                        {"url": job.location.addresses[0].url},
+                        {"url": dataset_from_db.location.addresses[0].url},
                     ],
                 },
             },
@@ -83,22 +84,18 @@ async def test_get_job(
     }
 
 
-async def test_get_jobs(
-    test_client: AsyncClient,
-    jobs: list[Job],
-    async_session: AsyncSession,
-):
+async def test_get_datasets(async_session: AsyncSession, test_client: AsyncClient, datasets: list[Dataset]):
     query = (
-        select(Job)
-        .where(Job.id.in_([job.id for job in jobs]))
-        .order_by(Job.id)
-        .options(selectinload(Job.location).selectinload(Location.addresses))
+        select(Dataset)
+        .where(Dataset.id.in_([dataset.id for dataset in datasets]))
+        .order_by(Dataset.id)
+        .options(selectinload(Dataset.location).selectinload(Location.addresses))
     )
     scalars = await async_session.scalars(query)
-    jobs_from_db = list(scalars.all())
+    datasets_from_db = list(scalars.all())
 
     response = await test_client.get(
-        f"v1/job?job_id={jobs[0].id}&job_id={jobs[1].id}",
+        f"v1/dataset?dataset_id={datasets[0].id}&dataset_id={datasets[1].id}",
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -115,14 +112,15 @@ async def test_get_jobs(
         },
         "items": [
             {
-                "id": job.id,
-                "name": job.name,
+                "id": dataset.id,
+                "format": dataset.format,
+                "name": dataset.name,
                 "location": {
-                    "type": job.location.type,
-                    "name": job.location.name,
-                    "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "name": dataset.location.name,
+                    "type": dataset.location.type,
+                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
                 },
             }
-            for job in jobs_from_db[:2]
+            for dataset in datasets_from_db[:2]
         ],
     }
