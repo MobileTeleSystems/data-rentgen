@@ -1,12 +1,19 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+from urllib.parse import quote
+
+from packaging.version import Version
+
 from data_rentgen.consumer.extractors.job import extract_job
 from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEvent,
     OpenLineageRunEventType,
 )
-from data_rentgen.consumer.openlineage.run_facets import OpenLineageParentRunFacet
+from data_rentgen.consumer.openlineage.run_facets import (
+    OpenLineageAirflowRunFacet,
+    OpenLineageParentRunFacet,
+)
 from data_rentgen.dto import RunDTO, RunStatusDTO
 
 
@@ -67,4 +74,45 @@ def enrich_run_logs(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
     if spark_application_details:
         run.running_log_url = spark_application_details.proxyUrl or spark_application_details.uiWebUrl
         run.persistent_log_url = spark_application_details.historyUrl
+        return run
+
+    airflow_task_run_facet = event.run.facets.airflow
+    if airflow_task_run_facet:
+        # https://github.com/OpenLineage/OpenLineage/pull/2852
+        if airflow_task_run_facet.taskInstance.log_url:
+            run.persistent_log_url = airflow_task_run_facet.taskInstance.log_url
+            return run
+
+        namespace = event.job.namespace
+        if not namespace.startswith("http"):
+            return run
+
+        processing_engine = event.run.facets.processing_engine
+        if processing_engine and processing_engine.version >= Version("2.9.1"):
+            run.persistent_log_url = get_airflow_2_9_plus_log_url(namespace, airflow_task_run_facet)
+        else:
+            run.persistent_log_url = get_airflow_2_x_log_url(namespace, airflow_task_run_facet)
     return run
+
+
+def get_airflow_2_9_plus_log_url(  # noqa: WPS114
+    namespace: str,
+    airflow_task_run_facet: OpenLineageAirflowRunFacet,
+) -> str:
+    # https://github.com/apache/airflow/pull/39183
+    # https://github.com/apache/airflow/blob/2.9.1/airflow/models/taskinstance.py#L1720-L1734
+    dag_id = airflow_task_run_facet.dag.dag_id
+    dag_run_id = quote(airflow_task_run_facet.dagRun.run_id)
+    task_id = quote(airflow_task_run_facet.task.task_id)
+    map_index = airflow_task_run_facet.taskInstance.map_index
+    if map_index is None:
+        map_index = -1
+    return f"{namespace}/dags/{dag_id}/grid?tab=logs&dag_run_id={dag_run_id}&task_id={task_id}&map_index={map_index}"
+
+
+def get_airflow_2_x_log_url(namespace: str, airflow_task_run_facet: OpenLineageAirflowRunFacet) -> str:  # noqa: WPS114
+    # https://github.com/apache/airflow/blob/2.1.0/airflow/models/taskinstance.py#L524-L528
+    dag_id = quote(airflow_task_run_facet.dag.dag_id)
+    execution_date = quote(airflow_task_run_facet.dagRun.data_interval_start.isoformat())
+    task_id = quote(airflow_task_run_facet.task.task_id)
+    return f"{namespace}/log?&dag_id={dag_id}&task_id={task_id}&execution_date={execution_date}"
