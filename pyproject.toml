@@ -44,7 +44,7 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
-pydantic = "^2.7.4"
+pydantic = "^2.8.2"
 typing-extensions = "^4.12.2"
 pydantic-settings = {version = "^2.3.4", optional = true}
 alembic = {version = "^1.13.2", optional = true}
@@ -53,9 +53,9 @@ sqlalchemy-utils = {version = "^0.41.2", optional = true}
 pyyaml = {version = "^6.0.1", optional = true}
 python-json-logger = {version = "^2.0.7", optional = true}
 coloredlogs = {version = "^15.0.1", optional = true}
-uuid6 = {version = "^2024.1.12", optional = true}
+uuid6 = {version = "^2024.7.10", optional = true}
 python-dateutil = {version = "^2.9.0.post0", optional = true}
-fastapi = {version = "^0.111.0", optional = true}
+fastapi = {version = "^0.111.1", optional = true}
 starlette = {version = "^0.37.2", optional = true}
 starlette-exporter = {version = "^0.23.0", optional = true}
 uvicorn = {version = "^0.30.1", optional = true}
@@ -106,7 +106,7 @@ pytest-asyncio = "^0.21.1"
 pytest-randomly = "^3.15.0"
 pytest-deadfixtures = "^2.2.1"
 pytest-rerunfailures = "^14.0"
-coverage = "^7.5.4"
+coverage = "^7.6.0"
 psycopg2-binary = "^2.9.9"
 gevent = "^24.2.1"
 
@@ -126,7 +126,7 @@ types-python-dateutil = "^2.9.0"
 [tool.poetry.group.docs.dependencies]
 autodoc-pydantic = "^2.2.0"
 numpydoc = "^1.7.0"
-sphinx = "^7.3.7"
+sphinx = "^7.4.4"
 furo = "^2024.5.6"
 sphinx-copybutton = "^0.5.2"
 sphinxcontrib-towncrier = "^0.4.0a0"
