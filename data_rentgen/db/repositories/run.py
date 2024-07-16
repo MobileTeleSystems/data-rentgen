@@ -22,7 +22,13 @@ class RunRepository(Repository[Run]):
 
         return result
 
-    async def create_or_update(self, run: RunDTO, job_id: int, parent_run_id: UUID | None) -> Run:
+    async def create_or_update(
+        self,
+        run: RunDTO,
+        job_id: int,
+        parent_run_id: UUID | None,
+        started_by_user_id: int | None,
+    ) -> Run:
         created_at = extract_timestamp_from_uuid(run.id)
         query = select(Run).where(Run.id == run.id, Run.created_at == created_at)
         result = await self._session.scalar(query)
@@ -39,6 +45,7 @@ class RunRepository(Repository[Run]):
                 attempt=run.attempt,
                 persistent_log_url=run.persistent_log_url,
                 running_log_url=run.running_log_url,
+                started_by_user_id=started_by_user_id,
             )
             self._session.add(result)
         else:
@@ -51,6 +58,7 @@ class RunRepository(Repository[Run]):
                 "attempt": run.attempt,
                 "persistent_log_url": run.persistent_log_url,
                 "running_log_url": run.running_log_url,
+                "started_by_user_id": started_by_user_id,
             }
 
             for column, value in optional_fields.items():

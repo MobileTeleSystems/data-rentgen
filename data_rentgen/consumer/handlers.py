@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.consumer.extractors import (
     extract_dataset,
+    extract_dataset_aliases,
     extract_dataset_symlinks,
     extract_input_interaction,
     extract_interaction_schema,
@@ -15,8 +16,8 @@ from data_rentgen.consumer.extractors import (
     extract_output_interaction,
     extract_parent_run,
     extract_run,
+    extract_run_user,
 )
-from data_rentgen.consumer.extractors.dataset import extract_dataset_aliases
 from data_rentgen.consumer.openlineage.dataset import OpenLineageDataset
 from data_rentgen.consumer.openlineage.job_facets import OpenLineageJobType
 from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
@@ -24,12 +25,13 @@ from data_rentgen.db.models import (
     Dataset,
     DatasetSymlink,
     DatasetSymlinkType,
+    Interaction,
     Job,
     Operation,
     Run,
+    Schema,
+    User,
 )
-from data_rentgen.db.models.interaction import Interaction
-from data_rentgen.db.models.schema import Schema
 from data_rentgen.dependencies import Stub
 from data_rentgen.dto import (
     DatasetDTO,
@@ -39,6 +41,7 @@ from data_rentgen.dto import (
     OperationDTO,
     RunDTO,
     SchemaDTO,
+    UserDTO,
 )
 from data_rentgen.services.uow import UnitOfWork
 
@@ -66,8 +69,14 @@ async def handle_run(event: OpenLineageRunEvent, unit_of_work: UnitOfWork) -> No
         job = await get_or_create_job(raw_job, unit_of_work)
 
     async with unit_of_work:
+        raw_user = extract_run_user(event)
+        user: User | None = None
+        if raw_user:
+            user = await get_or_create_user(raw_user, unit_of_work)
+
+    async with unit_of_work:
         raw_run = extract_run(event)
-        await create_or_update_run(raw_run, job, parent_run, unit_of_work)
+        await create_or_update_run(raw_run, job, parent_run, user, unit_of_work)
 
 
 async def handle_operation(event: OpenLineageRunEvent, unit_of_work: UnitOfWork) -> None:
@@ -149,9 +158,20 @@ async def get_or_create_job(job: JobDTO, unit_of_work: UnitOfWork) -> Job:
     return await unit_of_work.job.get_or_create(job, matching_location.id)
 
 
-async def create_or_update_run(run: RunDTO, job: Job, parent_run: Run | None, unit_of_work: UnitOfWork) -> Run:
+async def get_or_create_user(user: UserDTO, unit_of_work: UnitOfWork) -> User:
+    return await unit_of_work.user.get_or_create(user)
+
+
+async def create_or_update_run(
+    run: RunDTO,
+    job: Job,
+    parent_run: Run | None,
+    user: User | None,
+    unit_of_work: UnitOfWork,
+) -> Run:
     parent_run_id = parent_run.id if parent_run else None
-    return await unit_of_work.run.create_or_update(run, job.id, parent_run_id)
+    user_id = user.id if user else None
+    return await unit_of_work.run.create_or_update(run, job.id, parent_run_id, user_id)
 
 
 async def create_or_update_operation(operation: OperationDTO, run: Run | None, unit_of_work: UnitOfWork) -> Operation:

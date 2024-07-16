@@ -98,7 +98,6 @@ DB structure
         type
         ended_at
         schema_id
-        connect_as_user_id
         num_bytes
         num_rows
         num_files
@@ -121,6 +120,5 @@ DB structure
     Interaction ||--o{ Operation
     Interaction ||--o{ Dataset
     Interaction |o--o{ Schema
-    Interaction "connect_as_user_id" |o--o{ User
 
     @enduml

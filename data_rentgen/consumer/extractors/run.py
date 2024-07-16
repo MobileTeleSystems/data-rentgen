@@ -5,7 +5,7 @@ from urllib.parse import quote
 
 from packaging.version import Version
 
-from data_rentgen.consumer.extractors.job import extract_job
+from data_rentgen.consumer.extractors import extract_job
 from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEvent,
     OpenLineageRunEventType,

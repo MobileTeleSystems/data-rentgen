@@ -60,6 +60,7 @@ async def test_runs_handler_airflow(
     assert dag_run.ended_at == datetime(2024, 7, 5, 9, 8, 5, 691973, tzinfo=timezone.utc)
     assert dag_run.persistent_log_url is None
     assert dag_run.running_log_url is None
+    assert dag_run.started_by_user_id is None
 
     task_run = runs[1]
     assert task_run.id == UUID("01908223-0782-7fc0-9d69-b1df9dac2c60")
@@ -75,6 +76,7 @@ async def test_runs_handler_airflow(
         "http://airflow-host:8081/dags/mydag/grid?tab=logs&dag_run_id=manual__2024-07-05T09%3A04%3A12.162809%2B00%3A00&task_id=mytask&map_index=-1"
     )
     assert task_run.running_log_url is None
+    assert task_run.started_by_user_id is None
 
     operation_query = select(Operation)
     operation_scalars = await async_session.scalars(operation_query)
