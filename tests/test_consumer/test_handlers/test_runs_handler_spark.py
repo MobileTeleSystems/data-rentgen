@@ -16,6 +16,7 @@ from data_rentgen.db.models import (
     Interaction,
     InteractionType,
     Job,
+    JobType,
     Location,
     Operation,
     OperationType,
@@ -54,6 +55,7 @@ async def test_runs_handler_spark(
     assert jobs[0].location.name == "some.host.name"
     assert len(jobs[0].location.addresses) == 1
     assert jobs[0].location.addresses[0].url == "host://some.host.name"
+    assert jobs[0].type == JobType.SPARK_APPLICATION
 
     run_query = select(Run).order_by(Run.id).options(selectinload(Run.started_by_user))
     run_scalars = await async_session.scalars(run_query)

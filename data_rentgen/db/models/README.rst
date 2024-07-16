@@ -36,7 +36,6 @@ DB structure
         * location_id
         * name
         format
-        schema_id
     }
 
     entity DatasetSymlink {
@@ -52,6 +51,7 @@ DB structure
         ----
         * location_id
         * name
+        type
     }
 
     entity Run {
@@ -72,13 +72,14 @@ DB structure
 
     entity Operation {
         * id: UUIDv7
-        * started_at: Datetime
+        * created_at: Datetime
         ----
         * run_id
         status
         name
         type
         description
+        started_at
         ended_at
     }
 
@@ -91,12 +92,11 @@ DB structure
 
     entity Interaction {
         * id: UUIDv7
-        * started_at: Datetime
+        * created_at: Datetime
         ----
         * operation_id
         * dataset_id
-        type
-        ended_at
+        * type
         schema_id
         num_bytes
         num_rows
