@@ -24,6 +24,7 @@ def upgrade() -> None:
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("location_id", sa.BigInteger(), nullable=False),
         sa.Column("name", sa.String(length=255), nullable=False),
+        sa.Column("type", sa.String(length=255), nullable=True),
         sa.ForeignKeyConstraint(
             ["location_id"],
             ["location.id"],
@@ -35,9 +36,11 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix__job__location_id"), "job", ["location_id"], unique=False)
     op.create_index(op.f("ix__job__name"), "job", ["name"], unique=False)
+    op.create_index(op.f("ix__job__type"), "job", ["type"], unique=False)
 
 
 def downgrade() -> None:
+    op.drop_index(op.f("ix__job__type"), table_name="job")
     op.drop_index(op.f("ix__job__name"), table_name="job")
     op.drop_index(op.f("ix__job__location_id"), table_name="job")
     op.drop_table("job")

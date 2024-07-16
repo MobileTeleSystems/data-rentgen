@@ -6,6 +6,12 @@ from uuid6 import UUID
 
 from data_rentgen.consumer.extractors import extract_run
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
+from data_rentgen.consumer.openlineage.job_facets import (
+    OpenLineageJobFacets,
+    OpenLineageJobIntegrationType,
+    OpenLineageJobType,
+    OpenLineageJobTypeJobFacet,
+)
 from data_rentgen.consumer.openlineage.run import OpenLineageRun
 from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEvent,
@@ -24,6 +30,7 @@ from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageSparkDeployMode,
 )
 from data_rentgen.dto import JobDTO, LocationDTO, RunDTO, RunStatusDTO
+from data_rentgen.dto.job import JobTypeDTO
 
 
 def test_extractors_extract_run_spark_app_yarn():
@@ -32,7 +39,17 @@ def test_extractors_extract_run_spark_app_yarn():
     run = OpenLineageRunEvent(
         eventType=OpenLineageRunEventType.START,
         eventTime=now,
-        job=OpenLineageJob(namespace="yarn://cluster", name="myjob"),
+        job=OpenLineageJob(
+            namespace="yarn://cluster",
+            name="myjob",
+            facets=OpenLineageJobFacets(
+                jobType=OpenLineageJobTypeJobFacet(
+                    processingType=None,
+                    integration=OpenLineageJobIntegrationType.SPARK,
+                    jobType=OpenLineageJobType.APPLICATION,
+                ),
+            ),
+        ),
         run=OpenLineageRun(
             runId=run_id,
             facets=OpenLineageRunFacets(
@@ -55,6 +72,7 @@ def test_extractors_extract_run_spark_app_yarn():
         job=JobDTO(
             name="myjob",
             location=LocationDTO(type="yarn", name="cluster", addresses=["yarn://cluster"]),
+            type=JobTypeDTO.SPARK_APPLICATION,
         ),
         status=RunStatusDTO.STARTED,
         started_at=now,
@@ -72,7 +90,17 @@ def test_extractors_extract_run_spark_app_local():
     run = OpenLineageRunEvent(
         eventType=OpenLineageRunEventType.RUNNING,
         eventTime=now,
-        job=OpenLineageJob(namespace="host://some.host.com", name="myjob"),
+        job=OpenLineageJob(
+            namespace="host://some.host.com",
+            name="myjob",
+            facets=OpenLineageJobFacets(
+                jobType=OpenLineageJobTypeJobFacet(
+                    processingType=None,
+                    integration=OpenLineageJobIntegrationType.SPARK,
+                    jobType=OpenLineageJobType.APPLICATION,
+                ),
+            ),
+        ),
         run=OpenLineageRun(
             runId=run_id,
             facets=OpenLineageRunFacets(
@@ -94,6 +122,7 @@ def test_extractors_extract_run_spark_app_local():
         job=JobDTO(
             name="myjob",
             location=LocationDTO(type="host", name="some.host.com", addresses=["host://some.host.com"]),
+            type=JobTypeDTO.SPARK_APPLICATION,
         ),
         status=RunStatusDTO.STARTED,
         started_at=None,
@@ -110,7 +139,17 @@ def test_extractors_extract_run_airflow_task_with_ti_log_url():
     run = OpenLineageRunEvent(
         eventType=OpenLineageRunEventType.COMPLETE,
         eventTime=now,
-        job=OpenLineageJob(namespace="http://airflow-host:8081", name="mydag.mytask"),
+        job=OpenLineageJob(
+            namespace="http://airflow-host:8081",
+            name="mydag.mytask",
+            facets=OpenLineageJobFacets(
+                jobType=OpenLineageJobTypeJobFacet(
+                    processingType=None,
+                    integration=OpenLineageJobIntegrationType.AIRFLOW,
+                    jobType=OpenLineageJobType.TASK,
+                ),
+            ),
+        ),
         run=OpenLineageRun(
             runId=run_id,
             facets=OpenLineageRunFacets(
@@ -149,6 +188,7 @@ def test_extractors_extract_run_airflow_task_with_ti_log_url():
                 name="airflow-host:8081",
                 addresses=["http://airflow-host:8081"],
             ),
+            type=JobTypeDTO.AIRFLOW_TASK,
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
@@ -168,7 +208,17 @@ def test_extractors_extract_run_airflow_task_2_9_plus():
     run = OpenLineageRunEvent(
         eventType=OpenLineageRunEventType.COMPLETE,
         eventTime=now,
-        job=OpenLineageJob(namespace="http://airflow-host:8081", name="mydag.mytask"),
+        job=OpenLineageJob(
+            namespace="http://airflow-host:8081",
+            name="mydag.mytask",
+            facets=OpenLineageJobFacets(
+                jobType=OpenLineageJobTypeJobFacet(
+                    processingType=None,
+                    integration=OpenLineageJobIntegrationType.AIRFLOW,
+                    jobType=OpenLineageJobType.TASK,
+                ),
+            ),
+        ),
         run=OpenLineageRun(
             runId=run_id,
             facets=OpenLineageRunFacets(
@@ -204,6 +254,7 @@ def test_extractors_extract_run_airflow_task_2_9_plus():
                 name="airflow-host:8081",
                 addresses=["http://airflow-host:8081"],
             ),
+            type=JobTypeDTO.AIRFLOW_TASK,
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
@@ -223,7 +274,17 @@ def test_extractors_extract_run_airflow_task_2_x():
     run = OpenLineageRunEvent(
         eventType=OpenLineageRunEventType.COMPLETE,
         eventTime=now,
-        job=OpenLineageJob(namespace="http://airflow-host:8081", name="mydag.mytask"),
+        job=OpenLineageJob(
+            namespace="http://airflow-host:8081",
+            name="mydag.mytask",
+            facets=OpenLineageJobFacets(
+                jobType=OpenLineageJobTypeJobFacet(
+                    processingType=None,
+                    integration=OpenLineageJobIntegrationType.AIRFLOW,
+                    jobType=OpenLineageJobType.TASK,
+                ),
+            ),
+        ),
         run=OpenLineageRun(
             runId=run_id,
             facets=OpenLineageRunFacets(
@@ -254,6 +315,7 @@ def test_extractors_extract_run_airflow_task_2_x():
                 name="airflow-host:8081",
                 addresses=["http://airflow-host:8081"],
             ),
+            type=JobTypeDTO.AIRFLOW_TASK,
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
