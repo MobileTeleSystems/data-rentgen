@@ -224,7 +224,7 @@ def test_run_event_spark_job_running():
         "schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/RunEvent",
         "eventType": "RUNNING",
         "run": {
-            "runId": "01907e54-1606-7d8e-90b4-54d26da1c0e2",
+            "runId": "01908225-1fd7-746b-910c-70d24f2898b1",
             "facets": {
                 "parent": {
                     "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.18.0/integration/spark",
@@ -415,7 +415,7 @@ def test_run_event_spark_job_running():
             ),
         ),
         run=OpenLineageRun(
-            runId=UUID("01907e54-1606-7d8e-90b4-54d26da1c0e2"),
+            runId=UUID("01908225-1fd7-746b-910c-70d24f2898b1"),
             facets=OpenLineageRunFacets(
                 parent=OpenLineageParentRunFacet(
                     job=OpenLineageParentJob(
