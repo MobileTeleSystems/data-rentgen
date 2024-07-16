@@ -14,6 +14,7 @@ from data_rentgen.dto.operation import (
 from data_rentgen.dto.pagination import PaginationDTO
 from data_rentgen.dto.run import RunDTO, RunStatusDTO
 from data_rentgen.dto.schema import SchemaDTO
+from data_rentgen.dto.user import UserDTO
 
 __all__ = [
     "DatasetDTO",
@@ -30,4 +31,5 @@ __all__ = [
     "RunDTO",
     "RunStatusDTO",
     "SchemaDTO",
+    "UserDTO",
 ]

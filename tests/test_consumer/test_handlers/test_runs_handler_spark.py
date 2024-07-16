@@ -9,11 +9,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from uuid6 import UUID
 
-from data_rentgen.db.models import Job, Location, Operation, OperationType, Run, Status
-from data_rentgen.db.models.dataset import Dataset
-from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
-from data_rentgen.db.models.interaction import Interaction, InteractionType
-from data_rentgen.db.models.schema import Schema
+from data_rentgen.db.models import (
+    Dataset,
+    DatasetSymlink,
+    DatasetSymlinkType,
+    Interaction,
+    InteractionType,
+    Job,
+    Location,
+    Operation,
+    OperationType,
+    Run,
+    Schema,
+    Status,
+)
 
 RESOURCES_PATH = Path(__file__).parent.parent.joinpath("resources").resolve()
 
@@ -46,7 +55,7 @@ async def test_runs_handler_spark(
     assert len(jobs[0].location.addresses) == 1
     assert jobs[0].location.addresses[0].url == "host://some.host.name"
 
-    run_query = select(Run).order_by(Run.id)
+    run_query = select(Run).order_by(Run.id).options(selectinload(Run.started_by_user))
     run_scalars = await async_session.scalars(run_query)
     runs = run_scalars.all()
     assert len(runs) == 1
@@ -61,6 +70,8 @@ async def test_runs_handler_spark(
     assert application_run.external_id == "local-1719136537510"
     assert application_run.running_log_url == "http://127.0.0.1:4040"
     assert application_run.persistent_log_url is None
+    assert application_run.started_by_user is not None
+    assert application_run.started_by_user.name == "myuser"
 
     operation_query = select(Operation).order_by(Operation.id)
     operation_scalars = await async_session.scalars(operation_query)
@@ -158,7 +169,6 @@ async def test_runs_handler_spark(
     assert clickhouse_interaction.dataset_id == clickhouse_table.id
     assert clickhouse_interaction.type == InteractionType.OVERWRITE
     assert clickhouse_interaction.schema_id == clickhouse_schema.id
-    assert clickhouse_interaction.connect_as_user_id is None
     assert clickhouse_interaction.num_bytes == 5_000_000
     assert clickhouse_interaction.num_rows == 10_000
     assert clickhouse_interaction.num_files is None
@@ -169,7 +179,6 @@ async def test_runs_handler_spark(
     assert hive_interaction.dataset_id == hdfs_warehouse.id
     assert hive_interaction.type == InteractionType.READ
     assert hive_interaction.schema_id == hive_schema.id
-    assert hive_interaction.connect_as_user_id is None
     assert hive_interaction.num_bytes is None
     assert hive_interaction.num_rows is None
     assert hive_interaction.num_files is None

@@ -12,6 +12,7 @@ from data_rentgen.db.repositories.location import LocationRepository
 from data_rentgen.db.repositories.operation import OperationRepository
 from data_rentgen.db.repositories.run import RunRepository
 from data_rentgen.db.repositories.schema import SchemaRepository
+from data_rentgen.db.repositories.user import UserRepository
 from data_rentgen.dependencies import Stub
 
 
@@ -28,6 +29,7 @@ class UnitOfWork:
         self.dataset = DatasetRepository(session)
         self.schema = SchemaRepository(session)
         self.interaction = InteractionRepository(session)
+        self.user = UserRepository(session)
 
     async def __aenter__(self):
         return self

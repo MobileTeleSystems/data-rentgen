@@ -14,6 +14,7 @@ from data_rentgen.consumer.extractors.interaction import (
 from data_rentgen.consumer.extractors.job import extract_job
 from data_rentgen.consumer.extractors.operation import extract_operation
 from data_rentgen.consumer.extractors.run import extract_parent_run, extract_run
+from data_rentgen.consumer.extractors.user import extract_run_user
 
 __all__ = [
     "extract_dataset",
@@ -26,4 +27,5 @@ __all__ = [
     "extract_input_interaction",
     "extract_output_interaction",
     "extract_interaction_schema",
+    "extract_run_user",
 ]

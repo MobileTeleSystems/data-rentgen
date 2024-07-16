@@ -16,7 +16,6 @@ from data_rentgen.db.models.base import Base
 from data_rentgen.db.models.dataset import Dataset
 from data_rentgen.db.models.operation import Operation
 from data_rentgen.db.models.schema import Schema
-from data_rentgen.db.models.user import User
 
 
 class InteractionType(str, Enum):
@@ -95,19 +94,6 @@ class Interaction(Base):
         primaryjoin="Interaction.schema_id == Schema.id",
         lazy="noload",
         foreign_keys=[schema_id],
-    )
-
-    connect_as_user_id: Mapped[int | None] = mapped_column(
-        BigInteger,
-        index=True,
-        nullable=True,
-        doc="Username used for dataset access",
-    )
-    as_user: Mapped[User | None] = relationship(
-        User,
-        primaryjoin="Interaction.connect_as_user_id == User.id",
-        lazy="noload",
-        foreign_keys=[connect_as_user_id],
     )
 
     num_bytes: Mapped[int | None] = mapped_column(
