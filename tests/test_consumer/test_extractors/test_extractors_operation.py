@@ -18,6 +18,9 @@ from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEventType,
 )
 from data_rentgen.consumer.openlineage.run_facets import (
+    OpenLineageParentJob,
+    OpenLineageParentRun,
+    OpenLineageParentRunFacet,
     OpenLineageRunFacets,
     OpenLineageSparkJobDetailsRunFacet,
 )
@@ -26,8 +29,8 @@ from data_rentgen.dto.operation import OperationTypeDTO
 
 
 def test_extractors_extract_operation_spark_job_no_details():
-    now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
-    operation_id = UUID("01908223-0e9b-7c52-9856-6cecfc842610")
+    now = datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
+    operation_id = UUID("01908225-1fd7-746b-910c-70d24f2898b1")
 
     operation = OpenLineageRunEvent(
         eventType=OpenLineageRunEventType.START,
@@ -75,8 +78,8 @@ def test_extractors_extract_operation_spark_job_with_details(
     expected_position: int,
     expected_description: str,
 ):
-    now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
-    operation_id = UUID("01908223-0e9b-7c52-9856-6cecfc842610")
+    now = datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
+    operation_id = UUID("01908225-1fd7-746b-910C-70d24f2898b1")
 
     operation = OpenLineageRunEvent(
         eventType=OpenLineageRunEventType.RUNNING,
@@ -116,6 +119,87 @@ def test_extractors_extract_operation_spark_job_with_details(
     )
 
 
+def test_extractors_extract_operation_spark_job_with_parent():
+    now = datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
+    operation_id = UUID("01908225-1fd7-746b-910c-70d24f2898b1")
+
+    operation = OpenLineageRunEvent(
+        eventType=OpenLineageRunEventType.START,
+        eventTime=now,
+        job=OpenLineageJob(
+            namespace="anything",
+            name="mysession.execute_some_command",
+            facets=OpenLineageJobFacets(
+                jobType=OpenLineageJobTypeJobFacet(
+                    jobType=OpenLineageJobType.JOB,
+                    processingType=OpenLineageJobProcessingType.BATCH,
+                    integration=OpenLineageJobIntegrationType.SPARK,
+                ),
+            ),
+        ),
+        run=OpenLineageRun(
+            runId=operation_id,
+            facets=OpenLineageRunFacets(
+                parent=OpenLineageParentRunFacet(
+                    job=OpenLineageParentJob(
+                        namespace="anything",
+                        name="mysession",
+                    ),
+                    run=OpenLineageParentRun(
+                        runId=UUID("01908224-8410-79a2-8de6-a769ad6944c9"),
+                    ),
+                ),
+            ),
+        ),
+    )
+    assert extract_operation(operation) == OperationDTO(
+        id=operation_id,
+        # session name prefix is dropped
+        name="execute_some_command",
+        type=OperationTypeDTO.BATCH,
+        position=None,
+        description=None,
+        status=OperationStatusDTO.STARTED,
+        started_at=now,
+        ended_at=None,
+    )
+
+
+def test_extractors_extract_operation_spark_job_name_contains_newlines():
+    now = datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
+    operation_id = UUID("01908225-1fd7-746b-910c-70d24f2898b1")
+
+    operation = OpenLineageRunEvent(
+        eventType=OpenLineageRunEventType.START,
+        eventTime=now,
+        job=OpenLineageJob(
+            namespace="anything",
+            name="""mysession.scan_jdbc_relation((SELECT *
+            FROM some_table) T)
+            """,
+            facets=OpenLineageJobFacets(
+                jobType=OpenLineageJobTypeJobFacet(
+                    jobType=OpenLineageJobType.JOB,
+                    processingType=OpenLineageJobProcessingType.BATCH,
+                    integration=OpenLineageJobIntegrationType.SPARK,
+                ),
+            ),
+        ),
+        run=OpenLineageRun(runId=operation_id),
+    )
+    assert extract_operation(operation) == OperationDTO(
+        id=operation_id,
+        # appName prefix is dropped
+        name="mysession.scan_jdbc_relation((SELECT * FROM some_table) T)",
+        type=OperationTypeDTO.BATCH,
+        position=None,
+        description=None,
+        status=OperationStatusDTO.STARTED,
+        started_at=now,
+        ended_at=None,
+    )
+
+
 @pytest.mark.parametrize(
     ["event_type", "expected_status"],
     [
@@ -129,8 +213,8 @@ def test_extractors_extract_operation_spark_job_finished(
     event_type: OpenLineageRunEventType,
     expected_status: OperationStatusDTO | None,
 ):
-    now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
-    operation_id = UUID("01908223-0e9b-7c52-9856-6cecfc842610")
+    now = datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
+    operation_id = UUID("01908225-1fd7-746b-910C-70d24f2898b1")
     operation = OpenLineageRunEvent(
         eventType=event_type,
         eventTime=now,

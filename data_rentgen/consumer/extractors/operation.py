@@ -9,9 +9,15 @@ from data_rentgen.dto import OperationDTO, OperationStatusDTO, OperationTypeDTO
 
 
 def extract_operation(event: OpenLineageRunEvent) -> OperationDTO:
+    # in some cases, operation name may contain raw SELECT query with newlines
+    operation_name = " ".join(line.strip() for line in event.job.name.splitlines()).strip()
+    if event.run.facets.parent and operation_name.startswith(event.run.facets.parent.job.name):
+        prefix = len(event.run.facets.parent.job.name) + 1
+        operation_name = operation_name[prefix:]
+
     operation = OperationDTO(
         id=event.run.runId,
-        name=event.job.name,
+        name=operation_name,
         type=OperationTypeDTO(event.job.facets.jobType.processingType) if event.job.facets.jobType else None,
     )
     enrich_operation_status(operation, event)

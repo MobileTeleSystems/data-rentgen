@@ -82,7 +82,7 @@ async def test_runs_handler_spark(
     assert job_operation.id == UUID("01908225-1fd7-746b-910c-70d24f2898b1")
     assert job_operation.created_at == datetime(2024, 7, 5, 9, 6, 29, 463000, tzinfo=timezone.utc)
     assert job_operation.run_id == application_run.id
-    assert job_operation.name == "spark_session.execute_save_into_data_source_command"
+    assert job_operation.name == "execute_save_into_data_source_command"
     assert job_operation.type == OperationType.BATCH
     assert job_operation.status == Status.SUCCEEDED
     assert job_operation.started_at == datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
