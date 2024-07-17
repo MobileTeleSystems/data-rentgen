@@ -22,8 +22,8 @@ def upgrade() -> None:
         "dataset",
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("location_id", sa.BigInteger(), nullable=False),
-        sa.Column("name", sa.String(length=255), nullable=False),
-        sa.Column("format", sa.String(length=64), nullable=True),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.Column("format", sa.String(length=32), nullable=True),
         sa.ForeignKeyConstraint(
             ["location_id"],
             ["location.id"],

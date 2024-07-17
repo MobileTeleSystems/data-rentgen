@@ -22,8 +22,8 @@ def upgrade() -> None:
     op.create_table(
         "location",
         sa.Column("id", sa.BigInteger(), nullable=False),
-        sa.Column("type", sa.String(length=64), nullable=False),
-        sa.Column("name", sa.String(length=255), nullable=False),
+        sa.Column("type", sa.String(length=32), nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
         sa.PrimaryKeyConstraint("id", name=op.f("pk__location")),
     )
     op.create_index(op.f("ix__location__type_name"), "location", ["type", "name"], unique=True)

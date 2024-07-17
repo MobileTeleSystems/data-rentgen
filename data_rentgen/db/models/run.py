@@ -59,14 +59,14 @@ class Run(Base):
     )
 
     status: Mapped[Status] = mapped_column(
-        ChoiceType(Status),
+        ChoiceType(Status, impl=String(32)),
         nullable=False,
-        default=Status.STARTED,
+        default=Status.UNKNOWN,
         doc="Run status info",
     )
 
     external_id: Mapped[str | None] = mapped_column(
-        String(255),
+        String,
         nullable=True,
         doc="External ID of the run, e.g. Spark applicationId",
     )

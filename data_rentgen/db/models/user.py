@@ -12,4 +12,4 @@ class User(Base):
     __tablename__ = "user"
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    name: Mapped[str] = mapped_column(String(255), index=True, unique=True)
+    name: Mapped[str] = mapped_column(String, index=True, unique=True)

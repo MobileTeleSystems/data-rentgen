@@ -25,8 +25,8 @@ class OperationRepository(Repository[Operation]):
                 id=operation.id,
                 run_id=run_id,
                 name=operation.name,
-                type=OperationType(operation.type) if operation.type else None,
-                status=Status(operation.status) if operation.status else None,
+                type=OperationType(operation.type) if operation.type else OperationType.BATCH,
+                status=Status(operation.status) if operation.status else Status.UNKNOWN,
                 started_at=operation.started_at,
                 ended_at=operation.ended_at,
                 description=operation.description,
@@ -36,7 +36,6 @@ class OperationRepository(Repository[Operation]):
         else:
             optional_fields = {
                 # Operation run_id and type are not null while operation is created, but may be empty in later events
-                "run_id": run_id,
                 "type": OperationType(operation.type) if operation.type else None,
                 "status": Status(operation.status) if operation.status else None,
                 "started_at": operation.started_at,

@@ -24,7 +24,7 @@ def upgrade() -> None:
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("operation_id", sa.UUID(), nullable=False),
         sa.Column("dataset_id", sa.BigInteger(), nullable=False),
-        sa.Column("type", sa.String(length=255), nullable=False),
+        sa.Column("type", sa.String(length=32), nullable=False),
         sa.Column("schema_id", sa.BigInteger(), nullable=True),
         sa.Column("num_bytes", sa.BigInteger(), nullable=True),
         sa.Column("num_rows", sa.BigInteger(), nullable=True),
