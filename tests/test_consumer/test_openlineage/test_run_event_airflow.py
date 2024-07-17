@@ -23,6 +23,7 @@ from data_rentgen.consumer.openlineage.run_event import (
 from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageAirflowDagInfo,
     OpenLineageAirflowDagRunInfo,
+    OpenLineageAirflowDagRunType,
     OpenLineageAirflowRunFacet,
     OpenLineageAirflowTaskInfo,
     OpenLineageAirflowTaskInstanceInfo,
@@ -366,6 +367,7 @@ def test_run_event_airflow_task_start():
                     ),
                     dagRun=OpenLineageAirflowDagRunInfo(
                         run_id="manual__2024-07-05T09:04:12.162809+00:00",
+                        run_type=OpenLineageAirflowDagRunType.MANUAL,
                         data_interval_start=datetime(2024, 7, 5, 9, 4, 12, 162809, tzinfo=timezone.utc),
                         data_interval_end=datetime(2024, 7, 5, 9, 4, 12, 162809, tzinfo=timezone.utc),
                     ),

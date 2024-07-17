@@ -9,7 +9,15 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from uuid6 import UUID
 
-from data_rentgen.db.models import Job, JobType, Location, Operation, Run, Status
+from data_rentgen.db.models import (
+    Job,
+    JobType,
+    Location,
+    Operation,
+    Run,
+    RunStartReason,
+    Status,
+)
 
 RESOURCES_PATH = Path(__file__).parent.parent.joinpath("resources").resolve()
 
@@ -60,9 +68,11 @@ async def test_runs_handler_airflow(
     assert dag_run.status == Status.SUCCEEDED
     assert dag_run.started_at == datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
     assert dag_run.ended_at == datetime(2024, 7, 5, 9, 8, 5, 691973, tzinfo=timezone.utc)
+    assert dag_run.started_by_user_id is None
+    assert dag_run.start_reason is None
+    assert dag_run.end_reason is None
     assert dag_run.persistent_log_url is None
     assert dag_run.running_log_url is None
-    assert dag_run.started_by_user_id is None
 
     task_run = runs[1]
     assert task_run.id == UUID("01908223-0782-7fc0-9d69-b1df9dac2c60")
@@ -72,13 +82,15 @@ async def test_runs_handler_airflow(
     assert task_run.status == Status.SUCCEEDED
     assert task_run.started_at == datetime(2024, 7, 5, 9, 4, 20, 783845, tzinfo=timezone.utc)
     assert task_run.ended_at == datetime(2024, 7, 5, 9, 7, 37, 858423, tzinfo=timezone.utc)
+    assert task_run.started_by_user_id is None
+    assert task_run.start_reason == RunStartReason.MANUAL
+    assert task_run.end_reason is None
     assert task_run.external_id == "manual__2024-07-05T09:04:12.162809+00:00"
     assert task_run.attempt == "1"
     assert task_run.persistent_log_url == (
         "http://airflow-host:8081/dags/mydag/grid?tab=logs&dag_run_id=manual__2024-07-05T09%3A04%3A12.162809%2B00%3A00&task_id=mytask&map_index=-1"
     )
     assert task_run.running_log_url is None
-    assert task_run.started_by_user_id is None
 
     operation_query = select(Operation)
     operation_scalars = await async_session.scalars(operation_query)

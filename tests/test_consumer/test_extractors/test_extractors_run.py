@@ -20,6 +20,7 @@ from data_rentgen.consumer.openlineage.run_event import (
 from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageAirflowDagInfo,
     OpenLineageAirflowDagRunInfo,
+    OpenLineageAirflowDagRunType,
     OpenLineageAirflowRunFacet,
     OpenLineageAirflowTaskInfo,
     OpenLineageAirflowTaskInstanceInfo,
@@ -29,8 +30,14 @@ from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageSparkApplicationDetailsRunFacet,
     OpenLineageSparkDeployMode,
 )
-from data_rentgen.dto import JobDTO, LocationDTO, RunDTO, RunStatusDTO
-from data_rentgen.dto.job import JobTypeDTO
+from data_rentgen.dto import (
+    JobDTO,
+    JobTypeDTO,
+    LocationDTO,
+    RunDTO,
+    RunStartReasonDTO,
+    RunStatusDTO,
+)
 
 
 def test_extractors_extract_run_spark_app_yarn():
@@ -76,6 +83,7 @@ def test_extractors_extract_run_spark_app_yarn():
         ),
         status=RunStatusDTO.STARTED,
         started_at=now,
+        start_reason=None,
         ended_at=None,
         external_id="application_1234_5678",
         attempt=None,
@@ -126,6 +134,7 @@ def test_extractors_extract_run_spark_app_local():
         ),
         status=RunStatusDTO.STARTED,
         started_at=None,
+        start_reason=None,
         external_id="local-1234-5678",
         attempt=None,
         persistent_log_url=None,
@@ -162,6 +171,7 @@ def test_extractors_extract_run_airflow_task_with_ti_log_url():
                     dag=OpenLineageAirflowDagInfo(dag_id="mydag"),
                     dagRun=OpenLineageAirflowDagRunInfo(
                         run_id="manual__2024-07-05T09:04:13:979349+00:00",
+                        run_type=OpenLineageAirflowDagRunType.MANUAL,
                         data_interval_start=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
                         data_interval_end=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
                     ),
@@ -192,6 +202,7 @@ def test_extractors_extract_run_airflow_task_with_ti_log_url():
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
+        start_reason=RunStartReasonDTO.MANUAL,
         ended_at=now,
         external_id="manual__2024-07-05T09:04:13:979349+00:00",
         attempt="1",
@@ -230,7 +241,8 @@ def test_extractors_extract_run_airflow_task_2_9_plus():
                 airflow=OpenLineageAirflowRunFacet(
                     dag=OpenLineageAirflowDagInfo(dag_id="mydag"),
                     dagRun=OpenLineageAirflowDagRunInfo(
-                        run_id="manual__2024-07-05T09:04:13:979349+00:00",
+                        run_id="backfill__2024-07-05T09:04:13:979349+00:00",
+                        run_type=OpenLineageAirflowDagRunType.BACKFILL_JOB,
                         data_interval_start=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
                         data_interval_end=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
                     ),
@@ -258,11 +270,12 @@ def test_extractors_extract_run_airflow_task_2_9_plus():
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
+        start_reason=RunStartReasonDTO.AUTOMATIC,
         ended_at=now,
-        external_id="manual__2024-07-05T09:04:13:979349+00:00",
+        external_id="backfill__2024-07-05T09:04:13:979349+00:00",
         attempt="1",
         persistent_log_url=(
-            "http://airflow-host:8081/dags/mydag/grid?tab=logs&dag_run_id=manual__2024-07-05T09%3A04%3A13%3A979349%2B00%3A00&task_id=mytask&map_index=-1"
+            "http://airflow-host:8081/dags/mydag/grid?tab=logs&dag_run_id=backfill__2024-07-05T09%3A04%3A13%3A979349%2B00%3A00&task_id=mytask&map_index=-1"
         ),
         running_log_url=None,
     )
@@ -291,7 +304,8 @@ def test_extractors_extract_run_airflow_task_2_x():
                 airflow=OpenLineageAirflowRunFacet(
                     dag=OpenLineageAirflowDagInfo(dag_id="mydag"),
                     dagRun=OpenLineageAirflowDagRunInfo(
-                        run_id="manual__2024-07-05T09:04:13:979349+00:00",
+                        run_id="scheduled__2024-07-05T09:04:13:979349+00:00",
+                        run_type=OpenLineageAirflowDagRunType.SCHEDULED,
                         data_interval_start=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
                         data_interval_end=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
                     ),
@@ -319,8 +333,9 @@ def test_extractors_extract_run_airflow_task_2_x():
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
+        start_reason=RunStartReasonDTO.AUTOMATIC,
         ended_at=now,
-        external_id="manual__2024-07-05T09:04:13:979349+00:00",
+        external_id="scheduled__2024-07-05T09:04:13:979349+00:00",
         attempt="1",
         persistent_log_url=(
             "http://airflow-host:8081/log?&dag_id=mydag&task_id=mytask&execution_date=2024-07-05T09%3A04%3A13.979349%2B00%3A00"
@@ -360,6 +375,7 @@ def test_extractors_extract_run_unknown(event_type: OpenLineageRunEventType, exp
         ),
         status=expected_status,
         started_at=None,
+        start_reason=None,
         ended_at=ended_at,
         external_id=None,
         attempt=None,

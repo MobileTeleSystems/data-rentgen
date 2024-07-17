@@ -9,7 +9,7 @@ from data_rentgen.db.models.interaction import Interaction, InteractionType
 from data_rentgen.db.models.job import Job, JobType
 from data_rentgen.db.models.location import Location
 from data_rentgen.db.models.operation import Operation, OperationType
-from data_rentgen.db.models.run import Run
+from data_rentgen.db.models.run import Run, RunStartReason
 from data_rentgen.db.models.schema import Schema
 from data_rentgen.db.models.status import Status
 from data_rentgen.db.models.user import User
@@ -28,6 +28,7 @@ __all__ = [
     "Operation",
     "OperationType",
     "Run",
+    "RunStartReason",
     "Schema",
     "Status",
     "User",

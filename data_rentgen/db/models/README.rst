@@ -56,7 +56,7 @@ DB structure
 
     entity Run {
         * id: UUIDv7
-        * started_at: Datetime
+        * created_at: Datetime
         ----
         * job_id
         status
@@ -65,9 +65,11 @@ DB structure
         attempt
         persistent_log_url
         running_log_url
+        started_at
         started_by_user_id
+        start_reason
         ended_at
-        ended_reason
+        end_reason
     }
 
     entity Operation {

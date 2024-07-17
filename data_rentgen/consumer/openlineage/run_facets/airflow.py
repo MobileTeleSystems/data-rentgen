@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from datetime import datetime
+from enum import Enum
 
 from data_rentgen.consumer.openlineage.base import OpenLineageBase
 from data_rentgen.consumer.openlineage.run_facets.base import OpenLineageRunFacet
@@ -15,12 +16,24 @@ class OpenLineageAirflowDagInfo(OpenLineageBase):
     dag_id: str
 
 
+class OpenLineageAirflowDagRunType(Enum):
+    """Airflow dagRun type.
+    See [DagRunType](https://github.com/apache/airflow/blob/2.9.3/airflow/utils/types.py#L48-L54).
+    """
+
+    BACKFILL_JOB = "backfill"
+    SCHEDULED = "scheduled"
+    MANUAL = "manual"
+    DATASET_TRIGGERED = "dataset_triggered"
+
+
 class OpenLineageAirflowDagRunInfo(OpenLineageBase):
     """Airflow dagRun info.
     See [DagRun](https://github.com/apache/airflow/blob/providers-openlineage/1.9.0/airflow/providers/openlineage/facets/AirflowRunFacet.json).
     """
 
     run_id: str
+    run_type: OpenLineageAirflowDagRunType
     data_interval_start: datetime
     data_interval_end: datetime
 

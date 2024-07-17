@@ -11,10 +11,11 @@ from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEventType,
 )
 from data_rentgen.consumer.openlineage.run_facets import (
+    OpenLineageAirflowDagRunType,
     OpenLineageAirflowRunFacet,
     OpenLineageParentRunFacet,
 )
-from data_rentgen.dto import RunDTO, RunStatusDTO
+from data_rentgen.dto import RunDTO, RunStartReasonDTO, RunStatusDTO
 
 
 def extract_parent_run(parent_facet: OpenLineageParentRunFacet) -> RunDTO:
@@ -30,6 +31,7 @@ def extract_run(event: OpenLineageRunEvent) -> RunDTO:
         job=extract_job(event.job),
     )
     enrich_run_status(run, event)
+    enrich_run_start_reason(run, event)
     enrich_run_identifiers(run, event)
     enrich_run_logs(run, event)
     return run
@@ -116,3 +118,15 @@ def get_airflow_2_x_log_url(namespace: str, airflow_task_run_facet: OpenLineageA
     execution_date = quote(airflow_task_run_facet.dagRun.data_interval_start.isoformat())
     task_id = quote(airflow_task_run_facet.task.task_id)
     return f"{namespace}/log?&dag_id={dag_id}&task_id={task_id}&execution_date={execution_date}"
+
+
+def enrich_run_start_reason(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
+    airflow_task_run_facet = event.run.facets.airflow
+    if airflow_task_run_facet:
+        if airflow_task_run_facet.dagRun.run_type == OpenLineageAirflowDagRunType.MANUAL:
+            run.start_reason = RunStartReasonDTO.MANUAL
+        else:
+            run.start_reason = RunStartReasonDTO.AUTOMATIC
+        return run
+    # For Spark session we cannot determine start reason
+    return run

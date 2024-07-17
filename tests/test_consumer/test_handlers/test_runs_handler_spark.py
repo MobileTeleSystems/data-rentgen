@@ -21,6 +21,7 @@ from data_rentgen.db.models import (
     Operation,
     OperationType,
     Run,
+    RunStartReason,
     Schema,
     Status,
 )
@@ -68,12 +69,13 @@ async def test_runs_handler_spark(
     assert application_run.job_id == jobs[0].id
     assert application_run.status == Status.SUCCEEDED
     assert application_run.started_at == datetime(2024, 7, 5, 9, 4, 48, 794900, tzinfo=timezone.utc)
+    assert application_run.started_by_user is not None
+    assert application_run.started_by_user.name == "myuser"
+    assert application_run.start_reason is None
     assert application_run.ended_at == datetime(2024, 7, 5, 9, 7, 15, 646000, tzinfo=timezone.utc)
     assert application_run.external_id == "local-1719136537510"
     assert application_run.running_log_url == "http://127.0.0.1:4040"
     assert application_run.persistent_log_url is None
-    assert application_run.started_by_user is not None
-    assert application_run.started_by_user.name == "myuser"
 
     operation_query = select(Operation).order_by(Operation.id)
     operation_scalars = await async_session.scalars(operation_query)
