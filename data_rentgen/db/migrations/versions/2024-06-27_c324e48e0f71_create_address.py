@@ -22,7 +22,7 @@ def upgrade() -> None:
         "address",
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("location_id", sa.BigInteger(), nullable=False),
-        sa.Column("url", sa.String(length=255), nullable=False),
+        sa.Column("url", sa.String(), nullable=False),
         sa.ForeignKeyConstraint(
             ["location_id"],
             ["location.id"],

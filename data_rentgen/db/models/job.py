@@ -17,6 +17,7 @@ class JobType(str, Enum):
     AIRFLOW_DAG = "AIRFLOW_DAG"
     AIRFLOW_TASK = "AIRFLOW_TASK"
     SPARK_APPLICATION = "SPARK_APPLICATION"
+    UNKNOWN = "UNKNOWN"
 
     def __str__(self) -> str:
         return self.value
@@ -38,15 +39,15 @@ class Job(Base):
     location: Mapped[Location] = relationship(Location, lazy="noload")
 
     name: Mapped[str] = mapped_column(
-        String(255),
+        String,
         index=True,
         nullable=False,
         doc="Job name, e.g. Airflow DAG name + task name, or Spark applicationName",
     )
 
-    type: Mapped[JobType | None] = mapped_column(
-        ChoiceType(JobType),
+    type: Mapped[JobType] = mapped_column(
+        ChoiceType(JobType, impl=String(32)),
         index=True,
-        nullable=True,
+        nullable=False,
         doc="Job type, e.g. AIRFLOW_DAG, AIRFLOW_TASK, SPARK_APPLICATION",
     )

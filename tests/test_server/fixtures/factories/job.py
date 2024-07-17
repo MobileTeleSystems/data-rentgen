@@ -6,7 +6,7 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.db.models import Address, Job
+from data_rentgen.db.models import Address, Job, JobType
 from tests.test_server.fixtures.factories.base import random_string
 
 
@@ -15,6 +15,7 @@ def job_factory(**kwargs):
         "id": randint(0, 10000000),
         "location_id": randint(0, 10000000),
         "name": random_string(32),
+        "type": choice(list(JobType)),
     }
     data.update(kwargs)
     return Job(**data)

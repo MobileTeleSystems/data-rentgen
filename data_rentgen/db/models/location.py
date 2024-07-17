@@ -21,12 +21,12 @@ class Location(Base):
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     type: Mapped[str] = mapped_column(
-        String(64),
+        String(32),
         nullable=False,
         doc="Location type, e.g. kafka, postgres, hdfs",
     )
     name: Mapped[str] = mapped_column(
-        String(255),
+        String,
         nullable=False,
         doc="Location name, e.g. cluster name",
     )

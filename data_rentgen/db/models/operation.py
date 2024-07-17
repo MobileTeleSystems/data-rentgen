@@ -53,21 +53,22 @@ class Operation(Base):
     )
 
     status: Mapped[Status] = mapped_column(
-        ChoiceType(Status),
+        ChoiceType(Status, impl=String(32)),
         nullable=False,
-        default=Status.STARTED,
+        default=Status.UNKNOWN,
         doc="Operation status info",
     )
 
     name: Mapped[str] = mapped_column(
-        String(255),
+        String,
         nullable=False,
         doc="Name of the operation, e.g. job name",
     )
 
     type: Mapped[OperationType] = mapped_column(
-        ChoiceType(OperationType),
+        ChoiceType(OperationType, impl=String(32)),
         nullable=False,
+        default=OperationType.BATCH,
         doc="Type of the operation, e.g. BATCH, STREAMING",
     )
 

@@ -30,13 +30,13 @@ class Dataset(Base):
     )
 
     name: Mapped[str] = mapped_column(
-        String(255),
+        String,
         index=True,
         nullable=False,
         doc="Dataset name, e.g. table name or filesystem path",
     )
     format: Mapped[str | None] = mapped_column(
-        String(64),
+        String(32),
         nullable=True,
         doc="Data format, if any",
     )

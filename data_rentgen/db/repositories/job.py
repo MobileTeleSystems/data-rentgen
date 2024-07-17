@@ -23,7 +23,7 @@ class JobRepository(Repository[Job]):
             result = Job(
                 location_id=location_id,
                 name=job.name,
-                type=JobType(job.type) if job.type else None,
+                type=JobType(job.type) if job.type else JobType.UNKNOWN,
             )
             self._session.add(result)
         elif job.type:

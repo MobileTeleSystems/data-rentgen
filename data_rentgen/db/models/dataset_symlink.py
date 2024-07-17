@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from enum import Enum
 
-from sqlalchemy import BigInteger, ForeignKey, UniqueConstraint
+from sqlalchemy import BigInteger, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
 
@@ -50,7 +50,7 @@ class DatasetSymlink(Base):
     )
 
     type: Mapped[DatasetSymlinkType] = mapped_column(
-        ChoiceType(DatasetSymlinkType),
+        ChoiceType(DatasetSymlinkType, impl=String(32)),
         nullable=False,
         doc="Type of dataset symlink, e.g. metastore table -> hdfs location",
     )

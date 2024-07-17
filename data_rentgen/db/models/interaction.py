@@ -7,7 +7,7 @@ from datetime import datetime
 from enum import Enum
 
 from sqlalchemy import UUID as SQL_UUID
-from sqlalchemy import BigInteger, DateTime, PrimaryKeyConstraint
+from sqlalchemy import BigInteger, DateTime, PrimaryKeyConstraint, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
 from uuid6 import UUID
@@ -77,7 +77,7 @@ class Interaction(Base):
     )
 
     type: Mapped[InteractionType] = mapped_column(
-        ChoiceType(InteractionType),
+        ChoiceType(InteractionType, impl=String(32)),
         nullable=False,
         default=InteractionType.APPEND,
         doc="Type of the interaction, e.g. READ, CREATE, APPEND",

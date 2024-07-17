@@ -23,8 +23,8 @@ def upgrade() -> None:
         "job",
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("location_id", sa.BigInteger(), nullable=False),
-        sa.Column("name", sa.String(length=255), nullable=False),
-        sa.Column("type", sa.String(length=255), nullable=True),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.Column("type", sa.String(length=32), nullable=False),
         sa.ForeignKeyConstraint(
             ["location_id"],
             ["location.id"],
