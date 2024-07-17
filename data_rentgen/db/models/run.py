@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 
 from sqlalchemy import UUID as SQL_UUID
 from sqlalchemy import BigInteger, DateTime, PrimaryKeyConstraint, String
@@ -15,6 +16,14 @@ from data_rentgen.db.models.base import Base
 from data_rentgen.db.models.job import Job
 from data_rentgen.db.models.status import Status
 from data_rentgen.db.models.user import User
+
+
+class RunStartReason(str, Enum):
+    MANUAL = "MANUAL"
+    AUTOMATIC = "AUTOMATIC"
+
+    def __str__(self) -> str:
+        return str(self.value)
 
 
 # no foreign keys to avoid scanning all the partitions
@@ -102,13 +111,18 @@ class Run(Base):
         lazy="noload",
         foreign_keys=[started_by_user_id],
     )
+    start_reason: Mapped[RunStartReason | None] = mapped_column(
+        ChoiceType(RunStartReason, impl=String(32)),
+        nullable=True,
+        doc="Start reason of the run, e.g. MANUAL or AUTOMATIC",
+    )
 
     ended_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
         doc="End time of the run",
     )
-    ended_reason: Mapped[str | None] = mapped_column(
+    end_reason: Mapped[str | None] = mapped_column(
         String,
         nullable=True,
         doc="End reason of the run, e.g. exception string",

@@ -31,8 +31,9 @@ def upgrade() -> None:
         sa.Column("running_log_url", sa.String(), nullable=True),
         sa.Column("started_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("started_by_user_id", sa.BigInteger(), nullable=True),
+        sa.Column("start_reason", sa.String(length=32), nullable=True),
         sa.Column("ended_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("ended_reason", sa.String(), nullable=True),
+        sa.Column("end_reason", sa.String(), nullable=True),
         sa.PrimaryKeyConstraint("created_at", "id", name=op.f("pk__run")),
         postgresql_partition_by="RANGE (created_at)",
     )

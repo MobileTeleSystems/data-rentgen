@@ -4,7 +4,7 @@
 from sqlalchemy import select
 from uuid6 import UUID
 
-from data_rentgen.db.models import Run, Status
+from data_rentgen.db.models import Run, RunStartReason, Status
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid
 from data_rentgen.dto import RunDTO
@@ -40,12 +40,13 @@ class RunRepository(Repository[Run]):
                 status=Status(run.status) if run.status else None,
                 parent_run_id=parent_run_id,
                 started_at=run.started_at,
+                started_by_user_id=started_by_user_id,
+                start_reason=RunStartReason(run.start_reason) if run.start_reason else None,
                 ended_at=run.ended_at,
                 external_id=run.external_id,
                 attempt=run.attempt,
                 persistent_log_url=run.persistent_log_url,
                 running_log_url=run.running_log_url,
-                started_by_user_id=started_by_user_id,
             )
             self._session.add(result)
         else:
@@ -53,12 +54,13 @@ class RunRepository(Repository[Run]):
                 "status": Status(run.status) if run.status else None,
                 "parent_run_id": parent_run_id,
                 "started_at": run.started_at,
+                "started_by_user_id": started_by_user_id,
+                "start_reason": RunStartReason(run.start_reason) if run.start_reason else None,
                 "ended_at": run.ended_at,
                 "external_id": run.external_id,
                 "attempt": run.attempt,
                 "persistent_log_url": run.persistent_log_url,
                 "running_log_url": run.running_log_url,
-                "started_by_user_id": started_by_user_id,
             }
 
             for column, value in optional_fields.items():

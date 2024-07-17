@@ -5,6 +5,7 @@ from data_rentgen.consumer.openlineage.base import OpenLineageBase
 from data_rentgen.consumer.openlineage.run_facets.airflow import (
     OpenLineageAirflowDagInfo,
     OpenLineageAirflowDagRunInfo,
+    OpenLineageAirflowDagRunType,
     OpenLineageAirflowRunFacet,
     OpenLineageAirflowTaskInfo,
     OpenLineageAirflowTaskInstanceInfo,
@@ -39,6 +40,7 @@ __all__ = [
     "OpenLineageAirflowTaskInstanceInfo",
     "OpenLineageAirflowTaskInfo",
     "OpenLineageAirflowDagRunInfo",
+    "OpenLineageAirflowDagRunType",
     "OpenLineageAirflowDagInfo",
     "OpenLineageSparkDeployMode",
     "OpenLineageSparkApplicationDetailsRunFacet",

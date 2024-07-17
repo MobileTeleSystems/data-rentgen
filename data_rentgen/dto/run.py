@@ -19,6 +19,17 @@ class RunStatusDTO(str, Enum):
     FAILED = "FAILED"
     UNKNOWN = "UNKNOWN"
 
+    def __str__(self) -> str:
+        return str(self.value)
+
+
+class RunStartReasonDTO(str, Enum):
+    MANUAL = "MANUAL"
+    AUTOMATIC = "AUTOMATIC"
+
+    def __str__(self) -> str:
+        return str(self.value)
+
 
 @dataclass(slots=True)
 class RunDTO:
@@ -26,6 +37,7 @@ class RunDTO:
     job: JobDTO
     status: RunStatusDTO | None = None
     started_at: datetime | None = None
+    start_reason: RunStartReasonDTO | None = None
     ended_at: datetime | None = None
     external_id: str | None = None
     attempt: str | None = None
