@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing_extensions import Annotated
 
 from data_rentgen.db.repositories.dataset import DatasetRepository
+from data_rentgen.db.repositories.dataset_symlink import DatasetSymlinkRepository
 from data_rentgen.db.repositories.interaction import InteractionRepository
 from data_rentgen.db.repositories.job import JobRepository
 from data_rentgen.db.repositories.location import LocationRepository
@@ -27,6 +28,7 @@ class UnitOfWork:
         self.run = RunRepository(session)
         self.operation = OperationRepository(session)
         self.dataset = DatasetRepository(session)
+        self.dataset_symlink = DatasetSymlinkRepository(session)
         self.schema = SchemaRepository(session)
         self.interaction = InteractionRepository(session)
         self.user = UserRepository(session)

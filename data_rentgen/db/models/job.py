@@ -49,5 +49,6 @@ class Job(Base):
         ChoiceType(JobType, impl=String(32)),
         index=True,
         nullable=False,
+        default=JobType.UNKNOWN,
         doc="Job type, e.g. AIRFLOW_DAG, AIRFLOW_TASK, SPARK_APPLICATION",
     )
