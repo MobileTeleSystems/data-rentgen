@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from abc import ABC
-from typing import Generic, Tuple, TypeVar
+from hashlib import sha1
+from typing import Any, Generic, Tuple, TypeVar
 
 from sqlalchemy import ScalarResult, Select, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.sql import ColumnElement, SQLColumnExpression
+from sqlalchemy.sql import SQLColumnExpression
 
 from data_rentgen.db.models import Base
 from data_rentgen.dto import PaginationDTO
@@ -30,14 +31,6 @@ class Repository(ABC, Generic[Model]):
     def model_type(cls) -> type[Model]:
         # Get `User` from `UserRepository(Repository[User])`
         return cls.__orig_bases__[0].__args__[0]  # type: ignore[attr-defined]
-
-    async def _get(
-        self,
-        *where: ColumnElement,
-    ) -> Model | None:
-        model_type = self.model_type()
-        query: Select = select(model_type).where(*where)
-        return await self._session.scalar(query)
 
     async def _paginate_by_query(
         self,
@@ -71,3 +64,20 @@ class Repository(ABC, Generic[Model]):
 
         result = await self._session.scalars(query)
         return result.one()
+
+    async def _lock(
+        self,
+        *keys: Any,
+    ) -> None:
+        """
+        Take a lock on a specific table and set of keys, to avoid inserting the same row multiple times.
+        Based on [pg_advisory_xact_lock](https://www.postgresql.org/docs/current/functions-admin.html).
+        Lock is held until the transaction is committed or rolled back.
+        """
+        model_type = self.model_type()
+        data = ".".join(map(str, [model_type.__table__, *keys]))
+        digest = sha1(data.encode("utf-8"), usedforsecurity=False).digest()
+        # sha1 returns 160bit hash, we need only first 64 bits
+        lock_key = int.from_bytes(digest[:8], byteorder="big", signed=True)
+        statement = select(func.pg_advisory_xact_lock(lock_key))
+        await self._session.execute(statement)

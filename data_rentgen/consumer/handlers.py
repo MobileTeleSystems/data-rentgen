@@ -52,7 +52,7 @@ def get_unit_of_work(session: AsyncSession = Depends(Stub(AsyncSession))) -> Uni
     return UnitOfWork(session)
 
 
-@router.subscriber("input.runs")
+@router.subscriber("input.runs", group_id="data-rentgen")
 async def runs_handler(event: OpenLineageRunEvent, unit_of_work: UnitOfWork = Depends(get_unit_of_work)):
     if event.job.facets.jobType and event.job.facets.jobType.jobType == OpenLineageJobType.JOB:
         await handle_operation(event, unit_of_work)
@@ -66,7 +66,7 @@ async def handle_run(event: OpenLineageRunEvent, unit_of_work: UnitOfWork) -> No
 
     async with unit_of_work:
         raw_job = extract_job(event.job)
-        job = await get_or_create_job(raw_job, unit_of_work)
+        job = await create_or_update_job(raw_job, unit_of_work)
 
     async with unit_of_work:
         raw_user = extract_run_user(event)
@@ -149,13 +149,13 @@ async def get_or_create_parent_run(event: OpenLineageRunEvent, unit_of_work: Uni
         return None
 
     raw_parent_run = extract_parent_run(event.run.facets.parent)
-    parent_job = await get_or_create_job(raw_parent_run.job, unit_of_work)
+    parent_job = await create_or_update_job(raw_parent_run.job, unit_of_work)
     return await unit_of_work.run.get_or_create_minimal(raw_parent_run, parent_job.id)
 
 
-async def get_or_create_job(job: JobDTO, unit_of_work: UnitOfWork) -> Job:
+async def create_or_update_job(job: JobDTO, unit_of_work: UnitOfWork) -> Job:
     matching_location = await unit_of_work.location.get_or_create(job.location)
-    return await unit_of_work.job.get_or_create(job, matching_location.id)
+    return await unit_of_work.job.create_or_update(job, matching_location.id)
 
 
 async def get_or_create_user(user: UserDTO, unit_of_work: UnitOfWork) -> User:
@@ -190,7 +190,7 @@ async def get_or_create_dataset_symlink(
     symlink_type: DatasetSymlinkTypeDTO,
     unit_of_work: UnitOfWork,
 ) -> DatasetSymlink:
-    return await unit_of_work.dataset.create_or_update_symlink(
+    return await unit_of_work.dataset_symlink.create_or_update(
         from_dataset.id,
         to_dataset.id,
         DatasetSymlinkType(symlink_type),

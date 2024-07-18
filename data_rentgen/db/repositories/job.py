@@ -16,17 +16,34 @@ class JobRepository(Repository[Job]):
         )
         return await self._paginate_by_query(order_by=[Job.id], page=page, page_size=page_size, query=query)
 
-    async def get_or_create(self, job: JobDTO, location_id: int) -> Job:
-        statement = select(Job).where(Job.location_id == location_id, Job.name == job.name)
-        result = await self._session.scalar(statement)
+    async def create_or_update(self, job: JobDTO, location_id: int) -> Job:
+        result = await self._get(location_id, job.name)
         if not result:
-            result = Job(
-                location_id=location_id,
-                name=job.name,
-                type=JobType(job.type) if job.type else JobType.UNKNOWN,
-            )
-            self._session.add(result)
-        elif job.type:
-            result.type = JobType(job.type)
+            # try one more time, but with lock acquired.
+            # if another worker already created the same row, just use it. if not - create with holding the lock.
+            await self._lock(location_id, job.name)
+            result = await self._get(location_id, job.name)
+
+        if not result:
+            return await self._create(job, location_id)
+        return await self._update(result, job)
+
+    async def _get(self, location_id: int, name: str) -> Job | None:
+        statement = select(Job).where(Job.location_id == location_id, Job.name == name)
+        return await self._session.scalar(statement)
+
+    async def _create(self, job: JobDTO, location_id: int) -> Job:
+        result = Job(
+            location_id=location_id,
+            name=job.name,
+            type=JobType(job.type) if job.type else JobType.UNKNOWN,
+        )
+        self._session.add(result)
         await self._session.flush([result])
         return result
+
+    async def _update(self, existing: Job, new: JobDTO) -> Job:
+        if new.type:
+            existing.type = JobType(new.type)
+            await self._session.flush([existing])
+        return existing
