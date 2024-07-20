@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 async def test_get_dataset_empty(test_client: AsyncClient):
     response = await test_client.get(
-        "v1/dataset",
+        "v1/datasets",
     )
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
@@ -24,7 +24,7 @@ async def test_get_dataset_missing(
     new_dataset: Dataset,
 ):
     response = await test_client.get(
-        f"v1/dataset?dataset_id={new_dataset.id}",
+        f"v1/datasets?dataset_id={new_dataset.id}",
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -52,7 +52,7 @@ async def test_get_dataset(async_session: AsyncSession, test_client: AsyncClient
     dataset_from_db: Dataset = await async_session.scalar(query)
 
     response = await test_client.get(
-        f"v1/dataset?dataset_id={dataset.id}",
+        f"v1/datasets?dataset_id={dataset.id}",
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -95,7 +95,7 @@ async def test_get_datasets(async_session: AsyncSession, test_client: AsyncClien
     datasets_from_db = list(scalars.all())
 
     response = await test_client.get(
-        f"v1/dataset?dataset_id={datasets[0].id}&dataset_id={datasets[1].id}",
+        f"v1/datasets?dataset_id={datasets[0].id}&dataset_id={datasets[1].id}",
     )
 
     assert response.status_code == HTTPStatus.OK

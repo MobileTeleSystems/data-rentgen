@@ -2,14 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from datetime import datetime
+from typing import Optional
 
-from sqlalchemy import select
+from sqlalchemy import and_, select
+from sqlalchemy.orm import selectinload
 from uuid6 import UUID
 
 from data_rentgen.db.models import Run, RunStartReason, Status
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid
-from data_rentgen.dto import RunDTO
+from data_rentgen.dto import PaginationDTO, RunDTO
 
 
 class RunRepository(Repository[Run]):
@@ -100,3 +102,21 @@ class RunRepository(Repository[Run]):
 
         await self._session.flush([existing])
         return existing
+
+    async def get_pagination_by_id(self, page: int, page_size: int, run_id: list[int]) -> PaginationDTO[Run]:
+        query = select(Run).where(Run.id.in_(run_id)).options(selectinload(Run.started_by_user))
+        return await self._paginate_by_query(order_by=[Run.id], page=page, page_size=page_size, query=query)
+
+    async def get_pagination_by_job_id(
+        self,
+        page: int,
+        page_size: int,
+        job_id: int,
+        since: datetime,
+        until: Optional[datetime],
+    ) -> PaginationDTO[Run]:
+        filter = [Run.created_at >= since, Run.job_id == job_id]
+        if until:
+            filter.append(Run.created_at <= until)
+        query = select(Run).where(and_(*filter)).options(selectinload(Run.started_by_user))
+        return await self._paginate_by_query(order_by=[Run.id], page=page, page_size=page_size, query=query)
