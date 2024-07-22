@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import and_, select
 from sqlalchemy.orm import selectinload
@@ -56,7 +55,7 @@ class RunRepository(Repository[Run]):
         page_size: int,
         job_id: int,
         since: datetime,
-        until: Optional[datetime],
+        until: datetime | None,
     ) -> PaginationDTO[Run]:
         filter = [Run.created_at >= since, Run.job_id == job_id]
         if until:
