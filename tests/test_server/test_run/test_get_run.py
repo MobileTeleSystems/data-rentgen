@@ -115,8 +115,9 @@ async def test_get_run_by_id(
                 "running_log_url": run_from_db.running_log_url,
                 "started_at": run_from_db.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "started_by_user": {"name": run_from_db.started_by_user.name},
+                "start_reason": run_from_db.start_reason,
                 "ended_at": run_from_db.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_reason": run_from_db.ended_reason,
+                "end_reason": run_from_db.end_reason,
             },
         ],
     }
@@ -159,8 +160,9 @@ async def test_get_run_by_job_id(
                 "running_log_url": run_from_db.running_log_url,
                 "started_at": run_from_db.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "started_by_user": {"name": run_from_db.started_by_user.name},
+                "start_reason": run_from_db.start_reason,
                 "ended_at": run_from_db.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_reason": run_from_db.ended_reason,
+                "end_reason": run_from_db.end_reason,
             },
         ],
     }
@@ -209,8 +211,9 @@ async def test_get_runs_by_id(
                 "running_log_url": run.running_log_url,
                 "started_at": run.started_at,
                 "started_by_user": run.started_by_user,
+                "start_reason": run.start_reason,
                 "ended_at": run.ended_at,
-                "ended_reason": run.ended_reason,
+                "end_reason": run.end_reason,
             }
             for run in runs_from_db[:2]
         ],
@@ -260,8 +263,9 @@ async def test_get_runs_by_job_id(
                 "running_log_url": run.running_log_url,
                 "started_at": run.started_at,
                 "started_by_user": run.started_by_user,
+                "start_reason": run.start_reason,
                 "ended_at": run.ended_at,
-                "ended_reason": run.ended_reason,
+                "end_reason": run.end_reason,
             }
             for run in runs_from_db
         ],

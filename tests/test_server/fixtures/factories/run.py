@@ -43,8 +43,9 @@ def run_factory(**kwargs):
         "running_log_url": random_string(32),
         "started_at": random_datetime(),
         "started_by_user_id": randint(0, 10000000),
+        "start_reason": choice(["MANUAL", "AUTOMATIC"]),
         "ended_at": random_datetime(),
-        "ended_reason": random_string(8),
+        "end_reason": random_string(8),
     }
     data.update(kwargs)
     return Run(**data)

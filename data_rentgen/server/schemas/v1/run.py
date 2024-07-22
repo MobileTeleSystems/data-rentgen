@@ -30,8 +30,9 @@ class RunResponseV1(BaseModel):
     )
     started_at: Optional[datetime] = Field(description="Start time of the Run", default=None)
     started_by_user: Optional[UserResponseV1] = Field(description="User who started the Run", default=None)
+    start_reason: str | None = Field(description="Start reason of the Run", default=None)
     ended_at: Optional[datetime] = Field(description="End time of the Run", default=None)
-    ended_reason: Optional[str] = Field(description="End reason of the Run", default=None)
+    end_reason: Optional[str] = Field(description="End reason of the Run", default=None)
 
     model_config = ConfigDict(
         from_attributes=True,

@@ -46,6 +46,24 @@ class RunRepository(Repository[Run]):
             return await self._create(created_at, run, job_id, parent_run_id, started_by_user_id)
         return await self._update(result, run, parent_run_id, started_by_user_id)
 
+    async def pagination_by_id(self, page: int, page_size: int, run_id: list[int]) -> PaginationDTO[Run]:
+        query = select(Run).where(Run.id.in_(run_id)).options(selectinload(Run.started_by_user))
+        return await self._paginate_by_query(order_by=[Run.id], page=page, page_size=page_size, query=query)
+
+    async def pagination_by_job_id(
+        self,
+        page: int,
+        page_size: int,
+        job_id: int,
+        since: datetime,
+        until: Optional[datetime],
+    ) -> PaginationDTO[Run]:
+        filter = [Run.created_at >= since, Run.job_id == job_id]
+        if until:
+            filter.append(Run.created_at <= until)
+        query = select(Run).where(and_(*filter)).options(selectinload(Run.started_by_user))
+        return await self._paginate_by_query(order_by=[Run.id], page=page, page_size=page_size, query=query)
+
     async def _get(self, created_at: datetime, run_id: UUID) -> Run | None:
         query = select(Run).where(Run.id == run_id, Run.created_at == created_at)
         return await self._session.scalar(query)
@@ -102,21 +120,3 @@ class RunRepository(Repository[Run]):
 
         await self._session.flush([existing])
         return existing
-
-    async def get_pagination_by_id(self, page: int, page_size: int, run_id: list[int]) -> PaginationDTO[Run]:
-        query = select(Run).where(Run.id.in_(run_id)).options(selectinload(Run.started_by_user))
-        return await self._paginate_by_query(order_by=[Run.id], page=page, page_size=page_size, query=query)
-
-    async def get_pagination_by_job_id(
-        self,
-        page: int,
-        page_size: int,
-        job_id: int,
-        since: datetime,
-        until: Optional[datetime],
-    ) -> PaginationDTO[Run]:
-        filter = [Run.created_at >= since, Run.job_id == job_id]
-        if until:
-            filter.append(Run.created_at <= until)
-        query = select(Run).where(and_(*filter)).options(selectinload(Run.started_by_user))
-        return await self._paginate_by_query(order_by=[Run.id], page=page, page_size=page_size, query=query)
