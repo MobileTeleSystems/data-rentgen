@@ -3,7 +3,7 @@
 from datetime import datetime
 
 from fastapi import Query
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from data_rentgen.consumer.openlineage.uuid import UUID
 from data_rentgen.server.schemas.v1.pagination import PaginateQueryV1
@@ -42,6 +42,14 @@ class RunsByIdQueryV1(PaginateQueryV1):
     """Basic class with pagination query params."""
 
     run_id: list[UUID] = Field(Query(min_length=1, description="Run id"))
+
+    @field_validator("run_id", mode="after")
+    @classmethod
+    def check_run_id_version(cls, run_ids: list[UUID]) -> list[UUID]:
+        for run_id in run_ids:
+            if run_id.version and run_id.version < 6:
+                raise ValueError(f"Run id {run_id} uuid version < 6.")
+        return run_ids
 
 
 class RunsByJobQueryV1(PaginateQueryV1):

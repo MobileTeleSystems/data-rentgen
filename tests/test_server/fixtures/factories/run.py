@@ -14,8 +14,8 @@ from tests.test_server.fixtures.factories.base import random_datetime, random_st
 
 
 def run_factory_minimal(**kwargs):
-    if kwargs.get("instant"):
-        run_id = generate_new_uuid(kwargs.pop("instant"))
+    if kwargs.get("created_at_dttm"):
+        run_id = generate_new_uuid(kwargs.pop("created_at_dttm"))
     else:
         time.sleep(0.1)  # To be sure runs has different timestamps
         run_id = generate_new_uuid()
@@ -110,7 +110,7 @@ async def runs(
 
 
 @pytest_asyncio.fixture(params=[(5, {})])
-async def runs_with_one_job(
+async def runs_with_same_job(
     request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
     job: Job,
@@ -120,7 +120,7 @@ async def runs_with_one_job(
     items = [
         run_factory_minimal(
             job_id=job.id,
-            instant=started_at + timedelta(seconds=s),  # To be sure runs has different timestamps
+            created_at_dttm=started_at + timedelta(seconds=s),  # To be sure runs has different timestamps
             **params,
         )
         for s in range(size)
@@ -142,7 +142,7 @@ async def runs_with_one_job(
 
 
 @pytest_asyncio.fixture(params=[{}])
-async def full_run(
+async def run_with_all_fields(
     request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
     jobs: list[Job],

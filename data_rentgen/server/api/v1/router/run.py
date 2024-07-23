@@ -23,7 +23,6 @@ async def runs_by_id(
     unit_of_work: Annotated[UnitOfWork, Depends()],
 ):
     pagination = await unit_of_work.run.pagination_by_id(**pagination_args.model_dump())
-
     return PageResponseV1[RunResponseV1].from_pagination(pagination)
 
 

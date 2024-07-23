@@ -5,8 +5,8 @@ from datetime import datetime
 
 from sqlalchemy import and_, select
 from sqlalchemy.orm import selectinload
-from uuid6 import UUID
 
+from data_rentgen.consumer.openlineage.uuid import UUID
 from data_rentgen.db.models import Run, RunStartReason, Status
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid
@@ -45,8 +45,14 @@ class RunRepository(Repository[Run]):
             return await self._create(created_at, run, job_id, parent_run_id, started_by_user_id)
         return await self._update(result, run, parent_run_id, started_by_user_id)
 
-    async def pagination_by_id(self, page: int, page_size: int, run_id: list[int]) -> PaginationDTO[Run]:
-        query = select(Run).where(Run.id.in_(run_id)).options(selectinload(Run.started_by_user))
+    async def pagination_by_id(self, page: int, page_size: int, run_id: list[UUID]) -> PaginationDTO[Run]:
+        minimal_created_at = await self._extract_minimal_created_at(run_id)
+        query = (
+            select(Run)
+            .where(Run.created_at >= minimal_created_at)
+            .where(Run.id.in_(run_id))
+            .options(selectinload(Run.started_by_user))
+        )
         return await self._paginate_by_query(order_by=[Run.id], page=page, page_size=page_size, query=query)
 
     async def pagination_by_job_id(
@@ -119,3 +125,6 @@ class RunRepository(Repository[Run]):
 
         await self._session.flush([existing])
         return existing
+
+    async def _extract_minimal_created_at(self, ids: list[UUID]) -> datetime:
+        return extract_timestamp_from_uuid(min(i for i in ids))
