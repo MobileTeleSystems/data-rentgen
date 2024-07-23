@@ -5,7 +5,7 @@ from pydantic import Field
 
 from data_rentgen.consumer.openlineage.base import OpenLineageBase
 from data_rentgen.consumer.openlineage.run_facets import OpenLineageRunFacets
-from data_rentgen.consumer.openlineage.uuid import UUID
+from data_rentgen.utils import UUID
 
 
 class OpenLineageRun(OpenLineageBase):

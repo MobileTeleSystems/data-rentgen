@@ -1,4 +1,3 @@
-import time
 from collections.abc import AsyncGenerator
 from datetime import datetime, timedelta
 from random import choice, randint
@@ -17,7 +16,6 @@ def run_factory_minimal(**kwargs):
     if kwargs.get("created_at_dttm"):
         run_id = generate_new_uuid(kwargs.pop("created_at_dttm"))
     else:
-        time.sleep(0.1)  # To be sure runs has different timestamps
         run_id = generate_new_uuid()
     data = {
         "created_at": extract_timestamp_from_uuid(run_id),
@@ -29,8 +27,10 @@ def run_factory_minimal(**kwargs):
 
 
 def run_factory(**kwargs):
-    time.sleep(0.1)
-    run_id = generate_new_uuid()
+    if kwargs.get("created_at_dttm"):
+        run_id = generate_new_uuid(kwargs.pop("created_at_dttm"))
+    else:
+        run_id = generate_new_uuid()
     data = {
         "created_at": extract_timestamp_from_uuid(run_id),
         "id": run_id,
@@ -91,7 +91,15 @@ async def runs(
     jobs: list[Job],
 ) -> AsyncGenerator[list[Run], None]:
     size, params = request.param
-    items = [run_factory_minimal(job_id=choice(jobs).id, **params) for _ in range(size)]
+    started_at = datetime.now()
+    items = [
+        run_factory_minimal(
+            job_id=choice(jobs).id,
+            created_at_dttm=started_at + timedelta(seconds=0.1 * i),
+            **params,
+        )
+        for i in range(size)
+    ]
 
     # TODO: Refactor this part to separate function.
     async with async_session_maker() as async_session:
