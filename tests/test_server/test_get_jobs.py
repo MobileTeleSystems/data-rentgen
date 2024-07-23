@@ -14,7 +14,7 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 async def test_get_job_empty(
     test_client: AsyncClient,
 ):
-    response = await test_client.get("v1/job")
+    response = await test_client.get("v1/jobs")
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
 
@@ -24,7 +24,7 @@ async def test_get_job_missing(
     new_job: Job,
 ):
     response = await test_client.get(
-        f"v1/job?job_id={new_job.id}",
+        f"v1/jobs?job_id={new_job.id}",
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -52,7 +52,7 @@ async def test_get_job(
     job = await async_session.scalar(query)
 
     response = await test_client.get(
-        f"v1/job?job_id={job.id}",
+        f"v1/jobs?job_id={job.id}",
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -98,7 +98,7 @@ async def test_get_jobs(
     jobs_from_db = list(scalars.all())
 
     response = await test_client.get(
-        f"v1/job?job_id={jobs[0].id}&job_id={jobs[1].id}",
+        f"v1/jobs?job_id={jobs[0].id}&job_id={jobs[1].id}",
     )
 
     assert response.status_code == HTTPStatus.OK

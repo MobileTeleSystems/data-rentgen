@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from typing import Generic, List, Optional, TypeVar
+from typing import Generic, List, TypeVar
 
 from pydantic import BaseModel, Field
 
@@ -18,8 +18,8 @@ class PageMetaResponseV1(BaseModel):
     pages_count: int = Field(description="Number of items returned in current page")
     has_next: bool = Field(description="Is there a next page")
     has_previous: bool = Field(description="Is there a next page")
-    next_page: Optional[int] = Field(description="Next page number, if any")
-    previous_page: Optional[int] = Field(description="Previous page number, if any")
+    next_page: int | None = Field(description="Next page number, if any")
+    previous_page: int | None = Field(description="Previous page number, if any")
 
 
 class PaginateQueryV1(BaseModel):

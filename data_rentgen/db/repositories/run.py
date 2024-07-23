@@ -3,13 +3,14 @@
 
 from datetime import datetime
 
-from sqlalchemy import select
-from uuid6 import UUID
+from sqlalchemy import and_, select
+from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Run, RunStartReason, Status
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid
-from data_rentgen.dto import RunDTO
+from data_rentgen.dto import PaginationDTO, RunDTO
+from data_rentgen.utils import UUID
 
 
 class RunRepository(Repository[Run]):
@@ -43,6 +44,30 @@ class RunRepository(Repository[Run]):
         if not result:
             return await self._create(created_at, run, job_id, parent_run_id, started_by_user_id)
         return await self._update(result, run, parent_run_id, started_by_user_id)
+
+    async def pagination_by_id(self, page: int, page_size: int, run_id: list[UUID]) -> PaginationDTO[Run]:
+        minimal_created_at = extract_timestamp_from_uuid(min(i for i in run_id))
+        query = (
+            select(Run)
+            .where(Run.created_at >= minimal_created_at)
+            .where(Run.id.in_(run_id))
+            .options(selectinload(Run.started_by_user))
+        )
+        return await self._paginate_by_query(order_by=[Run.id], page=page, page_size=page_size, query=query)
+
+    async def pagination_by_job_id(
+        self,
+        page: int,
+        page_size: int,
+        job_id: int,
+        since: datetime,
+        until: datetime | None,
+    ) -> PaginationDTO[Run]:
+        filter = [Run.created_at >= since, Run.job_id == job_id]
+        if until:
+            filter.append(Run.created_at <= until)
+        query = select(Run).where(and_(*filter)).options(selectinload(Run.started_by_user))
+        return await self._paginate_by_query(order_by=[Run.id], page=page, page_size=page_size, query=query)
 
     async def _get(self, created_at: datetime, run_id: UUID) -> Run | None:
         query = select(Run).where(Run.id == run_id, Run.created_at == created_at)

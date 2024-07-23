@@ -1,7 +1,5 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from typing import Optional
-
 from fastapi import Query
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -13,7 +11,7 @@ class DatasetResponseV1(BaseModel):
     id: int = Field(description="Dataset id")
     location: LocationResponseV1 = Field(description="Corresponding Location")
     name: str = Field(description="Dataset name")
-    format: Optional[str] = Field(description="Data format", default=None)
+    format: str | None = Field(description="Data format", default=None)
 
     model_config = ConfigDict(from_attributes=True)
 

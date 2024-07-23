@@ -13,7 +13,7 @@ from data_rentgen.server.schemas.v1 import (
 )
 from data_rentgen.services import UnitOfWork
 
-router = APIRouter(prefix="/dataset", tags=["Datasets"], responses=get_error_responses(include={InvalidRequestSchema}))
+router = APIRouter(prefix="/datasets", tags=["Datasets"], responses=get_error_responses(include={InvalidRequestSchema}))
 
 
 @router.get("", summary="Paginated list of Datasets")
