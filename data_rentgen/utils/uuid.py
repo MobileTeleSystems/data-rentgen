@@ -10,7 +10,7 @@ from uuid6 import UUID as UUIDv7
 def uuid_version_validator(run_id: Any) -> Any:
     if isinstance(run_id, str):
         run_id = UUIDv7(run_id)
-        if run_id.version and run_id.version < 6:
+        if not run_id.version or run_id.version < 6:
             raise ValueError(f"Run ID: {run_id} is not valid uuid. Only UUIDv6+ are supported")
         return run_id
     return run_id

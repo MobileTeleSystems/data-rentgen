@@ -3,7 +3,6 @@ from uuid import uuid4
 
 import pytest
 from httpx import AsyncClient
-from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import select
@@ -143,17 +142,17 @@ async def test_get_runs_by_id(
             {
                 "id": str(run.id),
                 "job_id": run.job_id,
-                "parent_run_id": run.parent_run_id,
+                "parent_run_id": None,
                 "status": run.status.value,
-                "external_id": run.external_id,
-                "attempt": run.attempt,
-                "persistent_log_url": run.persistent_log_url,
-                "running_log_url": run.running_log_url,
-                "started_at": run.started_at,
-                "started_by_user": run.started_by_user,
-                "start_reason": run.start_reason,
-                "ended_at": run.ended_at,
-                "end_reason": run.end_reason,
+                "external_id": None,
+                "attempt": None,
+                "persistent_log_url": None,
+                "running_log_url": None,
+                "started_at": None,
+                "started_by_user": None,
+                "start_reason": None,
+                "ended_at": None,
+                "end_reason": None,
             }
             for run in runs_from_db[:2]
         ],
