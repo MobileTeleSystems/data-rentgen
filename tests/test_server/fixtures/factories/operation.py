@@ -96,6 +96,7 @@ async def operations(
         )
         for i in range(size)
     ]
+    items.sort(key=lambda x: (x.run_id, x.id))
 
     async with async_session_maker() as async_session:
         for item in items:
