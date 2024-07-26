@@ -5,7 +5,6 @@ from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import and_, select
-from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Operation, OperationType, Status
 from data_rentgen.db.repositories.base import Repository
