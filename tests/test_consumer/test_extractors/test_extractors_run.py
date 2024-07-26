@@ -21,14 +21,17 @@ from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageAirflowDagInfo,
     OpenLineageAirflowDagRunInfo,
     OpenLineageAirflowDagRunType,
-    OpenLineageAirflowRunFacet,
     OpenLineageAirflowTaskInfo,
     OpenLineageAirflowTaskInstanceInfo,
+    OpenLineageAirflowTaskRunFacet,
     OpenLineageProcessingEngineName,
     OpenLineageProcessingEngineRunFacet,
     OpenLineageRunFacets,
     OpenLineageSparkApplicationDetailsRunFacet,
     OpenLineageSparkDeployMode,
+)
+from data_rentgen.consumer.openlineage.run_facets.airflow import (
+    OpenLineageAirflowDagRunFacet,
 )
 from data_rentgen.dto import (
     JobDTO,
@@ -142,6 +145,130 @@ def test_extractors_extract_run_spark_app_local():
     )
 
 
+def test_extractors_extract_run_airflow_dag_2_3_plus():
+    now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
+    run_id = UUID("01908223-0782-79b8-9495-b1c38aaee839")
+    run = OpenLineageRunEvent(
+        eventType=OpenLineageRunEventType.COMPLETE,
+        eventTime=now,
+        job=OpenLineageJob(
+            namespace="http://airflow-host:8081",
+            name="mydag",
+            facets=OpenLineageJobFacets(
+                jobType=OpenLineageJobTypeJobFacet(
+                    processingType=None,
+                    integration=OpenLineageJobIntegrationType.AIRFLOW,
+                    jobType=OpenLineageJobType.DAG,
+                ),
+            ),
+        ),
+        run=OpenLineageRun(
+            runId=run_id,
+            facets=OpenLineageRunFacets(
+                processing_engine=OpenLineageProcessingEngineRunFacet(
+                    version=Version("2.9.2"),
+                    name=OpenLineageProcessingEngineName.AIRFLOW,
+                    openlineageAdapterVersion=Version("1.10.0"),
+                ),
+                airflowDagRun=OpenLineageAirflowDagRunFacet(
+                    dag=OpenLineageAirflowDagInfo(dag_id="mydag"),
+                    dagRun=OpenLineageAirflowDagRunInfo(
+                        run_id="manual__2024-07-05T09:04:13:979349+00:00",
+                        run_type=OpenLineageAirflowDagRunType.MANUAL,
+                        data_interval_start=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
+                        data_interval_end=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
+                    ),
+                ),
+            ),
+        ),
+    )
+
+    assert extract_run(run) == RunDTO(
+        id=run_id,
+        job=JobDTO(
+            name="mydag",
+            location=LocationDTO(
+                type="http",
+                name="airflow-host:8081",
+                addresses=["http://airflow-host:8081"],
+            ),
+            type=JobTypeDTO.AIRFLOW_DAG,
+        ),
+        status=RunStatusDTO.SUCCEEDED,
+        started_at=None,
+        start_reason=RunStartReasonDTO.MANUAL,
+        ended_at=now,
+        external_id="manual__2024-07-05T09:04:13:979349+00:00",
+        attempt=None,
+        persistent_log_url=(
+            "http://airflow-host:8081/dags/mydag/grid?dag_run_id=manual__2024-07-05T09%3A04%3A13%3A979349%2B00%3A00"
+        ),
+        running_log_url=None,
+    )
+
+
+def test_extractors_extract_run_airflow_dag_2_x():
+    now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
+    run_id = UUID("01908223-0782-79b8-9495-b1c38aaee839")
+    run = OpenLineageRunEvent(
+        eventType=OpenLineageRunEventType.COMPLETE,
+        eventTime=now,
+        job=OpenLineageJob(
+            namespace="http://airflow-host:8081",
+            name="mydag",
+            facets=OpenLineageJobFacets(
+                jobType=OpenLineageJobTypeJobFacet(
+                    processingType=None,
+                    integration=OpenLineageJobIntegrationType.AIRFLOW,
+                    jobType=OpenLineageJobType.DAG,
+                ),
+            ),
+        ),
+        run=OpenLineageRun(
+            runId=run_id,
+            facets=OpenLineageRunFacets(
+                processing_engine=OpenLineageProcessingEngineRunFacet(
+                    version=Version("2.1.4"),
+                    name=OpenLineageProcessingEngineName.AIRFLOW,
+                    openlineageAdapterVersion=Version("1.10.0"),
+                ),
+                airflowDagRun=OpenLineageAirflowDagRunFacet(
+                    dag=OpenLineageAirflowDagInfo(dag_id="mydag"),
+                    dagRun=OpenLineageAirflowDagRunInfo(
+                        run_id="manual__2024-07-05T09:04:13:979349+00:00",
+                        run_type=OpenLineageAirflowDagRunType.MANUAL,
+                        data_interval_start=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
+                        data_interval_end=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
+                    ),
+                ),
+            ),
+        ),
+    )
+
+    assert extract_run(run) == RunDTO(
+        id=run_id,
+        job=JobDTO(
+            name="mydag",
+            location=LocationDTO(
+                type="http",
+                name="airflow-host:8081",
+                addresses=["http://airflow-host:8081"],
+            ),
+            type=JobTypeDTO.AIRFLOW_DAG,
+        ),
+        status=RunStatusDTO.SUCCEEDED,
+        started_at=None,
+        start_reason=RunStartReasonDTO.MANUAL,
+        ended_at=now,
+        external_id="manual__2024-07-05T09:04:13:979349+00:00",
+        attempt=None,
+        persistent_log_url=(
+            "http://airflow-host:8081/graph?dag_id=mydag&execution_date=2024-07-05T09%3A04%3A13.979349%2B00%3A00"
+        ),
+        running_log_url=None,
+    )
+
+
 def test_extractors_extract_run_airflow_task_with_ti_log_url():
     now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
     run_id = UUID("01908223-0e9b-7c52-9856-6cecfc842610")
@@ -165,9 +292,9 @@ def test_extractors_extract_run_airflow_task_with_ti_log_url():
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("2.9.2"),
                     name=OpenLineageProcessingEngineName.AIRFLOW,
-                    openlineageAdapterVersion=Version("1.9.0"),
+                    openlineageAdapterVersion=Version("1.10.0"),
                 ),
-                airflow=OpenLineageAirflowRunFacet(
+                airflow=OpenLineageAirflowTaskRunFacet(
                     dag=OpenLineageAirflowDagInfo(dag_id="mydag"),
                     dagRun=OpenLineageAirflowDagRunInfo(
                         run_id="manual__2024-07-05T09:04:13:979349+00:00",
@@ -238,7 +365,7 @@ def test_extractors_extract_run_airflow_task_2_9_plus():
                     name=OpenLineageProcessingEngineName.AIRFLOW,
                     openlineageAdapterVersion=Version("1.9.0"),
                 ),
-                airflow=OpenLineageAirflowRunFacet(
+                airflow=OpenLineageAirflowTaskRunFacet(
                     dag=OpenLineageAirflowDagInfo(dag_id="mydag"),
                     dagRun=OpenLineageAirflowDagRunInfo(
                         run_id="backfill__2024-07-05T09:04:13:979349+00:00",
@@ -301,7 +428,7 @@ def test_extractors_extract_run_airflow_task_2_x():
         run=OpenLineageRun(
             runId=run_id,
             facets=OpenLineageRunFacets(
-                airflow=OpenLineageAirflowRunFacet(
+                airflow=OpenLineageAirflowTaskRunFacet(
                     dag=OpenLineageAirflowDagInfo(dag_id="mydag"),
                     dagRun=OpenLineageAirflowDagRunInfo(
                         run_id="scheduled__2024-07-05T09:04:13:979349+00:00",
