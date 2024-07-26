@@ -56,8 +56,17 @@ class OpenLineageAirflowTaskInstanceInfo(OpenLineageBase):
     log_url: str | None = None
 
 
-class OpenLineageAirflowRunFacet(OpenLineageRunFacet):
-    """Run facet describing Airflow run.
+class OpenLineageAirflowDagRunFacet(OpenLineageRunFacet):
+    """Run facet describing Airflow DAG run.
+    See [AirflowDagRunFacet](https://github.com/apache/airflow/blob/main/airflow/providers/openlineage/facets/AirflowDagRunFacet.json).
+    """
+
+    dag: OpenLineageAirflowDagInfo
+    dagRun: OpenLineageAirflowDagRunInfo
+
+
+class OpenLineageAirflowTaskRunFacet(OpenLineageRunFacet):
+    """Run facet describing Airflow Task run.
     See [AirflowRunFacet](https://github.com/apache/airflow/blob/providers-openlineage/1.9.0/airflow/providers/openlineage/facets/AirflowRunFacet.json).
     """
 
