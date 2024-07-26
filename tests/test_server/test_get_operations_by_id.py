@@ -87,7 +87,11 @@ async def test_get_operations_by_id(
     async_session: AsyncSession,
     operations: list[Operation],
 ):
-    query = select(Operation).where(Operation.id.in_([operation.id for operation in operations])).order_by(Operation.id)
+    query = (
+        select(Operation)
+        .where(Operation.id.in_([operation.id for operation in operations]))
+        .order_by(Operation.run_id, Operation.id)
+    )
     scalars = await async_session.scalars(query)
     operations_from_db = list(scalars.all())
 
