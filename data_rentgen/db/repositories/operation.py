@@ -52,7 +52,7 @@ class OperationRepository(Repository[Operation]):
         filter = [Operation.created_at >= since, Operation.run_id == run_id]
         if until:
             filter.append(Operation.created_at <= until)
-        query = select(Operation).where(and_(*filter)).options(selectinload(Operation.run))
+        query = select(Operation).where(and_(*filter))
         return await self._paginate_by_query(order_by=[Operation.id], page=page, page_size=page_size, query=query)
 
     async def _get(self, created_at: datetime, operation_id: UUID) -> Operation | None:
