@@ -7,6 +7,11 @@ from data_rentgen.server.schemas.v1.dataset import (
 )
 from data_rentgen.server.schemas.v1.job import JobPaginateQueryV1, JobResponseV1
 from data_rentgen.server.schemas.v1.location import LocationResponseV1
+from data_rentgen.server.schemas.v1.operation import (
+    OperationByIdQueryV1,
+    OperationByRunQueryV1,
+    OperationResponseV1,
+)
 from data_rentgen.server.schemas.v1.pagination import (
     PageMetaResponseV1,
     PageResponseV1,
@@ -30,6 +35,9 @@ __all__ = [
     "LocationResponseV1",
     "PageMetaResponseV1",
     "PageResponseV1",
+    "OperationByIdQueryV1",
+    "OperationByRunQueryV1",
+    "OperationResponseV1",
     "JobResponseV1",
     "JobPaginateQueryV1",
     "PaginateQueryV1",

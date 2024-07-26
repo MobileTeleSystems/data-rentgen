@@ -4,12 +4,13 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import and_, select
+from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Operation, OperationType, Status
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid
-from data_rentgen.dto import OperationDTO
+from data_rentgen.dto import OperationDTO, PaginationDTO
 
 
 class OperationRepository(Repository[Operation]):
@@ -27,6 +28,35 @@ class OperationRepository(Repository[Operation]):
             # run_id is always present in first event, but may be missing in later ones
             return await self._create(created_at, operation, run_id)  # type: ignore[arg-type]
         return await self._update(result, operation)
+
+    async def pagination_by_id(self, page: int, page_size: int, operation_id: list[UUID]) -> PaginationDTO[Operation]:
+        minimal_created_at = extract_timestamp_from_uuid(min(i for i in operation_id))
+        query = (
+            select(Operation)
+            .where(Operation.created_at >= minimal_created_at)
+            .where(Operation.id.in_(operation_id))
+            .options(selectinload(Operation.run))
+        )
+        return await self._paginate_by_query(
+            order_by=[Operation.run_id, Operation.id],
+            page=page,
+            page_size=page_size,
+            query=query,
+        )
+
+    async def pagination_by_run_id(
+        self,
+        page: int,
+        page_size: int,
+        run_id: UUID,
+        since: datetime,
+        until: datetime | None,
+    ) -> PaginationDTO[Operation]:
+        filter = [Operation.created_at >= since, Operation.run_id == run_id]
+        if until:
+            filter.append(Operation.created_at <= until)
+        query = select(Operation).where(and_(*filter)).options(selectinload(Operation.run))
+        return await self._paginate_by_query(order_by=[Operation.id], page=page, page_size=page_size, query=query)
 
     async def _get(self, created_at: datetime, operation_id: UUID) -> Operation | None:
         query = select(Operation).where(Operation.created_at == created_at, Operation.id == operation_id)

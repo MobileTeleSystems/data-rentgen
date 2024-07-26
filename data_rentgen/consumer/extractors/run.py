@@ -20,14 +20,14 @@ from data_rentgen.dto import RunDTO, RunStartReasonDTO, RunStatusDTO
 
 def extract_parent_run(parent_facet: OpenLineageParentRunFacet) -> RunDTO:
     return RunDTO(
-        id=parent_facet.run.runId,
+        id=parent_facet.run.runId,  # type: ignore [arg-type]
         job=extract_job(parent_facet.job),
     )
 
 
 def extract_run(event: OpenLineageRunEvent) -> RunDTO:
     run = RunDTO(
-        id=event.run.runId,
+        id=event.run.runId,  # type: ignore [arg-type]
         job=extract_job(event.job),
     )
     enrich_run_status(run, event)
