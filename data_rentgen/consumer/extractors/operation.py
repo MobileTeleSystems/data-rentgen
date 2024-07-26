@@ -16,7 +16,7 @@ def extract_operation(event: OpenLineageRunEvent) -> OperationDTO:
         operation_name = operation_name[prefix:]
 
     operation = OperationDTO(
-        id=event.run.runId,
+        id=event.run.runId,  # type: ignore [arg-type]
         name=operation_name,
         type=OperationTypeDTO(event.job.facets.jobType.processingType) if event.job.facets.jobType else None,
     )

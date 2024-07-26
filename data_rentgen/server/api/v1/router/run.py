@@ -21,7 +21,7 @@ router = APIRouter(prefix="/runs", tags=["Runs"], responses=get_error_responses(
 async def runs_by_id(
     pagination_args: Annotated[RunsByIdQueryV1, Depends()],
     unit_of_work: Annotated[UnitOfWork, Depends()],
-):
+) -> PageResponseV1[RunResponseV1]:
     pagination = await unit_of_work.run.pagination_by_id(**pagination_args.model_dump())
     return PageResponseV1[RunResponseV1].from_pagination(pagination)
 
@@ -30,6 +30,6 @@ async def runs_by_id(
 async def runs_by_job_id(
     pagination_args: Annotated[RunsByJobQueryV1, Depends()],
     unit_of_work: Annotated[UnitOfWork, Depends()],
-):
+) -> PageResponseV1[RunResponseV1]:
     pagination = await unit_of_work.run.pagination_by_job_id(**pagination_args.model_dump())
     return PageResponseV1[RunResponseV1].from_pagination(pagination)

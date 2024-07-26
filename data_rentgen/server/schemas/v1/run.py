@@ -48,9 +48,13 @@ class RunsByJobQueryV1(PaginateQueryV1):
     """Class with filtering query params by time."""
 
     since: datetime = Field(
-        Query(description="Start time of the Run in ISO 8601 format", example="2008-09-15T15:53:00+05:00"),
+        Query(description="Start time of the Run in ISO 8601 format", examples=["2008-09-15T15:53:00+05:00"]),
     )
     until: datetime | None = Field(
-        Query(default=None, description="End time of the Run in ISO 8601 format", example="2008-09-15T15:53:00+05:00"),
+        Query(
+            default=None,
+            description="End time of the Run in ISO 8601 format",
+            examples=["2008-09-15T15:53:00+05:00"],
+        ),
     )
     job_id: int = Field(Query(description="Job id"))

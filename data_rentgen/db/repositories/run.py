@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from datetime import datetime
+from uuid import UUID
 
 from sqlalchemy import and_, select
 from sqlalchemy.orm import selectinload
@@ -10,7 +11,6 @@ from data_rentgen.db.models import Run, RunStartReason, Status
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid
 from data_rentgen.dto import PaginationDTO, RunDTO
-from data_rentgen.utils import UUID
 
 
 class RunRepository(Repository[Run]):
