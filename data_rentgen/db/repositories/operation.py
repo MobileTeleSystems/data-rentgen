@@ -32,10 +32,7 @@ class OperationRepository(Repository[Operation]):
     async def pagination_by_id(self, page: int, page_size: int, operation_id: list[UUID]) -> PaginationDTO[Operation]:
         minimal_created_at = extract_timestamp_from_uuid(min(i for i in operation_id))
         query = (
-            select(Operation)
-            .where(Operation.created_at >= minimal_created_at)
-            .where(Operation.id.in_(operation_id))
-            .options(selectinload(Operation.run))
+            select(Operation).where(Operation.created_at >= minimal_created_at).where(Operation.id.in_(operation_id))
         )
         return await self._paginate_by_query(
             order_by=[Operation.run_id, Operation.id],
