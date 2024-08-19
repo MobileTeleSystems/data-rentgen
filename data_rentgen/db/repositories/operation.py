@@ -6,10 +6,21 @@ from uuid import UUID
 
 from sqlalchemy import select
 
-from data_rentgen.db.models import Operation, OperationType, Status
+from data_rentgen.db.models import (
+    Dataset,
+    Interaction,
+    Operation,
+    OperationType,
+    Status,
+)
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid
-from data_rentgen.dto import OperationDTO, PaginationDTO
+from data_rentgen.dto import (
+    OperationDatasetDTO,
+    OperationDTO,
+    OperationNodeDTO,
+    PaginationDTO,
+)
 
 
 class OperationRepository(Repository[Operation]):
@@ -52,6 +63,35 @@ class OperationRepository(Repository[Operation]):
         if until:
             query = query.where(Operation.created_at <= until)
         return await self._paginate_by_query(order_by=[Operation.id], page=page, page_size=page_size, query=query)
+
+    async def get_operation_datasets(
+        self,
+        operation_id: UUID,
+        type: list[str],
+        since: datetime,
+        until: datetime | None,
+    ) -> list[OperationDatasetDTO]:
+        """This method return all datasets connected to operation"""
+        filter = [Operation.created_at >= since, Operation.id == operation_id, Interaction.type.in_(type)]
+        if until:
+            filter.append(Operation.created_at <= until)
+        query = (
+            select(Operation.id, Dataset.id, Interaction.type)
+            .join(Interaction, Operation.id == Interaction.operation_id)
+            .join(Dataset, Interaction.dataset_id == Dataset.id)
+            .where(and_(*filter))
+        )
+        result = await self._session.execute(query)
+        return [OperationDatasetDTO(*row) for row in result.all()]
+
+    async def get_node_info(self, operation_id: UUID) -> OperationNodeDTO:
+        created_at = extract_timestamp_from_uuid(operation_id)
+        query = select(Operation.id, Operation.name, Operation.status, Operation.type).where(
+            Operation.created_at == created_at,
+            Operation.id == operation_id,
+        )
+        result = await self._session.execute(query)
+        return OperationNodeDTO(*result.one())
 
     async def _get(self, created_at: datetime, operation_id: UUID) -> Operation | None:
         query = select(Operation).where(Operation.created_at == created_at, Operation.id == operation_id)

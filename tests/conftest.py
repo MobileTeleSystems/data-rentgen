@@ -14,6 +14,7 @@ pytest_plugins = [
     "tests.test_server.fixtures.factories.address",
     "tests.test_server.fixtures.factories.dataset",
     "tests.test_server.fixtures.factories.job",
+    "tests.test_server.fixtures.factories.lineage",
     "tests.test_server.fixtures.factories.location",
     "tests.test_server.fixtures.factories.operation",
     "tests.test_server.fixtures.factories.run",

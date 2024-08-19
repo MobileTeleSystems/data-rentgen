@@ -1,12 +1,18 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
+from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import and_, select
 from sqlalchemy.orm import selectinload
 
-from data_rentgen.db.models import Dataset, Location
+from data_rentgen.db.models import Dataset, Interaction, Location, Operation
 from data_rentgen.db.repositories.base import Repository
-from data_rentgen.dto import DatasetDTO, PaginationDTO
+from data_rentgen.dto import (
+    DatasetDTO,
+    DatasetNodeDTO,
+    OperationDatasetDTO,
+    PaginationDTO,
+)
 
 
 class DatasetRepository(Repository[Dataset]):
@@ -28,6 +34,31 @@ class DatasetRepository(Repository[Dataset]):
         if dataset_ids:
             query = query.where(Dataset.id.in_(dataset_ids))
         return await self._paginate_by_query(order_by=[Dataset.name], page=page, page_size=page_size, query=query)
+
+    async def get_dataset_operations(
+        self,
+        dataset_id: int,
+        type: list[str],
+        since: datetime,
+        until: datetime | None,
+    ) -> list[OperationDatasetDTO]:
+        # filter by time on interaction.
+        filter = [Interaction.created_at >= since, Dataset.id == dataset_id, Interaction.type.in_(type)]
+        if until:
+            filter.append(Interaction.created_at <= since)
+        query = (
+            select(Operation.id, Dataset.id, Interaction.type)
+            .join(Interaction, Dataset.id == Interaction.dataset_id)
+            .join(Operation, Interaction.operation_id == Operation.id)
+            .where(and_(*filter))
+        )
+        result = await self._session.execute(query)
+        return [OperationDatasetDTO(*row) for row in result.all()]
+
+    async def get_node_info(self, dataset_id: int):
+        query = select(Dataset.id, Dataset.name).where(Dataset.id == dataset_id)
+        result = await self._session.execute(query)
+        return DatasetNodeDTO(*result.one())
 
     async def _get(self, location_id: int, name: str) -> Dataset | None:
         statement = select(Dataset).where(Dataset.location_id == location_id, Dataset.name == name)

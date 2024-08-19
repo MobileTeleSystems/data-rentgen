@@ -6,6 +6,7 @@ from data_rentgen.server.schemas.v1.dataset import (
     DatasetResponseV1,
 )
 from data_rentgen.server.schemas.v1.job import JobPaginateQueryV1, JobResponseV1
+from data_rentgen.server.schemas.v1.lineage import LineageQueryV1, LineageResponseV1
 from data_rentgen.server.schemas.v1.location import LocationResponseV1
 from data_rentgen.server.schemas.v1.operation import (
     OperationQueryV1,
@@ -26,6 +27,8 @@ __all__ = [
     "UserResponseV1",
     "DatasetPaginateQueryV1",
     "DatasetResponseV1",
+    "LineageQueryV1",
+    "LineageResponseV1",
     "LocationResponseV1",
     "PageMetaResponseV1",
     "PageResponseV1",
