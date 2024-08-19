@@ -9,6 +9,8 @@ from enum import Enum
 
 from uuid6 import UUID
 
+from data_rentgen.dto.interaction import InteractionTypeDTO
+
 
 class OperationTypeDTO(str, Enum):
     BATCH = "BATCH"
@@ -39,3 +41,18 @@ class OperationDTO:
     position: int | None = None
     started_at: datetime | None = None
     ended_at: datetime | None = None
+
+
+@dataclass(slots=True)
+class OperationDatasetDTO:
+    operation_id: UUID
+    dataset_id: int
+    interaction_type: InteractionTypeDTO
+
+
+@dataclass(slots=True)
+class OperationNodeDTO:
+    id: UUID
+    name: str
+    status: str
+    type: str
