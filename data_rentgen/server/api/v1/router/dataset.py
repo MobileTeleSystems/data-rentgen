@@ -21,6 +21,9 @@ async def paginate_datasets(
     pagination_args: Annotated[DatasetPaginateQueryV1, Depends()],
     unit_of_work: Annotated[UnitOfWork, Depends()],
 ) -> PageResponseV1[DatasetResponseV1]:
-    pagination = await unit_of_work.dataset.paginate(**pagination_args.model_dump())
-
+    pagination = await unit_of_work.dataset.paginate(
+        page=pagination_args.page,
+        page_size=pagination_args.page_size,
+        dataset_ids=pagination_args.dataset_id,
+    )
     return PageResponseV1[DatasetResponseV1].from_pagination(pagination)

@@ -10,18 +10,40 @@ from data_rentgen.db.models import Operation
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
-async def test_get_operations_by_id_empty(test_client: AsyncClient):
-    response = await test_client.get("v1/operations/by_id")
+async def test_get_operations_no_filter(test_client: AsyncClient):
+    response = await test_client.get("v1/operations")
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.json() == {
+        "error": {
+            "code": "invalid_request",
+            "message": "Invalid request",
+            "details": [
+                {
+                    "location": [],
+                    "code": "value_error",
+                    "message": "Value error, input should contain either 'run_id' and 'since', or 'operation_id' field",
+                    "context": {},
+                    "input": {
+                        "page": 1,
+                        "page_size": 20,
+                        "since": None,
+                        "operation_id": [],
+                        "run_id": None,
+                        "until": None,
+                    },
+                },
+            ],
+        },
+    }
 
 
-async def test_get_operations_by_id_missing(
+async def test_get_operations_by_missing_id(
     test_client: AsyncClient,
     new_operation: Operation,
 ):
     response = await test_client.get(
-        "v1/operations/by_id",
+        "v1/operations",
         params={"operation_id": new_operation.id},
     )
 
@@ -41,17 +63,17 @@ async def test_get_operations_by_id_missing(
     }
 
 
-async def test_get_operation_by_id(
+async def test_get_operations_by_one_id(
     test_client: AsyncClient,
-    operation_with_all_fields: Operation,
+    operation: Operation,
     async_session: AsyncSession,
 ):
-    query = select(Operation).where(Operation.id == operation_with_all_fields.id)
-    operation_from_db = await async_session.scalar(query)
+    query = select(Operation).where(Operation.id == operation.id)
+    operation_from_db: Operation = await async_session.scalar(query)
 
     response = await test_client.get(
-        "v1/operations/by_id",
-        params={"operation_id": operation_with_all_fields.id},
+        "v1/operations",
+        params={"operation_id": operation.id},
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -82,22 +104,20 @@ async def test_get_operation_by_id(
     }
 
 
-async def test_get_operations_by_id(
+async def test_get_operations_by_multiple_ids(
     test_client: AsyncClient,
-    async_session: AsyncSession,
     operations: list[Operation],
+    async_session: AsyncSession,
 ):
-    query = (
-        select(Operation)
-        .where(Operation.id.in_([operation.id for operation in operations]))
-        .order_by(Operation.run_id, Operation.id)
-    )
+    # create more objects than pass to endpoint, to test filtering
+    operation_ids = [operation.id for operation in operations[:2]]
+    query = select(Operation).where(Operation.id.in_(operation_ids)).order_by(Operation.run_id, Operation.id)
     scalars = await async_session.scalars(query)
     operations_from_db = list(scalars.all())
 
     response = await test_client.get(
-        "v1/operations/by_id",
-        params={"operation_id": [operation.id for operation in operations[:2]]},
+        "v1/operations",
+        params={"operation_id": [str(id) for id in operation_ids]},
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -119,11 +139,11 @@ async def test_get_operations_by_id(
                 "name": operation.name,
                 "status": operation.status.value,
                 "type": operation.type.value,
-                "position": None,
-                "description": None,
-                "started_at": None,
-                "ended_at": None,
+                "position": operation.position,
+                "description": operation.description,
+                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
             }
-            for operation in operations_from_db[:2]
+            for operation in operations_from_db
         ],
     }

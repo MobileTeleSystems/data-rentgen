@@ -3,7 +3,14 @@
 from datetime import datetime
 
 from fastapi import Query
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 from data_rentgen.server.schemas.v1.pagination import PaginateQueryV1
 from data_rentgen.utils import UUID
@@ -27,23 +34,49 @@ class OperationResponseV1(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class OperationByIdQueryV1(PaginateQueryV1):
-    """Basic class with pagination query params."""
+class OperationQueryV1(PaginateQueryV1):
+    """Query params for Operations paginate request."""
 
-    operation_id: list[UUID] = Field(Query(min_length=1, description="Operation id"))
-
-
-class OperationByRunQueryV1(PaginateQueryV1):
-    """Class with filtering query params by time."""
-
-    since: datetime = Field(
-        Query(description="Start time of the Run in ISO 8601 format", examples=["2008-09-15T15:53:00+05:00"]),
+    operation_id: list[UUID] = Field(
+        Query(
+            default_factory=list,
+            description="Operation ids, for exact match",
+        ),
+    )
+    since: datetime | None = Field(
+        Query(
+            default=None,
+            description="Minimum value of Operation 'created_at' field, in ISO 8601 format",
+            examples=["2008-09-15T15:53:00+05:00"],
+        ),
     )
     until: datetime | None = Field(
         Query(
             default=None,
-            description="End time of the Run in ISO 8601 format",
+            description="Maximum value of Operation 'created_at' field, in ISO 8601 format",
             examples=["2008-09-15T15:53:00+05:00"],
         ),
     )
-    run_id: UUID = Field(Query(description="Run id"))
+    run_id: UUID | None = Field(
+        Query(
+            default=None,
+            description="Run id, can be used only with 'since'",
+        ),
+    )
+
+    @field_validator("until", mode="after")
+    @classmethod
+    def _check_until(cls, value: datetime | None, info: ValidationInfo) -> datetime | None:
+        since = info.data.get("since")
+        if since and value and since >= value:
+            raise ValueError("'since' should be less than 'until'")
+        return value
+
+    @model_validator(mode="after")
+    def _check_fields(self):
+        if self.operation_id:
+            if self.run_id or self.since or self.until:
+                raise ValueError("fields 'run_id','since', 'until' cannot be used if 'operation_id' is set")
+        elif not self.run_id or not self.since:
+            raise ValueError("input should contain either 'run_id' and 'since', or 'operation_id' field")
+        return self

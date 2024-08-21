@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 
 import pytest
@@ -12,12 +12,110 @@ from data_rentgen.db.models import Run
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
-async def test_get_runs_by_job_id_empty(
+async def test_get_runs_by_job_id_missing_fields(
     test_client: AsyncClient,
 ):
-    response = await test_client.get("v1/runs/by_job_id")
+    since = datetime.now(tz=timezone.utc)
+    response = await test_client.get(
+        "v1/runs",
+        params={"since": since.isoformat()},
+    )
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.json() == {
+        "error": {
+            "code": "invalid_request",
+            "message": "Invalid request",
+            "details": [
+                {
+                    "location": [],
+                    "code": "value_error",
+                    "message": "Value error, input should contain either 'job_id' and 'since', or 'run_id' field",
+                    "context": {},
+                    "input": {
+                        "page": 1,
+                        "page_size": 20,
+                        "since": since.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                        "run_id": [],
+                        "job_id": None,
+                        "until": None,
+                    },
+                },
+            ],
+        },
+    }
+
+
+async def test_get_runs_by_job_id_conflicting_fields(
+    test_client: AsyncClient,
+    new_run: Run,
+):
+    since = datetime.now(tz=timezone.utc)
+    response = await test_client.get(
+        "v1/runs",
+        params={
+            "since": since.isoformat(),
+            "job_id": new_run.job_id,
+            "run_id": str(new_run.id),
+        },
+    )
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.json() == {
+        "error": {
+            "code": "invalid_request",
+            "message": "Invalid request",
+            "details": [
+                {
+                    "location": [],
+                    "code": "value_error",
+                    "message": "Value error, fields 'job_id','since', 'until' cannot be used if 'run_id' is set",
+                    "context": {},
+                    "input": {
+                        "page": 1,
+                        "page_size": 20,
+                        "run_id": [str(new_run.id)],
+                        "job_id": new_run.job_id,
+                        "since": since.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                        "until": None,
+                    },
+                },
+            ],
+        },
+    }
+
+
+async def test_get_runs_by_job_id_until_less_than_since(
+    test_client: AsyncClient,
+    new_run: Run,
+):
+    since = new_run.created_at
+    until = since - timedelta(days=1)
+    response = await test_client.get(
+        "v1/runs",
+        params={
+            "since": since.isoformat(),
+            "until": until.isoformat(),
+            "job_id": str(new_run.job_id),
+        },
+    )
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.json() == {
+        "error": {
+            "code": "invalid_request",
+            "message": "Invalid request",
+            "details": [
+                {
+                    "location": ["until"],
+                    "code": "value_error",
+                    "message": "Value error, 'since' should be less than 'until'",
+                    "context": {},
+                    "input": until.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                },
+            ],
+        },
+    }
 
 
 async def test_get_runs_by_job_id_missing(
@@ -25,7 +123,7 @@ async def test_get_runs_by_job_id_missing(
     new_run: Run,
 ):
     response = await test_client.get(
-        "v1/runs/by_job_id",
+        "v1/runs",
         params={"since": new_run.created_at.isoformat(), "job_id": new_run.job_id},
     )
 
@@ -47,15 +145,18 @@ async def test_get_runs_by_job_id_missing(
 
 async def test_get_run_by_job_id(
     test_client: AsyncClient,
-    run_with_all_fields: Run,
+    run: Run,
     async_session: AsyncSession,
 ):
-    query = select(Run).where(Run.id == run_with_all_fields.id).options(selectinload(Run.started_by_user))
+    query = select(Run).where(Run.id == run.id).options(selectinload(Run.started_by_user))
     run_from_db: Run = await async_session.scalar(query)
 
     response = await test_client.get(
-        "v1/runs/by_job_id",
-        params={"since": run_with_all_fields.created_at.isoformat(), "job_id": run_with_all_fields.job_id},
+        "v1/runs",
+        params={
+            "since": run.created_at.isoformat(),
+            "job_id": run.job_id,
+        },
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -105,8 +206,11 @@ async def test_get_runs_by_job_id(
     runs_from_db = list(scalars.all())
 
     response = await test_client.get(
-        "v1/runs/by_job_id",
-        params={"job_id": runs_with_same_job[0].job_id, "since": runs_with_same_job[0].created_at.isoformat()},
+        "v1/runs",
+        params={
+            "since": runs_with_same_job[0].created_at.isoformat(),
+            "job_id": runs_with_same_job[0].job_id,
+        },
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -125,17 +229,17 @@ async def test_get_runs_by_job_id(
             {
                 "id": str(run.id),
                 "job_id": run.job_id,
-                "parent_run_id": None,
+                "parent_run_id": str(run.parent_run_id),
                 "status": run.status.value,
-                "external_id": None,
-                "attempt": None,
-                "persistent_log_url": None,
-                "running_log_url": None,
-                "started_at": None,
-                "started_by_user": None,
-                "start_reason": None,
-                "ended_at": None,
-                "end_reason": None,
+                "external_id": run.external_id,
+                "attempt": run.attempt,
+                "persistent_log_url": run.persistent_log_url,
+                "running_log_url": run.running_log_url,
+                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "started_by_user": {"name": run.started_by_user.name},
+                "start_reason": run.start_reason,
+                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "end_reason": run.end_reason,
             }
             for run in runs_from_db
         ],
@@ -147,9 +251,14 @@ async def test_get_runs_time_range(
     runs_with_same_job: list[Run],
     async_session: AsyncSession,
 ):
+    since = runs_with_same_job[0].created_at
+    until = since + timedelta(seconds=1)
+
     query = (
         select(Run)
         .where(Run.id.in_([run.id for run in runs_with_same_job]))
+        .where(Run.created_at >= since)
+        .where(Run.created_at <= until)
         .order_by(Run.id)
         .options(selectinload(Run.started_by_user))
     )
@@ -157,14 +266,42 @@ async def test_get_runs_time_range(
     runs_from_db = list(scalars.all())
 
     response = await test_client.get(
-        "v1/runs/by_job_id",
+        "v1/runs",
         params={
             "job_id": runs_with_same_job[0].job_id,
-            "since": runs_with_same_job[0].created_at.isoformat(),
-            "until": (runs_with_same_job[0].created_at + timedelta(seconds=1)).isoformat(),
+            "since": since.isoformat(),
+            "until": until.isoformat(),
         },
     )
 
     assert response.status_code == HTTPStatus.OK
-    assert len(runs_from_db) == 5
-    assert response.json()["meta"]["total_count"] == 2
+    assert response.json() == {
+        "meta": {
+            "page": 1,
+            "page_size": 20,
+            "total_count": 2,
+            "pages_count": 1,
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "previous_page": None,
+        },
+        "items": [
+            {
+                "id": str(run.id),
+                "job_id": run.job_id,
+                "parent_run_id": str(run.parent_run_id),
+                "status": run.status.value,
+                "external_id": run.external_id,
+                "attempt": run.attempt,
+                "persistent_log_url": run.persistent_log_url,
+                "running_log_url": run.running_log_url,
+                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "started_by_user": {"name": run.started_by_user.name},
+                "start_reason": run.start_reason,
+                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "end_reason": run.end_reason,
+            }
+            for run in runs_from_db
+        ],
+    }

@@ -19,4 +19,4 @@ class DatasetResponseV1(BaseModel):
 class DatasetPaginateQueryV1(PaginateQueryV1):
     """Query params for Dataset paginate request."""
 
-    dataset_id: list[int] = Field(Query(min_length=1), description="Dataset id")
+    dataset_id: list[int] = Field(Query(default_factory=list), description="Dataset id")

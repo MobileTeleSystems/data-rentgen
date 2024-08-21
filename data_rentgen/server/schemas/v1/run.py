@@ -3,7 +3,14 @@
 from datetime import datetime
 
 from fastapi import Query
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 from data_rentgen.server.schemas.v1.pagination import PaginateQueryV1
 from data_rentgen.server.schemas.v1.user import UserResponseV1
@@ -38,23 +45,49 @@ class RunResponseV1(BaseModel):
     )
 
 
-class RunsByIdQueryV1(PaginateQueryV1):
-    """Basic class with pagination query params."""
+class RunsQueryV1(PaginateQueryV1):
+    """Query params for Runs paginate request."""
 
-    run_id: list[UUID] = Field(Query(min_length=1, description="Run id"))
-
-
-class RunsByJobQueryV1(PaginateQueryV1):
-    """Class with filtering query params by time."""
-
-    since: datetime = Field(
-        Query(description="Start time of the Run in ISO 8601 format", examples=["2008-09-15T15:53:00+05:00"]),
+    run_id: list[UUID] = Field(
+        Query(
+            default_factory=list,
+            description="Run ids, for exact match",
+        ),
+    )
+    since: datetime | None = Field(
+        Query(
+            default=None,
+            description="Minimum value of Run 'created_at' field, in ISO 8601 format",
+            examples=["2008-09-15T15:53:00+05:00"],
+        ),
     )
     until: datetime | None = Field(
         Query(
             default=None,
-            description="End time of the Run in ISO 8601 format",
+            description="Maximum value of Run 'created_at' field, in ISO 8601 format",
             examples=["2008-09-15T15:53:00+05:00"],
         ),
     )
-    job_id: int = Field(Query(description="Job id"))
+    job_id: int | None = Field(
+        Query(
+            default=None,
+            description="Job id, can be used only with 'since'",
+        ),
+    )
+
+    @field_validator("until", mode="after")
+    @classmethod
+    def _check_until(cls, value: datetime | None, info: ValidationInfo) -> datetime | None:
+        since = info.data.get("since")
+        if since and value and since >= value:
+            raise ValueError("'since' should be less than 'until'")
+        return value
+
+    @model_validator(mode="after")
+    def _check_fields(self):
+        if self.run_id:
+            if self.job_id or self.since or self.until:
+                raise ValueError("fields 'job_id','since', 'until' cannot be used if 'run_id' is set")
+        elif not self.job_id or not self.since:
+            raise ValueError("input should contain either 'job_id' and 'since', or 'run_id' field")
+        return self

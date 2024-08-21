@@ -11,20 +11,13 @@ from data_rentgen.db.models import Job, Location
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
-async def test_get_job_empty(
-    test_client: AsyncClient,
-):
-    response = await test_client.get("v1/jobs")
-
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-
-
-async def test_get_job_missing(
+async def test_get_jobs_by_unknown_id(
     test_client: AsyncClient,
     new_job: Job,
 ):
     response = await test_client.get(
-        f"v1/jobs?job_id={new_job.id}",
+        "v1/jobs",
+        params={"job_id": new_job.id},
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -43,7 +36,7 @@ async def test_get_job_missing(
     }
 
 
-async def test_get_job(
+async def test_get_jobs_by_one_id(
     test_client: AsyncClient,
     job: Job,
     async_session: AsyncSession,
@@ -52,7 +45,8 @@ async def test_get_job(
     job = await async_session.scalar(query)
 
     response = await test_client.get(
-        f"v1/jobs?job_id={job.id}",
+        "v1/jobs",
+        params={"job_id": job.id},
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -83,22 +77,26 @@ async def test_get_job(
     }
 
 
-async def test_get_jobs(
+async def test_get_jobs_by_multiple_ids(
     test_client: AsyncClient,
     jobs: list[Job],
     async_session: AsyncSession,
 ):
+    # create more objects than pass to endpoint, to test filtering
+    job_ids = [job.id for job in jobs[:2]]
+
     query = (
         select(Job)
-        .where(Job.id.in_([job.id for job in jobs]))
-        .order_by(Job.id)
+        .where(Job.id.in_(job_ids))
+        .order_by(Job.name)
         .options(selectinload(Job.location).selectinload(Location.addresses))
     )
     scalars = await async_session.scalars(query)
     jobs_from_db = list(scalars.all())
 
     response = await test_client.get(
-        f"v1/jobs?job_id={jobs[0].id}&job_id={jobs[1].id}",
+        "v1/jobs",
+        params={"job_id": job_ids},
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -123,6 +121,44 @@ async def test_get_jobs(
                     "addresses": [{"url": address.url} for address in job.location.addresses],
                 },
             }
-            for job in jobs_from_db[:2]
+            for job in jobs_from_db
+        ],
+    }
+
+
+async def test_get_jobs_no_filters(
+    test_client: AsyncClient,
+    jobs: list[Job],
+    async_session: AsyncSession,
+):
+    query = select(Job).order_by(Job.name).options(selectinload(Job.location).selectinload(Location.addresses))
+    scalars = await async_session.scalars(query)
+    jobs_from_db = list(scalars.all())
+
+    response = await test_client.get("v1/jobs")
+
+    assert response.status_code == HTTPStatus.OK
+    assert response.json() == {
+        "meta": {
+            "page": 1,
+            "page_size": 20,
+            "total_count": len(jobs_from_db),
+            "pages_count": 1,
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "previous_page": None,
+        },
+        "items": [
+            {
+                "id": job.id,
+                "name": job.name,
+                "location": {
+                    "type": job.location.type,
+                    "name": job.location.name,
+                    "addresses": [{"url": address.url} for address in job.location.addresses],
+                },
+            }
+            for job in jobs_from_db
         ],
     }
