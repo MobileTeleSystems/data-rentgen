@@ -22,6 +22,7 @@ def broker_factory(settings: ConsumerApplicationSettings) -> KafkaBroker:
     broker = KafkaBroker(
         bootstrap_servers=settings.kafka.bootstrap_servers,
         security=get_broker_security(settings.kafka.security),
+        compression_type=settings.kafka.compression.value if settings.kafka.compression else None,
         logger=logger,
     )
     broker.include_router(router)
