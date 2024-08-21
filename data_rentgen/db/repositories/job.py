@@ -10,11 +10,11 @@ from data_rentgen.dto import JobDTO, PaginationDTO
 
 
 class JobRepository(Repository[Job]):
-    async def paginate(self, page: int, page_size: int, job_id: list[int]) -> PaginationDTO[Job]:
-        query = (
-            select(Job).where(Job.id.in_(job_id)).options(selectinload(Job.location).selectinload(Location.addresses))
-        )
-        return await self._paginate_by_query(order_by=[Job.id], page=page, page_size=page_size, query=query)
+    async def paginate(self, page: int, page_size: int, job_ids: list[int]) -> PaginationDTO[Job]:
+        query = select(Job).options(selectinload(Job.location).selectinload(Location.addresses))
+        if job_ids:
+            query = query.where(Job.id.in_(job_ids))
+        return await self._paginate_by_query(order_by=[Job.name], page=page, page_size=page_size, query=query)
 
     async def create_or_update(self, job: JobDTO, location_id: int) -> Job:
         result = await self._get(location_id, job.name)

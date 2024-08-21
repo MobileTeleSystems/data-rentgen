@@ -4,7 +4,7 @@
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import and_, select
+from sqlalchemy import select
 
 from data_rentgen.db.models import Operation, OperationType, Status
 from data_rentgen.db.repositories.base import Repository
@@ -28,10 +28,10 @@ class OperationRepository(Repository[Operation]):
             return await self._create(created_at, operation, run_id)  # type: ignore[arg-type]
         return await self._update(result, operation)
 
-    async def pagination_by_id(self, page: int, page_size: int, operation_id: list[UUID]) -> PaginationDTO[Operation]:
-        minimal_created_at = extract_timestamp_from_uuid(min(i for i in operation_id))
+    async def pagination_by_id(self, page: int, page_size: int, operation_ids: list[UUID]) -> PaginationDTO[Operation]:
+        minimal_created_at = extract_timestamp_from_uuid(min(id for id in operation_ids))
         query = (
-            select(Operation).where(Operation.created_at >= minimal_created_at).where(Operation.id.in_(operation_id))
+            select(Operation).where(Operation.created_at >= minimal_created_at).where(Operation.id.in_(operation_ids))
         )
         return await self._paginate_by_query(
             order_by=[Operation.run_id, Operation.id],
@@ -48,10 +48,9 @@ class OperationRepository(Repository[Operation]):
         since: datetime,
         until: datetime | None,
     ) -> PaginationDTO[Operation]:
-        filter = [Operation.created_at >= since, Operation.run_id == run_id]
+        query = select(Operation).where(Operation.created_at >= since, Operation.run_id == run_id)
         if until:
-            filter.append(Operation.created_at <= until)
-        query = select(Operation).where(and_(*filter))
+            query = query.where(Operation.created_at <= until)
         return await self._paginate_by_query(order_by=[Operation.id], page=page, page_size=page_size, query=query)
 
     async def _get(self, created_at: datetime, operation_id: UUID) -> Operation | None:

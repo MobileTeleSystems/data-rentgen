@@ -12,25 +12,9 @@ from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new
 from tests.test_server.fixtures.factories.base import random_datetime, random_string
 
 
-def run_factory_minimal(**kwargs):
-    if kwargs.get("created_at_dttm"):
-        run_id = generate_new_uuid(kwargs.pop("created_at_dttm"))
-    else:
-        run_id = generate_new_uuid()
-    data = {
-        "created_at": extract_timestamp_from_uuid(run_id),
-        "id": run_id,
-        "job_id": randint(0, 10000000),
-    }
-    data.update(kwargs)
-    return Run(**data)
-
-
 def run_factory(**kwargs):
-    if kwargs.get("created_at_dttm"):
-        run_id = generate_new_uuid(kwargs.pop("created_at_dttm"))
-    else:
-        run_id = generate_new_uuid()
+    created_at = kwargs.pop("created_at", None)
+    run_id = generate_new_uuid(created_at)
     data = {
         "created_at": extract_timestamp_from_uuid(run_id),
         "id": run_id,
@@ -65,10 +49,11 @@ async def new_run(
 async def run(
     request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    user: User,
     job: Job,
 ) -> AsyncGenerator[Run, None]:
     params = request.param
-    item = run_factory_minimal(job_id=job.id, **params)
+    item = run_factory(job_id=job.id, started_by_user_id=user.id, **params)
 
     # TODO: Refactor this part to separate function.
     async with async_session_maker() as async_session:
@@ -88,14 +73,16 @@ async def run(
 async def runs(
     request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    user: User,
     jobs: list[Job],
 ) -> AsyncGenerator[list[Run], None]:
     size, params = request.param
     started_at = datetime.now()
     items = [
-        run_factory_minimal(
+        run_factory(
             job_id=choice(jobs).id,
-            created_at_dttm=started_at + timedelta(seconds=0.1 * i),
+            created_at=started_at + timedelta(seconds=0.1 * i),
+            started_by_user_id=user.id,
             **params,
         )
         for i in range(size)
@@ -121,14 +108,16 @@ async def runs(
 async def runs_with_same_job(
     request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    user: User,
     job: Job,
 ) -> AsyncGenerator[list[Run], None]:
     size, params = request.param
     started_at = datetime.now()
     items = [
-        run_factory_minimal(
+        run_factory(
             job_id=job.id,
-            created_at_dttm=started_at + timedelta(seconds=s),  # To be sure runs has different timestamps
+            created_at=started_at + timedelta(seconds=s),  # To be sure runs has different timestamps
+            started_by_user_id=user.id,
             **params,
         )
         for s in range(size)
@@ -147,28 +136,3 @@ async def runs_with_same_job(
             async_session.expunge(item)
 
     yield items
-
-
-@pytest_asyncio.fixture(params=[{}])
-async def run_with_all_fields(
-    request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
-    jobs: list[Job],
-    user: User,
-) -> AsyncGenerator[Run, None]:
-    params = request.param
-    parent_run = run_factory_minimal(job_id=jobs[0].id, **params)
-    item = run_factory(job_id=jobs[1].id, started_by_user_id=user.id, parent_run_id=parent_run.id, **params)
-
-    async with async_session_maker() as async_session:
-        async_session.add(parent_run)
-        async_session.add(item)
-        # this is not required for backend tests, but needed by client tests
-        await async_session.commit()
-
-        # remove current object from async_session. this is required to compare object against new state fetched
-        # from database, and also to remove it from cache
-        await async_session.refresh(item)
-        async_session.expunge(item)
-
-    yield item

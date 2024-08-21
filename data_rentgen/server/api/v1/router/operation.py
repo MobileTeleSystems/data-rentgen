@@ -7,8 +7,7 @@ from fastapi import APIRouter, Depends
 from data_rentgen.server.errors import get_error_responses
 from data_rentgen.server.errors.schemas import InvalidRequestSchema
 from data_rentgen.server.schemas.v1 import (
-    OperationByIdQueryV1,
-    OperationByRunQueryV1,
+    OperationQueryV1,
     OperationResponseV1,
     PageResponseV1,
 )
@@ -21,19 +20,23 @@ router = APIRouter(
 )
 
 
-@router.get("/by_id", summary="Paginated list of Operations by id")
-async def operations_by_id(
-    pagination_args: Annotated[OperationByIdQueryV1, Depends()],
+@router.get("", summary="Paginated list of Operations")
+async def operations(
+    pagination_args: Annotated[OperationQueryV1, Depends()],
     unit_of_work: Annotated[UnitOfWork, Depends()],
 ) -> PageResponseV1[OperationResponseV1]:
-    pagination = await unit_of_work.operation.pagination_by_id(**pagination_args.model_dump())
-    return PageResponseV1[OperationResponseV1].from_pagination(pagination)
-
-
-@router.get("/by_run_id", summary="Paginated list of Operation by Run id")
-async def operations_by_run_id(
-    pagination_args: Annotated[OperationByRunQueryV1, Depends()],
-    unit_of_work: Annotated[UnitOfWork, Depends()],
-) -> PageResponseV1[OperationResponseV1]:
-    pagination = await unit_of_work.operation.pagination_by_run_id(**pagination_args.model_dump())
+    if pagination_args.operation_id:
+        pagination = await unit_of_work.operation.pagination_by_id(
+            page=pagination_args.page,
+            page_size=pagination_args.page_size,
+            operation_ids=pagination_args.operation_id,
+        )
+    else:
+        pagination = await unit_of_work.operation.pagination_by_run_id(
+            page=pagination_args.page,
+            page_size=pagination_args.page_size,
+            run_id=pagination_args.run_id,  # type: ignore[arg-type]
+            since=pagination_args.since,  # type: ignore[arg-type]
+            until=pagination_args.until,
+        )
     return PageResponseV1[OperationResponseV1].from_pagination(pagination)

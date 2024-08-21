@@ -29,7 +29,7 @@ class KafkaSecuritySettings(BaseModel):
 
     @field_validator("user", "password", mode="after")
     @classmethod
-    def check_security(cls, value: str, info: ValidationInfo):
+    def _check_security(cls, value: str | None, info: ValidationInfo):
         security_type = info.data.get("type")
         if security_type is None:
             return value
@@ -43,7 +43,7 @@ def get_broker_security(settings: KafkaSecuritySettings) -> BaseSecurity:
         return BaseSecurity()
 
     security_class: type[BaseSecurity]
-    match settings.type:
+    match settings.type:  # pragma: no cover
         case "plaintext":
             security_class = SASLPlaintext
         case "scram-sha256":

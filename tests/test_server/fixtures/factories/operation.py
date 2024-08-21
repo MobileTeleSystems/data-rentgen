@@ -12,26 +12,9 @@ from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new
 from tests.test_server.fixtures.factories.base import random_datetime, random_string
 
 
-def operation_factory_minimal(**kwargs):
-    if kwargs.get("created_at_dttm"):
-        operation_id = generate_new_uuid(kwargs.pop("created_at_dttm"))
-    else:
-        operation_id = generate_new_uuid()
-    data = {
-        "created_at": extract_timestamp_from_uuid(operation_id),
-        "id": operation_id,
-        "run_id": generate_new_uuid(),
-        "name": random_string(),
-    }
-    data.update(kwargs)
-    return Operation(**data)
-
-
 def operation_factory(**kwargs):
-    if kwargs.get("created_at_dttm"):
-        operation_id = generate_new_uuid(kwargs.pop("created_at_dttm"))
-    else:
-        operation_id = generate_new_uuid()
+    created_at = kwargs.pop("created_at", None)
+    operation_id = generate_new_uuid(created_at)
     data = {
         "created_at": extract_timestamp_from_uuid(operation_id),
         "id": operation_id,
@@ -53,7 +36,7 @@ async def new_operation(
     request: pytest.FixtureRequest,
 ) -> AsyncGenerator[Operation, None]:
     params = request.param
-    item = operation_factory_minimal(**params)
+    item = operation_factory(**params)
 
     yield item
 
@@ -65,7 +48,7 @@ async def operation(
     run: Run,
 ) -> AsyncGenerator[Operation, None]:
     params = request.param
-    item = operation_factory_minimal(run_id=run.id, **params)
+    item = operation_factory(run_id=run.id, **params)
 
     async with async_session_maker() as async_session:
         async_session.add(item)
@@ -89,14 +72,13 @@ async def operations(
     size, params = request.param
     started_at = datetime.now()
     items = [
-        operation_factory_minimal(
+        operation_factory(
             run_id=choice(runs).id,
-            created_at_dttm=started_at + timedelta(seconds=0.1 * i),
+            created_at=started_at + timedelta(seconds=0.1 * i),
             **params,
         )
         for i in range(size)
     ]
-    items.sort(key=lambda x: (x.run_id, x.id))
 
     async with async_session_maker() as async_session:
         for item in items:
@@ -122,9 +104,9 @@ async def operations_with_same_run(
     size, params = request.param
     started_at = datetime.now()
     items = [
-        operation_factory_minimal(
+        operation_factory(
             run_id=run.id,
-            created_at_dttm=started_at + timedelta(seconds=s),
+            created_at=started_at + timedelta(seconds=s),
             **params,
         )
         for s in range(size)
@@ -143,25 +125,3 @@ async def operations_with_same_run(
             async_session.expunge(item)
 
     yield items
-
-
-@pytest_asyncio.fixture(params=[{}])
-async def operation_with_all_fields(
-    request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
-    run: Run,
-) -> AsyncGenerator[Operation, None]:
-    params = request.param
-    item = operation_factory(run_id=run.id, **params)
-
-    async with async_session_maker() as async_session:
-        async_session.add(item)
-        # this is not required for backend tests, but needed by client tests
-        await async_session.commit()
-
-        # remove current object from async_session. this is required to compare object against new state fetched
-        # from database, and also to remove it from cache
-        await async_session.refresh(item)
-        async_session.expunge(item)
-
-    yield item
