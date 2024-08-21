@@ -3,6 +3,7 @@
 
 from pydantic import BaseModel, Field
 
+from data_rentgen.consumer.settings.compression import KafkaCompression
 from data_rentgen.consumer.settings.security import KafkaSecuritySettings
 
 
@@ -25,4 +26,8 @@ class KafkaSettings(BaseModel):
     security: KafkaSecuritySettings = Field(
         default_factory=KafkaSecuritySettings,
         description=":ref:`Kafka security settings <configuration-consumer-kafka-security>`",
+    )
+    compression: KafkaCompression | None = Field(
+        default=None,
+        description="Kafka message compression type",
     )

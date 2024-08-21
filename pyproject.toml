@@ -62,6 +62,8 @@ uvicorn = {version = "^0.30.6", optional = true}
 asyncpg = {version = "^0.29.0", optional = true}
 asgi-correlation-id = {version = "^4.3.2", optional = true}
 faststream = {extras = ["kafka"], version = "^0.5.18", optional = true}
+# used by aiokafka for LZ4, Snappy, ZSTD compression algorithms
+cramjam = {version = "^2.8.3", optional = true}
 packaging = {version = "^24.1", optional = true}
 
 [tool.poetry.extras]
@@ -83,6 +85,7 @@ server = [
 ]
 consumer = [
   "faststream",
+  "cramjam",
   "pydantic-settings",
   "alembic",
   "sqlalchemy",
