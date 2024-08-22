@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 from datetime import datetime
+from typing import Literal
 
 from fastapi import Query
 from pydantic import (
@@ -19,7 +20,7 @@ from data_rentgen.utils import UUID
 class OperationResponseV1(BaseModel):
     """Operation response."""
 
-    kind: str = "operation"
+    kind: Literal["OPERATION"] = "OPERATION"
     id: UUID = Field(description="Operation id")
     run_id: UUID = Field(description="Run operation is a part of")
     status: str = Field(description="Operation status")

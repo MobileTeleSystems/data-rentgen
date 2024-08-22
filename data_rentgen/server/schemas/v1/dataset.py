@@ -1,5 +1,7 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
+from typing import Literal
+
 from fastapi import Query
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -8,7 +10,7 @@ from data_rentgen.server.schemas.v1.pagination import PaginateQueryV1
 
 
 class DatasetResponseV1(BaseModel):
-    kind: str = "dataset"
+    kind: Literal["DATASET"] = "DATASET"
     id: int = Field(description="Dataset id")
     location: LocationResponseV1 = Field(description="Corresponding Location")
     name: str = Field(description="Dataset name")

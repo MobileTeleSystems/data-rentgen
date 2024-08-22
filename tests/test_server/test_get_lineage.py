@@ -5,7 +5,6 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import select
-from uuid6 import uuid7
 
 from data_rentgen.db.models import Dataset, Interaction, Job, Location, Operation, Run
 
@@ -13,6 +12,7 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
 async def test_get_lineage_empty(test_client: AsyncClient):
+
     response = await test_client.get("v1/lineage")
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
@@ -42,10 +42,10 @@ async def test_get_dataset_lineage(
         "v1/lineage",
         params={
             "since": runs[0].created_at.isoformat(),
-            "point_kind": "dataset",
+            "point_kind": "DATASET",
             "point_id": dataset.id,
             "direction": "from",
-            "granularity": "operation",
+            "granularity": "OPERATION",
         },
     )
 
@@ -53,14 +53,15 @@ async def test_get_dataset_lineage(
     assert response.json() == {
         "relations": [
             {
-                "kind": "READ",
-                "from_": {"kind": "dataset", "id": dataset.id},
-                "to": {"kind": "operation", "id": str(operation.id)},
+                "kind": "INTERACTION",
+                "type": "READ",
+                "from": {"kind": "DATASET", "id": dataset.id},
+                "to": {"kind": "OPERATION", "id": str(operation.id)},
             },
         ],
         "nodes": [
             {
-                "kind": "dataset",
+                "kind": "DATASET",
                 "id": dataset.id,
                 "format": dataset.format,
                 "name": dataset.name,
@@ -71,7 +72,7 @@ async def test_get_dataset_lineage(
                 },
             },
             {
-                "kind": "operation",
+                "kind": "OPERATION",
                 "id": str(operation.id),
                 "run_id": str(operation.run_id),
                 "name": operation.name,
@@ -107,24 +108,25 @@ async def test_get_operation_lineage(
         "v1/lineage",
         params={
             "since": runs[0].created_at.isoformat(),
-            "point_kind": "operation",
+            "point_kind": "OPERATION",
             "point_id": operation.id,
             "direction": "from",
-            "granularity": "operation",
+            "granularity": "OPERATION",
         },
     )
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "relations": [
             {
-                "kind": "APPEND",
-                "from_": {"kind": "operation", "id": str(operation.id)},
-                "to": {"kind": "dataset", "id": dataset.id},
+                "kind": "INTERACTION",
+                "type": "APPEND",
+                "from": {"kind": "OPERATION", "id": str(operation.id)},
+                "to": {"kind": "DATASET", "id": dataset.id},
             },
         ],
         "nodes": [
             {
-                "kind": "operation",
+                "kind": "OPERATION",
                 "id": str(operation.id),
                 "run_id": str(operation.run_id),
                 "name": operation.name,
@@ -136,7 +138,7 @@ async def test_get_operation_lineage(
                 "ended_at": None,
             },
             {
-                "kind": "dataset",
+                "kind": "DATASET",
                 "id": dataset.id,
                 "format": dataset.format,
                 "name": dataset.name,
@@ -172,10 +174,10 @@ async def test_get_run_lineage(
         "v1/lineage",
         params={
             "since": runs[0].created_at.isoformat(),
-            "point_kind": "run",
+            "point_kind": "RUN",
             "point_id": runs[0].id,
             "direction": "from",
-            "granularity": "operation",
+            "granularity": "OPERATION",
         },
     )
 
@@ -183,18 +185,21 @@ async def test_get_run_lineage(
     assert response.json() == {
         "relations": [
             {
-                "kind": "APPEND",
-                "from_": {"kind": "operation", "id": str(operation.id)},
-                "to": {"kind": "dataset", "id": dataset.id},
+                "kind": "INTERACTION",
+                "type": "APPEND",
+                "from": {"kind": "OPERATION", "id": str(operation.id)},
+                "to": {"kind": "DATASET", "id": dataset.id},
             },
             {
                 "kind": "PARENT",
-                "from_": {"kind": "run", "id": str(run.id)},
-                "to": {"kind": "operation", "id": str(operation.id)},
+                "from": {"kind": "RUN", "id": str(run.id)},
+                "to": {"kind": "OPERATION", "id": str(operation.id)},
+                "type": None,
             },
         ],
         "nodes": [
             {
+                "kind": "RUN",
                 "id": str(run.id),
                 "job_id": run.job_id,
                 "parent_run_id": None,
@@ -210,7 +215,7 @@ async def test_get_run_lineage(
                 "end_reason": None,
             },
             {
-                "kind": "operation",
+                "kind": "OPERATION",
                 "id": str(operation.id),
                 "run_id": str(operation.run_id),
                 "name": operation.name,
@@ -222,7 +227,7 @@ async def test_get_run_lineage(
                 "ended_at": None,
             },
             {
-                "kind": "dataset",
+                "kind": "DATASET",
                 "id": dataset.id,
                 "format": dataset.format,
                 "name": dataset.name,
@@ -264,41 +269,56 @@ async def test_get_job_lineage(
         "v1/lineage",
         params={
             "since": runs[0].created_at.isoformat(),
-            "point_kind": "job",
+            "point_kind": "JOB",
             "point_id": job.id,
             "direction": "from",
-            "granularity": "operation",
+            "granularity": "OPERATION",
         },
     )
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
         "relations": [
-            {"kind": "PARENT", "from_": {"kind": "job", "id": job.id}, "to": {"kind": "run", "id": str(runs[0].id)}},
-            {"kind": "PARENT", "from_": {"kind": "job", "id": job.id}, "to": {"kind": "run", "id": str(runs[1].id)}},
             {
-                "kind": "APPEND",
-                "from_": {"kind": "operation", "id": str(operations[1].id)},
-                "to": {"kind": "dataset", "id": datasets[1].id},
+                "kind": "PARENT",
+                "from": {"kind": "JOB", "id": job.id},
+                "to": {"kind": "RUN", "id": str(runs[0].id)},
+                "type": None,
             },
             {
                 "kind": "PARENT",
-                "from_": {"kind": "run", "id": str(runs[0].id)},
-                "to": {"kind": "operation", "id": str(operations[1].id)},
+                "from": {"kind": "JOB", "id": job.id},
+                "to": {"kind": "RUN", "id": str(runs[1].id)},
+                "type": None,
             },
             {
-                "kind": "APPEND",
-                "from_": {"kind": "operation", "id": str(operations[3].id)},
-                "to": {"kind": "dataset", "id": datasets[3].id},
+                "kind": "INTERACTION",
+                "type": "APPEND",
+                "from": {"kind": "OPERATION", "id": str(operations[1].id)},
+                "to": {"kind": "DATASET", "id": datasets[1].id},
             },
             {
                 "kind": "PARENT",
-                "from_": {"kind": "run", "id": str(runs[1].id)},
-                "to": {"kind": "operation", "id": str(operations[3].id)},
+                "from": {"kind": "RUN", "id": str(runs[0].id)},
+                "to": {"kind": "OPERATION", "id": str(operations[1].id)},
+                "type": None,
+            },
+            {
+                "kind": "INTERACTION",
+                "type": "APPEND",
+                "from": {"kind": "OPERATION", "id": str(operations[3].id)},
+                "to": {"kind": "DATASET", "id": datasets[3].id},
+            },
+            {
+                "kind": "PARENT",
+                "from": {"kind": "RUN", "id": str(runs[1].id)},
+                "to": {"kind": "OPERATION", "id": str(operations[3].id)},
+                "type": None,
             },
         ],
         "nodes": [
             {
+                "kind": "JOB",
                 "id": job.id,
                 "name": job.name,
                 "location": {
@@ -308,6 +328,7 @@ async def test_get_job_lineage(
                 },
             },
             {
+                "kind": "RUN",
                 "id": str(runs[0].id),
                 "job_id": runs[0].job_id,
                 "parent_run_id": None,
@@ -323,6 +344,7 @@ async def test_get_job_lineage(
                 "end_reason": None,
             },
             {
+                "kind": "RUN",
                 "id": str(runs[1].id),
                 "job_id": runs[1].job_id,
                 "parent_run_id": None,
@@ -338,7 +360,7 @@ async def test_get_job_lineage(
                 "end_reason": None,
             },
             {
-                "kind": "operation",
+                "kind": "OPERATION",
                 "id": str(operations[1].id),
                 "run_id": str(operations[1].run_id),
                 "name": operations[1].name,
@@ -350,7 +372,7 @@ async def test_get_job_lineage(
                 "ended_at": None,
             },
             {
-                "kind": "dataset",
+                "kind": "DATASET",
                 "id": datasets[1].id,
                 "format": datasets[1].format,
                 "name": datasets[1].name,
@@ -361,7 +383,7 @@ async def test_get_job_lineage(
                 },
             },
             {
-                "kind": "operation",
+                "kind": "OPERATION",
                 "id": str(operations[3].id),
                 "run_id": str(operations[3].run_id),
                 "name": operations[3].name,
@@ -373,7 +395,7 @@ async def test_get_job_lineage(
                 "ended_at": None,
             },
             {
-                "kind": "dataset",
+                "kind": "DATASET",
                 "id": datasets[3].id,
                 "format": datasets[3].format,
                 "name": datasets[3].name,

@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 from datetime import datetime
+from typing import Literal
 
 from fastapi import Query
 from pydantic import (
@@ -20,6 +21,7 @@ from data_rentgen.utils import UUID
 class RunResponseV1(BaseModel):
     """Run response"""
 
+    kind: Literal["RUN"] = "RUN"
     id: UUID = Field(description="Run id")
     job_id: int = Field(description="Job the run is associated with")
     parent_run_id: UUID | None = Field(description="Parent of current run", default=None)

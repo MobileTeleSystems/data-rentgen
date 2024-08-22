@@ -41,7 +41,8 @@ class OperationStrategy(AbstractStrategy):
             dataset = datasets[interaction.dataset_id]
             lineage.relations.append(
                 LineageRelation(
-                    kind=interaction.type.value,
+                    kind="INTERACTION",
+                    type=interaction.type.value,
                     from_=(
                         LineageEntity(kind=LineageEntityKind.OPERATION, id=operation.id)  # type: ignore[union-attr]
                         if direction == "from"
