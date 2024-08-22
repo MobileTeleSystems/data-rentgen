@@ -26,7 +26,6 @@ class RunStrategy(AbstractStrategy):
         until: datetime | None,
     ) -> LineageResponseV1:
         direction_type = self._get_direction(direction)
-        # TODO: Add recursive logic for child runs
         run = await self._uow.run.get_by_id(point_id)
 
         lineage = LineageResponseV1(nodes=[RunResponseV1.model_validate(run)])
@@ -40,33 +39,12 @@ class RunStrategy(AbstractStrategy):
         )
 
         operations_ids = [interaction.operation_id for interaction in interactions]
-        operations = {operation.id: operation for operation in await self._uow.operation.get_by_ids(operations_ids)}  # type: ignore[arg-type]
+        operations_by_id = {operation.id: operation for operation in all_operations if operation.id in operations_ids}
 
         datasets_ids = [interaction.dataset_id for interaction in interactions]
         datasets = {dataset.id: dataset for dataset in await self._uow.dataset.get_by_ids(datasets_ids)}
 
-        # TODO: Add granularity logic
-        for interaction in interactions:
-            dataset = datasets[interaction.dataset_id]
-            operation = operations[interaction.operation_id]
-
-            lineage.relations.append(
-                LineageRelation(
-                    kind="INTERACTION",
-                    type=interaction.type.value,
-                    from_=(
-                        LineageEntity(kind=LineageEntityKind.OPERATION, id=operation.id)
-                        if direction == "from"
-                        else LineageEntity(kind=LineageEntityKind.DATASET, id=dataset.id)
-                    ),
-                    to=(
-                        LineageEntity(kind=LineageEntityKind.DATASET, id=dataset.id)
-                        if direction == "from"
-                        else LineageEntity(kind=LineageEntityKind.OPERATION, id=operation.id)
-                    ),
-                ),
-            )
-
+        for operation in operations_by_id.values():
             lineage.relations.append(
                 LineageRelation(
                     kind="PARENT",
@@ -75,6 +53,27 @@ class RunStrategy(AbstractStrategy):
                 ),
             )
             lineage.nodes.append(OperationResponseV1.model_validate(operation))
+
+        for dataset in datasets.values():
             lineage.nodes.append(DatasetResponseV1.model_validate(dataset))
+
+        for interaction in interactions:
+
+            lineage.relations.append(
+                LineageRelation(
+                    kind="INTERACTION",
+                    type=interaction.type.value,
+                    from_=(
+                        LineageEntity(kind=LineageEntityKind.OPERATION, id=interaction.operation_id)
+                        if direction == "from"
+                        else LineageEntity(kind=LineageEntityKind.DATASET, id=interaction.dataset_id)
+                    ),
+                    to=(
+                        LineageEntity(kind=LineageEntityKind.DATASET, id=interaction.dataset_id)
+                        if direction == "from"
+                        else LineageEntity(kind=LineageEntityKind.OPERATION, id=interaction.operation_id)
+                    ),
+                ),
+            )
 
         return lineage

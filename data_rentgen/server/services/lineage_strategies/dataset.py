@@ -32,25 +32,27 @@ class DatasetStrategy(AbstractStrategy):
         lineage = LineageResponseV1(nodes=[DatasetResponseV1.model_validate(dataset)])
         interactions = await self._uow.interaction.get_by_datasets([point_id], direction_type, since, until)
         operation_ids = [interaction.operation_id for interaction in interactions]
-        operations = {operation.id: operation for operation in await self._uow.operation.get_by_ids(operation_ids)}  # type: ignore[arg-type]
+        operations_by_id = {operation.id: operation for operation in await self._uow.operation.get_by_ids(operation_ids)}  # type: ignore[arg-type]
+
+        for operation in operations_by_id.values():
+            lineage.nodes.append(OperationResponseV1.model_validate(operation))
+
         for interaction in interactions:
-            operation = operations[interaction.operation_id]
             lineage.relations.append(
                 LineageRelation(
                     kind="INTERACTION",
                     type=interaction.type.value,
                     from_=(
-                        LineageEntity(kind=LineageEntityKind.OPERATION, id=operation.id)
+                        LineageEntity(kind=LineageEntityKind.OPERATION, id=interaction.operation_id)
                         if direction == "to"
                         else LineageEntity(kind=LineageEntityKind.DATASET, id=dataset.id)  # type: ignore[union-attr]
                     ),
                     to=(
                         LineageEntity(kind=LineageEntityKind.DATASET, id=dataset.id)  # type: ignore[union-attr]
                         if direction == "to"
-                        else LineageEntity(kind=LineageEntityKind.OPERATION, id=operation.id)
+                        else LineageEntity(kind=LineageEntityKind.OPERATION, id=interaction.operation_id)
                     ),
                 ),
             )
-            lineage.nodes.append(OperationResponseV1.model_validate(operation))
 
         return lineage
