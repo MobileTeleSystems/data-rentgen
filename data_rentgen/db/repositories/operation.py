@@ -2,25 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from datetime import datetime
-from uuid import UUID
+from typing import Sequence
 
 from sqlalchemy import select
 
-from data_rentgen.db.models import (
-    Dataset,
-    Interaction,
-    Operation,
-    OperationType,
-    Status,
-)
+from data_rentgen.db.models import Operation, OperationType, Status
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid
-from data_rentgen.dto import (
-    OperationDatasetDTO,
-    OperationDTO,
-    OperationNodeDTO,
-    PaginationDTO,
-)
+from data_rentgen.dto import OperationDTO, PaginationDTO
+from data_rentgen.utils import UUID
 
 
 class OperationRepository(Repository[Operation]):
@@ -64,34 +54,23 @@ class OperationRepository(Repository[Operation]):
             query = query.where(Operation.created_at <= until)
         return await self._paginate_by_query(order_by=[Operation.id], page=page, page_size=page_size, query=query)
 
-    async def get_operation_datasets(
-        self,
-        operation_id: UUID,
-        type: list[str],
-        since: datetime,
-        until: datetime | None,
-    ) -> list[OperationDatasetDTO]:
-        """This method return all datasets connected to operation"""
-        filter = [Operation.created_at >= since, Operation.id == operation_id, Interaction.type.in_(type)]
+    async def get_by_run_ids(self, run_ids: list[UUID], since: datetime, until: datetime | None) -> Sequence[Operation]:
+        filter = [Operation.created_at >= since, Operation.run_id.in_(run_ids)]
         if until:
             filter.append(Operation.created_at <= until)
-        query = (
-            select(Operation.id, Dataset.id, Interaction.type)
-            .join(Interaction, Operation.id == Interaction.operation_id)
-            .join(Dataset, Interaction.dataset_id == Dataset.id)
-            .where(and_(*filter))
-        )
-        result = await self._session.execute(query)
-        return [OperationDatasetDTO(*row) for row in result.all()]
+        query = select(Operation).where(and_(*filter))
+        result = await self._session.scalars(query)
+        return result.all()
 
-    async def get_node_info(self, operation_id: UUID) -> OperationNodeDTO:
+    async def get_by_id(self, operation_id: UUID) -> Operation | None:
         created_at = extract_timestamp_from_uuid(operation_id)
-        query = select(Operation.id, Operation.name, Operation.status, Operation.type).where(
-            Operation.created_at == created_at,
-            Operation.id == operation_id,
-        )
-        result = await self._session.execute(query)
-        return OperationNodeDTO(*result.one())
+        return await self._get(created_at, operation_id)
+
+    async def get_by_ids(self, operation_ids: list[UUID]) -> Sequence[Operation]:
+        created_at = extract_timestamp_from_uuid(min(i for i in operation_ids))
+        query = select(Operation).where(Operation.created_at >= created_at, Operation.id.in_(operation_ids))
+        result = await self._session.scalars(query)
+        return result.all()
 
     async def _get(self, created_at: datetime, operation_id: UUID) -> Operation | None:
         query = select(Operation).where(Operation.created_at == created_at, Operation.id == operation_id)

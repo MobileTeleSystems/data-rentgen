@@ -1,13 +1,13 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-
 from datetime import datetime
+from typing import Sequence
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from data_rentgen.db.models import Job, Operation, Run, RunStartReason, Status
+from data_rentgen.db.models import Run, RunStartReason, Status
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid
 from data_rentgen.dto import PaginationDTO, RunDTO
@@ -70,23 +70,23 @@ class RunRepository(Repository[Run]):
             query = query.where(Run.created_at <= until)
         return await self._paginate_by_query(order_by=[Run.id], page=page, page_size=page_size, query=query)
 
-    async def get_run_operations(self, run_id: UUID, since: datetime, until: datetime | None):
-        filter = [Run.created_at >= since, Run.id == run_id]
+    async def get_by_id(self, run_id: UUID) -> Run | None:
+        created_at = extract_timestamp_from_uuid(run_id)
+        return await self._get(created_at, run_id)
+
+    async def get_by_job_id(self, job_id: int, since: datetime, until: datetime | None) -> Sequence[Run]:
+        filter = [Run.created_at >= since, Run.job_id == job_id]
         if until:
             filter.append(Run.created_at <= until)
-        query = select(Run.id, Operation.id).join(Operation, Run.id == Operation.run_id).where(and_(*filter))
-        result = await self._session.execute(query)
+        query = select(Run).where(and_(*filter))
+        result = await self._session.scalars(query)
         return result.all()
 
-    async def get_node_info(self, run_id: UUID):
-        created_at = extract_timestamp_from_uuid(run_id)
-        query = (
-            select(Run.id, Job.name, Run.status)
-            .join(Job, Run.job_id == Job.id)
-            .where(Run.created_at == created_at, Run.id == run_id)
-        )
-        result = await self._session.execute(query)
-        return result.one()
+    async def get_by_ids(self, run_ids: list[UUID]) -> Sequence[Run]:
+        created_at = extract_timestamp_from_uuid(min(i for i in run_ids))
+        query = select(Run).where(Run.created_at >= created_at).where(Run.id.in_(run_ids))
+        result = await self._session.scalars(query)
+        return result.all()
 
     async def _get(self, created_at: datetime, run_id: UUID) -> Run | None:
         query = select(Run).where(Run.id == run_id, Run.created_at == created_at)

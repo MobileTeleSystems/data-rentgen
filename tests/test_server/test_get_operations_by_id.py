@@ -90,6 +90,7 @@ async def test_get_operations_by_one_id(
         },
         "items": [
             {
+                "kind": "operation",
                 "id": str(operation_from_db.id),
                 "run_id": str(operation_from_db.run_id),
                 "name": operation_from_db.name,
@@ -134,6 +135,7 @@ async def test_get_operations_by_multiple_ids(
         },
         "items": [
             {
+                "kind": "operation",
                 "id": str(operation.id),
                 "run_id": str(operation.run_id),
                 "name": operation.name,

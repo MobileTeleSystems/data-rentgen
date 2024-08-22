@@ -2,18 +2,18 @@
 # SPDX-License-Identifier: Apache-2.0
 from datetime import datetime
 
+from data_rentgen.server.schemas.v1.dataset import DatasetResponseV1
+from data_rentgen.server.schemas.v1.job import JobResponseV1
 from data_rentgen.server.schemas.v1.lineage import (
-    DatasetNode,
-    JobNode,
+    LineageEntity,
     LineageEntityKind,
     LineageGranularity,
     LineageRelation,
     LineageResponseV1,
-    OperationNode,
-    RunNode,
 )
+from data_rentgen.server.schemas.v1.operation import OperationResponseV1
+from data_rentgen.server.schemas.v1.run import RunResponseV1
 from data_rentgen.server.services.lineage_strategies.base import AbstractStrategy
-from data_rentgen.utils import UUID
 
 
 class JobStrategy(AbstractStrategy):
@@ -21,7 +21,7 @@ class JobStrategy(AbstractStrategy):
 
     async def get_lineage(  # noqa: WPS217
         self,
-        point_id: int | UUID,
+        point_id: int,  # type: ignore[override]
         granularity: LineageGranularity,
         direction: str,
         depth: int,
@@ -30,62 +30,68 @@ class JobStrategy(AbstractStrategy):
     ):
         await self._check_granularity(granularity)
         direction_type = await self._get_direction(direction)
-        lineage = LineageResponseV1()
+        job = await self._uow.job.get_by_id(point_id)
 
-        job_runs = await self._uow.job.get_job_runs(point_id, since, until)  # type: ignore[arg-type]
-        for job_id, run_id in job_runs:
-            # Add Job -> Run relation, only if granularity is more then JOB
-            lineage.relations.append(LineageRelation(type="parent", from_=job_id, to=run_id))
-            # Add Jobe as Node
-            job_node = await self._uow.job.get_node_info(job_id)
-            lineage.nodes.append(JobNode(id=job_node.id, name=job_node.name, job_type=job_node.type))
+        lineage = LineageResponseV1(nodes=[JobResponseV1.model_validate(job)])
 
-            run_operations = await self._uow.run.get_run_operations(run_id, since, until)
-            for _, operation_id in run_operations:
-                operation_datasets = await self._uow.operation.get_operation_datasets(
-                    operation_id,
-                    direction_type,
-                    since,
-                    until,
-                )
+        all_runs = await self._uow.run.get_by_job_id(point_id, since, until)
+        all_operations = await self._uow.operation.get_by_run_ids([run.id for run in all_runs], since, until)
 
-                if operation_datasets:
-                    # Add Run -> Operation and Run as Node only if operation interact with dataset and granularity is equal to OPERATION
-                    lineage.relations.append(LineageRelation(type="parent", from_=run_id, to=operation_id))
-                    run_node = await self._uow.run.get_node_info(run_id)
-                    lineage.nodes.append(RunNode(id=run_node.id, job_name=run_node.name, status=run_node.status))
+        interactions = await self._uow.interaction.get_by_operations(
+            [operation.id for operation in all_operations],
+            direction_type,
+            since,
+            until,
+        )
+        # Now we have only interactions which we need to add. So we need to filter runs with this operations.
+        operations_ids = [interaction.operation_id for interaction in interactions]
+        operations = {operation.id: operation for operation in await self._uow.operation.get_by_ids(operations_ids)}  # type: ignore[arg-type]
 
-                for operation_dataset in operation_datasets:
-                    dataset_id = operation_dataset.dataset_id
-                    # Add Operation <-> Dataset
-                    if direction == "from":
-                        lineage.relations.append(
-                            LineageRelation(
-                                from_=operation_id,
-                                to=dataset_id,
-                                type=operation_dataset.interaction_type.value,
-                            ),
-                        )
+        datasets_ids = [interaction.dataset_id for interaction in interactions]
+        datasets = {dataset.id: dataset for dataset in await self._uow.dataset.get_by_ids(datasets_ids)}
 
-                    elif direction == "to":
-                        lineage.relations.append(
-                            LineageRelation(
-                                from_=dataset_id,
-                                to=operation_id,
-                                type=operation_dataset.interaction_type.value,
-                            ),
-                        )
-                    # Add Operation and Dataset as Nodes
-                    operation_node = await self._uow.operation.get_node_info(operation_id)
-                    lineage.nodes.append(
-                        OperationNode(
-                            id=operation_node.id,
-                            status=operation_node.status,
-                            operation_type=operation_node.type,
-                            name=operation_node.name,
-                        ),
-                    )
-                    dataset_node = await self._uow.dataset.get_node_info(dataset_id)
-                    lineage.nodes.append(DatasetNode(id=dataset_node.id, name=dataset_node.name))
+        run_ids = [operation.run_id for operation in operations.values()]
+        runs = {run.id: run for run in await self._uow.run.get_by_ids(run_ids)}  # type: ignore[arg-type]
+
+        # Add Job->Run relation
+        for run_id, run in runs.items():
+            lineage.relations.append(
+                LineageRelation(
+                    kind="PARENT",
+                    from_=LineageEntity(kind=LineageEntityKind.JOB, id=job.id),  # type: ignore[union-attr]
+                    to=LineageEntity(kind=LineageEntityKind.RUN, id=run_id),
+                ),
+            )
+            lineage.nodes.append(RunResponseV1.model_validate(run))
+
+        for interaction in interactions:
+            dataset = datasets[interaction.dataset_id]
+            operation = operations[interaction.operation_id]
+
+            lineage.relations.append(
+                LineageRelation(
+                    kind=interaction.type.value,
+                    from_=(
+                        LineageEntity(kind=LineageEntityKind.OPERATION, id=operation.id)
+                        if direction == "from"
+                        else LineageEntity(kind=LineageEntityKind.DATASET, id=dataset.id)
+                    ),
+                    to=(
+                        LineageEntity(kind=LineageEntityKind.DATASET, id=dataset.id)
+                        if direction == "from"
+                        else LineageEntity(kind=LineageEntityKind.OPERATION, id=operation.id)
+                    ),
+                ),
+            )
+
+            lineage.relations.append(
+                LineageRelation(
+                    kind="PARENT",
+                    from_=LineageEntity(kind=LineageEntityKind.RUN, id=operation.run_id),
+                    to=LineageEntity(kind=LineageEntityKind.OPERATION, id=operation.id),
+                ),
+            )
+            lineage.nodes.append(OperationResponseV1.model_validate(operation))
+            lineage.nodes.append(DatasetResponseV1.model_validate(dataset))
 
         return lineage

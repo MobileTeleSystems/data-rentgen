@@ -11,6 +11,7 @@ from data_rentgen.server.schemas.v1.lineage import (
     LineageResponseV1,
 )
 from data_rentgen.server.services.lineage_strategies import (
+    AbstractStrategy,
     DatasetStrategy,
     JobStrategy,
     OperationStrategy,
@@ -34,16 +35,17 @@ class LineageService:
         since: datetime,
         until: datetime | None,
     ) -> LineageResponseV1:
-        if point_kind == LineageEntityKind.OPERATION:
-            strategy = OperationStrategy(self._uow)
-            return await strategy.get_lineage(point_id, granularity, direction, depth, since, until)
-        elif point_kind == LineageEntityKind.DATASET:
-            strategy = DatasetStrategy(self._uow)  # type: ignore[assignment]
-            return await strategy.get_lineage(point_id, granularity, direction, depth, since, until)
-        elif point_kind == LineageEntityKind.RUN:
-            strategy = RunStrategy(self._uow)  # type: ignore[assignment]
-            return await strategy.get_lineage(point_id, granularity, direction, depth, since, until)
-        elif point_kind == LineageEntityKind.JOB:
-            strategy = JobStrategy(self._uow)  # type: ignore[assignment]
-            return await strategy.get_lineage(point_id, granularity, direction, depth, since, until)
-        raise ValueError(f"Can't get lineage for this start point kind: {point_kind}")
+        strategy: AbstractStrategy
+        match point_kind:
+            case LineageEntityKind.OPERATION:
+                strategy = OperationStrategy(self._uow)
+            case LineageEntityKind.DATASET:
+                strategy = DatasetStrategy(self._uow)
+            case LineageEntityKind.RUN:
+                strategy = RunStrategy(self._uow)
+            case LineageEntityKind.JOB:
+                strategy = JobStrategy(self._uow)
+            case _:
+                raise ValueError(f"Can't get lineage for this start point kind: {point_kind}")
+
+        return await strategy.get_lineage(point_id, granularity, direction, depth, since, until)

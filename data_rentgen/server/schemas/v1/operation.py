@@ -19,6 +19,7 @@ from data_rentgen.utils import UUID
 class OperationResponseV1(BaseModel):
     """Operation response."""
 
+    kind: str = "operation"
     id: UUID = Field(description="Operation id")
     run_id: UUID = Field(description="Run operation is a part of")
     status: str = Field(description="Operation status")
