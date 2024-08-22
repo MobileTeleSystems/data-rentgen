@@ -6,7 +6,6 @@ from data_rentgen.server.schemas.v1.dataset import DatasetResponseV1
 from data_rentgen.server.schemas.v1.lineage import (
     LineageEntity,
     LineageEntityKind,
-    LineageGranularity,
     LineageRelation,
     LineageResponseV1,
 )
@@ -21,14 +20,11 @@ class OperationStrategy(AbstractStrategy):
     async def get_lineage(
         self,
         point_id: UUID,  # type: ignore[override]
-        granularity: LineageGranularity,
         direction: str,
-        depth: int,
         since: datetime,
         until: datetime | None,
     ):
-        await self._check_granularity(granularity)
-        direction_type = await self._get_direction(direction)
+        direction_type = self._get_direction(direction)
 
         operation = await self._uow.operation.get_by_id(point_id)
         lineage = LineageResponseV1(nodes=[OperationResponseV1.model_validate(operation)])

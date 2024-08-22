@@ -45,7 +45,6 @@ async def test_get_dataset_lineage(
             "point_kind": "DATASET",
             "point_id": dataset.id,
             "direction": "from",
-            "granularity": "OPERATION",
         },
     )
 
@@ -111,7 +110,6 @@ async def test_get_operation_lineage(
             "point_kind": "OPERATION",
             "point_id": operation.id,
             "direction": "from",
-            "granularity": "OPERATION",
         },
     )
     assert response.status_code == HTTPStatus.OK, response.json()
@@ -177,7 +175,6 @@ async def test_get_run_lineage(
             "point_kind": "RUN",
             "point_id": runs[0].id,
             "direction": "from",
-            "granularity": "OPERATION",
         },
     )
 
@@ -272,7 +269,6 @@ async def test_get_job_lineage(
             "point_kind": "JOB",
             "point_id": job.id,
             "direction": "from",
-            "granularity": "OPERATION",
         },
     )
 

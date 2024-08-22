@@ -4,7 +4,14 @@ from datetime import datetime
 from enum import Enum
 
 from fastapi import Query
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 from data_rentgen.server.schemas.v1.dataset import DatasetResponseV1
 from data_rentgen.server.schemas.v1.job import JobResponseV1
@@ -19,33 +26,16 @@ class LineageEntityKind(str, Enum):
     OPERATION = "OPERATION"
     DATASET = "DATASET"
 
-    def to_int(self) -> int:
-        int_map = {
-            LineageEntityKind.DATASET: 0,
-            LineageEntityKind.JOB: 1,
-            LineageEntityKind.RUN: 2,
-            LineageEntityKind.OPERATION: 3,
-        }
-        return int_map[self]
+    def __str__(self) -> str:
+        return self.value
 
 
 class LineageDirection(str, Enum):
     FROM = "from"
     TO = "to"
 
-
-class LineageGranularity(str, Enum):
-    JOB = "JOB"
-    RUN = "RUN"
-    OPERATION = "OPERATION"
-
-    def to_int(self) -> int:
-        int_map = {
-            LineageGranularity.JOB: 1,
-            LineageGranularity.RUN: 2,
-            LineageGranularity.OPERATION: 3,
-        }
-        return int_map[self]
+    def __str__(self) -> str:
+        return self.value
 
 
 class LineageEntity(BaseModel):
@@ -55,7 +45,6 @@ class LineageEntity(BaseModel):
     model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
 
-# TODO: Maybe add default values for all fields except since and until?
 class LineageQueryV1(BaseModel):
     since: datetime = Field(
         Query(description="", examples=["2008-09-15T15:53:00+05:00"]),
@@ -77,10 +66,27 @@ class LineageQueryV1(BaseModel):
     direction: LineageDirection = Field(
         Query(description="Direction of the lineage", examples=["from"]),
     )
-    granularity: LineageGranularity = Field(
-        Query(description="Granularity of the lineage", examples=["job"]),
-    )
-    depth: int = Field(Query(description="Depth of the lineage", examples=["2"], le=3, default=1))
+
+    @field_validator("until", mode="after")
+    @classmethod
+    def _check_until(cls, value: datetime | None, info: ValidationInfo) -> datetime | None:
+        since = info.data.get("since")
+        if since and value and since >= value:
+            raise ValueError("'since' should be less than 'until'")
+        return value
+
+    @model_validator(mode="after")
+    def _check_ids(self):
+        from uuid import UUID as OLD_UUID
+
+        if self.point_kind in {LineageEntityKind.JOB, LineageEntityKind.DATASET} and not isinstance(self.point_id, int):
+            raise ValueError(f"'point_id' should be int for '{self.point_kind}' kind")
+        elif self.point_kind in {LineageEntityKind.RUN, LineageEntityKind.OPERATION} and not isinstance(
+            self.point_id,
+            OLD_UUID,
+        ):
+            raise ValueError(f"'point_id' should be UUIDv7 for '{self.point_kind}' kind")
+        return self
 
 
 class LineageRelation(BaseModel):
