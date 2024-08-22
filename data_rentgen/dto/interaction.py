@@ -23,6 +23,10 @@ class InteractionTypeDTO(str, Enum):
     def __str__(self) -> str:
         return self.value
 
+    @classmethod
+    def write_interactions(cls) -> list[str]:
+        return [item.value for item in InteractionTypeDTO if item != InteractionTypeDTO.READ]
+
 
 @dataclass(slots=True)
 class InteractionDTO:

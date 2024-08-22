@@ -3,6 +3,7 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 
+from data_rentgen.dto import InteractionTypeDTO
 from data_rentgen.server.schemas.v1.lineage import LineageEntityKind
 from data_rentgen.services.uow import UnitOfWork
 from data_rentgen.utils import UUID
@@ -30,7 +31,7 @@ class AbstractStrategy(ABC):
     @classmethod
     def _get_direction(cls, direction: str) -> list[str]:
         if direction == "from":
-            return ["ALTER", "APPEND", "CREATE", "DROP", "OVERWRITE", "RENAME", "TRUNCATE"]
+            return InteractionTypeDTO.write_interactions()
         elif direction == "to":
-            return ["READ"]
+            return [InteractionTypeDTO.READ.value]
         raise ValueError(f"No such direction: {direction}")
