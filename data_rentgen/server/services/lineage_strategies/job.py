@@ -41,16 +41,16 @@ class JobStrategy(AbstractStrategy):
         )
         # Now we have only interactions which we need to add. So we need to filter runs with this operations.
         operations_ids = [interaction.operation_id for interaction in interactions]
-        operations = {operation.id: operation for operation in await self._uow.operation.get_by_ids(operations_ids)}  # type: ignore[arg-type]
+        operations_by_id = {operation.id: operation for operation in all_operations if operation.id in operations_ids}  # type: ignore[arg-type]
 
         datasets_ids = [interaction.dataset_id for interaction in interactions]
-        datasets = {dataset.id: dataset for dataset in await self._uow.dataset.get_by_ids(datasets_ids)}
+        datasets_by_id = {dataset.id: dataset for dataset in await self._uow.dataset.get_by_ids(datasets_ids)}
 
-        run_ids = [operation.run_id for operation in operations.values()]
-        runs = {run.id: run for run in await self._uow.run.get_by_ids(run_ids)}  # type: ignore[arg-type]
+        run_ids = [operation.run_id for operation in operations_by_id.values()]
+        runs_by_id = {run.id: run for run in all_runs if run.id in run_ids}  # type: ignore[arg-type]
 
         # Add Job->Run relation
-        for run_id, run in runs.items():
+        for run_id, run in runs_by_id.items():
             lineage.relations.append(
                 LineageRelation(
                     kind="PARENT",
@@ -60,27 +60,8 @@ class JobStrategy(AbstractStrategy):
             )
             lineage.nodes.append(RunResponseV1.model_validate(run))
 
-        for interaction in interactions:
-            dataset = datasets[interaction.dataset_id]
-            operation = operations[interaction.operation_id]
-
-            lineage.relations.append(
-                LineageRelation(
-                    kind="INTERACTION",
-                    type=interaction.type.value,
-                    from_=(
-                        LineageEntity(kind=LineageEntityKind.OPERATION, id=operation.id)
-                        if direction == "from"
-                        else LineageEntity(kind=LineageEntityKind.DATASET, id=dataset.id)
-                    ),
-                    to=(
-                        LineageEntity(kind=LineageEntityKind.DATASET, id=dataset.id)
-                        if direction == "from"
-                        else LineageEntity(kind=LineageEntityKind.OPERATION, id=operation.id)
-                    ),
-                ),
-            )
-
+        for operation in operations_by_id.values():
+            lineage.nodes.append(OperationResponseV1.model_validate(operation))
             lineage.relations.append(
                 LineageRelation(
                     kind="PARENT",
@@ -88,7 +69,27 @@ class JobStrategy(AbstractStrategy):
                     to=LineageEntity(kind=LineageEntityKind.OPERATION, id=operation.id),
                 ),
             )
-            lineage.nodes.append(OperationResponseV1.model_validate(operation))
+
+        for dataset in datasets_by_id.values():
             lineage.nodes.append(DatasetResponseV1.model_validate(dataset))
+
+        for interaction in interactions:
+
+            lineage.relations.append(
+                LineageRelation(
+                    kind="INTERACTION",
+                    type=interaction.type.value,
+                    from_=(
+                        LineageEntity(kind=LineageEntityKind.OPERATION, id=interaction.operation_id)
+                        if direction == "from"
+                        else LineageEntity(kind=LineageEntityKind.DATASET, id=interaction.dataset_id)
+                    ),
+                    to=(
+                        LineageEntity(kind=LineageEntityKind.DATASET, id=interaction.dataset_id)
+                        if direction == "from"
+                        else LineageEntity(kind=LineageEntityKind.OPERATION, id=interaction.operation_id)
+                    ),
+                ),
+            )
 
         return lineage
