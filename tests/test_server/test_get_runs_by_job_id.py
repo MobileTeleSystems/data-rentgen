@@ -290,6 +290,7 @@ async def test_get_runs_time_range(
         },
         "items": [
             {
+                "kind": "RUN",
                 "id": str(run.id),
                 "job_id": run.job_id,
                 "parent_run_id": str(run.parent_run_id),

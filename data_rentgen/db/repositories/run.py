@@ -75,10 +75,11 @@ class RunRepository(Repository[Run]):
         return await self._get(created_at, run_id)
 
     async def get_by_job_id(self, job_id: int, since: datetime, until: datetime | None) -> Sequence[Run]:
-        filter = [Run.created_at >= since, Run.job_id == job_id]
+        query = (
+            select(Run).where(Run.created_at >= since, Run.job_id == job_id).options(selectinload(Run.started_by_user))
+        )
         if until:
-            filter.append(Run.created_at <= until)
-        query = select(Run).where(and_(*filter))
+            query = query.where(Run.created_at <= until)
         result = await self._session.scalars(query)
         return result.all()
 

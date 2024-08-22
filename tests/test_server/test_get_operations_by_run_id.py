@@ -279,6 +279,7 @@ async def test_get_operations_by_run_id_with_until(
         },
         "items": [
             {
+                "kind": "OPERATION",
                 "id": str(operation.id),
                 "run_id": str(operation.run_id),
                 "name": operation.name,

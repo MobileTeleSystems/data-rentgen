@@ -163,6 +163,7 @@ async def test_get_datasets_no_filters(
         },
         "items": [
             {
+                "kind": "DATASET",
                 "id": dataset.id,
                 "format": dataset.format,
                 "name": dataset.name,
