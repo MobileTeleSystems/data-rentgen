@@ -55,10 +55,9 @@ class OperationRepository(Repository[Operation]):
         return await self._paginate_by_query(order_by=[Operation.id], page=page, page_size=page_size, query=query)
 
     async def get_by_run_ids(self, run_ids: list[UUID], since: datetime, until: datetime | None) -> Sequence[Operation]:
-        filter = [Operation.created_at >= since, Operation.run_id.in_(run_ids)]
+        query = select(Operation).where(Operation.created_at >= since, Operation.run_id.in_(run_ids))
         if until:
-            filter.append(Operation.created_at <= until)
-        query = select(Operation).where(and_(*filter))
+            query = query.where(Operation.created_at <= until)
         result = await self._session.scalars(query)
         return result.all()
 

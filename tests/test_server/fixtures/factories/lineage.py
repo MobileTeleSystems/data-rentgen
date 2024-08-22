@@ -17,8 +17,8 @@ from data_rentgen.db.models import (
 )
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
 from tests.test_server.fixtures.factories.dataset import dataset_factory
-from tests.test_server.fixtures.factories.operation import operation_factory_minimal
-from tests.test_server.fixtures.factories.run import run_factory_minimal
+from tests.test_server.fixtures.factories.operation import operation_factory
+from tests.test_server.fixtures.factories.run import run_factory
 
 
 def interaction_factory_minimal(**kwargs) -> Interaction:
@@ -43,11 +43,9 @@ async def lineage(
     addresses: list[Address],
 ) -> AsyncGenerator[tuple[Job, list[Run], list[Dataset], list[Operation], list[Interaction]], None]:
     datasets = [dataset_factory(location_id=choice(addresses).location_id) for _ in range(4)]
-    runs = [run_factory_minimal(job_id=job.id) for _ in range(2)]
+    runs = [run_factory(job_id=job.id) for _ in range(2)]
 
-    operations = [
-        operation_factory_minimal(run_id=run.id) for run in runs for _ in range(2)  # Two operations for each run
-    ]
+    operations = [operation_factory(run_id=run.id) for run in runs for _ in range(2)]  # Two operations for each run
     read = InteractionType.READ
     append = InteractionType.APPEND
     interactions = [

@@ -153,6 +153,7 @@ async def test_get_jobs_no_filters(
         },
         "items": [
             {
+                "kind": "JOB",
                 "id": job.id,
                 "name": job.name,
                 "location": {
