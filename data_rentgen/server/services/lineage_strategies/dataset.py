@@ -6,7 +6,6 @@ from data_rentgen.server.schemas.v1.dataset import DatasetResponseV1
 from data_rentgen.server.schemas.v1.lineage import (
     LineageEntity,
     LineageEntityKind,
-    LineageGranularity,
     LineageRelation,
     LineageResponseV1,
 )
@@ -20,17 +19,15 @@ class DatasetStrategy(AbstractStrategy):
     async def get_lineage(
         self,
         point_id: int,  # type: ignore[override]
-        granularity: LineageGranularity,
         direction: str,
-        depth: int,
         since: datetime,
         until: datetime | None,
     ) -> LineageResponseV1:
         # Logic are inverted for datasets
         if direction == "from":
-            direction_type = await self._get_direction("to")
+            direction_type = self._get_direction("to")
         elif direction == "to":
-            direction_type = await self._get_direction("from")
+            direction_type = self._get_direction("from")
         dataset = await self._uow.dataset.get_by_id(point_id)
         lineage = LineageResponseV1(nodes=[DatasetResponseV1.model_validate(dataset)])
         interactions = await self._uow.interaction.get_by_datasets([point_id], direction_type, since, until)

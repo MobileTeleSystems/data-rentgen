@@ -5,11 +5,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from data_rentgen.server.schemas.v1.lineage import (
-    LineageEntityKind,
-    LineageGranularity,
-    LineageResponseV1,
-)
+from data_rentgen.server.schemas.v1.lineage import LineageEntityKind, LineageResponseV1
 from data_rentgen.server.services.lineage_strategies import (
     AbstractStrategy,
     DatasetStrategy,
@@ -29,9 +25,7 @@ class LineageService:
         self,
         point_kind: LineageEntityKind,
         point_id: int | UUID,
-        granularity: LineageGranularity,
         direction: str,
-        depth: int,
         since: datetime,
         until: datetime | None,
     ) -> LineageResponseV1:
@@ -48,4 +42,4 @@ class LineageService:
             case _:
                 raise ValueError(f"Can't get lineage for this start point kind: {point_kind}")
 
-        return await strategy.get_lineage(point_id, granularity, direction, depth, since, until)
+        return await strategy.get_lineage(point_id, direction, since, until)

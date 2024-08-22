@@ -6,7 +6,6 @@ from data_rentgen.server.schemas.v1.dataset import DatasetResponseV1
 from data_rentgen.server.schemas.v1.lineage import (
     LineageEntity,
     LineageEntityKind,
-    LineageGranularity,
     LineageRelation,
     LineageResponseV1,
 )
@@ -22,14 +21,11 @@ class RunStrategy(AbstractStrategy):
     async def get_lineage(
         self,
         point_id: UUID,  # type: ignore[override]
-        granularity: LineageGranularity,
         direction: str,
-        depth: int,
         since: datetime,
         until: datetime | None,
     ) -> LineageResponseV1:
-        await self._check_granularity(granularity)
-        direction_type = await self._get_direction(direction)
+        direction_type = self._get_direction(direction)
         # TODO: Add recursive logic for child runs
         run = await self._uow.run.get_by_id(point_id)
 

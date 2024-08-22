@@ -7,7 +7,6 @@ from data_rentgen.server.schemas.v1.job import JobResponseV1
 from data_rentgen.server.schemas.v1.lineage import (
     LineageEntity,
     LineageEntityKind,
-    LineageGranularity,
     LineageRelation,
     LineageResponseV1,
 )
@@ -22,14 +21,11 @@ class JobStrategy(AbstractStrategy):
     async def get_lineage(  # noqa: WPS217
         self,
         point_id: int,  # type: ignore[override]
-        granularity: LineageGranularity,
         direction: str,
-        depth: int,
         since: datetime,
         until: datetime | None,
     ):
-        await self._check_granularity(granularity)
-        direction_type = await self._get_direction(direction)
+        direction_type = self._get_direction(direction)
         job = await self._uow.job.get_by_id(point_id)
 
         lineage = LineageResponseV1(nodes=[JobResponseV1.model_validate(job)])
