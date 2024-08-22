@@ -182,16 +182,16 @@ async def test_get_run_lineage(
     assert response.json() == {
         "relations": [
             {
-                "kind": "INTERACTION",
-                "type": "APPEND",
-                "from": {"kind": "OPERATION", "id": str(operation.id)},
-                "to": {"kind": "DATASET", "id": dataset.id},
-            },
-            {
                 "kind": "PARENT",
                 "from": {"kind": "RUN", "id": str(run.id)},
                 "to": {"kind": "OPERATION", "id": str(operation.id)},
                 "type": None,
+            },
+            {
+                "kind": "INTERACTION",
+                "type": "APPEND",
+                "from": {"kind": "OPERATION", "id": str(operation.id)},
+                "to": {"kind": "DATASET", "id": dataset.id},
             },
         ],
         "nodes": [
@@ -288,28 +288,28 @@ async def test_get_job_lineage(
                 "type": None,
             },
             {
-                "kind": "INTERACTION",
-                "type": "APPEND",
-                "from": {"kind": "OPERATION", "id": str(operations[1].id)},
-                "to": {"kind": "DATASET", "id": datasets[1].id},
-            },
-            {
                 "kind": "PARENT",
                 "from": {"kind": "RUN", "id": str(runs[0].id)},
                 "to": {"kind": "OPERATION", "id": str(operations[1].id)},
                 "type": None,
             },
             {
-                "kind": "INTERACTION",
-                "type": "APPEND",
-                "from": {"kind": "OPERATION", "id": str(operations[3].id)},
-                "to": {"kind": "DATASET", "id": datasets[3].id},
-            },
-            {
                 "kind": "PARENT",
                 "from": {"kind": "RUN", "id": str(runs[1].id)},
                 "to": {"kind": "OPERATION", "id": str(operations[3].id)},
                 "type": None,
+            },
+            {
+                "kind": "INTERACTION",
+                "type": "APPEND",
+                "from": {"kind": "OPERATION", "id": str(operations[1].id)},
+                "to": {"kind": "DATASET", "id": datasets[1].id},
+            },
+            {
+                "kind": "INTERACTION",
+                "type": "APPEND",
+                "from": {"kind": "OPERATION", "id": str(operations[3].id)},
+                "to": {"kind": "DATASET", "id": datasets[3].id},
             },
         ],
         "nodes": [
@@ -368,17 +368,6 @@ async def test_get_job_lineage(
                 "ended_at": None,
             },
             {
-                "kind": "DATASET",
-                "id": datasets[1].id,
-                "format": datasets[1].format,
-                "name": datasets[1].name,
-                "location": {
-                    "name": location_1.name,
-                    "type": location_1.type,
-                    "addresses": [{"url": address.url} for address in location_1.addresses],
-                },
-            },
-            {
                 "kind": "OPERATION",
                 "id": str(operations[3].id),
                 "run_id": str(operations[3].run_id),
@@ -389,6 +378,17 @@ async def test_get_job_lineage(
                 "description": None,
                 "started_at": None,
                 "ended_at": None,
+            },
+            {
+                "kind": "DATASET",
+                "id": datasets[1].id,
+                "format": datasets[1].format,
+                "name": datasets[1].name,
+                "location": {
+                    "name": location_1.name,
+                    "type": location_1.type,
+                    "addresses": [{"url": address.url} for address in location_1.addresses],
+                },
             },
             {
                 "kind": "DATASET",
