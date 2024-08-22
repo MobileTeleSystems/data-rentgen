@@ -2,16 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 from datetime import datetime
 
+from data_rentgen.server.schemas.v1.dataset import DatasetResponseV1
 from data_rentgen.server.schemas.v1.lineage import (
-    DatasetNode,
+    LineageEntity,
     LineageEntityKind,
     LineageGranularity,
     LineageRelation,
     LineageResponseV1,
-    OperationNode,
 )
+from data_rentgen.server.schemas.v1.operation import OperationResponseV1
 from data_rentgen.server.services.lineage_strategies.base import AbstractStrategy
-from data_rentgen.utils import UUID
 
 
 class DatasetStrategy(AbstractStrategy):
@@ -19,7 +19,7 @@ class DatasetStrategy(AbstractStrategy):
 
     async def get_lineage(
         self,
-        point_id: int | UUID,
+        point_id: int,  # type: ignore[override]
         granularity: LineageGranularity,
         direction: str,
         depth: int,
@@ -31,31 +31,28 @@ class DatasetStrategy(AbstractStrategy):
             direction_type = await self._get_direction("to")
         elif direction == "to":
             direction_type = await self._get_direction("from")
-        dataset_operations = await self._uow.dataset.get_dataset_operations(point_id, direction_type, since, until)  # type: ignore[arg-type]
-        lineage = LineageResponseV1()
-        for dataset_operation in dataset_operations:
-            operation_id = dataset_operation.operation_id
-            dataset_id = dataset_operation.dataset_id
-            # Add Operation <-> Dataset
-            if direction == "from":
-                lineage.relations.append(
-                    LineageRelation(from_=dataset_id, to=operation_id, type=dataset_operation.interaction_type.value),
-                )
-            elif direction == "to":
-                lineage.relations.append(
-                    LineageRelation(from_=operation_id, to=dataset_id, type=dataset_operation.interaction_type.value),
-                )
-            # Add Operation and Dataset as Nodes
-            operation_node = await self._uow.operation.get_node_info(operation_id)
-            lineage.nodes.append(
-                OperationNode(
-                    id=operation_node.id,
-                    status=operation_node.status,
-                    operation_type=operation_node.type,
-                    name=operation_node.name,
+        dataset = await self._uow.dataset.get_by_id(point_id)
+        lineage = LineageResponseV1(nodes=[DatasetResponseV1.model_validate(dataset)])
+        interactions = await self._uow.interaction.get_by_datasets([point_id], direction_type, since, until)
+        operation_ids = [interaction.operation_id for interaction in interactions]
+        operations = {operation.id: operation for operation in await self._uow.operation.get_by_ids(operation_ids)}  # type: ignore[arg-type]
+        for interaction in interactions:
+            operation = operations[interaction.operation_id]
+            lineage.relations.append(
+                LineageRelation(
+                    kind=interaction.type.value,
+                    from_=(
+                        LineageEntity(kind=LineageEntityKind.OPERATION, id=operation.id)
+                        if direction == "to"
+                        else LineageEntity(kind=LineageEntityKind.DATASET, id=dataset.id)  # type: ignore[union-attr]
+                    ),
+                    to=(
+                        LineageEntity(kind=LineageEntityKind.DATASET, id=dataset.id)  # type: ignore[union-attr]
+                        if direction == "to"
+                        else LineageEntity(kind=LineageEntityKind.OPERATION, id=operation.id)
+                    ),
                 ),
             )
-            dataset_node = await self._uow.dataset.get_node_info(dataset_id)
-            lineage.nodes.append(DatasetNode(id=dataset_node.id, name=dataset_node.name))
+            lineage.nodes.append(OperationResponseV1.model_validate(operation))
 
         return lineage

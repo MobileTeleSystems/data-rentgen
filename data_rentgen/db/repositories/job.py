@@ -29,18 +29,17 @@ class JobRepository(Repository[Job]):
             return await self._create(job, location_id)
         return await self._update(result, job)
 
+    async def get_by_id(self, job_id: int) -> Job | None:
+        query = select(Job).where(Job.id == job_id).options(selectinload(Job.location).selectinload(Location.addresses))
+        return await self._session.scalar(query)
+
     async def get_job_runs(self, job_id: int, since: datetime, until: datetime | None):
         filter = [Run.created_at >= since, Job.id == job_id]
         if until:
             filter.append(Run.created_at <= until)
-        query = select(Job.id, Run.id).join(Run, Job.id == Run.job_id).where(and_(*filter))
+        query = select(Run).join(Run, Job.id == Run.job_id).where(and_(*filter))
         result = await self._session.execute(query)
         return result.all()
-
-    async def get_node_info(self, job_id: int):
-        query = select(Job.id, Job.name, Job.type).where(Job.id == job_id)
-        result = await self._session.execute(query)
-        return result.one()
 
     async def _get(self, location_id: int, name: str) -> Job | None:
         statement = select(Job).where(Job.location_id == location_id, Job.name == name)

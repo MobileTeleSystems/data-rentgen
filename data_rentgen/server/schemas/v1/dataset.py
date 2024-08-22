@@ -8,6 +8,7 @@ from data_rentgen.server.schemas.v1.pagination import PaginateQueryV1
 
 
 class DatasetResponseV1(BaseModel):
+    kind: str = "dataset"
     id: int = Field(description="Dataset id")
     location: LocationResponseV1 = Field(description="Corresponding Location")
     name: str = Field(description="Dataset name")

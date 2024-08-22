@@ -6,6 +6,10 @@ from enum import Enum
 from fastapi import Query
 from pydantic import BaseModel, ConfigDict, Field
 
+from data_rentgen.server.schemas.v1.dataset import DatasetResponseV1
+from data_rentgen.server.schemas.v1.job import JobResponseV1
+from data_rentgen.server.schemas.v1.operation import OperationResponseV1
+from data_rentgen.server.schemas.v1.run import RunResponseV1
 from data_rentgen.utils import UUID
 
 
@@ -44,7 +48,7 @@ class LineageGranularity(str, Enum):
         return int_map[self]
 
 
-class LineageEntity:
+class LineageEntity(BaseModel):
     kind: LineageEntityKind = Field(description="Type of Lineage entity")
     id: int | UUID = Field(description="Id of Lineage entity")
 
@@ -79,42 +83,12 @@ class LineageQueryV1(BaseModel):
     depth: int = Field(Query(description="Depth of the lineage", examples=["2"], le=3, default=1))
 
 
-class LineageNode(BaseModel):
-    type: LineageEntityKind
-    id: int | UUID
-
-
-class JobNode(LineageNode):
-    type: LineageEntityKind = LineageEntityKind.JOB
-    name: str
-    job_type: str
-
-
-class RunNode(LineageNode):
-    type: LineageEntityKind = LineageEntityKind.RUN
-    job_name: str
-    status: str
-
-
-class OperationNode(LineageNode):
-    type: LineageEntityKind = LineageEntityKind.OPERATION
-    name: str
-    status: str
-    operation_type: str
-
-
-class DatasetNode(LineageNode):
-    type: LineageEntityKind = LineageEntityKind.DATASET
-    name: str
-
-
-# TODO: Should from_ and to be optional?
 class LineageRelation(BaseModel):
-    type: str = Field(description="Type of relation between entities")
-    from_: int | UUID = Field(description="Start point of relation")
-    to: int | UUID = Field(description="End point of relation")
+    kind: str = Field(description="Kind of relation")
+    from_: LineageEntity = Field(description="Start point of relation")
+    to: LineageEntity = Field(description="End point of relation")
 
 
 class LineageResponseV1(BaseModel):
     relations: list[LineageRelation] = []
-    nodes: list[RunNode | OperationNode | JobNode | DatasetNode] = []
+    nodes: list[RunResponseV1 | OperationResponseV1 | JobResponseV1 | DatasetResponseV1] = []
