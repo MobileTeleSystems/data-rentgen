@@ -1,11 +1,10 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from datetime import datetime
 
-from sqlalchemy import and_, select
+from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
-from data_rentgen.db.models import Job, JobType, Location, Run
+from data_rentgen.db.models import Job, JobType, Location
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.dto import JobDTO, PaginationDTO
 
@@ -32,14 +31,6 @@ class JobRepository(Repository[Job]):
     async def get_by_id(self, job_id: int) -> Job | None:
         query = select(Job).where(Job.id == job_id).options(selectinload(Job.location).selectinload(Location.addresses))
         return await self._session.scalar(query)
-
-    async def get_job_runs(self, job_id: int, since: datetime, until: datetime | None):
-        filter = [Run.created_at >= since, Job.id == job_id]
-        if until:
-            filter.append(Run.created_at <= until)
-        query = select(Run).join(Run, Job.id == Run.job_id).where(and_(*filter))
-        result = await self._session.execute(query)
-        return result.all()
 
     async def _get(self, location_id: int, name: str) -> Job | None:
         statement = select(Job).where(Job.location_id == location_id, Job.name == name)
