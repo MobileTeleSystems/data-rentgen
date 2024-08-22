@@ -16,11 +16,9 @@ from data_rentgen.db.models import (
     Run,
 )
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
-from tests.test_server.fixtures.factories import (
-    dataset_factory,
-    operation_factory_minimal,
-    run_factory_minimal,
-)
+from tests.test_server.fixtures.factories.dataset import dataset_factory
+from tests.test_server.fixtures.factories.operation import operation_factory_minimal
+from tests.test_server.fixtures.factories.run import run_factory_minimal
 
 
 def interaction_factory_minimal(**kwargs) -> Interaction:

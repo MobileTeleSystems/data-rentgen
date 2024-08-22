@@ -29,6 +29,10 @@ class LineageService:
         since: datetime,
         until: datetime | None,
     ) -> LineageResponseV1:
+        # TODO: Remove Response schemas from LineageService and Strategies
+        # TODO: Add depths logic
+        # TODO: Add granularity logic
+        # TODO: Add Child runs logic
         strategy: AbstractStrategy
         match point_kind:
             case LineageEntityKind.OPERATION:
