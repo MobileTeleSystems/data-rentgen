@@ -63,6 +63,7 @@ async def test_get_jobs_by_one_id(
         },
         "items": [
             {
+                "kind": "JOB",
                 "id": job.id,
                 "name": job.name,
                 "location": {
@@ -113,6 +114,7 @@ async def test_get_jobs_by_multiple_ids(
         },
         "items": [
             {
+                "kind": "JOB",
                 "id": job.id,
                 "name": job.name,
                 "location": {

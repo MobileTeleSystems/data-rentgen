@@ -14,10 +14,10 @@ from data_rentgen.utils import UUID
 
 
 class LineageEntityKind(str, Enum):
-    JOB = "job"
-    RUN = "run"
-    OPERATION = "operation"
-    DATASET = "dataset"
+    JOB = "JOB"
+    RUN = "RUN"
+    OPERATION = "OPERATION"
+    DATASET = "DATASET"
 
     def to_int(self) -> int:
         int_map = {
@@ -35,9 +35,9 @@ class LineageDirection(str, Enum):
 
 
 class LineageGranularity(str, Enum):
-    JOB = "job"
-    RUN = "run"
-    OPERATION = "operation"
+    JOB = "JOB"
+    RUN = "RUN"
+    OPERATION = "OPERATION"
 
     def to_int(self) -> int:
         int_map = {
@@ -85,8 +85,9 @@ class LineageQueryV1(BaseModel):
 
 class LineageRelation(BaseModel):
     kind: str = Field(description="Kind of relation")
-    from_: LineageEntity = Field(description="Start point of relation")
+    from_: LineageEntity = Field(description="Start point of relation", serialization_alias="from")
     to: LineageEntity = Field(description="End point of relation")
+    type: str | None = Field(description="Type of interaction", examples=["READ", "APPEND"], default=None)
 
 
 class LineageResponseV1(BaseModel):

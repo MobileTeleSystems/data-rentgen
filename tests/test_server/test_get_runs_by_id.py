@@ -111,6 +111,7 @@ async def test_get_runs_by_one_id(
         },
         "items": [
             {
+                "kind": "RUN",
                 "id": str(run_from_db.id),
                 "job_id": run_from_db.job_id,
                 "parent_run_id": str(run_from_db.parent_run_id),
@@ -162,6 +163,7 @@ async def test_get_runs_by_multiple_ids(
         },
         "items": [
             {
+                "kind": "RUN",
                 "id": str(run.id),
                 "job_id": run.job_id,
                 "parent_run_id": str(run.parent_run_id),

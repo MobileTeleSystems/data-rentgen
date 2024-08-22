@@ -56,7 +56,8 @@ class RunStrategy(AbstractStrategy):
 
             lineage.relations.append(
                 LineageRelation(
-                    kind=interaction.type.value,
+                    kind="INTERACTION",
+                    type=interaction.type.value,
                     from_=(
                         LineageEntity(kind=LineageEntityKind.OPERATION, id=operation.id)
                         if direction == "from"

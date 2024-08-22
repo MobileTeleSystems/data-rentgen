@@ -67,7 +67,7 @@ async def test_get_dataset(
         },
         "items": [
             {
-                "kind": "dataset",
+                "kind": "DATASET",
                 "id": dataset_from_db.id,
                 "format": dataset_from_db.format,
                 "name": dataset_from_db.name,
@@ -119,7 +119,7 @@ async def test_get_datasets_by_multiple_ids(
         },
         "items": [
             {
-                "kind": "dataset",
+                "kind": "DATASET",
                 "id": dataset.id,
                 "format": dataset.format,
                 "name": dataset.name,
