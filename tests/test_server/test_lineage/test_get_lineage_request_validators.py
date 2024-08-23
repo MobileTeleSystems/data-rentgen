@@ -1,3 +1,4 @@
+from datetime import timedelta
 from http import HTTPStatus
 
 import pytest
@@ -155,5 +156,42 @@ async def test_get_lineage_point_id_uuid_type_validation(
                 },
             ],
             "message": "Invalid request",
+        },
+    }
+
+
+async def test_get_lineage_until_less_than_since(
+    test_client: AsyncClient,
+    lineage: lineage_fixture_annotation,
+):
+    _, runs, _, _, _ = lineage
+    since = runs[0].created_at
+    until = since - timedelta(days=1)
+
+    response = await test_client.get(
+        "v1/lineage",
+        params={
+            "since": since.isoformat(),
+            "until": until.isoformat(),
+            "point_kind": "RUN",
+            "direction": "from",
+            "point_id": runs[0].id,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.json() == {
+        "error": {
+            "code": "invalid_request",
+            "message": "Invalid request",
+            "details": [
+                {
+                    "location": ["until"],
+                    "code": "value_error",
+                    "message": "Value error, 'since' should be less than 'until'",
+                    "context": {},
+                    "input": until.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                },
+            ],
         },
     }
