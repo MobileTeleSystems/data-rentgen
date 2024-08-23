@@ -36,7 +36,7 @@ async def test_get_operation_lineage(
             "since": runs[0].created_at.isoformat(),
             "point_kind": "OPERATION",
             "point_id": operation.id,
-            "direction": "from",
+            "direction": "FROM",
         },
     )
     assert response.status_code == HTTPStatus.OK, response.json()

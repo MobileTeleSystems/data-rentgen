@@ -43,7 +43,7 @@ async def test_get_job_lineage(
             "since": runs[0].created_at.isoformat(),
             "point_kind": "JOB",
             "point_id": job.id,
-            "direction": "from",
+            "direction": "FROM",
         },
     )
 

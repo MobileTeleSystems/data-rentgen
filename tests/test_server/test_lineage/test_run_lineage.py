@@ -37,7 +37,7 @@ async def test_get_run_lineage(
             "since": runs[0].created_at.isoformat(),
             "point_kind": "RUN",
             "point_id": runs[0].id,
-            "direction": "from",
+            "direction": "FROM",
         },
     )
 

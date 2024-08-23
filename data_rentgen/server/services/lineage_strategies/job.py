@@ -81,12 +81,12 @@ class JobStrategy(AbstractStrategy):
                     type=interaction.type.value,
                     from_=(
                         LineageEntity(kind=LineageEntityKind.OPERATION, id=interaction.operation_id)
-                        if direction == "from"
+                        if direction == "FROM"
                         else LineageEntity(kind=LineageEntityKind.DATASET, id=interaction.dataset_id)
                     ),
                     to=(
                         LineageEntity(kind=LineageEntityKind.DATASET, id=interaction.dataset_id)
-                        if direction == "from"
+                        if direction == "FROM"
                         else LineageEntity(kind=LineageEntityKind.OPERATION, id=interaction.operation_id)
                     ),
                 ),

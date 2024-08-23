@@ -30,8 +30,8 @@ class AbstractStrategy(ABC):
 
     @classmethod
     def _get_direction(cls, direction: str) -> list[str]:
-        if direction == "from":
+        if direction == "FROM":
             return InteractionTypeDTO.write_interactions()
-        elif direction == "to":
+        elif direction == "TO":
             return [InteractionTypeDTO.READ.value]
         raise ValueError(f"No such direction: {direction}")

@@ -31,8 +31,8 @@ class LineageEntityKind(str, Enum):
 
 
 class LineageDirection(str, Enum):
-    FROM = "from"
-    TO = "to"
+    FROM = "FROM"
+    TO = "TO"
 
     def __str__(self) -> str:
         return self.value
