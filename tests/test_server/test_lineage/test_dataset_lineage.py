@@ -36,7 +36,7 @@ async def test_get_dataset_lineage(
             "since": runs[0].created_at.isoformat(),
             "point_kind": "DATASET",
             "point_id": dataset.id,
-            "direction": "from",
+            "direction": "FROM",
         },
     )
 
@@ -76,3 +76,12 @@ async def test_get_dataset_lineage(
             },
         ],
     }
+
+
+async def test_get_dataset_lineage_with_until(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage: lineage_fixture_annotation,
+):
+    _, runs, datasets, operations, _ = lineage
+    # В фикстуре должно создаваться несколько операций с датасетами (3) две связи должны попасть в линадж 1 нет

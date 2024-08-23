@@ -43,7 +43,7 @@ async def test_get_lineage_missing_id(
         params={
             "since": runs[0].created_at.isoformat(),
             "point_kind": point_kind,
-            "direction": "from",
+            "direction": "FROM",
             "point_id": point_id,
         },
     )
@@ -84,7 +84,7 @@ async def test_get_lineage_point_id_int_type_validation(
         params={
             "since": runs[0].created_at.isoformat(),
             "point_kind": point_kind,
-            "direction": "from",
+            "direction": "FROM",
             "point_id": point_id,
         },
     )
@@ -98,7 +98,7 @@ async def test_get_lineage_point_id_int_type_validation(
                     "code": "value_error",
                     "context": {},
                     "input": {
-                        "direction": "from",
+                        "direction": "FROM",
                         "point_id": f"{point_id}",
                         "point_kind": f"{point_kind}",
                         "since": f'{runs[0].created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}',
@@ -131,7 +131,7 @@ async def test_get_lineage_point_id_uuid_type_validation(
         params={
             "since": runs[0].created_at.isoformat(),
             "point_kind": point_kind,
-            "direction": "from",
+            "direction": "FROM",
             "point_id": point_id,
         },
     )
@@ -145,7 +145,7 @@ async def test_get_lineage_point_id_uuid_type_validation(
                     "code": "value_error",
                     "context": {},
                     "input": {
-                        "direction": "from",
+                        "direction": "FROM",
                         "point_id": point_id,
                         "point_kind": f"{point_kind}",
                         "since": f'{runs[0].created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}',
@@ -174,7 +174,7 @@ async def test_get_lineage_until_less_than_since(
             "since": since.isoformat(),
             "until": until.isoformat(),
             "point_kind": "RUN",
-            "direction": "from",
+            "direction": "FROM",
             "point_id": runs[0].id,
         },
     )

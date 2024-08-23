@@ -24,10 +24,10 @@ class DatasetStrategy(AbstractStrategy):
         until: datetime | None,
     ) -> LineageResponseV1:
         # Logic are inverted for datasets
-        if direction == "from":
-            direction_type = self._get_direction("to")
-        elif direction == "to":
-            direction_type = self._get_direction("from")
+        if direction == "FROM":
+            direction_type = self._get_direction("TO")
+        elif direction == "TO":
+            direction_type = self._get_direction("FROM")
         dataset = await self._uow.dataset.get_by_id(point_id)
         lineage = LineageResponseV1(nodes=[DatasetResponseV1.model_validate(dataset)])
         interactions = await self._uow.interaction.get_by_datasets([point_id], direction_type, since, until)
@@ -44,12 +44,12 @@ class DatasetStrategy(AbstractStrategy):
                     type=interaction.type.value,
                     from_=(
                         LineageEntity(kind=LineageEntityKind.OPERATION, id=interaction.operation_id)
-                        if direction == "to"
+                        if direction == "TO"
                         else LineageEntity(kind=LineageEntityKind.DATASET, id=dataset.id)  # type: ignore[union-attr]
                     ),
                     to=(
                         LineageEntity(kind=LineageEntityKind.DATASET, id=dataset.id)  # type: ignore[union-attr]
-                        if direction == "to"
+                        if direction == "TO"
                         else LineageEntity(kind=LineageEntityKind.OPERATION, id=interaction.operation_id)
                     ),
                 ),
