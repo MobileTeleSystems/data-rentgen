@@ -4,6 +4,7 @@ from datetime import datetime
 
 from data_rentgen.server.schemas.v1.dataset import DatasetResponseV1
 from data_rentgen.server.schemas.v1.lineage import (
+    LineageDirection,
     LineageEntity,
     LineageEntityKind,
     LineageRelation,
@@ -20,15 +21,15 @@ class DatasetStrategy(AbstractStrategy):
     async def get_lineage(
         self,
         point_id: int,  # type: ignore[override]
-        direction: str,
+        direction: LineageDirection,
         since: datetime,
         until: datetime | None,
     ) -> LineageResponseV1:
         # Logic are inverted for datasets
-        if direction == "FROM":
-            direction_type = self._get_direction("TO")
-        elif direction == "TO":
-            direction_type = self._get_direction("FROM")
+        if direction == LineageDirection.FROM:
+            direction_type = self._get_direction(LineageDirection.TO)
+        elif direction == LineageDirection.TO:
+            direction_type = self._get_direction(LineageDirection.FROM)
         dataset = await self._uow.dataset.get_by_id(point_id)
         lineage = LineageResponseV1(nodes=[DatasetResponseV1.model_validate(dataset)])
         interactions = await self._uow.interaction.get_by_datasets([point_id], direction_type, since, until)
@@ -45,12 +46,12 @@ class DatasetStrategy(AbstractStrategy):
                     type=interaction.type.value,
                     from_=(
                         LineageEntity(kind=LineageEntityKind.OPERATION, id=interaction.operation_id)
-                        if direction == "TO"
+                        if direction == LineageDirection.TO
                         else LineageEntity(kind=LineageEntityKind.DATASET, id=dataset.id)  # type: ignore[union-attr]
                     ),
                     to=(
                         LineageEntity(kind=LineageEntityKind.DATASET, id=dataset.id)  # type: ignore[union-attr]
-                        if direction == "TO"
+                        if direction == LineageDirection.TO
                         else LineageEntity(kind=LineageEntityKind.OPERATION, id=interaction.operation_id)
                     ),
                 ),

@@ -5,7 +5,11 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from data_rentgen.server.schemas.v1.lineage import LineageEntityKind, LineageResponseV1
+from data_rentgen.server.schemas.v1.lineage import (
+    LineageDirection,
+    LineageEntityKind,
+    LineageResponseV1,
+)
 from data_rentgen.server.services.lineage_strategies import (
     AbstractStrategy,
     DatasetStrategy,
@@ -25,14 +29,14 @@ class LineageService:
         self,
         point_kind: LineageEntityKind,
         point_id: int | UUID,
-        direction: str,
+        direction: LineageDirection,
         since: datetime,
         until: datetime | None,
     ) -> LineageResponseV1:
         # TODO: Remove Response schemas from LineageService and Strategies
-        # TODO: Add depths logic
-        # TODO: Add granularity logic
-        # TODO: Add Child runs logic
+        # TODO: Add depths logic: DOP-18989
+        # TODO: Add granularity logic: DOP-18988
+        # TODO: Add Child runs logic: DOP-18990
         strategy: AbstractStrategy
         match point_kind:
             case LineageEntityKind.OPERATION:

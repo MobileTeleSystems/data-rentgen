@@ -4,6 +4,7 @@ from datetime import datetime
 
 from data_rentgen.server.schemas.v1.dataset import DatasetResponseV1
 from data_rentgen.server.schemas.v1.lineage import (
+    LineageDirection,
     LineageEntity,
     LineageEntityKind,
     LineageRelation,
@@ -66,12 +67,12 @@ class RunStrategy(AbstractStrategy):
                     type=interaction.type.value,
                     from_=(
                         LineageEntity(kind=LineageEntityKind.OPERATION, id=interaction.operation_id)
-                        if direction == "FROM"
+                        if direction == LineageDirection.FROM
                         else LineageEntity(kind=LineageEntityKind.DATASET, id=interaction.dataset_id)
                     ),
                     to=(
                         LineageEntity(kind=LineageEntityKind.DATASET, id=interaction.dataset_id)
-                        if direction == "FROM"
+                        if direction == LineageDirection.FROM
                         else LineageEntity(kind=LineageEntityKind.OPERATION, id=interaction.operation_id)
                     ),
                 ),

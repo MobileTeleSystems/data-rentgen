@@ -5,6 +5,7 @@ from datetime import datetime
 from data_rentgen.server.schemas.v1.dataset import DatasetResponseV1
 from data_rentgen.server.schemas.v1.job import JobResponseV1
 from data_rentgen.server.schemas.v1.lineage import (
+    LineageDirection,
     LineageEntity,
     LineageEntityKind,
     LineageRelation,
@@ -22,7 +23,7 @@ class JobStrategy(AbstractStrategy):
     async def get_lineage(  # noqa: WPS217
         self,
         point_id: int,  # type: ignore[override]
-        direction: str,
+        direction: LineageDirection,
         since: datetime,
         until: datetime | None,
     ):
@@ -82,12 +83,12 @@ class JobStrategy(AbstractStrategy):
                     type=interaction.type.value,
                     from_=(
                         LineageEntity(kind=LineageEntityKind.OPERATION, id=interaction.operation_id)
-                        if direction == "FROM"
+                        if direction == LineageDirection.FROM
                         else LineageEntity(kind=LineageEntityKind.DATASET, id=interaction.dataset_id)
                     ),
                     to=(
                         LineageEntity(kind=LineageEntityKind.DATASET, id=interaction.dataset_id)
-                        if direction == "FROM"
+                        if direction == LineageDirection.FROM
                         else LineageEntity(kind=LineageEntityKind.OPERATION, id=interaction.operation_id)
                     ),
                 ),
