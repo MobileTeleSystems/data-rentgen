@@ -1,5 +1,6 @@
 from collections.abc import AsyncGenerator
-from random import choice, randint
+from datetime import datetime, timedelta
+from random import choice
 from typing import AsyncContextManager, Callable
 
 import pytest
@@ -15,25 +16,10 @@ from data_rentgen.db.models import (
     Operation,
     Run,
 )
-from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
 from tests.test_server.fixtures.factories.dataset import dataset_factory
+from tests.test_server.fixtures.factories.interaction import interaction_factory
 from tests.test_server.fixtures.factories.operation import operation_factory
 from tests.test_server.fixtures.factories.run import run_factory
-
-
-def interaction_factory_minimal(**kwargs) -> Interaction:
-    if kwargs.get("created_at_dttm"):
-        interaction_id = generate_new_uuid(kwargs.pop("created_at_dttm"))
-    else:
-        interaction_id = generate_new_uuid()
-    data = {
-        "id": interaction_id,
-        "created_at": extract_timestamp_from_uuid(interaction_id),
-        "operation_id": generate_new_uuid(),
-        "dataset_id": randint(0, 10000000),
-    }
-    data.update(kwargs)
-    return Interaction(**data)
 
 
 @pytest_asyncio.fixture()
@@ -49,7 +35,7 @@ async def lineage(
     read = InteractionType.READ
     append = InteractionType.APPEND
     interactions = [
-        interaction_factory_minimal(
+        interaction_factory(
             operation_id=operation.id,
             dataset_id=dataset.id,
             type=inter_type,
@@ -69,3 +55,73 @@ async def lineage(
             async_session.expunge(item)
 
     yield job, runs, datasets, operations, interactions
+
+
+@pytest_asyncio.fixture(params=[(3, {})])
+async def operation_to_datasets_lineage(
+    request: pytest.FixtureRequest,
+    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    addresses: list[Address],
+):
+    size, params = request.param
+    started_at = datetime.now()
+    datasets = [dataset_factory(location_id=choice(addresses).location_id) for _ in range(size)]
+    operation = operation_factory(created_at=started_at, **params)
+
+    interactions = [
+        interaction_factory(
+            created_at=started_at + timedelta(seconds=1),
+            operation_id=operation.id,
+            dataset_id=dataset.id,
+            type=InteractionType.APPEND,
+        )
+        for dataset in datasets
+    ]
+
+    async with async_session_maker() as async_session:
+        for item in datasets + [operation] + interactions:
+            async_session.add(item)
+        await async_session.commit()
+
+        # remove current object from async_session. this is required to compare object against new state fetched
+        # from database, and also to remove it from cache
+        for item in datasets + [operation] + interactions:
+            await async_session.refresh(item)
+            async_session.expunge(item)
+
+    yield operation, datasets
+
+
+@pytest_asyncio.fixture(params=[(3, {})])
+async def operations_to_dataset_lineage(
+    request: pytest.FixtureRequest,
+    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    address: Address,
+):
+    size, params = request.param
+    started_at = datetime.now()
+    dataset = dataset_factory(location_id=address.location_id)
+    operations = [operation_factory(created_at=started_at, **params) for _ in range(size)]
+
+    interactions = [
+        interaction_factory(
+            created_at=started_at + timedelta(seconds=index),
+            operation_id=operation.id,
+            dataset_id=dataset.id,
+            type=InteractionType.APPEND,
+        )
+        for index, operation in enumerate(operations)
+    ]
+
+    async with async_session_maker() as async_session:
+        for item in [dataset] + operations + interactions:
+            async_session.add(item)
+        await async_session.commit()
+
+        # remove current object from async_session. this is required to compare object against new state fetched
+        # from database, and also to remove it from cache
+        for item in [dataset] + operations + interactions:
+            await async_session.refresh(item)
+            async_session.expunge(item)
+
+    yield dataset, operations

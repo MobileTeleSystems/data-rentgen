@@ -9,15 +9,13 @@ from data_rentgen.db.utils.uuid import generate_new_uuid
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
+lineage_fixture_annotation = tuple[Job, list[Run], list[Dataset], list[Operation], list[Interaction]]
+
 
 async def test_get_lineage_no_filter(test_client: AsyncClient):
-
     response = await test_client.get("v1/lineage")
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-
-
-lineage_fixture_annotation = tuple[Job, list[Run], list[Dataset], list[Operation], list[Interaction]]
 
 
 @pytest.mark.parametrize(
