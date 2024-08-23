@@ -29,13 +29,19 @@ async def lineage(
     addresses: list[Address],
 ) -> AsyncGenerator[tuple[Job, list[Run], list[Dataset], list[Operation], list[Interaction]], None]:
     datasets = [dataset_factory(location_id=choice(addresses).location_id) for _ in range(4)]
-    runs = [run_factory(job_id=job.id) for _ in range(2)]
+    started_at = datetime.now()
+    runs = [run_factory(job_id=job.id, created_at=started_at + timedelta(seconds=s)) for s in range(2)]
 
-    operations = [operation_factory(run_id=run.id) for run in runs for _ in range(2)]  # Two operations for each run
+    operations = [
+        operation_factory(run_id=run.id, created_at=run.created_at + timedelta(seconds=s))
+        for run in runs
+        for s in range(2)
+    ]  # Two operations for each run
     read = InteractionType.READ
     append = InteractionType.APPEND
     interactions = [
         interaction_factory(
+            created_at=operation.created_at,
             operation_id=operation.id,
             dataset_id=dataset.id,
             type=inter_type,
@@ -55,6 +61,45 @@ async def lineage(
             async_session.expunge(item)
 
     yield job, runs, datasets, operations, interactions
+
+
+@pytest_asyncio.fixture(params=[(3, {})])
+async def run_lineage(
+    request: pytest.FixtureRequest,
+    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    addresses: list[Address],
+):
+    size, params = request.param
+    started_at = datetime.now()
+    run = run_factory(created_at=started_at)
+    datasets = [dataset_factory(location_id=choice(addresses).location_id) for _ in range(size)]
+    operations = [
+        operation_factory(run_id=run.id, created_at=run.created_at + timedelta(seconds=s)) for s in range(size)
+    ]
+
+    interactions = [
+        interaction_factory(
+            created_at=operation.created_at,
+            operation_id=operation.id,
+            dataset_id=dataset.id,
+            type=InteractionType.APPEND,
+        )
+        for operation, dataset in zip(operations, datasets)
+    ]
+
+    async with async_session_maker() as async_session:
+        for item in [run] + datasets + operations + interactions:
+            async_session.add(item)
+        await async_session.commit()
+
+        # remove current object from async_session. this is required to compare object against new state fetched
+        # from database, and also to remove it from cache
+
+        for item in [run] + datasets + operations + interactions:
+            await async_session.refresh(item)
+            async_session.expunge(item)
+
+    yield run, datasets, operations
 
 
 @pytest_asyncio.fixture(params=[(3, {})])
