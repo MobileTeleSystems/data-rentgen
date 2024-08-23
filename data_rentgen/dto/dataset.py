@@ -17,9 +17,3 @@ class DatasetDTO:
     @property
     def full_name(self) -> str:
         return f"{self.location.full_name}/{self.name}"  # noqa: WPS237
-
-
-@dataclass(slots=True)
-class DatasetNodeDTO:
-    id: int
-    name: str

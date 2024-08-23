@@ -1,15 +1,13 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from data_rentgen.dto.dataset import DatasetDTO, DatasetNodeDTO
+from data_rentgen.dto.dataset import DatasetDTO
 from data_rentgen.dto.dataset_symlink import DatasetSymlinkDTO, DatasetSymlinkTypeDTO
 from data_rentgen.dto.interaction import InteractionDTO, InteractionTypeDTO
 from data_rentgen.dto.job import JobDTO, JobTypeDTO
 from data_rentgen.dto.location import LocationDTO
 from data_rentgen.dto.operation import (
-    OperationDatasetDTO,
     OperationDTO,
-    OperationNodeDTO,
     OperationStatusDTO,
     OperationTypeDTO,
 )
@@ -20,7 +18,6 @@ from data_rentgen.dto.user import UserDTO
 
 __all__ = [
     "DatasetDTO",
-    "DatasetNodeDTO",
     "DatasetSymlinkDTO",
     "DatasetSymlinkTypeDTO",
     "LocationDTO",
@@ -28,9 +25,7 @@ __all__ = [
     "InteractionTypeDTO",
     "JobDTO",
     "JobTypeDTO",
-    "OperationDatasetDTO",
     "OperationDTO",
-    "OperationNodeDTO",
     "OperationStatusDTO",
     "OperationTypeDTO",
     "PaginationDTO",

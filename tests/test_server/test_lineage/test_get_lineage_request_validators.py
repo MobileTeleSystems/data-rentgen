@@ -56,7 +56,7 @@ async def test_get_lineage_missing_id(
                     "context": {},
                     "input": None,
                     "location": [],
-                    "message": "Input should be a valid dictionary or " "object to extract fields from",
+                    "message": "Input should be a valid dictionary or object to extract fields from",
                 },
             ],
             "message": "Invalid request",
