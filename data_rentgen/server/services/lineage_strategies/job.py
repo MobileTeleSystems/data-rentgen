@@ -8,6 +8,7 @@ from data_rentgen.server.schemas.v1.lineage import (
     LineageEntity,
     LineageEntityKind,
     LineageRelation,
+    LineageRelationKind,
     LineageResponseV1,
 )
 from data_rentgen.server.schemas.v1.operation import OperationResponseV1
@@ -53,7 +54,7 @@ class JobStrategy(AbstractStrategy):
         for run_id, run in runs_by_id.items():
             lineage.relations.append(
                 LineageRelation(
-                    kind="PARENT",
+                    kind=LineageRelationKind.PARENT,
                     from_=LineageEntity(kind=LineageEntityKind.JOB, id=job.id),  # type: ignore[union-attr]
                     to=LineageEntity(kind=LineageEntityKind.RUN, id=run_id),
                 ),
@@ -64,7 +65,7 @@ class JobStrategy(AbstractStrategy):
             lineage.nodes.append(OperationResponseV1.model_validate(operation))
             lineage.relations.append(
                 LineageRelation(
-                    kind="PARENT",
+                    kind=LineageRelationKind.PARENT,
                     from_=LineageEntity(kind=LineageEntityKind.RUN, id=operation.run_id),
                     to=LineageEntity(kind=LineageEntityKind.OPERATION, id=operation.id),
                 ),
@@ -77,7 +78,7 @@ class JobStrategy(AbstractStrategy):
 
             lineage.relations.append(
                 LineageRelation(
-                    kind="INTERACTION",
+                    kind=LineageRelationKind.INTERACTION,
                     type=interaction.type.value,
                     from_=(
                         LineageEntity(kind=LineageEntityKind.OPERATION, id=interaction.operation_id)

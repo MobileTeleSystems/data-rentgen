@@ -7,6 +7,7 @@ from data_rentgen.server.schemas.v1.lineage import (
     LineageEntity,
     LineageEntityKind,
     LineageRelation,
+    LineageRelationKind,
     LineageResponseV1,
 )
 from data_rentgen.server.schemas.v1.operation import OperationResponseV1
@@ -40,7 +41,7 @@ class DatasetStrategy(AbstractStrategy):
         for interaction in interactions:
             lineage.relations.append(
                 LineageRelation(
-                    kind="INTERACTION",
+                    kind=LineageRelationKind.INTERACTION,
                     type=interaction.type.value,
                     from_=(
                         LineageEntity(kind=LineageEntityKind.OPERATION, id=interaction.operation_id)
