@@ -38,6 +38,14 @@ class LineageDirection(str, Enum):
         return self.value
 
 
+class LineageRelationKind(str, Enum):
+    PARENT = "PARENT"
+    INTERACTION = "INTERACTION"
+
+    def __str__(self) -> str:
+        return self.value
+
+
 class LineageEntity(BaseModel):
     kind: LineageEntityKind = Field(description="Type of Lineage entity")
     id: int | UUID = Field(description="Id of Lineage entity")
@@ -90,7 +98,7 @@ class LineageQueryV1(BaseModel):
 
 
 class LineageRelation(BaseModel):
-    kind: str = Field(description="Kind of relation")
+    kind: LineageRelationKind = Field(description="Kind of relation", examples=["PARENT", "INTERACTION"])
     from_: LineageEntity = Field(description="Start point of relation", serialization_alias="from")
     to: LineageEntity = Field(description="End point of relation")
     type: str | None = Field(description="Type of interaction", examples=["READ", "APPEND"], default=None)

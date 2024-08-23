@@ -7,6 +7,7 @@ from data_rentgen.server.schemas.v1.lineage import (
     LineageEntity,
     LineageEntityKind,
     LineageRelation,
+    LineageRelationKind,
     LineageResponseV1,
 )
 from data_rentgen.server.schemas.v1.operation import OperationResponseV1
@@ -47,7 +48,7 @@ class RunStrategy(AbstractStrategy):
         for operation in operations_by_id.values():
             lineage.relations.append(
                 LineageRelation(
-                    kind="PARENT",
+                    kind=LineageRelationKind.PARENT,
                     from_=LineageEntity(kind=LineageEntityKind.RUN, id=run.id),  # type: ignore[union-attr]
                     to=LineageEntity(kind=LineageEntityKind.OPERATION, id=operation.id),
                 ),
@@ -61,7 +62,7 @@ class RunStrategy(AbstractStrategy):
 
             lineage.relations.append(
                 LineageRelation(
-                    kind="INTERACTION",
+                    kind=LineageRelationKind.INTERACTION,
                     type=interaction.type.value,
                     from_=(
                         LineageEntity(kind=LineageEntityKind.OPERATION, id=interaction.operation_id)
