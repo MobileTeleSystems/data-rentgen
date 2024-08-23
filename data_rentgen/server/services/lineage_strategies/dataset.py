@@ -31,6 +31,8 @@ class DatasetStrategy(AbstractStrategy):
         elif direction == LineageDirection.TO:
             direction_type = self._get_direction(LineageDirection.FROM)
         dataset = await self._uow.dataset.get_by_id(point_id)
+        if not dataset:
+            return LineageResponseV1()
         lineage = LineageResponseV1(nodes=[DatasetResponseV1.model_validate(dataset)])
         interactions = await self._uow.interaction.get_by_datasets([point_id], direction_type, since, until)
         operation_ids = [interaction.operation_id for interaction in interactions]
