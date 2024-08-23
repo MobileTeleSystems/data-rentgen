@@ -83,12 +83,6 @@ class RunRepository(Repository[Run]):
         result = await self._session.scalars(query)
         return result.all()
 
-    async def get_by_ids(self, run_ids: list[UUID]) -> Sequence[Run]:
-        created_at = extract_timestamp_from_uuid(min(i for i in run_ids))
-        query = select(Run).where(Run.created_at >= created_at).where(Run.id.in_(run_ids))
-        result = await self._session.scalars(query)
-        return result.all()
-
     async def _get(self, created_at: datetime, run_id: UUID) -> Run | None:
         query = select(Run).where(Run.id == run_id, Run.created_at == created_at)
         return await self._session.scalar(query)
