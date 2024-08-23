@@ -29,7 +29,8 @@ class RunStrategy(AbstractStrategy):
     ) -> LineageResponseV1:
         direction_type = self._get_direction(direction)
         run = await self._uow.run.get_by_id(point_id)
-
+        if not run:
+            return LineageResponseV1()
         lineage = LineageResponseV1(nodes=[RunResponseV1.model_validate(run)])
         all_operations = await self._uow.operation.get_by_run_ids([point_id], since, until)
 

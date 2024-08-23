@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
 from http import HTTPStatus
 
 import pytest
@@ -16,15 +16,23 @@ async def test_get_lineage_no_filter(test_client: AsyncClient):
     response = await test_client.get("v1/lineage")
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.json() == {
+        "detail": [
+            {"input": None, "loc": ["query", "since"], "msg": "Field required", "type": "missing"},
+            {"input": None, "loc": ["query", "point_kind"], "msg": "Field required", "type": "missing"},
+            {"input": None, "loc": ["query", "point_id"], "msg": "Field required", "type": "missing"},
+            {"input": None, "loc": ["query", "direction"], "msg": "Field required", "type": "missing"},
+        ],
+    }
 
 
 @pytest.mark.parametrize(
     "point_kind, point_id",
     [
         ("OPERATION", generate_new_uuid()),
-        ("DATASET", "1"),
+        ("DATASET", 1),
         ("RUN", generate_new_uuid()),
-        ("JOB", "1"),
+        ("JOB", 1),
     ],
     ids=["OPERATION", "DATASET", "RUN", "JOB"],
 )
@@ -32,35 +40,23 @@ async def test_get_lineage_missing_id(
     point_kind: str,
     point_id: str,
     test_client: AsyncClient,
-    lineage: lineage_fixture_annotation,
 ):
-    _, runs, _, _, _ = lineage
+    since = datetime.now()
 
     response = await test_client.get(
         "v1/lineage",
         params={
-            "since": runs[0].created_at.isoformat(),
+            "since": since.isoformat(),
             "point_kind": point_kind,
             "direction": "FROM",
             "point_id": point_id,
         },
     )
 
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.status_code == HTTPStatus.OK
     assert response.json() == {
-        "error": {
-            "code": "invalid_request",
-            "details": [
-                {
-                    "code": "model_attributes_type",
-                    "context": {},
-                    "input": None,
-                    "location": [],
-                    "message": "Input should be a valid dictionary or object to extract fields from",
-                },
-            ],
-            "message": "Invalid request",
-        },
+        "relations": [],
+        "nodes": [],
     }
 
 

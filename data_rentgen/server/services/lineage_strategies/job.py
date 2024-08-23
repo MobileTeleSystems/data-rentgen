@@ -29,7 +29,8 @@ class JobStrategy(AbstractStrategy):
     ):
         direction_type = self._get_direction(direction)
         job = await self._uow.job.get_by_id(point_id)
-
+        if not job:
+            return LineageResponseV1()
         lineage = LineageResponseV1(nodes=[JobResponseV1.model_validate(job)])
 
         all_runs = await self._uow.run.get_by_job_id(point_id, since, until)

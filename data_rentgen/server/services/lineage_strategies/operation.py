@@ -29,6 +29,8 @@ class OperationStrategy(AbstractStrategy):
         direction_type = self._get_direction(direction)
 
         operation = await self._uow.operation.get_by_id(point_id)
+        if not operation:
+            return LineageResponseV1()
         lineage = LineageResponseV1(nodes=[OperationResponseV1.model_validate(operation)])
 
         interactions = await self._uow.interaction.get_by_operations([point_id], direction_type, since, until)
