@@ -28,7 +28,7 @@ class Job(Base):
     __tablename__ = "job"
     __table_args__ = (
         UniqueConstraint("location_id", "name"),
-        Index("ix_job_search_vector", "search_vector", postgresql_using="gin"),
+        Index("ix__job__search_vector", "search_vector", postgresql_using="gin"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
@@ -59,7 +59,7 @@ class Job(Base):
 
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,
-        Computed("to_tsvector('english'::regconfig, COALESCE(name, ''::text))", persisted=True),
+        Computed("to_tsvector('english'::regconfig, COALESCE(translate(name, '/.', ' '), ''::text))", persisted=True),
         nullable=False,
         doc="Full-text search vector",
     )

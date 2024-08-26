@@ -20,7 +20,7 @@ class Location(Base):
     __tablename__ = "location"
     __table_args__ = (
         Index(None, "type", "name", unique=True),
-        Index("ix_location_search_vector", "search_vector", postgresql_using="gin"),
+        Index("ix__location__search_vector", "search_vector", postgresql_using="gin"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
@@ -43,7 +43,7 @@ class Location(Base):
 
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,
-        Computed("to_tsvector('english'::regconfig, COALESCE(name, ''::text))", persisted=True),
+        Computed("to_tsvector('english'::regconfig, COALESCE(translate(name, '/.', ' '), ''::text))", persisted=True),
         nullable=False,
         doc="Full-text search vector",
     )

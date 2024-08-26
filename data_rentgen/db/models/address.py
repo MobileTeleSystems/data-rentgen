@@ -14,7 +14,7 @@ class Address(Base):
     __tablename__ = "address"
     __table_args__ = (
         UniqueConstraint("location_id", "url"),
-        Index("ix_address_search_vector", "search_vector", postgresql_using="gin"),
+        Index("ix__address__search_vector", "search_vector", postgresql_using="gin"),
     )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
@@ -41,7 +41,7 @@ class Address(Base):
 
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,
-        Computed("to_tsvector('english'::regconfig, COALESCE(url, ''::text))", persisted=True),
+        Computed("to_tsvector('english'::regconfig, COALESCE(translate(url, '/.', ' '), ''::text))", persisted=True),
         nullable=False,
         doc="Full-text search vector",
     )

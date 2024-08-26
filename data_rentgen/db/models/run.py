@@ -39,7 +39,7 @@ class Run(Base):
     __tablename__ = "run"
     __table_args__ = (
         PrimaryKeyConstraint("created_at", "id"),
-        Index("ix_run_search_vector", "search_vector", postgresql_using="gin"),
+        Index("ix__run__search_vector", "search_vector", postgresql_using="gin"),
         {"postgresql_partition_by": "RANGE (created_at)"},
     )
 
@@ -139,7 +139,10 @@ class Run(Base):
 
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,
-        Computed("to_tsvector('english'::regconfig, COALESCE(name, ''::text))", persisted=True),
+        Computed(
+            "to_tsvector('english'::regconfig, COALESCE(translate(external_id, '/.', ' '), ''::text))",
+            persisted=True,
+        ),
         nullable=False,
         doc="Full-text search vector",
     )
