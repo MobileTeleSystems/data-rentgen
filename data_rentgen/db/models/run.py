@@ -7,7 +7,15 @@ from datetime import datetime
 from enum import Enum
 
 from sqlalchemy import UUID as SQL_UUID
-from sqlalchemy import BigInteger, DateTime, PrimaryKeyConstraint, String
+from sqlalchemy import (
+    BigInteger,
+    Computed,
+    DateTime,
+    Index,
+    PrimaryKeyConstraint,
+    String,
+)
+from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
 from uuid6 import UUID
@@ -31,6 +39,7 @@ class Run(Base):
     __tablename__ = "run"
     __table_args__ = (
         PrimaryKeyConstraint("created_at", "id"),
+        Index("ix_run_search_vector", "search_vector", postgresql_using="gin"),
         {"postgresql_partition_by": "RANGE (created_at)"},
     )
 
@@ -126,4 +135,11 @@ class Run(Base):
         String,
         nullable=True,
         doc="End reason of the run, e.g. exception string",
+    )
+
+    search_vector: Mapped[str] = mapped_column(
+        TSVECTOR,
+        Computed("to_tsvector('english'::regconfig, COALESCE(name, ''::text))", persisted=True),
+        nullable=False,
+        doc="Full-text search vector",
     )

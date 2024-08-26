@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-from sqlalchemy import BigInteger, ForeignKey, String, UniqueConstraint
+from sqlalchemy import BigInteger, Computed, ForeignKey, Index, String, UniqueConstraint
+from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from data_rentgen.db.models.base import Base
@@ -11,7 +12,10 @@ from data_rentgen.db.models.location import Location
 
 class Address(Base):
     __tablename__ = "address"
-    __table_args__ = (UniqueConstraint("location_id", "url"),)
+    __table_args__ = (
+        UniqueConstraint("location_id", "url"),
+        Index("ix_address_search_vector", "search_vector", postgresql_using="gin"),
+    )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     location_id: Mapped[int] = mapped_column(
@@ -33,4 +37,11 @@ class Address(Base):
         index=True,
         nullable=False,
         doc="Address in URL format",
+    )
+
+    search_vector: Mapped[str] = mapped_column(
+        TSVECTOR,
+        Computed("to_tsvector('english'::regconfig, COALESCE(url, ''::text))", persisted=True),
+        nullable=False,
+        doc="Full-text search vector",
     )

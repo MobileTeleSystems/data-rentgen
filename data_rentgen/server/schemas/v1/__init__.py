@@ -16,6 +16,7 @@ from data_rentgen.server.schemas.v1.pagination import (
     PageMetaResponseV1,
     PageResponseV1,
     PaginateQueryV1,
+    SearchPaginateQueryV1,
 )
 from data_rentgen.server.schemas.v1.run import RunResponseV1, RunsQueryV1
 from data_rentgen.server.schemas.v1.user import UserResponseV1
@@ -37,4 +38,5 @@ __all__ = [
     "JobResponseV1",
     "JobPaginateQueryV1",
     "PaginateQueryV1",
+    "SearchPaginateQueryV1",
 ]

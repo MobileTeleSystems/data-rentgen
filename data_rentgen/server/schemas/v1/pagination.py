@@ -29,6 +29,12 @@ class PaginateQueryV1(BaseModel):
     page_size: int = Field(gt=0, le=50, default=20, description="Number of items per page")  # noqa: WPS432
 
 
+class SearchPaginateQueryV1(PaginateQueryV1):
+    """Query params for search paginate request."""
+
+    query: str = Field(min_length=3, description="Search query")
+
+
 class PageResponseV1(BaseModel, Generic[T]):
     """Page response."""
 

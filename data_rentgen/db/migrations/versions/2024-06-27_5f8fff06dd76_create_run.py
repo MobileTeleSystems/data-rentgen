@@ -9,6 +9,7 @@ Create Date: 2024-06-27 19:14:50.909604
 """
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = "5f8fff06dd76"
@@ -34,14 +35,22 @@ def upgrade() -> None:
         sa.Column("start_reason", sa.String(length=32), nullable=True),
         sa.Column("ended_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("end_reason", sa.String(), nullable=True),
+        sa.Column(
+            "search_vector",
+            postgresql.TSVECTOR(),
+            sa.Computed("to_tsvector('english'::regconfig, COALESCE(external_id, ''::text))", persisted=True),
+            nullable=False,
+        ),
         sa.PrimaryKeyConstraint("created_at", "id", name=op.f("pk__run")),
         postgresql_partition_by="RANGE (created_at)",
     )
     op.create_index(op.f("ix__run__job_id"), "run", ["job_id"], unique=False)
     op.create_index(op.f("ix__run__parent_run_id"), "run", ["parent_run_id"], unique=False)
+    op.create_index(op.f("ix__run__search_vector"), "run", ["search_vector"], unique=False, postgresql_using="gin")
 
 
 def downgrade() -> None:
     op.drop_index(op.f("ix__run__parent_run_id"), table_name="run")
     op.drop_index(op.f("ix__run__job_id"), table_name="run")
+    op.drop_index(op.f("ix__run__search_vector"), table_name="run", postgresql_using="gin")
     op.drop_table("run")

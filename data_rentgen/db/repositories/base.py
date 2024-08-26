@@ -32,6 +32,30 @@ class Repository(ABC, Generic[Model]):
         # Get `User` from `UserRepository(Repository[User])`
         return cls.__orig_bases__[0].__args__[0]  # type: ignore[attr-defined]
 
+    async def search(self, search_query: str, page: int, page_size: int) -> PaginationDTO[Model]:
+        model_type = self.model_type()
+        ts_query = func.to_tsquery("english", search_query)
+        query = (
+            select(model_type)
+            .where(model_type.search_vector.op("@@")(ts_query))  # type: ignore[attr-defined]
+            .order_by(
+                func.ts_rank(model_type.search_vector, ts_query).desc(),  # type: ignore[attr-defined]
+            )
+            .limit(page_size)
+            .offset((page - 1) * page_size)
+        )
+        items_result: ScalarResult[Model] = await self._session.scalars(query)
+        total_count: int = await self._session.scalar(  # type: ignore[assignment]
+            select(func.count()).select_from(query.subquery()),
+        )
+
+        return PaginationDTO[model_type](  # type: ignore[valid-type]
+            items=list(items_result.all()),
+            total_count=total_count,
+            page=page,
+            page_size=page_size,
+        )
+
     async def _paginate_by_query(
         self,
         order_by: list[SQLColumnExpression],
