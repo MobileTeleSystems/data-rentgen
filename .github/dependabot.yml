@@ -19,6 +19,9 @@ updates:
       interval: weekly
     labels:
       - type:dependency
+    ignore:
+      # https://github.com/sphinx-contrib/sphinxcontrib-towncrier/issues/92
+      - dependency-name: towncrier
     # https://til.simonwillison.net/github/dependabot-python-setup
     groups:
       python-packages:
