@@ -77,3 +77,29 @@ async def datasets(
             async_session.expunge(item)
 
     yield items
+
+
+@pytest_asyncio.fixture(params=[{}])
+async def datasets_with_clear_name(
+    request: pytest.FixtureRequest,
+    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    addresses: list[Address],
+) -> AsyncGenerator[list[Dataset], None]:
+    params = request.param
+    names = ["postgres.public.history", "postgres.public.location_history", "/user/hive/warehouse/transfers"]
+    items = [dataset_factory(location_id=choice(addresses).location_id, name=name, **params) for name in names]
+
+    async with async_session_maker() as async_session:
+        for item in items:
+            del item.id
+            async_session.add(item)
+        # this is not required for backend tests, but needed by client tests
+        await async_session.commit()
+
+        # remove current object from async_session. this is required to compare object against new state fetched
+        # from database, and also to remove it from cache
+        for item in items:
+            await async_session.refresh(item)
+            async_session.expunge(item)
+
+    yield items

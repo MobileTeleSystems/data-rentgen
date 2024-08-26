@@ -38,7 +38,10 @@ def upgrade() -> None:
         sa.Column(
             "search_vector",
             postgresql.TSVECTOR(),
-            sa.Computed("to_tsvector('english'::regconfig, COALESCE(external_id, ''::text))", persisted=True),
+            sa.Computed(
+                "to_tsvector('english'::regconfig, COALESCE(translate(external_id, '/.', '  '), ''::text))",
+                persisted=True,
+            ),
             nullable=False,
         ),
         sa.PrimaryKeyConstraint("created_at", "id", name=op.f("pk__run")),

@@ -30,7 +30,7 @@ async def paginate_datasets(
     return PageResponseV1[DatasetResponseV1].from_pagination(pagination)
 
 
-@router.get("/search/", summary="Search Datasets by name")
+@router.get("/search", summary="Search Datasets by name")
 async def search_datasets(
     pagination_args: Annotated[SearchPaginateQueryV1, Depends()],
     unit_of_work: Annotated[UnitOfWork, Depends()],
@@ -38,6 +38,6 @@ async def search_datasets(
     pagination = await unit_of_work.dataset.search(
         page=pagination_args.page,
         page_size=pagination_args.page_size,
-        search_query=pagination_args.query,
+        search_query=pagination_args.search_query,
     )
     return PageResponseV1[DatasetResponseV1].from_pagination(pagination)

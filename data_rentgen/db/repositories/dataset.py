@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from typing import Sequence
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Dataset, Location
@@ -46,6 +46,18 @@ class DatasetRepository(Repository[Dataset]):
         )
         result = await self._session.scalars(query)
         return result.all()
+
+    async def search(self, search_query: str, page: int, page_size: int) -> PaginationDTO[Dataset]:
+        ts_query = func.plainto_tsquery("english", func.translate(search_query, "/.", "  "))
+        query = (
+            select(Dataset)
+            .where(Dataset.search_vector.op("@@")(ts_query))
+            .options(selectinload(Dataset.location).selectinload(Location.addresses))
+            .limit(page_size)
+            .offset((page - 1) * page_size)
+        )
+        order_by = [func.ts_rank(Dataset.search_vector, ts_query).desc()]
+        return await self._paginate_by_query(order_by=order_by, page=page, page_size=page_size, query=query)  # type: ignore[arg-type]
 
     async def _get(self, location_id: int, name: str) -> Dataset | None:
         statement = select(Dataset).where(Dataset.location_id == location_id, Dataset.name == name)

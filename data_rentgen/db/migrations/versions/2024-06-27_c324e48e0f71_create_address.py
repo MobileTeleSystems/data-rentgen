@@ -27,7 +27,10 @@ def upgrade() -> None:
         sa.Column(
             "search_vector",
             postgresql.TSVECTOR(),
-            sa.Computed("to_tsvector('english'::regconfig, COALESCE(url, ''::text))", persisted=True),
+            sa.Computed(
+                "to_tsvector('english'::regconfig, COALESCE(translate(url, '/.', '  '), ''::text))",
+                persisted=True,
+            ),
             nullable=False,
         ),
         sa.ForeignKeyConstraint(

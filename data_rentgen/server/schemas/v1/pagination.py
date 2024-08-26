@@ -32,7 +32,7 @@ class PaginateQueryV1(BaseModel):
 class SearchPaginateQueryV1(PaginateQueryV1):
     """Query params for search paginate request."""
 
-    query: str = Field(min_length=3, description="Search query")
+    search_query: str = Field(min_length=3, description="Search query")
 
 
 class PageResponseV1(BaseModel, Generic[T]):
