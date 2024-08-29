@@ -3140,4 +3140,4 @@ server = ["alembic", "asgi-correlation-id", "coloredlogs", "fastapi", "pydantic-
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "47493d9933e399a297bc5f9400fe5fc705a79c7029af57b31125026eda2cb1d2"
+content-hash = "4f5be402b32dba65e92c24b7c9995143337f53ec729e1c4e8a3c09f0a9513cb2"
