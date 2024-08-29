@@ -29,7 +29,7 @@ def upgrade() -> None:
             "search_vector",
             postgresql.TSVECTOR(),
             sa.Computed(
-                "to_tsvector('english'::regconfig, COALESCE(translate(name, '/.', '  '), ''::text))",
+                "to_tsvector('english'::regconfig, COALESCE(translate(name, '/.', ' '), ''::text) || ' ' || COALESCE(translate(type, '/.', ' '), ''::text))",
                 persisted=True,
             ),
             nullable=False,
