@@ -44,7 +44,7 @@ class Location(Base):
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,
         Computed(
-            "to_tsvector('english'::regconfig, COALESCE(translate(name, '/.', ' '), ''::text) || ' ' || COALESCE(translate(type, '/.', ' '), ''::text))",
+            "to_tsvector('english'::regconfig, name || ' ' || (translate(name, '/.', ' ')) || ' ' || type)",
             persisted=True,
         ),
         nullable=False,

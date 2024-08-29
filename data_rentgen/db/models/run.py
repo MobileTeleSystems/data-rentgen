@@ -140,7 +140,7 @@ class Run(Base):
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,
         Computed(
-            "to_tsvector('english'::regconfig, COALESCE(translate(external_id, '/.', ' '), ''::text))",
+            "to_tsvector('english'::regconfig, external_id || ' ' || (translate(external_id, '/.', '  ')))",
             persisted=True,
         ),
         nullable=False,

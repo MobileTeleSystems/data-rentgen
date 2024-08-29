@@ -51,8 +51,11 @@ class DatasetRepository(Repository[Dataset]):
         return result.all()
 
     async def search(self, search_query: str, page: int, page_size: int) -> PaginationDTO[Dataset]:
-        search_query = search_query.translate(ts_query_punctuation_map)
-        ts_query = func.plainto_tsquery("english", search_query)
+        ts_query = select(
+            func.plainto_tsquery("english", search_query).op("||")(
+                func.plainto_tsquery("english", search_query.translate(ts_query_punctuation_map)),
+            ),
+        )
         base_stmt = select(Dataset.id)
         dataset_stmt = (
             base_stmt.add_columns((func.ts_rank(Dataset.search_vector, ts_query)).label("search_rank"))

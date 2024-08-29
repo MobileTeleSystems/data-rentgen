@@ -41,7 +41,7 @@ class Address(Base):
 
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,
-        Computed("to_tsvector('english'::regconfig, COALESCE(translate(url, '/.', ' '), ''::text))", persisted=True),
+        Computed("to_tsvector('english'::regconfig, url || ' ' || (translate(url, '/.', '  ')))", persisted=True),
         nullable=False,
         doc="Full-text search vector",
     )
