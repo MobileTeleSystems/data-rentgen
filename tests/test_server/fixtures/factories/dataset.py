@@ -11,8 +11,6 @@ from tests.test_server.fixtures.factories.address import address_factory
 from tests.test_server.fixtures.factories.base import random_string
 from tests.test_server.fixtures.factories.location import location_factory
 
-dataset_search_fixture_annotation = tuple[list[Address], list[Location], list[Dataset]]
-
 
 def dataset_factory(**kwargs):
     data = {
@@ -87,7 +85,7 @@ async def datasets(
 async def datasets_search(
     request: pytest.FixtureRequest,
     async_session: AsyncSession,
-) -> AsyncGenerator[tuple[list[Address], list[Location], list[Dataset]], None]:
+) -> AsyncGenerator[list[Dataset], None]:
     """
     Fixture with explicit dataset, locations and addresses names for search tests.
     The fixtures create database structure like this:
@@ -175,4 +173,4 @@ async def datasets_search(
         await async_session.refresh(item)
         async_session.expunge(item)
 
-    yield addresses, locations, datasets
+    yield datasets

@@ -7,10 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import select
 
-from data_rentgen.db.models import Address, Dataset, Location
-from tests.test_server.fixtures.factories.dataset import (
-    dataset_search_fixture_annotation,
-)
+from data_rentgen.db.models import Dataset, Location
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
@@ -28,11 +25,10 @@ async def test_dataset_search_no_query(test_client: AsyncClient, datasets: list[
 async def test_dataset_search_in_addres_url(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    datasets_search: dataset_search_fixture_annotation,
+    datasets_search: list[Dataset],
 ) -> None:
-    _, _, datasets = datasets_search
     # dataset with id 8 has two addresses urls: [hdfs://my-cluster-namenode:2080, hdfs://my-cluster-namenode:8020] and random name
-    dataset = datasets[8]
+    dataset = datasets_search[8]
     query = (
         select(Location)
         .join(Dataset, Dataset.location_id == Location.id)
@@ -77,14 +73,12 @@ async def test_dataset_search_in_addres_url(
 async def test_dataset_search_in_location_name(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    datasets_search: dataset_search_fixture_annotation,
+    datasets_search: list[Dataset],
 ) -> None:
-
-    _, _, datasets = datasets_search
     # Datasets with ids 3 and 4 has location names `postgres.location` and `postgres.history_location`
     # Dataset with id 1 has dataset name `postgres.public.location_history`
     # So this test also cover case: `search in dataset.name + location.name`
-    datasets = [datasets[1], datasets[3], datasets[4]]
+    datasets = [datasets_search[1], datasets_search[3], datasets_search[4]]
     query = (
         select(Dataset)
         .where(Dataset.id.in_([dataset.id for dataset in datasets]))
@@ -133,12 +127,10 @@ async def test_dataset_search_in_location_name(
 async def test_dataset_search_in_dataset_name(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    datasets_search: dataset_search_fixture_annotation,
+    datasets_search: list[Dataset],
 ) -> None:
-
-    _, _, datasets = datasets_search
     # Dataset with id 1 has dataset name `postgres.public.location_history`
-    dataset = datasets[1]
+    dataset = datasets_search[1]
     query = (
         select(Dataset)
         .where(Dataset.id.in_([dataset.id]))
@@ -184,12 +176,11 @@ async def test_dataset_search_in_dataset_name(
 async def test_dataset_search_in_location_name_and_address_url(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    datasets_search: dataset_search_fixture_annotation,
+    datasets_search: list[Dataset],
 ) -> None:
-    _, _, datasets = datasets_search
     # Dataset with id 5 has location name `my-cluster`
     # Dataset with id 8 has address url `hdfs://my-cluster-namenode:2080` and `hdfs://my-cluster-namenode:8020`
-    datasets = [datasets[5], datasets[8]]
+    datasets = [datasets_search[5], datasets_search[8]]
     query = (
         select(Dataset)
         .where(Dataset.id.in_([dataset.id for dataset in datasets]))
