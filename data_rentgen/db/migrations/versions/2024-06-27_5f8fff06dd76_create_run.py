@@ -39,10 +39,9 @@ def upgrade() -> None:
             "search_vector",
             postgresql.TSVECTOR(),
             sa.Computed(
-                "to_tsvector('english'::regconfig, external_id || ' ' || (translate(external_id, '/.', '  ')))",
+                "to_tsvector('english'::regconfig, COALESCE(external_id, ''::text) || ' ' || (translate(external_id, '/.', '  ')))",
                 persisted=True,
             ),
-            nullable=True,
         ),
         sa.PrimaryKeyConstraint("created_at", "id", name=op.f("pk__run")),
         postgresql_partition_by="RANGE (created_at)",

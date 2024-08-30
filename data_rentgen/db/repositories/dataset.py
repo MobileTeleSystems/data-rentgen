@@ -51,11 +51,14 @@ class DatasetRepository(Repository[Dataset]):
         return result.all()
 
     async def search(self, search_query: str, page: int, page_size: int) -> PaginationDTO[Dataset]:
+        # For more accurate full-text search, we create a tsquery by combining the `search_query` "as is" with
+        # a modified version of it using the '||' operator.
+        # In the modified version of `search_query`, punctuation is replaced with spaces using `translate`.
         ts_query = select(
             func.plainto_tsquery("english", search_query).op("||")(
                 func.plainto_tsquery("english", search_query.translate(ts_query_punctuation_map)),
             ),
-        )
+        ).scalar_subquery()
         base_stmt = select(Dataset.id)
         dataset_stmt = (
             base_stmt.add_columns((func.ts_rank(Dataset.search_vector, ts_query)).label("search_rank"))
