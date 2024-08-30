@@ -42,7 +42,7 @@ def upgrade() -> None:
                 "to_tsvector('english'::regconfig, external_id || ' ' || (translate(external_id, '/.', '  ')))",
                 persisted=True,
             ),
-            nullable=False,
+            nullable=True,
         ),
         sa.PrimaryKeyConstraint("created_at", "id", name=op.f("pk__run")),
         postgresql_partition_by="RANGE (created_at)",

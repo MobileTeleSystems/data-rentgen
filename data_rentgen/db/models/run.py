@@ -143,6 +143,6 @@ class Run(Base):
             "to_tsvector('english'::regconfig, external_id || ' ' || (translate(external_id, '/.', '  ')))",
             persisted=True,
         ),
-        nullable=False,
+        nullable=True,
         doc="Full-text search vector",
     )
