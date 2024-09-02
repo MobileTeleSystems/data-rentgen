@@ -85,7 +85,7 @@ async def datasets(
 async def datasets_search(
     request: pytest.FixtureRequest,
     async_session: AsyncSession,
-) -> AsyncGenerator[list[Dataset], None]:
+) -> AsyncGenerator[dict[str, Dataset], None]:
     """
     Fixture with explicit dataset, locations and addresses names for search tests.
     The fixtures create database structure like this:
@@ -114,7 +114,6 @@ async def datasets_search(
     tip: you can imagine it like identity matrix with not-random names on diagonal.
     """
     request.param
-
     location_names = ["postgres.location", "postgres.history_location", "my-cluster"]
     locations_with_names = [
         location_factory(name=name, type=location_type)
@@ -160,7 +159,6 @@ async def datasets_search(
     ]
     datasets_with_random_name = [dataset_factory(location_id=location.id) for location in locations[:6]]
     datasets = datasets_with_name + datasets_with_random_name
-
     for item in addresses + datasets:
         del item.id
         async_session.add(item)
@@ -173,4 +171,13 @@ async def datasets_search(
         await async_session.refresh(item)
         async_session.expunge(item)
 
-    yield datasets
+    entities = {name: dataset for name, dataset in zip(datasets_names, datasets[:3])}
+    entities.update({name: dataset for name, dataset in zip(location_names, datasets[3:6])})
+    entities.update(
+        {
+            name: dataset
+            for name, dataset in zip(addresses_url, [dataset for dataset in datasets[6:] for _ in range(2)])
+        },
+    )
+
+    yield entities

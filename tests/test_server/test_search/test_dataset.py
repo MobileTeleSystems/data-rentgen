@@ -25,10 +25,10 @@ async def test_dataset_search_no_query(test_client: AsyncClient, datasets: list[
 async def test_dataset_search_in_addres_url(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    datasets_search: list[Dataset],
+    datasets_search: dict[str, Dataset],
 ) -> None:
     # dataset with id 8 has two addresses urls: [hdfs://my-cluster-namenode:2080, hdfs://my-cluster-namenode:8020] and random name
-    dataset = datasets_search[8]
+    dataset = datasets_search["hdfs://my-cluster-namenode:2080"]
     query = (
         select(Location)
         .join(Dataset, Dataset.location_id == Location.id)
@@ -73,12 +73,17 @@ async def test_dataset_search_in_addres_url(
 async def test_dataset_search_in_location_name(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    datasets_search: list[Dataset],
+    datasets_search: dict[str, Dataset],
 ) -> None:
     # Datasets with ids 3 and 4 has location names `postgres.location` and `postgres.history_location`
     # Dataset with id 1 has dataset name `postgres.public.location_history`
     # So this test also cover case: `search in dataset.name + location.name`
-    datasets = [datasets_search[1], datasets_search[3], datasets_search[4]]
+
+    datasets = [
+        datasets_search["postgres.public.location_history"],
+        datasets_search["postgres.location"],
+        datasets_search["postgres.history_location"],
+    ]
     query = (
         select(Dataset)
         .where(Dataset.id.in_([dataset.id for dataset in datasets]))
@@ -127,10 +132,10 @@ async def test_dataset_search_in_location_name(
 async def test_dataset_search_in_dataset_name(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    datasets_search: list[Dataset],
+    datasets_search: dict[str, Dataset],
 ) -> None:
     # Dataset with id 1 has dataset name `postgres.public.location_history`
-    dataset = datasets_search[1]
+    dataset = datasets_search["postgres.public.location_history"]
     query = (
         select(Dataset)
         .where(Dataset.id.in_([dataset.id]))
@@ -176,11 +181,11 @@ async def test_dataset_search_in_dataset_name(
 async def test_dataset_search_in_location_name_and_address_url(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    datasets_search: list[Dataset],
+    datasets_search: dict[str, Dataset],
 ) -> None:
     # Dataset with id 5 has location name `my-cluster`
     # Dataset with id 8 has address url `hdfs://my-cluster-namenode:2080` and `hdfs://my-cluster-namenode:8020`
-    datasets = [datasets_search[5], datasets_search[8]]
+    datasets = [datasets_search["my-cluster"], datasets_search["hdfs://my-cluster-namenode:8020"]]
     query = (
         select(Dataset)
         .where(Dataset.id.in_([dataset.id for dataset in datasets]))

@@ -53,7 +53,11 @@ class DatasetRepository(Repository[Dataset]):
     async def search(self, search_query: str, page: int, page_size: int) -> PaginationDTO[Dataset]:
         # For more accurate full-text search, we create a tsquery by combining the `search_query` "as is" with
         # a modified version of it using the '||' operator.
-        # In the modified version of `search_query`, punctuation is replaced with spaces using `translate`.
+        # The "as is" version is used so that an exact match with the query has the highest rank.
+        # The modified version is needed because, in some cases, PostgreSQL tokenizes words joined by punctuation marks
+        # (e.g., `database.schema.table`) as a single word. By replacing punctuation with spaces using `translate`,
+        # we split such strings into separate words, allowing us to search by parts of the name.
+
         ts_query = select(
             func.plainto_tsquery("english", search_query).op("||")(
                 func.plainto_tsquery("english", search_query.translate(ts_query_punctuation_map)),
