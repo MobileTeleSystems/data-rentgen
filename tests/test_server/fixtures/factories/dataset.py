@@ -6,8 +6,10 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.db.models import Address, Dataset
+from data_rentgen.db.models import Address, Dataset, Location
+from tests.test_server.fixtures.factories.address import address_factory
 from tests.test_server.fixtures.factories.base import random_string
+from tests.test_server.fixtures.factories.location import location_factory
 
 
 def dataset_factory(**kwargs):
@@ -77,3 +79,105 @@ async def datasets(
             async_session.expunge(item)
 
     yield items
+
+
+@pytest_asyncio.fixture(params=[{}])
+async def datasets_search(
+    request: pytest.FixtureRequest,
+    async_session: AsyncSession,
+) -> AsyncGenerator[dict[str, Dataset], None]:
+    """
+    Fixture with explicit dataset, locations and addresses names for search tests.
+    The fixtures create database structure like this:
+    |Dataset ID | Dataset.name                       | Location.name               | Location.type | Address.url                        |
+    |---------- | ---------------------------------- | --------------------------- | ------------- | ---------------------------------- |
+    |0          | 'postgres.public.history'          | 'random-location-name'      | 'kafka'       | 'random-url'                       |
+    |0          | 'postgres.public.history'          | 'random-location-name'      | 'kafka'       | 'random-url'                       |
+    |1          | 'postgres.public.location_history' | 'random-location-name'      | 'kafka'       | 'random-url'                       |
+    |1          | 'postgres.public.location_history' | 'random-location-name'      | 'kafka'       | 'random-url'                       |
+    |2          | '/user/hive/warehouse/transfers'   | 'random-location-name'      | 'kafka'       | 'random-url'                       |
+    |2          | '/user/hive/warehouse/transfers'   | 'random-location-name'      | 'kafka'       | 'random-url'                       |
+    |3          | 'random-dataset-name'              | 'postgres.location'         | 'postgres'    | 'random-url'                       |
+    |3          | 'random-dataset-name'              | 'postgres.location'         | 'postgres'    | 'random-url'                       |
+    |4          | 'random-dataset-name'              | 'postgres.history_location' | 'postgres'    | 'random-url'                       |
+    |4          | 'random-dataset-name'              | 'postgres.history_location' | 'postgres'    | 'random-url'                       |
+    |5          | 'random-dataset-name'              | 'my-cluster'                | 'hdfs'        | 'random-url'                       |
+    |5          | 'random-dataset-name'              | 'my-cluster'                | 'hdfs'        | 'random-url'                       |
+    |6          | 'random-dataset-name'              | 'random-location-name'      | 'kafka'       | 'http://my-postgres-host:8012'     |
+    |6          | 'random-dataset-name'              | 'random-location-name'      | 'kafka'       | 'http://my-postgres-host:2108'     |
+    |7          | 'random-dataset-name'              | 'random-location-name'      | 'kafka'       | 'http://your-postgres-host:2108'   |
+    |7          | 'random-dataset-name'              | 'random-location-name'      | 'kafka'       | 'http://your-postgres-host:8012'   |
+    |8          | 'random-dataset-name'              | 'random-location-name'      | 'kafka'       | 'hdfs://my-cluster-namenode:2080'  |
+    |8          | 'random-dataset-name'              | 'random-location-name'      | 'kafka'       | 'hdfs://my-cluster-namenode:8020'  |
+
+    Every location relate to two dataset and two addresses. 2-1-2
+    tip: you can imagine it like identity matrix with not-random names on diagonal.
+    """
+    request.param
+    location_names = ["postgres.location", "postgres.history_location", "my-cluster"]
+    locations_with_names = [
+        location_factory(name=name, type=location_type)
+        for name, location_type in zip(location_names, ["postgres", "postgres", "hdfs"])
+    ]
+    locations_with_random_name = [location_factory(type="kafka") for _ in range(6)]
+    locations = locations_with_names + locations_with_random_name
+
+    for item in locations:
+        del item.id
+        async_session.add(item)
+    # this is not required for backend tests, but needed by client tests
+    await async_session.commit()
+
+    # remove current object from async_session. this is required to compare object against new state fetched
+    # from database, and also to remove it from cache
+    for item in locations:
+        await async_session.refresh(item)
+        async_session.expunge(item)
+
+    addresses_url = (
+        ["http://my-postgres-host:8012", "http://my-postgres-host:2108"]
+        + ["http://your-postgres-host:8012", "http://your-postgres-host:2108"]
+        + ["hdfs://my-cluster-namenode:8020", "hdfs://my-cluster-namenode:2080"]
+    )
+    # Each location has 2 addresses
+    addresses_with_name = [
+        address_factory(url=url, location_id=location.id)
+        for url, location in zip(
+            addresses_url,
+            [location for location in locations_with_random_name[:3] for _ in range(2)],
+        )
+    ]
+    addresses_with_random_name = [
+        address_factory(location_id=location.id) for location in (locations[:3] + locations[6:]) * 2
+    ]
+    addresses = addresses_with_name + addresses_with_random_name
+
+    datasets_names = ["postgres.public.history", "postgres.public.location_history", "/user/hive/warehouse/transfers"]
+    datasets_with_name = [
+        dataset_factory(name=name, location_id=location.id)
+        for name, location in zip(datasets_names, locations_with_random_name[3:])
+    ]
+    datasets_with_random_name = [dataset_factory(location_id=location.id) for location in locations[:6]]
+    datasets = datasets_with_name + datasets_with_random_name
+    for item in addresses + datasets:
+        del item.id
+        async_session.add(item)
+    # this is not required for backend tests, but needed by client tests
+    await async_session.commit()
+
+    # remove current object from async_session. this is required to compare object against new state fetched
+    # from database, and also to remove it from cache
+    for item in addresses + datasets:
+        await async_session.refresh(item)
+        async_session.expunge(item)
+
+    entities = {name: dataset for name, dataset in zip(datasets_names, datasets[:3])}
+    entities.update({name: dataset for name, dataset in zip(location_names, datasets[3:6])})
+    entities.update(
+        {
+            name: dataset
+            for name, dataset in zip(addresses_url, [dataset for dataset in datasets[6:] for _ in range(2)])
+        },
+    )
+
+    yield entities

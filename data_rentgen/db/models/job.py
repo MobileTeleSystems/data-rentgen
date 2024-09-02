@@ -5,7 +5,8 @@ from __future__ import annotations
 
 from enum import Enum
 
-from sqlalchemy import BigInteger, ForeignKey, String, UniqueConstraint
+from sqlalchemy import BigInteger, Computed, ForeignKey, Index, String, UniqueConstraint
+from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
 
@@ -25,7 +26,10 @@ class JobType(str, Enum):
 
 class Job(Base):
     __tablename__ = "job"
-    __table_args__ = (UniqueConstraint("location_id", "name"),)
+    __table_args__ = (
+        UniqueConstraint("location_id", "name"),
+        Index("ix__job__search_vector", "search_vector", postgresql_using="gin"),
+    )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
 
@@ -51,4 +55,11 @@ class Job(Base):
         nullable=False,
         default=JobType.UNKNOWN,
         doc="Job type, e.g. AIRFLOW_DAG, AIRFLOW_TASK, SPARK_APPLICATION",
+    )
+
+    search_vector: Mapped[str] = mapped_column(
+        TSVECTOR,
+        Computed("to_tsvector('english'::regconfig, name || ' ' || (translate(name, '/.', '  ')))", persisted=True),
+        nullable=False,
+        doc="Full-text search vector",
     )

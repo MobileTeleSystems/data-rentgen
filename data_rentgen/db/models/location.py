@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import BigInteger, Index, String
+from sqlalchemy import BigInteger, Computed, Index, String
+from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from data_rentgen.db.models.base import Base
@@ -17,7 +18,10 @@ class Location(Base):
     """Some network location where data is bound to"""
 
     __tablename__ = "location"
-    __table_args__ = (Index(None, "type", "name", unique=True),)
+    __table_args__ = (
+        Index(None, "type", "name", unique=True),
+        Index("ix__location__search_vector", "search_vector", postgresql_using="gin"),
+    )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
     type: Mapped[str] = mapped_column(
@@ -35,4 +39,14 @@ class Location(Base):
         "Address",
         lazy="noload",
         back_populates="location",
+    )
+
+    search_vector: Mapped[str] = mapped_column(
+        TSVECTOR,
+        Computed(
+            "to_tsvector('english'::regconfig, name || ' ' || (translate(name, '/.', ' ')) || ' ' || type)",
+            persisted=True,
+        ),
+        nullable=False,
+        doc="Full-text search vector",
     )
