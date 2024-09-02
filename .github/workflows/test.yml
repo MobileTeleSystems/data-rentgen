@@ -64,6 +64,8 @@ jobs:
         with:
           name: raw-coverage-${{ env.DEFAULT_PYTHON }}
           path: reports/.coverage*
+          # https://github.com/actions/upload-artifact/issues/602
+          include-hidden-files: true
 
       - name: Shutdown containers
         if: always()
