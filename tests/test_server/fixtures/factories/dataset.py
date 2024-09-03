@@ -115,9 +115,13 @@ async def datasets_search(
     """
     request.param
     location_names = ["postgres.location", "postgres.history_location", "my-cluster"]
+    location_names_types = [
+        ("postgres.location", "postgres"),
+        ("postgres.history_location", "postgres"),
+        ("my-cluster", "hdfs"),
+    ]
     locations_with_names = [
-        location_factory(name=name, type=location_type)
-        for name, location_type in zip(location_names, ["postgres", "postgres", "hdfs"])
+        location_factory(name=name, type=location_type) for name, location_type in location_names_types
     ]
     locations_with_random_name = [location_factory(type="kafka") for _ in range(6)]
     locations = locations_with_names + locations_with_random_name

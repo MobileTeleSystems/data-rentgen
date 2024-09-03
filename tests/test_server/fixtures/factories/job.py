@@ -91,8 +91,8 @@ async def jobs_search(
     The fixtures create database structure like this:
     |Job ID     | Job.name                           | Location.name               | Location.type | Address.url                        |
     |---------- | ---------------------------------- | --------------------------- | ------------- | ---------------------------------- |
-    |0          | 'spark-job'                        | 'random-location-name'      | 'kafka'       | 'random-url'                       |
-    |0          | 'spark-job'                        | 'random-location-name'      | 'kafka'       | 'random-url'                       |
+    |0          | 'airflow-task'                     | 'random-location-name'      | 'kafka'       | 'random-url'                       |
+    |0          | 'airflow-task'                     | 'random-location-name'      | 'kafka'       | 'random-url'                       |
     |1          | 'spark-application'                | 'random-location-name'      | 'kafka'       | 'random-url'                       |
     |1          | 'spark-application'                | 'random-location-name'      | 'kafka'       | 'random-url'                       |
     |2          | 'airflow-dag'                      | 'random-location-name'      | 'kafka'       | 'random-url'                       |
@@ -103,21 +103,21 @@ async def jobs_search(
     |4          | 'random-job-name'                  | 'my-cluster'                | 'yarn'        | 'random-url'                       |
     |5          | 'random-job-name'                  | 'data-product:8020'         | 'http'        | 'random-url'                       |
     |5          | 'random-job-name'                  | 'data-product:8020'         | 'htpp'        | 'random-url'                       |
-    |6          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'yarn:dwh:8012'                    |
-    |6          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'yarn:dwh:2108'                    |
-    |7          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'yarn:my-cluster:2108'             |
-    |7          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'yarn:my-cluster:8012'             |
-    |8          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'hdfs://my-cluster-namenode:2080'  |
-    |8          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'hdfs://my-cluster-namenode:8020'  |
+    |6          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'yarn://my_cluster:2080'           |
+    |6          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'yarn://my_cluster:8020'           |
+    |7          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'local://some.host.name:2080'      |
+    |7          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'local://some.host.name:8020'      |
+    |8          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'http://airflow-host:8020'         |
+    |8          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'http://airflow-host:2080'         |
 
     Every location relate to two job and two addresses. 2-1-2
     tip: you can imagine it like identity matrix with not-random names on diagonal.
     """
     request.param
     location_names = ["dwh", "my-cluster", "data-product:8020"]
+    location_names_types = [("dwh", "yarn"), ("my-cluster", "yarn"), ("data-product:8020", "http")]
     locations_with_names = [
-        location_factory(name=name, type=location_type)
-        for name, location_type in zip(location_names, ["yarn", "yarn", "http"])
+        location_factory(name=name, type=location_type) for name, location_type in location_names_types
     ]
     locations_with_random_name = [location_factory(type="kafka") for _ in range(6)]
     locations = locations_with_names + locations_with_random_name
@@ -135,8 +135,8 @@ async def jobs_search(
         async_session.expunge(item)
 
     addresses_url = (
-        ["yarn:dwh:8012", "yarn:dwh:2108"]
-        + ["yarn:my-cluster:8012", "yarn:my-cluster:2108"]
+        ["yarn://my_cluster:8020", "yarn://my_cluster:2080"]
+        + ["local://some.host.name:8020", "local://some.host.name:2080"]
         + ["http://airflow-host:8020", "http://airflow-host:2080"]
     )
     # Each location has 2 addresses
@@ -152,7 +152,7 @@ async def jobs_search(
     ]
     addresses = addresses_with_name + addresses_with_random_name
 
-    jobs_names = ["spark_job", "spark_application", "airflow-dag"]
+    jobs_names = ["airflow-task", "spark_application", "airflow-dag"]
     jobs_with_name = [
         job_factory(name=name, location_id=location.id)
         for name, location in zip(jobs_names, locations_with_random_name[3:])

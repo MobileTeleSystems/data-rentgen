@@ -119,8 +119,9 @@ async def test_job_search_in_job_name(
     async_session: AsyncSession,
     jobs_search: dict[str, Job],
 ) -> None:
-    # Jobs with ids 0 and 1 has job name `spark_job` and `spark_application`
-    jobs = [jobs_search["spark_application"], jobs_search["spark_job"]]
+    # Jobs with ids 0 and 2 has job name `airflow-task` and `airflow-task`
+    # Jobs with id 8 has two addresses urls: [http://airflow-host:2080, http://airflow-host:8020]
+    jobs = [jobs_search["airflow-task"], jobs_search["airflow-dag"], jobs_search["http://airflow-host:8020"]]
     query = (
         select(Job)
         .where(Job.id.in_([job.id for job in jobs]))
@@ -149,13 +150,13 @@ async def test_job_search_in_job_name(
             "page_size": 20,
             "pages_count": 1,
             "previous_page": None,
-            "total_count": 2,
+            "total_count": 3,
         },
     }
 
     response = await test_client.get(
         "/v1/jobs/search",
-        params={"search_query": "spark"},
+        params={"search_query": "airflow"},
     )
 
     # At this case the order is unstable
@@ -169,8 +170,8 @@ async def test_job_search_in_location_name_and_address_url(
     jobs_search: dict[str, Job],
 ) -> None:
     # Job with id 4 has location name `my-cluster`
-    # Job with id 7 has address url `yarn:my-cluster:8012` and `yarn:my-cluster:2108`
-    jobs = [jobs_search["my-cluster"], jobs_search["yarn:my-cluster:8012"]]
+    # Job with id 7 has address url `yarn://my_cluster:2080`
+    jobs = [jobs_search["my-cluster"], jobs_search["yarn://my_cluster:2080"]]
     query = (
         select(Job)
         .where(Job.id.in_([job.id for job in jobs]))
