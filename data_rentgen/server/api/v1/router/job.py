@@ -10,6 +10,7 @@ from data_rentgen.server.schemas.v1 import (
     JobPaginateQueryV1,
     JobResponseV1,
     PageResponseV1,
+    SearchPaginateQueryV1,
 )
 from data_rentgen.services import UnitOfWork
 
@@ -26,4 +27,18 @@ async def paginate_jobs(
         page_size=pagination_args.page_size,
         job_ids=pagination_args.job_id,
     )
+    return PageResponseV1[JobResponseV1].from_pagination(pagination)
+
+
+@router.get("/search", summary="Search Jobs")
+async def search_jobs(
+    pagination_args: Annotated[SearchPaginateQueryV1, Depends()],
+    unit_of_work: Annotated[UnitOfWork, Depends()],
+) -> PageResponseV1[JobResponseV1]:
+    pagination = await unit_of_work.job.search(
+        page=pagination_args.page,
+        page_size=pagination_args.page_size,
+        search_query=pagination_args.search_query,
+    )
+
     return PageResponseV1[JobResponseV1].from_pagination(pagination)
