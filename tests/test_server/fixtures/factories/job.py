@@ -101,10 +101,10 @@ async def jobs_search(
     |3          | 'random-job-name'                  | 'dwh'                       | 'yarn'        | 'random-url'                       |
     |4          | 'random-job-name'                  | 'my-cluster'                | 'yarn'        | 'random-url'                       |
     |4          | 'random-job-name'                  | 'my-cluster'                | 'yarn'        | 'random-url'                       |
-    |5          | 'random-job-name'                  | 'data-product:8020'         | 'http'        | 'random-url'                       |
-    |5          | 'random-job-name'                  | 'data-product:8020'         | 'htpp'        | 'random-url'                       |
+    |5          | 'random-job-name'                  | 'data-product-host'         | 'http'        | 'random-url'                       |
+    |5          | 'random-job-name'                  | 'data-product-host'         | 'http'        | 'random-url'                       |
     |6          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'http://my_cluster:2080'           |
-    |6          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'htpp://my_cluster:8020'           |
+    |6          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'http://my_cluster:8020'           |
     |7          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'http://some.host.name:2080'       |
     |7          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'http://some.host.name:8020'       |
     |8          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'http://airflow-host:8020'         |
@@ -113,7 +113,7 @@ async def jobs_search(
     tip: you can imagine it like identity matrix with not-random names on diagonal.
     """
     request.param
-    location_names_types = [("dwh", "yarn"), ("my-cluster", "yarn"), ("data-product:8020", "http")]
+    location_names_types = [("dwh", "yarn"), ("my-cluster", "yarn"), ("data-product-host", "http")]
     locations_with_names = [
         location_factory(name=name, type=location_type) for name, location_type in location_names_types
     ]

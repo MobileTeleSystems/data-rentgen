@@ -72,9 +72,9 @@ async def test_job_search_in_location_name(
     async_session: AsyncSession,
     jobs_search: dict[str, Job],
 ) -> None:
-    # Job with id 5 has location names `data-product:8020`
+    # Job with id 5 has location names `data-product-host`
 
-    job = jobs_search["data-product:8020"]
+    job = jobs_search["data-product-host"]
     query = select(Job).where(Job.id.in_([job.id])).options(selectinload(Job.location).selectinload(Location.addresses))
     result = await async_session.scalars(query)
     expected_response = {
