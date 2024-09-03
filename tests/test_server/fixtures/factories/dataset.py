@@ -114,7 +114,6 @@ async def datasets_search(
     tip: you can imagine it like identity matrix with not-random names on diagonal.
     """
     request.param
-    location_names = ["postgres.location", "postgres.history_location", "my-cluster"]
     location_names_types = [
         ("postgres.location", "postgres"),
         ("postgres.history_location", "postgres"),
@@ -176,7 +175,15 @@ async def datasets_search(
         async_session.expunge(item)
 
     entities = {name: dataset for name, dataset in zip(datasets_names, datasets[:3])}
-    entities.update({name: dataset for name, dataset in zip(location_names, datasets[3:6])})
+    entities.update(
+        {
+            name: dataset
+            for name, dataset in zip(
+                [name for name, _ in location_names_types],
+                datasets[3:6],
+            )
+        },
+    )
     entities.update(
         {
             name: dataset

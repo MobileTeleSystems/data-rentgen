@@ -114,7 +114,6 @@ async def jobs_search(
     tip: you can imagine it like identity matrix with not-random names on diagonal.
     """
     request.param
-    location_names = ["dwh", "my-cluster", "data-product:8020"]
     location_names_types = [("dwh", "yarn"), ("my-cluster", "yarn"), ("data-product:8020", "http")]
     locations_with_names = [
         location_factory(name=name, type=location_type) for name, location_type in location_names_types
@@ -172,7 +171,15 @@ async def jobs_search(
         async_session.expunge(item)
 
     entities = {name: job for name, job in zip(jobs_names, jobs[:3])}
-    entities.update({name: job for name, job in zip(location_names, jobs[3:6])})
+    entities.update(
+        {
+            name: job
+            for name, job in zip(
+                [name for name, _ in location_names_types],
+                jobs[3:6],
+            )
+        },
+    )
     entities.update(
         {name: job for name, job in zip(addresses_url, [job for job in jobs[6:] for _ in range(2)])},
     )
