@@ -171,7 +171,7 @@ async def test_job_search_in_location_name_and_address_url(
 ) -> None:
     # Job with id 4 has location name `my-cluster`
     # Job with id 7 has address url `yarn://my_cluster:2080`
-    jobs = [jobs_search["my-cluster"], jobs_search["yarn://my_cluster:2080"]]
+    jobs = [jobs_search["my-cluster"], jobs_search["http://my_cluster:2080"]]
     query = (
         select(Job)
         .where(Job.id.in_([job.id for job in jobs]))
