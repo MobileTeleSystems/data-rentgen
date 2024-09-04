@@ -91,24 +91,24 @@ async def jobs_search(
     The fixtures create database structure like this:
     |Job ID     | Job.name                           | Location.name               | Location.type | Address.url                        |
     |---------- | ---------------------------------- | --------------------------- | ------------- | ---------------------------------- |
-    |0          | 'airflow-task'                     | 'random-location-name'      | 'kafka'       | 'random-url'                       |
-    |0          | 'airflow-task'                     | 'random-location-name'      | 'kafka'       | 'random-url'                       |
-    |1          | 'spark-application'                | 'random-location-name'      | 'kafka'       | 'random-url'                       |
-    |1          | 'spark-application'                | 'random-location-name'      | 'kafka'       | 'random-url'                       |
-    |2          | 'airflow-dag'                      | 'random-location-name'      | 'kafka'       | 'random-url'                       |
-    |2          | 'airflow-dag'                      | 'random-location-name'      | 'kafka'       | 'random-url'                       |
+    |0          | 'airflow-task'                     | 'random-location-name'      | 'random'      | 'random-url'                       |
+    |0          | 'airflow-task'                     | 'random-location-name'      | 'random'      | 'random-url'                       |
+    |1          | 'spark-application'                | 'random-location-name'      | 'random'      | 'random-url'                       |
+    |1          | 'spark-application'                | 'random-location-name'      | 'random'      | 'random-url'                       |
+    |2          | 'airflow-dag'                      | 'random-location-name'      | 'random'      | 'random-url'                       |
+    |2          | 'airflow-dag'                      | 'random-location-name'      | 'random'      | 'random-url'                       |
     |3          | 'random-job-name'                  | 'dwh'                       | 'yarn'        | 'random-url'                       |
     |3          | 'random-job-name'                  | 'dwh'                       | 'yarn'        | 'random-url'                       |
     |4          | 'random-job-name'                  | 'my-cluster'                | 'yarn'        | 'random-url'                       |
     |4          | 'random-job-name'                  | 'my-cluster'                | 'yarn'        | 'random-url'                       |
     |5          | 'random-job-name'                  | 'data-product-host'         | 'http'        | 'random-url'                       |
     |5          | 'random-job-name'                  | 'data-product-host'         | 'http'        | 'random-url'                       |
-    |6          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'yarn://my_cluster_1'              |
-    |6          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'yarn://my_cluster_2'              |
-    |7          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'http://some.host.name:2080'       |
-    |7          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'http://some.host.name:8020'       |
-    |8          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'http://airflow-host:8020'         |
-    |8          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'http://airflow-host:2080'         |
+    |6          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'yarn://my_cluster_1'              |
+    |6          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'yarn://my_cluster_2'              |
+    |7          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'http://some.host.name:2080'       |
+    |7          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'http://some.host.name:8020'       |
+    |8          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'http://airflow-host:8020'         |
+    |8          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'http://airflow-host:2080'         |
 
     tip: you can imagine it like identity matrix with not-random names on diagonal.
     """
@@ -117,7 +117,7 @@ async def jobs_search(
     locations_with_names = [
         location_factory(name=name, type=location_type) for name, location_type in location_names_types
     ]
-    locations_with_random_name = [location_factory(type="kafka") for _ in range(6)]
+    locations_with_random_name = [location_factory(type="random") for _ in range(6)]
     locations = locations_with_names + locations_with_random_name
 
     for item in locations:
