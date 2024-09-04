@@ -103,8 +103,8 @@ async def jobs_search(
     |4          | 'random-job-name'                  | 'my-cluster'                | 'yarn'        | 'random-url'                       |
     |5          | 'random-job-name'                  | 'data-product-host'         | 'http'        | 'random-url'                       |
     |5          | 'random-job-name'                  | 'data-product-host'         | 'http'        | 'random-url'                       |
-    |6          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'http://my_cluster:2080'           |
-    |6          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'http://my_cluster:8020'           |
+    |6          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'yarn://my_cluster_1'              |
+    |6          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'yarn://my_cluster_2'              |
     |7          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'http://some.host.name:2080'       |
     |7          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'http://some.host.name:8020'       |
     |8          | 'random-job-name'                  | 'random-location-name'      | 'kafka'       | 'http://airflow-host:8020'         |
@@ -133,7 +133,7 @@ async def jobs_search(
         async_session.expunge(item)
 
     addresses_url = (
-        ["http://my_cluster:8020", "http://my_cluster:2080"]
+        ["yarn://my_cluster_1", "yarn://my_cluster_2"]
         + ["http://some.host.name:8020", "http://some.host.name:2080"]
         + ["http://airflow-host:8020", "http://airflow-host:2080"]
     )
