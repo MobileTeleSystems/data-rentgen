@@ -91,35 +91,38 @@ async def datasets_search(
     The fixtures create database structure like this:
     |Dataset ID | Dataset.name                       | Location.name               | Location.type | Address.url                        |
     |---------- | ---------------------------------- | --------------------------- | ------------- | ---------------------------------- |
-    |0          | 'postgres.public.history'          | 'random-location-name'      | 'kafka'       | 'random-url'                       |
-    |0          | 'postgres.public.history'          | 'random-location-name'      | 'kafka'       | 'random-url'                       |
-    |1          | 'postgres.public.location_history' | 'random-location-name'      | 'kafka'       | 'random-url'                       |
-    |1          | 'postgres.public.location_history' | 'random-location-name'      | 'kafka'       | 'random-url'                       |
-    |2          | '/user/hive/warehouse/transfers'   | 'random-location-name'      | 'kafka'       | 'random-url'                       |
-    |2          | '/user/hive/warehouse/transfers'   | 'random-location-name'      | 'kafka'       | 'random-url'                       |
+    |0          | 'postgres.public.history'          | 'random-location-name'      | 'random'      | 'random-url'                       |
+    |0          | 'postgres.public.history'          | 'random-location-name'      | 'random'      | 'random-url'                       |
+    |1          | 'postgres.public.location_history' | 'random-location-name'      | 'random'      | 'random-url'                       |
+    |1          | 'postgres.public.location_history' | 'random-location-name'      | 'random'      | 'random-url'                       |
+    |2          | '/user/hive/warehouse/transfers'   | 'random-location-name'      | 'random'      | 'random-url'                       |
+    |2          | '/user/hive/warehouse/transfers'   | 'random-location-name'      | 'random'      | 'random-url'                       |
     |3          | 'random-dataset-name'              | 'postgres.location'         | 'postgres'    | 'random-url'                       |
     |3          | 'random-dataset-name'              | 'postgres.location'         | 'postgres'    | 'random-url'                       |
     |4          | 'random-dataset-name'              | 'postgres.history_location' | 'postgres'    | 'random-url'                       |
     |4          | 'random-dataset-name'              | 'postgres.history_location' | 'postgres'    | 'random-url'                       |
     |5          | 'random-dataset-name'              | 'my-cluster'                | 'hdfs'        | 'random-url'                       |
     |5          | 'random-dataset-name'              | 'my-cluster'                | 'hdfs'        | 'random-url'                       |
-    |6          | 'random-dataset-name'              | 'random-location-name'      | 'kafka'       | 'http://my-postgres-host:8012'     |
-    |6          | 'random-dataset-name'              | 'random-location-name'      | 'kafka'       | 'http://my-postgres-host:2108'     |
-    |7          | 'random-dataset-name'              | 'random-location-name'      | 'kafka'       | 'http://your-postgres-host:2108'   |
-    |7          | 'random-dataset-name'              | 'random-location-name'      | 'kafka'       | 'http://your-postgres-host:8012'   |
-    |8          | 'random-dataset-name'              | 'random-location-name'      | 'kafka'       | 'hdfs://my-cluster-namenode:2080'  |
-    |8          | 'random-dataset-name'              | 'random-location-name'      | 'kafka'       | 'hdfs://my-cluster-namenode:8020'  |
+    |6          | 'random-dataset-name'              | 'random-location-name'      | 'random'      | 'http://my-postgres-host:8012'     |
+    |6          | 'random-dataset-name'              | 'random-location-name'      | 'random'      | 'http://my-postgres-host:2108'     |
+    |7          | 'random-dataset-name'              | 'random-location-name'      | 'random'      | 'http://your-postgres-host:2108'   |
+    |7          | 'random-dataset-name'              | 'random-location-name'      | 'random'      | 'http://your-postgres-host:8012'   |
+    |8          | 'random-dataset-name'              | 'random-location-name'      | 'random'      | 'hdfs://my-cluster-namenode:2080'  |
+    |8          | 'random-dataset-name'              | 'random-location-name'      | 'random'      | 'hdfs://my-cluster-namenode:8020'  |
 
     Every location relate to two dataset and two addresses. 2-1-2
     tip: you can imagine it like identity matrix with not-random names on diagonal.
     """
     request.param
-    location_names = ["postgres.location", "postgres.history_location", "my-cluster"]
-    locations_with_names = [
-        location_factory(name=name, type=location_type)
-        for name, location_type in zip(location_names, ["postgres", "postgres", "hdfs"])
+    location_names_types = [
+        ("postgres.location", "postgres"),
+        ("postgres.history_location", "postgres"),
+        ("my-cluster", "hdfs"),
     ]
-    locations_with_random_name = [location_factory(type="kafka") for _ in range(6)]
+    locations_with_names = [
+        location_factory(name=name, type=location_type) for name, location_type in location_names_types
+    ]
+    locations_with_random_name = [location_factory(type="random") for _ in range(6)]
     locations = locations_with_names + locations_with_random_name
 
     for item in locations:
@@ -172,7 +175,15 @@ async def datasets_search(
         async_session.expunge(item)
 
     entities = {name: dataset for name, dataset in zip(datasets_names, datasets[:3])}
-    entities.update({name: dataset for name, dataset in zip(location_names, datasets[3:6])})
+    entities.update(
+        {
+            name: dataset
+            for name, dataset in zip(
+                [name for name, _ in location_names_types],
+                datasets[3:6],
+            )
+        },
+    )
     entities.update(
         {
             name: dataset
