@@ -49,7 +49,7 @@ class JobRepository(Repository[Job]):
             ),
         ).scalar_subquery()
         base_stmt = select(Job.id)
-        dataset_stmt = (
+        job_stmt = (
             base_stmt.add_columns((func.ts_rank(Job.search_vector, ts_query)).label("search_rank"))
             .join(Location, Job.location_id == Location.id)
             .join(Address, Location.id == Address.location_id)
@@ -67,7 +67,7 @@ class JobRepository(Repository[Job]):
             .join(Job, Location.id == Job.location_id)
             .where(Address.search_vector.op("@@")(ts_query))
         )
-        union_query = union(dataset_stmt, location_stmt, address_stmt).order_by(desc("search_rank"))
+        union_query = union(job_stmt, location_stmt, address_stmt).order_by(desc("search_rank"))
 
         results = await self._session.execute(
             union_query.limit(page_size).offset((page - 1) * page_size),

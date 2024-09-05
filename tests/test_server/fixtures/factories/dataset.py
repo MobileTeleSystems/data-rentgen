@@ -87,7 +87,7 @@ async def datasets_search(
     async_session: AsyncSession,
 ) -> AsyncGenerator[dict[str, Dataset], None]:
     """
-    Fixture with explicit dataset, locations and addresses names for search tests.
+    Fixture with explicit dataset, locations names and addresses urls for search tests.
     The fixtures create database structure like this:
     |Dataset ID | Dataset.name                       | Location.name               | Location.type | Address.url                        |
     |---------- | ---------------------------------- | --------------------------- | ------------- | ---------------------------------- |

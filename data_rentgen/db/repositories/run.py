@@ -1,16 +1,19 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 from datetime import datetime
+from string import punctuation
 from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import desc, func, select, union
 from sqlalchemy.orm import selectinload
 
-from data_rentgen.db.models import Run, RunStartReason, Status
+from data_rentgen.db.models import Job, Run, RunStartReason, Status
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid
 from data_rentgen.dto import PaginationDTO, RunDTO
+
+ts_query_punctuation_map = str.maketrans(punctuation, " " * len(punctuation))
 
 
 class RunRepository(Repository[Run]):
@@ -82,6 +85,40 @@ class RunRepository(Repository[Run]):
             query = query.where(Run.created_at <= until)
         result = await self._session.scalars(query)
         return result.all()
+
+    async def search(self, search_query: str, page: int, page_size: int) -> PaginationDTO[Run]:
+        # For more accurate full-text search, we create a tsquery by combining the `search_query` "as is" with
+        # a modified version of it using the '||' operator.
+        # The "as is" version is used so that an exact match with the query has the highest rank.
+        # The modified version is needed because, in some cases, PostgreSQL tokenizes words joined by punctuation marks
+        # (e.g., `database.schema.table`) as a single word. By replacing punctuation with spaces using `translate`,
+        # we split such strings into separate words, allowing us to search by parts of the name.
+
+        ts_query = select(
+            func.plainto_tsquery("english", search_query).op("||")(
+                func.plainto_tsquery("english", search_query.translate(ts_query_punctuation_map)),
+            ),
+        ).scalar_subquery()
+        base_stmt = select(Run.id)
+        run_stmt = (
+            base_stmt.add_columns((func.ts_rank(Run.search_vector, ts_query)).label("search_rank"))
+            .join(Job, Run.job_id == Job.id)
+            .where(Run.search_vector.op("@@")(ts_query))
+        )
+        job_stmt = (
+            base_stmt.add_columns((func.ts_rank(Job.search_vector, ts_query)).label("search_rank"))
+            .join(Run, Job.id == Run.job_id)
+            .where(Job.search_vector.op("@@")(ts_query))
+        )
+        union_query = union(run_stmt, job_stmt).order_by(desc("search_rank"))
+
+        results = await self._session.execute(
+            union_query.limit(page_size).offset((page - 1) * page_size),
+        )
+        results = results.all()  # type: ignore[assignment]
+        run_ids = [result.id for result in results]
+
+        return await self.pagination_by_id(page=page, page_size=page_size, run_ids=run_ids)
 
     async def _get(self, created_at: datetime, run_id: UUID) -> Run | None:
         query = select(Run).where(Run.id == run_id, Run.created_at == created_at)

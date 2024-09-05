@@ -87,7 +87,7 @@ async def jobs_search(
     async_session: AsyncSession,
 ) -> AsyncGenerator[dict[str, Job], None]:
     """
-    Fixture with explicit dataset, locations and addresses names for search tests.
+    Fixture with explicit jobs, locations names and addresses urls for search tests.
     The fixtures create database structure like this:
     |Job ID     | Job.name                           | Location.name               | Location.type | Address.url                        |
     |---------- | ---------------------------------- | --------------------------- | ------------- | ---------------------------------- |
