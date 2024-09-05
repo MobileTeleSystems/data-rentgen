@@ -169,8 +169,7 @@ async def test_dataset_search_in_location_name_and_address_url(
     # Dataset with id 5 has location name `my-cluster`
     # Dataset with id 8 has address url `hdfs://my-cluster-namenode:2080` and `hdfs://my-cluster-namenode:8020`
     datasets = await enrich_datasets(
-        datasets_search["my-cluster"],
-        datasets_search["hdfs://my-cluster-namenode:8020"],
+        [datasets_search["my-cluster"], datasets_search["hdfs://my-cluster-namenode:8020"]],
         async_session,
     )
     expected_response = {
