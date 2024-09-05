@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from datetime import datetime
 from string import punctuation
-from typing import Sequence
+from typing import Iterable
 from uuid import UUID
 
 from sqlalchemy import desc, func, select, union
@@ -48,7 +48,7 @@ class RunRepository(Repository[Run]):
             return await self._create(created_at, run, job_id, parent_run_id, started_by_user_id)
         return await self._update(result, run, parent_run_id, started_by_user_id)
 
-    async def pagination_by_id(self, page: int, page_size: int, run_ids: list[UUID]) -> PaginationDTO[Run]:
+    async def pagination_by_id(self, page: int, page_size: int, run_ids: Iterable[UUID]) -> PaginationDTO[Run]:
         minimal_created_at = extract_timestamp_from_uuid(min(id for id in run_ids))
         query = (
             select(Run)
@@ -73,18 +73,26 @@ class RunRepository(Repository[Run]):
             query = query.where(Run.created_at <= until)
         return await self._paginate_by_query(order_by=[Run.id], page=page, page_size=page_size, query=query)
 
-    async def get_by_id(self, run_id: UUID) -> Run | None:
-        created_at = extract_timestamp_from_uuid(run_id)
-        return await self._get(created_at, run_id)
-
-    async def get_by_job_id(self, job_id: int, since: datetime, until: datetime | None) -> Sequence[Run]:
+    async def list_by_ids(self, run_ids: Iterable[UUID]) -> list[Run]:
+        created_at = extract_timestamp_from_uuid(min(i for i in run_ids))
         query = (
-            select(Run).where(Run.created_at >= since, Run.job_id == job_id).options(selectinload(Run.started_by_user))
+            select(Run)
+            .where(Run.created_at >= created_at, Run.id.in_(run_ids))
+            .options(selectinload(Run.started_by_user))
+        )
+        result = await self._session.scalars(query)
+        return list(result.all())
+
+    async def list_by_job_ids(self, job_ids: Iterable[int], since: datetime, until: datetime | None) -> list[Run]:
+        query = (
+            select(Run)
+            .where(Run.created_at >= since, Run.job_id.in_(job_ids))
+            .options(selectinload(Run.started_by_user))
         )
         if until:
             query = query.where(Run.created_at <= until)
         result = await self._session.scalars(query)
-        return result.all()
+        return list(result.all())
 
     async def search(self, search_query: str, page: int, page_size: int) -> PaginationDTO[Run]:
         # For more accurate full-text search, we create a tsquery by combining the `search_query` "as is" with

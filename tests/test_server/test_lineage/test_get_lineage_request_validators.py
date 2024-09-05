@@ -48,8 +48,8 @@ async def test_get_lineage_missing_id(
         params={
             "since": since.isoformat(),
             "point_kind": point_kind,
-            "direction": "FROM",
             "point_id": point_id,
+            "direction": "FROM",
         },
     )
 
@@ -78,8 +78,8 @@ async def test_get_lineage_point_id_int_type_validation(
         params={
             "since": runs[0].created_at.isoformat(),
             "point_kind": point_kind,
-            "direction": "FROM",
             "point_id": point_id,
+            "direction": "FROM",
         },
     )
 
@@ -125,8 +125,8 @@ async def test_get_lineage_point_id_uuid_type_validation(
         params={
             "since": runs[0].created_at.isoformat(),
             "point_kind": point_kind,
-            "direction": "FROM",
             "point_id": point_id,
+            "direction": "FROM",
         },
     )
 
@@ -168,8 +168,8 @@ async def test_get_lineage_until_less_than_since(
             "since": since.isoformat(),
             "until": until.isoformat(),
             "point_kind": "RUN",
+            "point_id": str(runs[0].id),
             "direction": "FROM",
-            "point_id": runs[0].id,
         },
     )
 

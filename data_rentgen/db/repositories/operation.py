@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from datetime import datetime
-from typing import Sequence
+from typing import Iterable
 
 from sqlalchemy import select
 
@@ -29,7 +29,12 @@ class OperationRepository(Repository[Operation]):
             return await self._create(created_at, operation, run_id)  # type: ignore[arg-type]
         return await self._update(result, operation)
 
-    async def pagination_by_id(self, page: int, page_size: int, operation_ids: list[UUID]) -> PaginationDTO[Operation]:
+    async def pagination_by_id(
+        self,
+        page: int,
+        page_size: int,
+        operation_ids: Iterable[UUID],
+    ) -> PaginationDTO[Operation]:
         minimal_created_at = extract_timestamp_from_uuid(min(id for id in operation_ids))
         query = (
             select(Operation).where(Operation.created_at >= minimal_created_at).where(Operation.id.in_(operation_ids))
@@ -54,22 +59,23 @@ class OperationRepository(Repository[Operation]):
             query = query.where(Operation.created_at <= until)
         return await self._paginate_by_query(order_by=[Operation.id], page=page, page_size=page_size, query=query)
 
-    async def get_by_run_ids(self, run_ids: list[UUID], since: datetime, until: datetime | None) -> Sequence[Operation]:
+    async def list_by_run_ids(
+        self,
+        run_ids: Iterable[UUID],
+        since: datetime,
+        until: datetime | None,
+    ) -> list[Operation]:
         query = select(Operation).where(Operation.created_at >= since, Operation.run_id.in_(run_ids))
         if until:
             query = query.where(Operation.created_at <= until)
         result = await self._session.scalars(query)
-        return result.all()
+        return list(result.all())
 
-    async def get_by_id(self, operation_id: UUID) -> Operation | None:
-        created_at = extract_timestamp_from_uuid(operation_id)
-        return await self._get(created_at, operation_id)
-
-    async def get_by_ids(self, operation_ids: list[UUID]) -> Sequence[Operation]:
+    async def list_by_ids(self, operation_ids: Iterable[UUID]) -> list[Operation]:
         created_at = extract_timestamp_from_uuid(min(i for i in operation_ids))
         query = select(Operation).where(Operation.created_at >= created_at, Operation.id.in_(operation_ids))
         result = await self._session.scalars(query)
-        return result.all()
+        return list(result.all())
 
     async def _get(self, created_at: datetime, operation_id: UUID) -> Operation | None:
         query = select(Operation).where(Operation.created_at == created_at, Operation.id == operation_id)
