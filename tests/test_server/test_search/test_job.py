@@ -25,8 +25,7 @@ async def test_job_search_in_addres_url(
     jobs_search: dict[str, Job],
 ) -> None:
     # Job with id 8 has two addresses urls: [http://airflow-host:2080, http://airflow-host:8020] and random name
-    job = jobs_search["http://airflow-host:2080"]
-    jobs = await enrich_jobs([job], async_session)
+    jobs = await enrich_jobs([jobs_search["http://airflow-host:2080"]], async_session)
 
     response = await test_client.get(
         "/v1/jobs/search",
@@ -67,9 +66,7 @@ async def test_job_search_in_location_name(
     jobs_search: dict[str, Job],
 ) -> None:
     # Job with id 5 has location names `data-product-host`
-
-    job = jobs_search["data-product-host"]
-    jobs = await enrich_jobs([job], async_session)
+    jobs = await enrich_jobs([jobs_search["data-product-host"]], async_session)
     expected_response = {
         "items": [
             {
@@ -114,8 +111,10 @@ async def test_job_search_in_job_name(
 ) -> None:
     # Jobs with ids 0 and 2 has job name `airflow-task` and `airflow-task`
     # Jobs with id 8 has two addresses urls: [http://airflow-host:2080, http://airflow-host:8020]
-    jobs = [jobs_search["airflow-task"], jobs_search["airflow-dag"], jobs_search["http://airflow-host:8020"]]
-    jobs = await enrich_jobs(jobs, async_session)
+    jobs = await enrich_jobs(
+        [jobs_search["airflow-task"], jobs_search["airflow-dag"], jobs_search["http://airflow-host:8020"]],
+        async_session,
+    )
     expected_response = {
         "items": [
             {
@@ -159,8 +158,7 @@ async def test_job_search_in_location_name_and_address_url(
 ) -> None:
     # Job with id 4 has location name `my-cluster`
     # Job with id 6 has address urls: [`yarn://my_cluster_1`, `yarn://my_cluster_2`]
-    jobs = [jobs_search["my-cluster"], jobs_search["yarn://my_cluster_1"]]
-    jobs = await enrich_jobs(jobs, async_session)
+    jobs = await enrich_jobs([jobs_search["my-cluster"], jobs_search["yarn://my_cluster_1"]], async_session)
     expected_response = {
         "items": [
             {

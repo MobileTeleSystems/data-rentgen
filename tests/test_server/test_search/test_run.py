@@ -24,8 +24,10 @@ async def test_run_search_in_external_id(
     async_session: AsyncSession,
     runs_search: dict[str, Run],
 ) -> None:
-    runs = [runs_search["application_1638922609021_0001"], runs_search["application_1638922609021_0002"]]
-    runs = await enrich_runs(runs, async_session)
+    runs = await enrich_runs(
+        [runs_search["application_1638922609021_0001"], runs_search["application_1638922609021_0002"]],
+        async_session,
+    )
     expected_response = {
         "items": [
             {
@@ -74,8 +76,7 @@ async def test_run_search_in_job_name(
     async_session: AsyncSession,
     runs_search: dict[str, Run],
 ) -> None:
-    runs = [runs_search["extract_task_0001"], runs_search["extract_task_0002"]]
-    runs = await enrich_runs(runs, async_session)
+    runs = await enrich_runs([runs_search["extract_task_0001"], runs_search["extract_task_0002"]], async_session)
     expected_response = {
         "items": [
             {
@@ -124,8 +125,10 @@ async def test_run_search_in_job_type(
     async_session: AsyncSession,
     runs_search: dict[str, Run],
 ) -> None:
-    runs = [runs_search["application_1638922609021_0001"], runs_search["application_1638922609021_0002"]]
-    runs = await enrich_runs(runs, async_session)
+    runs = await enrich_runs(
+        [runs_search["application_1638922609021_0001"], runs_search["application_1638922609021_0002"]],
+        async_session,
+    )
     expected_response = {
         "items": [
             {
