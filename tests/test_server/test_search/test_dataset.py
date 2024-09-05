@@ -4,10 +4,9 @@ import pytest
 from deepdiff import DeepDiff
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-from sqlalchemy.sql import select
 
-from data_rentgen.db.models import Dataset, Location
+from data_rentgen.db.models import Dataset
+from tests.test_server.test_search.utils import enrich_datasets
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
@@ -29,13 +28,7 @@ async def test_dataset_search_in_addres_url(
 ) -> None:
     # dataset with id 8 has two addresses urls: [hdfs://my-cluster-namenode:2080, hdfs://my-cluster-namenode:8020] and random name
     dataset = datasets_search["hdfs://my-cluster-namenode:2080"]
-    query = (
-        select(Location)
-        .join(Dataset, Dataset.location_id == Location.id)
-        .options(selectinload(Location.addresses))
-        .where(Dataset.id == dataset.id)
-    )
-    location = await async_session.scalar(query)
+    result = await enrich_datasets([dataset], async_session)
 
     response = await test_client.get(
         "/v1/datasets/search",
@@ -51,11 +44,12 @@ async def test_dataset_search_in_addres_url(
                 "format": dataset.format,
                 "name": dataset.name,
                 "location": {
-                    "name": location.name,
-                    "type": location.type,
-                    "addresses": [{"url": address.url} for address in location.addresses],
+                    "name": dataset.location.name,
+                    "type": dataset.location.type,
+                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
                 },
-            },
+            }
+            for dataset in result
         ],
         "meta": {
             "has_next": False,
@@ -84,12 +78,7 @@ async def test_dataset_search_in_location_name(
         datasets_search["postgres.location"],
         datasets_search["postgres.history_location"],
     ]
-    query = (
-        select(Dataset)
-        .where(Dataset.id.in_([dataset.id for dataset in datasets]))
-        .options(selectinload(Dataset.location).selectinload(Location.addresses))
-    )
-    result = await async_session.scalars(query)
+    result = await enrich_datasets(datasets, async_session)
     expected_response = {
         "items": [
             {
@@ -103,7 +92,7 @@ async def test_dataset_search_in_location_name(
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
                 },
             }
-            for dataset in result.all()
+            for dataset in result
         ],
         "meta": {
             "has_next": False,
@@ -136,12 +125,7 @@ async def test_dataset_search_in_dataset_name(
 ) -> None:
     # Dataset with id 1 has dataset name `postgres.public.location_history`
     dataset = datasets_search["postgres.public.location_history"]
-    query = (
-        select(Dataset)
-        .where(Dataset.id.in_([dataset.id]))
-        .options(selectinload(Dataset.location).selectinload(Location.addresses))
-    )
-    result = await async_session.scalars(query)
+    result = await enrich_datasets([dataset], async_session)
     expected_response = {
         "items": [
             {
@@ -155,7 +139,7 @@ async def test_dataset_search_in_dataset_name(
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
                 },
             }
-            for dataset in result.all()
+            for dataset in result
         ],
         "meta": {
             "has_next": False,
@@ -186,12 +170,7 @@ async def test_dataset_search_in_location_name_and_address_url(
     # Dataset with id 5 has location name `my-cluster`
     # Dataset with id 8 has address url `hdfs://my-cluster-namenode:2080` and `hdfs://my-cluster-namenode:8020`
     datasets = [datasets_search["my-cluster"], datasets_search["hdfs://my-cluster-namenode:8020"]]
-    query = (
-        select(Dataset)
-        .where(Dataset.id.in_([dataset.id for dataset in datasets]))
-        .options(selectinload(Dataset.location).selectinload(Location.addresses))
-    )
-    result = await async_session.scalars(query)
+    result = await enrich_datasets(datasets, async_session)
     expected_response = {
         "items": [
             {
@@ -205,7 +184,7 @@ async def test_dataset_search_in_location_name_and_address_url(
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
                 },
             }
-            for dataset in result.all()
+            for dataset in result
         ],
         "meta": {
             "has_next": False,

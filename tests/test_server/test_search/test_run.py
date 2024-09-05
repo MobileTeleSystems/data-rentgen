@@ -4,11 +4,9 @@ import pytest
 from deepdiff import DeepDiff
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-from sqlalchemy.sql import select
 
 from data_rentgen.db.models import Run
-from tests.test_server.test_search.utils import get_runs_from_db
+from tests.test_server.test_search.utils import enrich_runs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
@@ -27,7 +25,7 @@ async def test_run_search_in_external_id(
     runs_search: dict[str, Run],
 ) -> None:
     runs = [runs_search["application_1638922609021_0001"], runs_search["application_1638922609021_0002"]]
-    result = await get_runs_from_db(runs, async_session)
+    result = await enrich_runs(runs, async_session)
     expected_response = {
         "items": [
             {
@@ -77,7 +75,7 @@ async def test_run_search_in_job_name(
     runs_search: dict[str, Run],
 ) -> None:
     runs = [runs_search["extract_task_0001"], runs_search["extract_task_0002"]]
-    result = await get_runs_from_db(runs, async_session)
+    result = await enrich_runs(runs, async_session)
     expected_response = {
         "items": [
             {
@@ -127,7 +125,7 @@ async def test_run_search_in_job_type(
     runs_search: dict[str, Run],
 ) -> None:
     runs = [runs_search["application_1638922609021_0001"], runs_search["application_1638922609021_0002"]]
-    result = await get_runs_from_db(runs, async_session)
+    result = await enrich_runs(runs, async_session)
     expected_response = {
         "items": [
             {
