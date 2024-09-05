@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from datetime import datetime
-from typing import Sequence
+from typing import Iterable
 from uuid import UUID
 
 from sqlalchemy import and_, select
@@ -44,37 +44,41 @@ class InteractionRepository(Repository[Interaction]):
             return await self._create(created_at, interaction_id, interaction, operation_id, dataset_id, schema_id)
         return await self._update(result, interaction)
 
-    async def get_by_operations(
+    async def list_by_operation_ids(
         self,
-        operation_ids: list[UUID],
-        type: list[str],
+        operation_ids: Iterable[UUID],
+        types: Iterable[str],
         since: datetime,
         until: datetime | None,
-    ) -> Sequence[Interaction]:
-        filter = [
+    ) -> list[Interaction]:
+        filters = [
             Interaction.created_at >= since,
             Interaction.operation_id.in_(operation_ids),
-            Interaction.type.in_(type),
+            Interaction.type.in_(types),
         ]
         if until:
-            filter.append(Interaction.created_at <= until)
-        query = select(Interaction).where(and_(*filter))
+            filters.append(Interaction.created_at <= until)
+        query = select(Interaction).where(and_(*filters))
         result = await self._session.scalars(query)
-        return result.all()
+        return list(result.all())
 
-    async def get_by_datasets(
+    async def list_by_dataset_ids(
         self,
-        dataset_ids: list[int],
-        type: list[str],
+        dataset_ids: Iterable[int],
+        types: Iterable[str],
         since: datetime,
         until: datetime | None,
-    ) -> Sequence[Interaction]:
-        filter = [Interaction.created_at >= since, Interaction.dataset_id.in_(dataset_ids), Interaction.type.in_(type)]
+    ) -> list[Interaction]:
+        filters = [
+            Interaction.created_at >= since,
+            Interaction.dataset_id.in_(dataset_ids),
+            Interaction.type.in_(types),
+        ]
         if until:
-            filter.append(Interaction.created_at <= until)
-        query = select(Interaction).where(and_(*filter))
+            filters.append(Interaction.created_at <= until)
+        query = select(Interaction).where(and_(*filters))
         result = await self._session.scalars(query)
-        return result.all()
+        return list(result.all())
 
     async def _get(self, created_at: datetime, interaction_id: UUID) -> Interaction | None:
         query = select(Interaction).where(Interaction.created_at == created_at, Interaction.id == interaction_id)

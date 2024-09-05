@@ -1,15 +1,11 @@
 from collections.abc import AsyncGenerator
-from datetime import datetime, timedelta
-from random import choice
 from typing import AsyncContextManager, Callable
 
-import pytest
 import pytest_asyncio
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import (
-    Address,
     Dataset,
     Interaction,
     InteractionType,
@@ -17,190 +13,139 @@ from data_rentgen.db.models import (
     Operation,
     Run,
 )
-from tests.test_server.fixtures.factories.dataset import dataset_factory
 from tests.test_server.fixtures.factories.interaction import interaction_factory
-from tests.test_server.fixtures.factories.operation import operation_factory
-from tests.test_server.fixtures.factories.run import run_factory
+
+LINEAGE_FIXTURE_ANNOTATION = tuple[list[Job], list[Run], list[Operation], list[Dataset], list[Interaction]]
 
 
 @pytest_asyncio.fixture()
 async def lineage(
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
-    job: Job,
-    addresses: list[Address],
-) -> AsyncGenerator[tuple[Job, list[Run], list[Dataset], list[Operation], list[Interaction]], None]:
-    datasets = [dataset_factory(location_id=choice(addresses).location_id) for _ in range(4)]
-    started_at = datetime.now()
-    runs = [run_factory(job_id=job.id, created_at=started_at + timedelta(seconds=s)) for s in range(2)]
-
-    operations = [
-        operation_factory(run_id=run.id, created_at=run.created_at + timedelta(seconds=s))
-        for run in runs
-        for s in range(2)
-    ]  # Two operations for each run
-    read = InteractionType.READ
-    append = InteractionType.APPEND
-    interactions = [
-        interaction_factory(
-            created_at=operation.created_at,
-            operation_id=operation.id,
-            dataset_id=dataset.id,
-            type=inter_type,
+    jobs: list[Job],
+    runs: list[Run],
+    operations: list[Operation],
+    datasets: list[Dataset],
+) -> AsyncGenerator[LINEAGE_FIXTURE_ANNOTATION, None]:
+    interactions = []
+    # each operation interacted with some dataset, both read and append
+    for operation, dataset in zip(operations, datasets):
+        interactions.append(
+            interaction_factory(
+                created_at=operation.created_at,
+                operation_id=operation.id,
+                dataset_id=dataset.id,
+                type=InteractionType.READ,
+            ),
         )
-        for operation, dataset, inter_type in zip(operations, datasets, [read, append, read, append])
-    ]
+        interactions.append(
+            interaction_factory(
+                created_at=operation.created_at,
+                operation_id=operation.id,
+                dataset_id=dataset.id,
+                type=InteractionType.APPEND,
+            ),
+        )
+
+    # operations are randomly distributed along runs. select only those which will appear in lineage graph
+    run_ids = {operation.run_id for operation in operations}
+    actual_runs = [run for run in runs if run.id in run_ids]
+
+    # same for jobs
+    job_ids = {run.job_id for run in actual_runs}
+    actual_jobs = [job for job in jobs if job.id in job_ids]
+
     async with async_session_maker() as async_session:
-        async_session.add_all(runs + datasets + operations + interactions)
+        for item in interactions:
+            async_session.add(item)
         await async_session.commit()
-        for item in runs + datasets + operations + interactions:
+
+        # remove current object from async_session. this is required to compare object against new state fetched
+        # from database, and also to remove it from cache
+        for item in interactions:
             await async_session.refresh(item)
 
         async_session.expunge_all()
 
-    yield job, runs, datasets, operations, interactions
+    yield actual_jobs, actual_runs, operations, datasets, interactions
 
     delete_interaction = delete(Interaction).where(
         Interaction.operation_id.in_([operation.id for operation in operations]),
     )
-    delete_operation = delete(Operation).where(Operation.id.in_([operation.id for operation in operations]))
-    delete_dataset = delete(Dataset).where(Dataset.id.in_([item.id for item in datasets]))
-    delete_run = delete(Run).where(Run.id.in_([item.id for item in runs]))
     async with async_session_maker() as async_session:
         await async_session.execute(delete_interaction)
-        await async_session.execute(delete_operation)
-        await async_session.execute(delete_dataset)
-        await async_session.execute(delete_run)
         await async_session.commit()
 
 
-@pytest_asyncio.fixture(params=[(3, {})])
-async def run_lineage(
-    request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
-    addresses: list[Address],
-):
-    size, params = request.param
-    started_at = datetime.now()
-    run = run_factory(created_at=started_at)
-    datasets = [dataset_factory(location_id=choice(addresses).location_id) for _ in range(size)]
-    operations = [
-        operation_factory(run_id=run.id, created_at=run.created_at + timedelta(seconds=s)) for s in range(size)
-    ]
+@pytest_asyncio.fixture()
+async def lineage_with_same_job(
+    lineage: LINEAGE_FIXTURE_ANNOTATION,
+) -> LINEAGE_FIXTURE_ANNOTATION:
+    # Select some job, and filter all lineage graph to contain entities somehow related to this job
+    [job, *_], all_runs, all_operations, all_datasets, all_interactions = lineage
 
-    interactions = [
-        interaction_factory(
-            created_at=operation.created_at,
-            operation_id=operation.id,
-            dataset_id=dataset.id,
-            type=InteractionType.APPEND,
-        )
-        for operation, dataset in zip(operations, datasets)
-    ]
+    runs = [run for run in all_runs if run.job_id == job.id]
+    run_ids = {run.id for run in runs}
 
-    async with async_session_maker() as async_session:
-        async_session.add_all([run] + datasets + operations + interactions)
+    operations = [operation for operation in all_operations if operation.run_id in run_ids]
+    operation_ids = {operation.id for operation in operations}
 
-        await async_session.commit()
-        for item in [run] + datasets + operations + interactions:
-            await async_session.refresh(item)
+    interactions = [interaction for interaction in all_interactions if interaction.operation_id in operation_ids]
 
-        async_session.expunge_all()
+    dataset_ids = {interaction.dataset_id for interaction in interactions}
+    datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
 
-    yield run, datasets, operations
-
-    delete_interaction = delete(Interaction).where(
-        Interaction.operation_id.in_([operation.id for operation in operations]),
-    )
-    delete_operation = delete(Operation).where(Operation.id.in_([operation.id for operation in operations]))
-    delete_dataset = delete(Dataset).where(Dataset.id.in_([item.id for item in datasets]))
-    delete_run = delete(Run).where(Run.id == run.id)
-    async with async_session_maker() as async_session:
-        await async_session.execute(delete_interaction)
-        await async_session.execute(delete_operation)
-        await async_session.execute(delete_dataset)
-        await async_session.execute(delete_run)
-        await async_session.commit()
+    return [job], runs, operations, datasets, interactions
 
 
-@pytest_asyncio.fixture(params=[(3, {})])
-async def operation_to_datasets_lineage(
-    request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
-    addresses: list[Address],
-):
-    size, params = request.param
-    started_at = datetime.now()
-    datasets = [dataset_factory(location_id=choice(addresses).location_id) for _ in range(size)]
-    operation = operation_factory(created_at=started_at, **params)
+@pytest_asyncio.fixture()
+async def lineage_with_same_run(
+    lineage_with_same_job: LINEAGE_FIXTURE_ANNOTATION,
+) -> LINEAGE_FIXTURE_ANNOTATION:
+    # Select some run, and filter all lineage graph to contain entities somehow related to this run
+    jobs, [run, *_], all_operations, all_datasets, all_interactions = lineage_with_same_job
 
-    interactions = [
-        interaction_factory(
-            created_at=operation.created_at + timedelta(seconds=1),
-            operation_id=operation.id,
-            dataset_id=dataset.id,
-            type=InteractionType.APPEND,
-        )
-        for dataset in datasets
-    ]
+    operations = [operation for operation in all_operations if operation.run_id == run.id]
+    operation_ids = {operation.id for operation in operations}
 
-    async with async_session_maker() as async_session:
-        async_session.add_all(datasets + [operation] + interactions)
+    interactions = [interaction for interaction in all_interactions if interaction.operation_id in operation_ids]
 
-        await async_session.commit()
-        for item in datasets + [operation] + interactions:
-            await async_session.refresh(item)
+    dataset_ids = {interaction.dataset_id for interaction in interactions}
+    datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
 
-        async_session.expunge_all()
-
-    yield operation, datasets
-
-    delete_interaction = delete(Interaction).where(Interaction.operation_id == operation.id)
-    delete_operation = delete(Operation).where(Operation.id == operation.id)
-    delete_dataset = delete(Dataset).where(Dataset.id.in_([item.id for item in datasets]))
-    async with async_session_maker() as async_session:
-        await async_session.execute(delete_interaction)
-        await async_session.execute(delete_operation)
-        await async_session.execute(delete_dataset)
-        await async_session.commit()
+    return jobs, [run], operations, datasets, interactions
 
 
-@pytest_asyncio.fixture(params=[(3, {})])
-async def operations_to_dataset_lineage(
-    request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
-    address: Address,
-):
-    size, params = request.param
-    started_at = datetime.now()
-    dataset = dataset_factory(location_id=address.location_id)
-    operations = [operation_factory(created_at=started_at, **params) for _ in range(size)]
+@pytest_asyncio.fixture()
+async def lineage_with_same_operation(
+    lineage_with_same_run: LINEAGE_FIXTURE_ANNOTATION,
+) -> LINEAGE_FIXTURE_ANNOTATION:
+    # Select some operation, and filter all lineage graph to contain entities somehow related to this operation
+    jobs, runs, [operation, *_], all_datasets, all_interactions = lineage_with_same_run
 
-    interactions = [
-        interaction_factory(
-            created_at=started_at + timedelta(seconds=index),
-            operation_id=operation.id,
-            dataset_id=dataset.id,
-            type=InteractionType.APPEND,
-        )
-        for index, operation in enumerate(operations)
-    ]
+    interactions = [interaction for interaction in all_interactions if interaction.operation_id == operation.id]
 
-    async with async_session_maker() as async_session:
-        async_session.add_all([dataset] + operations + interactions)
+    dataset_ids = {interaction.dataset_id for interaction in interactions}
+    datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
 
-        await async_session.commit()
-        for item in [dataset] + operations + interactions:
-            await async_session.refresh(item)
+    return jobs, runs, [operation], datasets, interactions
 
-        async_session.expunge_all()
 
-    yield dataset, operations
+@pytest_asyncio.fixture()
+async def lineage_with_same_dataset(
+    lineage: LINEAGE_FIXTURE_ANNOTATION,
+) -> LINEAGE_FIXTURE_ANNOTATION:
+    # Select some dataset, and filter all lineage graph to contain entities somehow related to this dataset
+    all_jobs, all_runs, all_operations, [dataset, *_], all_interactions = lineage
 
-    delete_interaction = delete(Interaction).where(Interaction.dataset_id == dataset.id)
-    delete_dataset = delete(Dataset).where(Dataset.id == dataset.id)
-    delete_operation = delete(Operation).where(Operation.id.in_([operation.id for operation in operations]))
-    async with async_session_maker() as async_session:
-        await async_session.execute(delete_interaction)
-        await async_session.execute(delete_dataset)
-        await async_session.execute(delete_operation)
-        await async_session.commit()
+    interactions = [interaction for interaction in all_interactions if interaction.dataset_id == dataset.id]
+
+    operation_ids = {interaction.operation_id for interaction in interactions}
+    operations = [operation for operation in all_operations if operation.id in operation_ids]
+
+    run_ids = {operation.run_id for operation in operations}
+    runs = [run for run in all_runs if run.id in run_ids]
+
+    job_ids = {run.job_id for run in runs}
+    jobs = [job for job in all_jobs if job.id in job_ids]
+
+    return jobs, runs, operations, [dataset], interactions

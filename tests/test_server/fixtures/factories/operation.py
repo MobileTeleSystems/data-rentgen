@@ -75,12 +75,12 @@ async def operations(
 ) -> AsyncGenerator[list[Operation], None]:
     size, params = request.param
     items = []
-    for i in range(size):
+    for index in range(size):
         run = choice(runs)
         items.append(
             operation_factory(
                 run_id=run.id,
-                created_at=run.created_at + timedelta(seconds=0.1 * i),
+                created_at=run.created_at + timedelta(seconds=index),
                 **params,
             ),
         )
@@ -112,10 +112,10 @@ async def operations_with_same_run(
     items = [
         operation_factory(
             run_id=run.id,
-            created_at=run.created_at + timedelta(seconds=s),
+            created_at=run.created_at + timedelta(seconds=index),
             **params,
         )
-        for s in range(size)
+        for index in range(size)
     ]
 
     async with async_session_maker() as async_session:

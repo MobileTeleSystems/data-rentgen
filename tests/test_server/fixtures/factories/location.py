@@ -28,7 +28,6 @@ async def location(
 ) -> AsyncGenerator[Location, None]:
     params = request.param
     item = location_factory(**params)
-
     del item.id
 
     async with async_session_maker() as async_session:

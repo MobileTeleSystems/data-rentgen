@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 from string import punctuation
+from typing import Iterable
 
 from sqlalchemy import desc, func, select, union
 from sqlalchemy.orm import selectinload
@@ -31,9 +32,12 @@ class JobRepository(Repository[Job]):
             return await self._create(job, location_id)
         return await self._update(result, job)
 
-    async def get_by_id(self, job_id: int) -> Job | None:
-        query = select(Job).where(Job.id == job_id).options(selectinload(Job.location).selectinload(Location.addresses))
-        return await self._session.scalar(query)
+    async def list_by_ids(self, job_ids: Iterable[int]) -> list[Job]:
+        query = (
+            select(Job).where(Job.id.in_(job_ids)).options(selectinload(Job.location).selectinload(Location.addresses))
+        )
+        result = await self._session.scalars(query)
+        return list(result.all())
 
     async def search(self, search_query: str, page: int, page_size: int) -> PaginationDTO[Job]:
         # For more accurate full-text search, we create a tsquery by combining the `search_query` "as is" with
