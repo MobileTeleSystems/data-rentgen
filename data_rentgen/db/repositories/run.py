@@ -99,7 +99,7 @@ class RunRepository(Repository[Run]):
                 func.plainto_tsquery("english", search_query.translate(ts_query_punctuation_map)),
             ),
         ).scalar_subquery()
-        base_stmt = select(Run.id)
+        base_stmt = select(Run)
         run_stmt = (
             base_stmt.add_columns((func.ts_rank(Run.search_vector, ts_query)).label("search_rank"))
             .join(Job, Run.job_id == Job.id)
@@ -117,7 +117,7 @@ class RunRepository(Repository[Run]):
         )
         results = results.all()  # type: ignore[assignment]
         run_ids = [result.id for result in results]
-
+        # TODO: refactor to explicit pagination
         return await self.pagination_by_id(page=page, page_size=page_size, run_ids=run_ids)
 
     async def _get(self, created_at: datetime, run_id: UUID) -> Run | None:
