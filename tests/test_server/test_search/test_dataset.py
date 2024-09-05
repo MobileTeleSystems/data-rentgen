@@ -28,7 +28,7 @@ async def test_dataset_search_in_addres_url(
 ) -> None:
     # dataset with id 8 has two addresses urls: [hdfs://my-cluster-namenode:2080, hdfs://my-cluster-namenode:8020] and random name
     dataset = datasets_search["hdfs://my-cluster-namenode:2080"]
-    result = await enrich_datasets([dataset], async_session)
+    datasets = await enrich_datasets([dataset], async_session)
 
     response = await test_client.get(
         "/v1/datasets/search",
@@ -49,7 +49,7 @@ async def test_dataset_search_in_addres_url(
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
                 },
             }
-            for dataset in result
+            for dataset in datasets
         ],
         "meta": {
             "has_next": False,
@@ -78,7 +78,7 @@ async def test_dataset_search_in_location_name(
         datasets_search["postgres.location"],
         datasets_search["postgres.history_location"],
     ]
-    result = await enrich_datasets(datasets, async_session)
+    datasets = await enrich_datasets(datasets, async_session)
     expected_response = {
         "items": [
             {
@@ -92,7 +92,7 @@ async def test_dataset_search_in_location_name(
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
                 },
             }
-            for dataset in result
+            for dataset in datasets
         ],
         "meta": {
             "has_next": False,
@@ -125,7 +125,7 @@ async def test_dataset_search_in_dataset_name(
 ) -> None:
     # Dataset with id 1 has dataset name `postgres.public.location_history`
     dataset = datasets_search["postgres.public.location_history"]
-    result = await enrich_datasets([dataset], async_session)
+    datasets = await enrich_datasets([dataset], async_session)
     expected_response = {
         "items": [
             {
@@ -139,7 +139,7 @@ async def test_dataset_search_in_dataset_name(
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
                 },
             }
-            for dataset in result
+            for dataset in datasets
         ],
         "meta": {
             "has_next": False,
@@ -170,7 +170,7 @@ async def test_dataset_search_in_location_name_and_address_url(
     # Dataset with id 5 has location name `my-cluster`
     # Dataset with id 8 has address url `hdfs://my-cluster-namenode:2080` and `hdfs://my-cluster-namenode:8020`
     datasets = [datasets_search["my-cluster"], datasets_search["hdfs://my-cluster-namenode:8020"]]
-    result = await enrich_datasets(datasets, async_session)
+    datasets = await enrich_datasets(datasets, async_session)
     expected_response = {
         "items": [
             {
@@ -184,7 +184,7 @@ async def test_dataset_search_in_location_name_and_address_url(
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
                 },
             }
-            for dataset in result
+            for dataset in datasets
         ],
         "meta": {
             "has_next": False,

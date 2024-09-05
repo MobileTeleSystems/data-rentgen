@@ -25,7 +25,7 @@ async def test_run_search_in_external_id(
     runs_search: dict[str, Run],
 ) -> None:
     runs = [runs_search["application_1638922609021_0001"], runs_search["application_1638922609021_0002"]]
-    result = await enrich_runs(runs, async_session)
+    runs = await enrich_runs(runs, async_session)
     expected_response = {
         "items": [
             {
@@ -44,7 +44,7 @@ async def test_run_search_in_external_id(
                 "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "end_reason": run.end_reason,
             }
-            for run in result
+            for run in runs
         ],
         "meta": {
             "has_next": False,
@@ -75,7 +75,7 @@ async def test_run_search_in_job_name(
     runs_search: dict[str, Run],
 ) -> None:
     runs = [runs_search["extract_task_0001"], runs_search["extract_task_0002"]]
-    result = await enrich_runs(runs, async_session)
+    runs = await enrich_runs(runs, async_session)
     expected_response = {
         "items": [
             {
@@ -94,7 +94,7 @@ async def test_run_search_in_job_name(
                 "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "end_reason": run.end_reason,
             }
-            for run in result
+            for run in runs
         ],
         "meta": {
             "has_next": False,
@@ -125,7 +125,7 @@ async def test_run_search_in_job_type(
     runs_search: dict[str, Run],
 ) -> None:
     runs = [runs_search["application_1638922609021_0001"], runs_search["application_1638922609021_0002"]]
-    result = await enrich_runs(runs, async_session)
+    runs = await enrich_runs(runs, async_session)
     expected_response = {
         "items": [
             {
@@ -144,7 +144,7 @@ async def test_run_search_in_job_type(
                 "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "end_reason": run.end_reason,
             }
-            for run in result
+            for run in runs
         ],
         "meta": {
             "has_next": False,
