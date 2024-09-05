@@ -7,9 +7,10 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.db.models import Job, Run, Status, User
+from data_rentgen.db.models import Address, Job, Run, Status, User
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
 from tests.test_server.fixtures.factories.base import random_datetime, random_string
+from tests.test_server.fixtures.factories.job import job_factory
 
 
 def run_factory(**kwargs):
@@ -136,3 +137,58 @@ async def runs_with_same_job(
             async_session.expunge(item)
 
     yield items
+
+
+@pytest_asyncio.fixture(params=[{}])
+async def runs_search(
+    request: pytest.FixtureRequest,
+    async_session: AsyncSession,
+    addresses: list[Address],
+    user: User,
+) -> AsyncGenerator[dict[str, Run], None]:
+    request.param
+    job_names_type = [("spark_application_name", "SPARK_APPLICATION"), ("airflow_dag_name", "AIRFLOW_DAG")]
+    jobs = [
+        job_factory(
+            name=name,
+            type=job_type,
+            location_id=choice(addresses).location_id,
+        )
+        for name, job_type in job_names_type
+    ]
+    for item in jobs:
+        del item.id
+        async_session.add(item)
+    # this is not required for backend tests, but needed by client tests
+    await async_session.commit()
+
+    # remove current object from async_session. this is required to compare object against new state fetched
+    # from database, and also to remove it from cache
+    for item in jobs:
+        await async_session.refresh(item)
+        async_session.expunge(item)
+
+    runs_external_ids = [
+        "application_1638922609021_0001",
+        "application_1638922609021_0002",
+        "extract_task_0001",
+        "extract_task_0002",
+    ]
+
+    runs = [
+        run_factory(external_id=external_id, job_id=job.id, started_by_user_id=user.id)
+        # Each job has 2 runs
+        for external_id, job in zip(runs_external_ids, [job for job in jobs for _ in range(2)])
+    ]
+    for item in runs:
+        async_session.add(item)
+    # this is not required for backend tests, but needed by client tests
+    await async_session.commit()
+
+    # remove current object from async_session. this is required to compare object against new state fetched
+    # from database, and also to remove it from cache
+    for item in runs:
+        await async_session.refresh(item)
+        async_session.expunge(item)
+
+    yield {str(run.external_id): run for run in runs}

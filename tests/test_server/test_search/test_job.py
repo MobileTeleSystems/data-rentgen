@@ -4,10 +4,9 @@ import pytest
 from deepdiff import DeepDiff
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-from sqlalchemy.sql import select
 
-from data_rentgen.db.models import Job, Location
+from data_rentgen.db.models import Job
+from tests.test_server.test_search.utils import enrich_jobs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
@@ -26,14 +25,7 @@ async def test_job_search_in_addres_url(
     jobs_search: dict[str, Job],
 ) -> None:
     # Job with id 8 has two addresses urls: [http://airflow-host:2080, http://airflow-host:8020] and random name
-    job = jobs_search["http://airflow-host:2080"]
-    query = (
-        select(Location)
-        .join(Job, Job.location_id == Location.id)
-        .options(selectinload(Location.addresses))
-        .where(Job.id == job.id)
-    )
-    location = await async_session.scalar(query)
+    jobs = await enrich_jobs([jobs_search["http://airflow-host:2080"]], async_session)
 
     response = await test_client.get(
         "/v1/jobs/search",
@@ -48,11 +40,12 @@ async def test_job_search_in_addres_url(
                 "id": job.id,
                 "name": job.name,
                 "location": {
-                    "name": location.name,
-                    "type": location.type,
-                    "addresses": [{"url": address.url} for address in location.addresses],
+                    "name": job.location.name,
+                    "type": job.location.type,
+                    "addresses": [{"url": address.url} for address in job.location.addresses],
                 },
-            },
+            }
+            for job in jobs
         ],
         "meta": {
             "has_next": False,
@@ -73,10 +66,7 @@ async def test_job_search_in_location_name(
     jobs_search: dict[str, Job],
 ) -> None:
     # Job with id 5 has location names `data-product-host`
-
-    job = jobs_search["data-product-host"]
-    query = select(Job).where(Job.id.in_([job.id])).options(selectinload(Job.location).selectinload(Location.addresses))
-    result = await async_session.scalars(query)
+    jobs = await enrich_jobs([jobs_search["data-product-host"]], async_session)
     expected_response = {
         "items": [
             {
@@ -89,7 +79,7 @@ async def test_job_search_in_location_name(
                     "addresses": [{"url": address.url} for address in job.location.addresses],
                 },
             }
-            for job in result.all()
+            for job in jobs
         ],
         "meta": {
             "has_next": False,
@@ -121,13 +111,10 @@ async def test_job_search_in_job_name(
 ) -> None:
     # Jobs with ids 0 and 2 has job name `airflow-task` and `airflow-task`
     # Jobs with id 8 has two addresses urls: [http://airflow-host:2080, http://airflow-host:8020]
-    jobs = [jobs_search["airflow-task"], jobs_search["airflow-dag"], jobs_search["http://airflow-host:8020"]]
-    query = (
-        select(Job)
-        .where(Job.id.in_([job.id for job in jobs]))
-        .options(selectinload(Job.location).selectinload(Location.addresses))
+    jobs = await enrich_jobs(
+        [jobs_search["airflow-task"], jobs_search["airflow-dag"], jobs_search["http://airflow-host:8020"]],
+        async_session,
     )
-    result = await async_session.scalars(query)
     expected_response = {
         "items": [
             {
@@ -140,7 +127,7 @@ async def test_job_search_in_job_name(
                     "addresses": [{"url": address.url} for address in job.location.addresses],
                 },
             }
-            for job in result.all()
+            for job in jobs
         ],
         "meta": {
             "has_next": False,
@@ -171,13 +158,7 @@ async def test_job_search_in_location_name_and_address_url(
 ) -> None:
     # Job with id 4 has location name `my-cluster`
     # Job with id 6 has address urls: [`yarn://my_cluster_1`, `yarn://my_cluster_2`]
-    jobs = [jobs_search["my-cluster"], jobs_search["yarn://my_cluster_1"]]
-    query = (
-        select(Job)
-        .where(Job.id.in_([job.id for job in jobs]))
-        .options(selectinload(Job.location).selectinload(Location.addresses))
-    )
-    result = await async_session.scalars(query)
+    jobs = await enrich_jobs([jobs_search["my-cluster"], jobs_search["yarn://my_cluster_1"]], async_session)
     expected_response = {
         "items": [
             {
@@ -190,7 +171,7 @@ async def test_job_search_in_location_name_and_address_url(
                     "addresses": [{"url": address.url} for address in job.location.addresses],
                 },
             }
-            for job in result.all()
+            for job in jobs
         ],
         "meta": {
             "has_next": False,
