@@ -4,6 +4,7 @@ from typing import AsyncContextManager, Callable
 
 import pytest
 import pytest_asyncio
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Address, Job, JobType
@@ -45,15 +46,19 @@ async def job(
 
     async with async_session_maker() as async_session:
         async_session.add(item)
-        # this is not required for backend tests, but needed by client tests
-        await async_session.commit()
 
-        # remove current object from async_session. this is required to compare object against new state fetched
-        # from database, and also to remove it from cache
+        await async_session.commit()
         await async_session.refresh(item)
-        async_session.expunge(item)
+
+        async_session.expunge_all()
 
     yield item
+
+    delete_query = delete(Job).where(Job.id == item.id)
+    # Add teardown cause fixture async_session doesn't used
+    async with async_session_maker() as async_session:
+        await async_session.execute(delete_query)
+        await async_session.commit()
 
 
 @pytest_asyncio.fixture(params=[(5, {})])
@@ -69,16 +74,20 @@ async def jobs(
         for item in items:
             del item.id
             async_session.add(item)
-        # this is not required for backend tests, but needed by client tests
-        await async_session.commit()
 
-        # remove current object from async_session. this is required to compare object against new state fetched
-        # from database, and also to remove it from cache
+        await async_session.commit()
         for item in items:
             await async_session.refresh(item)
-            async_session.expunge(item)
+
+        async_session.expunge_all()
 
     yield items
+
+    delete_query = delete(Job).where(Job.id.in_([item.id for item in items]))
+    # Add teardown cause fixture async_session doesn't used
+    async with async_session_maker() as async_session:
+        await async_session.execute(delete_query)
+        await async_session.commit()
 
 
 @pytest_asyncio.fixture(params=[{}])
@@ -123,14 +132,7 @@ async def jobs_search(
     for item in locations:
         del item.id
         async_session.add(item)
-    # this is not required for backend tests, but needed by client tests
-    await async_session.commit()
-
-    # remove current object from async_session. this is required to compare object against new state fetched
-    # from database, and also to remove it from cache
-    for item in locations:
-        await async_session.refresh(item)
-        async_session.expunge(item)
+    await async_session.flush()
 
     addresses_url = (
         ["yarn://my_cluster_1", "yarn://my_cluster_2"]
@@ -149,6 +151,10 @@ async def jobs_search(
         address_factory(location_id=location.id) for location in (locations[:3] + locations[6:]) * 2
     ]
     addresses = addresses_with_name + addresses_with_random_name
+    for item in addresses:
+        del item.id
+        async_session.add(item)
+    await async_session.flush()
 
     jobs_names = ["airflow-task", "spark_application", "airflow-dag"]
     jobs_with_name = [
@@ -157,15 +163,12 @@ async def jobs_search(
     ]
     jobs_with_random_name = [job_factory(location_id=location.id) for location in locations[:6]]
     jobs = jobs_with_name + jobs_with_random_name
-    for item in addresses + jobs:
+    for item in jobs:
         del item.id
         async_session.add(item)
-    # this is not required for backend tests, but needed by client tests
     await async_session.commit()
 
-    # remove current object from async_session. this is required to compare object against new state fetched
-    # from database, and also to remove it from cache
-    for item in addresses + jobs:
+    for item in locations + addresses + jobs:
         await async_session.refresh(item)
         async_session.expunge(item)
 

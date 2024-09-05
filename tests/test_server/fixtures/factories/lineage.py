@@ -5,6 +5,7 @@ from typing import AsyncContextManager, Callable
 
 import pytest
 import pytest_asyncio
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import (
@@ -24,8 +25,8 @@ from tests.test_server.fixtures.factories.run import run_factory
 
 @pytest_asyncio.fixture()
 async def lineage(
-    job: Job,
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    job: Job,
     addresses: list[Address],
 ) -> AsyncGenerator[tuple[Job, list[Run], list[Dataset], list[Operation], list[Interaction]], None]:
     datasets = [dataset_factory(location_id=choice(addresses).location_id) for _ in range(4)]
@@ -49,18 +50,27 @@ async def lineage(
         for operation, dataset, inter_type in zip(operations, datasets, [read, append, read, append])
     ]
     async with async_session_maker() as async_session:
-        for item in runs + datasets + operations + interactions:
-            async_session.add(item)
+        async_session.add_all(runs + datasets + operations + interactions)
         await async_session.commit()
-
-        # remove current object from async_session. this is required to compare object against new state fetched
-        # from database, and also to remove it from cache
-
         for item in runs + datasets + operations + interactions:
             await async_session.refresh(item)
-            async_session.expunge(item)
+
+        async_session.expunge_all()
 
     yield job, runs, datasets, operations, interactions
+
+    delete_interaction = delete(Interaction).where(
+        Interaction.operation_id.in_([operation.id for operation in operations]),
+    )
+    delete_operation = delete(Operation).where(Operation.id.in_([operation.id for operation in operations]))
+    delete_dataset = delete(Dataset).where(Dataset.id.in_([item.id for item in datasets]))
+    delete_run = delete(Run).where(Run.id.in_([item.id for item in runs]))
+    async with async_session_maker() as async_session:
+        await async_session.execute(delete_interaction)
+        await async_session.execute(delete_operation)
+        await async_session.execute(delete_dataset)
+        await async_session.execute(delete_run)
+        await async_session.commit()
 
 
 @pytest_asyncio.fixture(params=[(3, {})])
@@ -88,18 +98,28 @@ async def run_lineage(
     ]
 
     async with async_session_maker() as async_session:
-        for item in [run] + datasets + operations + interactions:
-            async_session.add(item)
+        async_session.add_all([run] + datasets + operations + interactions)
+
         await async_session.commit()
-
-        # remove current object from async_session. this is required to compare object against new state fetched
-        # from database, and also to remove it from cache
-
         for item in [run] + datasets + operations + interactions:
             await async_session.refresh(item)
-            async_session.expunge(item)
+
+        async_session.expunge_all()
 
     yield run, datasets, operations
+
+    delete_interaction = delete(Interaction).where(
+        Interaction.operation_id.in_([operation.id for operation in operations]),
+    )
+    delete_operation = delete(Operation).where(Operation.id.in_([operation.id for operation in operations]))
+    delete_dataset = delete(Dataset).where(Dataset.id.in_([item.id for item in datasets]))
+    delete_run = delete(Run).where(Run.id == run.id)
+    async with async_session_maker() as async_session:
+        await async_session.execute(delete_interaction)
+        await async_session.execute(delete_operation)
+        await async_session.execute(delete_dataset)
+        await async_session.execute(delete_run)
+        await async_session.commit()
 
 
 @pytest_asyncio.fixture(params=[(3, {})])
@@ -115,7 +135,7 @@ async def operation_to_datasets_lineage(
 
     interactions = [
         interaction_factory(
-            created_at=started_at + timedelta(seconds=1),
+            created_at=operation.created_at + timedelta(seconds=1),
             operation_id=operation.id,
             dataset_id=dataset.id,
             type=InteractionType.APPEND,
@@ -124,17 +144,24 @@ async def operation_to_datasets_lineage(
     ]
 
     async with async_session_maker() as async_session:
-        for item in datasets + [operation] + interactions:
-            async_session.add(item)
-        await async_session.commit()
+        async_session.add_all(datasets + [operation] + interactions)
 
-        # remove current object from async_session. this is required to compare object against new state fetched
-        # from database, and also to remove it from cache
+        await async_session.commit()
         for item in datasets + [operation] + interactions:
             await async_session.refresh(item)
-            async_session.expunge(item)
+
+        async_session.expunge_all()
 
     yield operation, datasets
+
+    delete_interaction = delete(Interaction).where(Interaction.operation_id == operation.id)
+    delete_operation = delete(Operation).where(Operation.id == operation.id)
+    delete_dataset = delete(Dataset).where(Dataset.id.in_([item.id for item in datasets]))
+    async with async_session_maker() as async_session:
+        await async_session.execute(delete_interaction)
+        await async_session.execute(delete_operation)
+        await async_session.execute(delete_dataset)
+        await async_session.commit()
 
 
 @pytest_asyncio.fixture(params=[(3, {})])
@@ -159,14 +186,21 @@ async def operations_to_dataset_lineage(
     ]
 
     async with async_session_maker() as async_session:
-        for item in [dataset] + operations + interactions:
-            async_session.add(item)
-        await async_session.commit()
+        async_session.add_all([dataset] + operations + interactions)
 
-        # remove current object from async_session. this is required to compare object against new state fetched
-        # from database, and also to remove it from cache
+        await async_session.commit()
         for item in [dataset] + operations + interactions:
             await async_session.refresh(item)
-            async_session.expunge(item)
+
+        async_session.expunge_all()
 
     yield dataset, operations
+
+    delete_interaction = delete(Interaction).where(Interaction.dataset_id == dataset.id)
+    delete_dataset = delete(Dataset).where(Dataset.id == dataset.id)
+    delete_operation = delete(Operation).where(Operation.id.in_([operation.id for operation in operations]))
+    async with async_session_maker() as async_session:
+        await async_session.execute(delete_interaction)
+        await async_session.execute(delete_dataset)
+        await async_session.execute(delete_operation)
+        await async_session.commit()

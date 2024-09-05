@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import select
 
 from data_rentgen.db.models import Dataset, Interaction, Job, Location, Operation, Run
+from tests.test_server.utils.enrich import enrich_datasets, enrich_jobs, enrich_runs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
@@ -20,23 +21,12 @@ async def test_get_job_lineage(
     lineage: lineage_fixture_annotation,
 ):
     job, runs, datasets, operations, _ = lineage
-    # Get location for dataset from db
-    query = select(Location).options(selectinload(Location.addresses)).where(Location.id == job.location_id)
-    job_location = await async_session.scalar(query)
-    query = (
-        select(Location)
-        .join(Dataset, Dataset.location_id == Location.id)
-        .options(selectinload(Location.addresses))
-        .where(Dataset.id == datasets[1].id)
-    )
-    location_1 = await async_session.scalar(query)
-    query = (
-        select(Location)
-        .join(Dataset, Dataset.location_id == Location.id)
-        .options(selectinload(Location.addresses))
-        .where(Dataset.id == datasets[3].id)
-    )
-    location_3 = await async_session.scalar(query)
+
+    jobs = await enrich_jobs([job], async_session)
+    job = jobs[0]
+
+    runs = await enrich_runs(runs, async_session)
+    datasets = await enrich_datasets(datasets, async_session)
 
     response = await test_client.get(
         "v1/lineage",
@@ -94,9 +84,9 @@ async def test_get_job_lineage(
                 "id": job.id,
                 "name": job.name,
                 "location": {
-                    "type": job_location.type,
-                    "name": job_location.name,
-                    "addresses": [{"url": address.url} for address in job_location.addresses],
+                    "type": job.location.type,
+                    "name": job.location.name,
+                    "addresses": [{"url": address.url} for address in job.location.addresses],
                 },
             },
             {
@@ -161,9 +151,9 @@ async def test_get_job_lineage(
                 "format": datasets[1].format,
                 "name": datasets[1].name,
                 "location": {
-                    "name": location_1.name,
-                    "type": location_1.type,
-                    "addresses": [{"url": address.url} for address in location_1.addresses],
+                    "name": datasets[1].location.name,
+                    "type": datasets[1].location.type,
+                    "addresses": [{"url": address.url} for address in datasets[1].location.addresses],
                 },
             },
             {
@@ -172,9 +162,9 @@ async def test_get_job_lineage(
                 "format": datasets[3].format,
                 "name": datasets[3].name,
                 "location": {
-                    "name": location_3.name,
-                    "type": location_3.type,
-                    "addresses": [{"url": address.url} for address in location_3.addresses],
+                    "name": datasets[3].location.name,
+                    "type": datasets[3].location.type,
+                    "addresses": [{"url": address.url} for address in datasets[3].location.addresses],
                 },
             },
         ],
@@ -187,14 +177,17 @@ async def test_get_job_lineage_with_until(
     lineage: lineage_fixture_annotation,
 ):
     job, runs, datasets, operations, _ = lineage
+
+    runs = await enrich_runs(runs, async_session)
     run = runs[0]
+
+    datasets = await enrich_datasets(datasets, async_session)
     dataset = datasets[1]
+
+    jobs = await enrich_jobs([job], async_session)
+    job = jobs[0]
     operation = operations[1]
-    # Get locations from db
-    query = select(Location).options(selectinload(Location.addresses)).where(Location.id == job.location_id)
-    job_location = await async_session.scalar(query)
-    query = select(Location).options(selectinload(Location.addresses)).where(Location.id == datasets[1].location_id)
-    dataset_location = await async_session.scalar(query)
+
     since = run.created_at
     until = since + timedelta(seconds=1)
     job_node = {
@@ -202,9 +195,9 @@ async def test_get_job_lineage_with_until(
         "id": job.id,
         "name": job.name,
         "location": {
-            "type": job_location.type,
-            "name": job_location.name,
-            "addresses": [{"url": address.url} for address in job_location.addresses],
+            "type": job.location.type,
+            "name": job.location.name,
+            "addresses": [{"url": address.url} for address in job.location.addresses],
         },
     }
     run_node = {
@@ -241,9 +234,9 @@ async def test_get_job_lineage_with_until(
         "format": dataset.format,
         "name": dataset.name,
         "location": {
-            "name": dataset_location.name,
-            "type": dataset_location.type,
-            "addresses": [{"url": address.url} for address in dataset_location.addresses],
+            "name": dataset.location.name,
+            "type": dataset.location.type,
+            "addresses": [{"url": address.url} for address in dataset.location.addresses],
         },
     }
     relations = [

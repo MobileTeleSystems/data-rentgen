@@ -1,10 +1,11 @@
 from collections.abc import AsyncGenerator
-from datetime import datetime, timedelta
+from datetime import timedelta
 from random import choice, randint
 from typing import AsyncContextManager, Callable
 
 import pytest
 import pytest_asyncio
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Operation, OperationType, Run, Status
@@ -48,19 +49,22 @@ async def operation(
     run: Run,
 ) -> AsyncGenerator[Operation, None]:
     params = request.param
-    item = operation_factory(run_id=run.id, **params)
+    item = operation_factory(run_id=run.id, created_at=run.created_at + timedelta(seconds=1), **params)
 
     async with async_session_maker() as async_session:
         async_session.add(item)
-        # this is not required for backend tests, but needed by client tests
-        await async_session.commit()
 
-        # remove current object from async_session. this is required to compare object against new state fetched
-        # from database, and also to remove it from cache
+        await async_session.commit()
         await async_session.refresh(item)
-        async_session.expunge(item)
+
+        async_session.expunge_all()
 
     yield item
+
+    delete_query = delete(Operation).where(Operation.id == item.id)
+    async with async_session_maker() as async_session:
+        await async_session.execute(delete_query)
+        await async_session.commit()
 
 
 @pytest_asyncio.fixture(params=[(5, {})])
@@ -70,29 +74,32 @@ async def operations(
     runs: list[Run],
 ) -> AsyncGenerator[list[Operation], None]:
     size, params = request.param
-    started_at = datetime.now()
-    items = [
-        operation_factory(
-            run_id=choice(runs).id,
-            created_at=started_at + timedelta(seconds=0.1 * i),
-            **params,
+    items = []
+    for i in range(size):
+        run = choice(runs)
+        items.append(
+            operation_factory(
+                run_id=run.id,
+                created_at=run.created_at + timedelta(seconds=0.1 * i),
+                **params,
+            ),
         )
-        for i in range(size)
-    ]
 
     async with async_session_maker() as async_session:
-        for item in items:
-            async_session.add(item)
-        # this is not required for backend tests, but needed by client tests
-        await async_session.commit()
+        async_session.add_all(items)
 
-        # remove current object from async_session. this is required to compare object against new state fetched
-        # from database, and also to remove it from cache
+        await async_session.commit()
         for item in items:
             await async_session.refresh(item)
-            async_session.expunge(item)
+
+        async_session.expunge_all()
 
     yield items
+
+    delete_query = delete(Operation).where(Operation.id.in_([item.id for item in items]))
+    async with async_session_maker() as async_session:
+        await async_session.execute(delete_query)
+        await async_session.commit()
 
 
 @pytest_asyncio.fixture(params=[(5, {})])
@@ -102,26 +109,27 @@ async def operations_with_same_run(
     run: Run,
 ) -> AsyncGenerator[list[Operation], None]:
     size, params = request.param
-    started_at = datetime.now()
     items = [
         operation_factory(
             run_id=run.id,
-            created_at=started_at + timedelta(seconds=s),
+            created_at=run.created_at + timedelta(seconds=s),
             **params,
         )
         for s in range(size)
     ]
 
     async with async_session_maker() as async_session:
-        for item in items:
-            async_session.add(item)
-        # this is not required for backend tests, but needed by client tests
-        await async_session.commit()
+        async_session.add_all(items)
 
-        # remove current object from async_session. this is required to compare object against new state fetched
-        # from database, and also to remove it from cache
+        await async_session.commit()
         for item in items:
             await async_session.refresh(item)
-            async_session.expunge(item)
+
+        async_session.expunge_all()
 
     yield items
+
+    delete_query = delete(Operation).where(Operation.id.in_([item.id for item in items]))
+    async with async_session_maker() as async_session:
+        await async_session.execute(delete_query)
+        await async_session.commit()

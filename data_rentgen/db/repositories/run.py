@@ -56,7 +56,7 @@ class RunRepository(Repository[Run]):
             .where(Run.id.in_(run_ids))
             .options(selectinload(Run.started_by_user))
         )
-        return await self._paginate_by_query(order_by=[Run.job_id, Run.id], page=page, page_size=page_size, query=query)
+        return await self._paginate_by_query(order_by=[Run.id], page=page, page_size=page_size, query=query)
 
     async def pagination_by_job_id(
         self,

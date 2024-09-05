@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import select
 
 from data_rentgen.db.models import Dataset, Location
+from tests.test_server.utils.enrich import enrich_datasets
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
@@ -41,12 +42,8 @@ async def test_get_dataset(
     dataset: Dataset,
     async_session: AsyncSession,
 ):
-    query = (
-        select(Dataset)
-        .where(Dataset.id == dataset.id)
-        .options(selectinload(Dataset.location).selectinload(Location.addresses))
-    )
-    dataset_from_db: Dataset = await async_session.scalar(query)
+    datasets = await enrich_datasets([dataset], async_session)
+    dataset = datasets[0]
 
     response = await test_client.get(
         "v1/datasets",
@@ -68,15 +65,13 @@ async def test_get_dataset(
         "items": [
             {
                 "kind": "DATASET",
-                "id": dataset_from_db.id,
-                "format": dataset_from_db.format,
-                "name": dataset_from_db.name,
+                "id": dataset.id,
+                "format": dataset.format,
+                "name": dataset.name,
                 "location": {
-                    "name": dataset_from_db.location.name,
-                    "type": dataset_from_db.location.type,
-                    "addresses": [
-                        {"url": dataset_from_db.location.addresses[0].url},
-                    ],
+                    "name": dataset.location.name,
+                    "type": dataset.location.type,
+                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
                 },
             },
         ],
@@ -89,20 +84,11 @@ async def test_get_datasets_by_multiple_ids(
     async_session: AsyncSession,
 ):
     # create more objects than pass to endpoint, to test filtering
-    dataset_ids = [dataset.id for dataset in datasets[:2]]
-
-    query = (
-        select(Dataset)
-        .where(Dataset.id.in_(dataset_ids))
-        .order_by(Dataset.name)
-        .options(selectinload(Dataset.location).selectinload(Location.addresses))
-    )
-    scalars = await async_session.scalars(query)
-    datasets_from_db = list(scalars.all())
+    datasets = await enrich_datasets(datasets[:2], async_session)
 
     response = await test_client.get(
         "v1/datasets",
-        params={"dataset_id": dataset_ids},
+        params={"dataset_id": [dataset.id for dataset in datasets]},
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -129,7 +115,7 @@ async def test_get_datasets_by_multiple_ids(
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
                 },
             }
-            for dataset in datasets_from_db
+            for dataset in sorted(datasets, key=lambda x: x.name)
         ],
     }
 
@@ -139,15 +125,8 @@ async def test_get_datasets_no_filters(
     datasets: list[Dataset],
     async_session: AsyncSession,
 ):
-    query = (
-        select(Dataset).order_by(Dataset.name).options(selectinload(Dataset.location).selectinload(Location.addresses))
-    )
-    scalars = await async_session.scalars(query)
-    datasets_from_db = list(scalars.all())
-
-    response = await test_client.get(
-        "v1/datasets",
-    )
+    datasets = await enrich_datasets(datasets, async_session)
+    response = await test_client.get("v1/datasets")
 
     assert response.status_code == HTTPStatus.OK
     assert response.json() == {
@@ -173,6 +152,6 @@ async def test_get_datasets_no_filters(
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
                 },
             }
-            for dataset in datasets_from_db
+            for dataset in sorted(datasets, key=lambda x: x.name)
         ],
     }

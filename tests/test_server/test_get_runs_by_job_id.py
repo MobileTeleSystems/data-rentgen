@@ -4,10 +4,9 @@ from http import HTTPStatus
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-from sqlalchemy.sql import select
 
-from data_rentgen.db.models import Run
+from data_rentgen.db.models import Job, Run
+from tests.test_server.utils.enrich import enrich_runs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
@@ -143,74 +142,27 @@ async def test_get_runs_by_job_id_missing(
     }
 
 
-async def test_get_run_by_job_id(
-    test_client: AsyncClient,
-    run: Run,
-    async_session: AsyncSession,
-):
-    query = select(Run).where(Run.id == run.id).options(selectinload(Run.started_by_user))
-    run_from_db: Run = await async_session.scalar(query)
-
-    response = await test_client.get(
-        "v1/runs",
-        params={
-            "since": run.created_at.isoformat(),
-            "job_id": run.job_id,
-        },
-    )
-
-    assert response.status_code == HTTPStatus.OK
-    assert response.json() == {
-        "meta": {
-            "page": 1,
-            "page_size": 20,
-            "total_count": 1,
-            "pages_count": 1,
-            "has_next": False,
-            "has_previous": False,
-            "next_page": None,
-            "previous_page": None,
-        },
-        "items": [
-            {
-                "kind": "RUN",
-                "id": str(run_from_db.id),
-                "job_id": run_from_db.job_id,
-                "parent_run_id": str(run_from_db.parent_run_id),
-                "status": run_from_db.status.value,
-                "external_id": run_from_db.external_id,
-                "attempt": run_from_db.attempt,
-                "persistent_log_url": run_from_db.persistent_log_url,
-                "running_log_url": run_from_db.running_log_url,
-                "started_at": run_from_db.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "started_by_user": {"name": run_from_db.started_by_user.name},
-                "start_reason": run_from_db.start_reason,
-                "ended_at": run_from_db.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "end_reason": run_from_db.end_reason,
-            },
-        ],
-    }
-
-
 async def test_get_runs_by_job_id(
     test_client: AsyncClient,
-    runs_with_same_job: list[Run],
+    jobs: list[Job],
+    runs: list[Run],
     async_session: AsyncSession,
 ):
-    query = (
-        select(Run)
-        .where(Run.id.in_([run.id for run in runs_with_same_job]))
-        .order_by(Run.id)
-        .options(selectinload(Run.started_by_user))
-    )
-    scalars = await async_session.scalars(query)
-    runs_from_db = list(scalars.all())
+    job_ids = {run.job_id for run in runs}
+    jobs = [job for job in jobs if job.id in job_ids]
 
+    selected_job = jobs[0]
+    selected_runs = await enrich_runs(
+        [run for run in runs if run.job_id == selected_job.id],
+        async_session,
+    )
+
+    since = min(run.created_at for run in selected_runs)
     response = await test_client.get(
         "v1/runs",
         params={
-            "since": runs_with_same_job[0].created_at.isoformat(),
-            "job_id": runs_with_same_job[0].job_id,
+            "since": since.isoformat(),
+            "job_id": selected_job.id,
         },
     )
 
@@ -219,7 +171,7 @@ async def test_get_runs_by_job_id(
         "meta": {
             "page": 1,
             "page_size": 20,
-            "total_count": 5,
+            "total_count": len(selected_runs),
             "pages_count": 1,
             "has_next": False,
             "has_previous": False,
@@ -243,7 +195,7 @@ async def test_get_runs_by_job_id(
                 "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "end_reason": run.end_reason,
             }
-            for run in runs_from_db
+            for run in sorted(selected_runs, key=lambda x: x.id)
         ],
     }
 
@@ -253,24 +205,16 @@ async def test_get_runs_time_range(
     runs_with_same_job: list[Run],
     async_session: AsyncSession,
 ):
-    since = runs_with_same_job[0].created_at
+    since = min(run.created_at for run in runs_with_same_job)
     until = since + timedelta(seconds=1)
 
-    query = (
-        select(Run)
-        .where(Run.id.in_([run.id for run in runs_with_same_job]))
-        .where(Run.created_at >= since)
-        .where(Run.created_at <= until)
-        .order_by(Run.id)
-        .options(selectinload(Run.started_by_user))
-    )
-    scalars = await async_session.scalars(query)
-    runs_from_db = list(scalars.all())
+    selected_runs = [run for run in runs_with_same_job if since <= run.created_at <= until]
+    runs = await enrich_runs(selected_runs, async_session)
 
     response = await test_client.get(
         "v1/runs",
         params={
-            "job_id": runs_with_same_job[0].job_id,
+            "job_id": runs[0].job_id,
             "since": since.isoformat(),
             "until": until.isoformat(),
         },
@@ -305,6 +249,6 @@ async def test_get_runs_time_range(
                 "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "end_reason": run.end_reason,
             }
-            for run in runs_from_db
+            for run in sorted(runs, key=lambda x: x.id)
         ],
     }

@@ -4,6 +4,7 @@ from typing import AsyncContextManager, Callable
 
 import pytest
 import pytest_asyncio
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Address, Dataset, Location
@@ -45,15 +46,19 @@ async def dataset(
 
     async with async_session_maker() as async_session:
         async_session.add(item)
-        # this is not required for backend tests, but needed by client tests
-        await async_session.commit()
 
-        # remove current object from async_session. this is required to compare object against new state fetched
-        # from database, and also to remove it from cache
+        await async_session.commit()
         await async_session.refresh(item)
-        async_session.expunge(item)
+
+        async_session.expunge_all()
 
     yield item
+
+    delete_query = delete(Dataset).where(Dataset.id == item.id)
+    # Add teardown cause fixture async_session doesn't used
+    async with async_session_maker() as async_session:
+        await async_session.execute(delete_query)
+        await async_session.commit()
 
 
 @pytest_asyncio.fixture(params=[(2, {})])
@@ -69,16 +74,20 @@ async def datasets(
         for item in items:
             del item.id
             async_session.add(item)
-        # this is not required for backend tests, but needed by client tests
-        await async_session.commit()
 
-        # remove current object from async_session. this is required to compare object against new state fetched
-        # from database, and also to remove it from cache
+        await async_session.commit()
         for item in items:
             await async_session.refresh(item)
-            async_session.expunge(item)
+
+        async_session.expunge_all()
 
     yield items
+
+    delete_query = delete(Dataset).where(Dataset.id.in_([item.id for item in items]))
+    # Add teardown cause fixture async_session doesn't used
+    async with async_session_maker() as async_session:
+        await async_session.execute(delete_query)
+        await async_session.commit()
 
 
 @pytest_asyncio.fixture(params=[{}])
@@ -128,14 +137,8 @@ async def datasets_search(
     for item in locations:
         del item.id
         async_session.add(item)
-    # this is not required for backend tests, but needed by client tests
-    await async_session.commit()
 
-    # remove current object from async_session. this is required to compare object against new state fetched
-    # from database, and also to remove it from cache
-    for item in locations:
-        await async_session.refresh(item)
-        async_session.expunge(item)
+    await async_session.flush()
 
     addresses_url = (
         ["http://my-postgres-host:8012", "http://my-postgres-host:2108"]
@@ -154,6 +157,10 @@ async def datasets_search(
         address_factory(location_id=location.id) for location in (locations[:3] + locations[6:]) * 2
     ]
     addresses = addresses_with_name + addresses_with_random_name
+    for item in addresses:
+        del item.id
+        async_session.add(item)
+    await async_session.flush()
 
     datasets_names = ["postgres.public.history", "postgres.public.location_history", "/user/hive/warehouse/transfers"]
     datasets_with_name = [
@@ -162,15 +169,13 @@ async def datasets_search(
     ]
     datasets_with_random_name = [dataset_factory(location_id=location.id) for location in locations[:6]]
     datasets = datasets_with_name + datasets_with_random_name
-    for item in addresses + datasets:
+    for item in datasets:
         del item.id
         async_session.add(item)
-    # this is not required for backend tests, but needed by client tests
+
     await async_session.commit()
 
-    # remove current object from async_session. this is required to compare object against new state fetched
-    # from database, and also to remove it from cache
-    for item in addresses + datasets:
+    for item in locations + addresses + datasets:
         await async_session.refresh(item)
         async_session.expunge(item)
 
