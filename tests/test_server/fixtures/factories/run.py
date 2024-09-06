@@ -5,6 +5,7 @@ from typing import AsyncContextManager, Callable
 
 import pytest
 import pytest_asyncio
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Address, Job, Run, Status, User
@@ -59,15 +60,19 @@ async def run(
     # TODO: Refactor this part to separate function.
     async with async_session_maker() as async_session:
         async_session.add(item)
-        # this is not required for backend tests, but needed by client tests
-        await async_session.commit()
 
-        # remove current object from async_session. this is required to compare object against new state fetched
-        # from database, and also to remove it from cache
+        await async_session.commit()
         await async_session.refresh(item)
-        async_session.expunge(item)
+
+        async_session.expunge_all()
 
     yield item
+
+    delete_query = delete(Run).where(Run.id == item.id)
+    # Add teardown cause fixture async_session doesn't used
+    async with async_session_maker() as async_session:
+        await async_session.execute(delete_query)
+        await async_session.commit()
 
 
 @pytest_asyncio.fixture(params=[(5, {})])
@@ -91,18 +96,21 @@ async def runs(
 
     # TODO: Refactor this part to separate function.
     async with async_session_maker() as async_session:
-        for item in items:
-            async_session.add(item)
-        # this is not required for backend tests, but needed by client tests
-        await async_session.commit()
+        async_session.add_all(items)
 
-        # remove current object from async_session. this is required to compare object against new state fetched
-        # from database, and also to remove it from cache
+        await async_session.commit()
         for item in items:
             await async_session.refresh(item)
-            async_session.expunge(item)
+
+        async_session.expunge_all()
 
     yield items
+
+    delete_query = delete(Run).where(Run.id.in_([item.id for item in items]))
+    # Add teardown cause fixture async_session doesn't used
+    async with async_session_maker() as async_session:
+        await async_session.execute(delete_query)
+        await async_session.commit()
 
 
 @pytest_asyncio.fixture(params=[(5, {})])
@@ -125,18 +133,21 @@ async def runs_with_same_job(
     ]
 
     async with async_session_maker() as async_session:
-        for item in items:
-            async_session.add(item)
-        # this is not required for backend tests, but needed by client tests
-        await async_session.commit()
+        async_session.add_all(items)
 
-        # remove current object from async_session. this is required to compare object against new state fetched
-        # from database, and also to remove it from cache
+        await async_session.commit()
         for item in items:
             await async_session.refresh(item)
-            async_session.expunge(item)
+
+        async_session.expunge_all()
 
     yield items
+
+    delete_query = delete(Run).where(Run.id.in_([item.id for item in items]))
+    # Add teardown cause fixture async_session doesn't used
+    async with async_session_maker() as async_session:
+        await async_session.execute(delete_query)
+        await async_session.commit()
 
 
 @pytest_asyncio.fixture(params=[{}])
@@ -145,7 +156,7 @@ async def runs_search(
     async_session: AsyncSession,
     addresses: list[Address],
     user: User,
-) -> AsyncGenerator[dict[str, Run], None]:
+) -> AsyncGenerator[dict[str | None, Run], None]:
     request.param
     job_names_type = [("spark_application_name", "SPARK_APPLICATION"), ("airflow_dag_name", "AIRFLOW_DAG")]
     jobs = [
@@ -159,14 +170,7 @@ async def runs_search(
     for item in jobs:
         del item.id
         async_session.add(item)
-    # this is not required for backend tests, but needed by client tests
-    await async_session.commit()
-
-    # remove current object from async_session. this is required to compare object against new state fetched
-    # from database, and also to remove it from cache
-    for item in jobs:
-        await async_session.refresh(item)
-        async_session.expunge(item)
+    await async_session.flush()
 
     runs_external_ids = [
         "application_1638922609021_0001",
@@ -182,13 +186,10 @@ async def runs_search(
     ]
     for item in runs:
         async_session.add(item)
-    # this is not required for backend tests, but needed by client tests
     await async_session.commit()
 
-    # remove current object from async_session. this is required to compare object against new state fetched
-    # from database, and also to remove it from cache
-    for item in runs:
+    for item in jobs + runs:
         await async_session.refresh(item)
         async_session.expunge(item)
 
-    yield {str(run.external_id): run for run in runs}
+    yield {run.external_id: run for run in runs}

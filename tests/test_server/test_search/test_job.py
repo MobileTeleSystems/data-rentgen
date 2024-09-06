@@ -6,7 +6,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Job
-from tests.test_server.test_search.utils import enrich_jobs
+from tests.test_server.utils.enrich import enrich_jobs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 

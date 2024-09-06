@@ -2,8 +2,6 @@ from http import HTTPStatus
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Operation
 
@@ -44,7 +42,7 @@ async def test_get_operations_by_missing_id(
 ):
     response = await test_client.get(
         "v1/operations",
-        params={"operation_id": new_operation.id},
+        params={"operation_id": str(new_operation.id)},
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -66,14 +64,10 @@ async def test_get_operations_by_missing_id(
 async def test_get_operations_by_one_id(
     test_client: AsyncClient,
     operation: Operation,
-    async_session: AsyncSession,
 ):
-    query = select(Operation).where(Operation.id == operation.id)
-    operation_from_db: Operation = await async_session.scalar(query)
-
     response = await test_client.get(
         "v1/operations",
-        params={"operation_id": operation.id},
+        params={"operation_id": str(operation.id)},
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -91,15 +85,15 @@ async def test_get_operations_by_one_id(
         "items": [
             {
                 "kind": "OPERATION",
-                "id": str(operation_from_db.id),
-                "run_id": str(operation_from_db.run_id),
-                "name": operation_from_db.name,
-                "status": operation_from_db.status.value,
-                "type": operation_from_db.type.value,
-                "position": operation_from_db.position,
-                "description": operation_from_db.description,
-                "started_at": operation_from_db.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation_from_db.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "id": str(operation.id),
+                "run_id": str(operation.run_id),
+                "name": operation.name,
+                "status": operation.status.value,
+                "type": operation.type.value,
+                "position": operation.position,
+                "description": operation.description,
+                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
             },
         ],
     }
@@ -108,17 +102,13 @@ async def test_get_operations_by_one_id(
 async def test_get_operations_by_multiple_ids(
     test_client: AsyncClient,
     operations: list[Operation],
-    async_session: AsyncSession,
 ):
     # create more objects than pass to endpoint, to test filtering
-    operation_ids = [operation.id for operation in operations[:2]]
-    query = select(Operation).where(Operation.id.in_(operation_ids)).order_by(Operation.run_id, Operation.id)
-    scalars = await async_session.scalars(query)
-    operations_from_db = list(scalars.all())
+    selected_operations = operations[:2]
 
     response = await test_client.get(
         "v1/operations",
-        params={"operation_id": [str(id) for id in operation_ids]},
+        params={"operation_id": [str(operation.id) for operation in selected_operations]},
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -146,6 +136,6 @@ async def test_get_operations_by_multiple_ids(
                 "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
             }
-            for operation in operations_from_db
+            for operation in sorted(selected_operations, key=lambda x: (x.run_id.bytes, x.id.bytes))
         ],
     }

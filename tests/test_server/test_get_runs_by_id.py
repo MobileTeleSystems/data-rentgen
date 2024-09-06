@@ -9,6 +9,7 @@ from sqlalchemy.sql import select
 from uuid6 import uuid7
 
 from data_rentgen.db.models import Run
+from tests.test_server.utils.enrich import enrich_runs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
@@ -65,7 +66,7 @@ async def test_get_runs_by_missing_id(
 ):
     response = await test_client.get(
         "v1/runs",
-        params={"run_id": new_run.id},
+        params={"run_id": str(new_run.id)},
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -89,12 +90,12 @@ async def test_get_runs_by_one_id(
     run: Run,
     async_session: AsyncSession,
 ):
-    query = select(Run).where(Run.id == run.id).options(selectinload(Run.started_by_user))
-    run_from_db: Run = await async_session.scalar(query)
+    runs = await enrich_runs([run], async_session)
+    run = runs[0]
 
     response = await test_client.get(
         "v1/runs",
-        params={"run_id": run.id},
+        params={"run_id": str(run.id)},
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -112,19 +113,19 @@ async def test_get_runs_by_one_id(
         "items": [
             {
                 "kind": "RUN",
-                "id": str(run_from_db.id),
-                "job_id": run_from_db.job_id,
-                "parent_run_id": str(run_from_db.parent_run_id),
-                "status": run_from_db.status.value,
-                "external_id": run_from_db.external_id,
-                "attempt": run_from_db.attempt,
-                "persistent_log_url": run_from_db.persistent_log_url,
-                "running_log_url": run_from_db.running_log_url,
-                "started_at": run_from_db.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "started_by_user": {"name": run_from_db.started_by_user.name},
-                "start_reason": run_from_db.start_reason.value,
-                "ended_at": run_from_db.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "end_reason": run_from_db.end_reason,
+                "id": str(run.id),
+                "job_id": run.job_id,
+                "parent_run_id": str(run.parent_run_id),
+                "status": run.status.value,
+                "external_id": run.external_id,
+                "attempt": run.attempt,
+                "persistent_log_url": run.persistent_log_url,
+                "running_log_url": run.running_log_url,
+                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "started_by_user": {"name": run.started_by_user.name},
+                "start_reason": run.start_reason.value,
+                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "end_reason": run.end_reason,
             },
         ],
     }
@@ -136,17 +137,11 @@ async def test_get_runs_by_multiple_ids(
     async_session: AsyncSession,
 ):
     # create more objects than pass to endpoint, to test filtering
-    run_ids = [run.id for run in runs[:2]]
-
-    query = (
-        select(Run).where(Run.id.in_(run_ids)).order_by(Run.job_id, Run.id).options(selectinload(Run.started_by_user))
-    )
-    scalars = await async_session.scalars(query)
-    runs_from_db = list(scalars.all())
+    selected_runs = await enrich_runs(runs[:2], async_session)
 
     response = await test_client.get(
         "v1/runs",
-        params={"run_id": [str(id) for id in run_ids]},
+        params={"run_id": [str(run.id) for run in selected_runs]},
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -178,6 +173,6 @@ async def test_get_runs_by_multiple_ids(
                 "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "end_reason": run.end_reason,
             }
-            for run in runs_from_db
+            for run in sorted(selected_runs, key=lambda x: x.id)
         ],
     }

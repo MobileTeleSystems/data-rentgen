@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import select
 
 from data_rentgen.db.models import Dataset, Interaction, Job, Location, Operation, Run
+from tests.test_server.utils.enrich import enrich_datasets
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
@@ -20,16 +21,10 @@ async def test_get_dataset_lineage(
     lineage: lineage_fixture_annotation,
 ):
     _, runs, datasets, operations, _ = lineage
+    datasets = await enrich_datasets(datasets, async_session)
+
     operation = operations[0]
     dataset = datasets[0]
-    # Get location for dataset from db
-    query = (
-        select(Location)
-        .join(Dataset, Dataset.location_id == Location.id)
-        .options(selectinload(Location.addresses))
-        .where(Dataset.id == dataset.id)
-    )
-    location = await async_session.scalar(query)
 
     response = await test_client.get(
         "v1/lineage",
@@ -58,9 +53,9 @@ async def test_get_dataset_lineage(
                 "format": dataset.format,
                 "name": dataset.name,
                 "location": {
-                    "name": location.name,
-                    "type": location.type,
-                    "addresses": [{"url": address.url} for address in location.addresses],
+                    "name": dataset.location.name,
+                    "type": dataset.location.type,
+                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
                 },
             },
             {
@@ -88,14 +83,8 @@ async def test_get_dataset_lineage_with_until(
     operations_to_dataset_lineage: dataset_lineage_annotation,
 ):
     dataset, operations = operations_to_dataset_lineage
-    # Get location for dataset from db
-    query = (
-        select(Location)
-        .join(Dataset, Dataset.location_id == Location.id)
-        .options(selectinload(Location.addresses))
-        .where(Dataset.id == dataset.id)
-    )
-    location = await async_session.scalar(query)
+    datasets = await enrich_datasets([dataset], async_session)
+    dataset = datasets[0]
     since = operations[0].created_at
     until = since + timedelta(seconds=1)
     # Create expected results
@@ -106,9 +95,9 @@ async def test_get_dataset_lineage_with_until(
             "format": dataset.format,
             "name": dataset.name,
             "location": {
-                "name": location.name,
-                "type": location.type,
-                "addresses": [{"url": address.url} for address in location.addresses],
+                "name": dataset.location.name,
+                "type": dataset.location.type,
+                "addresses": [{"url": address.url} for address in dataset.location.addresses],
             },
         },
     ]

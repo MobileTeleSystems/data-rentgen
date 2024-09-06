@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import select
 
 from data_rentgen.db.models import Job, Location
+from tests.test_server.utils.enrich import enrich_jobs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
@@ -41,8 +42,8 @@ async def test_get_jobs_by_one_id(
     job: Job,
     async_session: AsyncSession,
 ):
-    query = select(Job).where(Job.id == job.id).options(selectinload(Job.location).selectinload(Location.addresses))
-    job = await async_session.scalar(query)
+    jobs = await enrich_jobs([job], async_session)
+    job = jobs[0]
 
     response = await test_client.get(
         "v1/jobs",
@@ -69,9 +70,7 @@ async def test_get_jobs_by_one_id(
                 "location": {
                     "type": job.location.type,
                     "name": job.location.name,
-                    "addresses": [
-                        {"url": job.location.addresses[0].url},
-                    ],
+                    "addresses": [{"url": address.url} for address in job.location.addresses],
                 },
             },
         ],
@@ -84,20 +83,11 @@ async def test_get_jobs_by_multiple_ids(
     async_session: AsyncSession,
 ):
     # create more objects than pass to endpoint, to test filtering
-    job_ids = [job.id for job in jobs[:2]]
-
-    query = (
-        select(Job)
-        .where(Job.id.in_(job_ids))
-        .order_by(Job.name)
-        .options(selectinload(Job.location).selectinload(Location.addresses))
-    )
-    scalars = await async_session.scalars(query)
-    jobs_from_db = list(scalars.all())
+    selected_jobs = await enrich_jobs(jobs[:2], async_session)
 
     response = await test_client.get(
         "v1/jobs",
-        params={"job_id": job_ids},
+        params={"job_id": [job.id for job in selected_jobs]},
     )
 
     assert response.status_code == HTTPStatus.OK
@@ -123,7 +113,7 @@ async def test_get_jobs_by_multiple_ids(
                     "addresses": [{"url": address.url} for address in job.location.addresses],
                 },
             }
-            for job in jobs_from_db
+            for job in sorted(selected_jobs, key=lambda x: x.name)
         ],
     }
 
@@ -133,10 +123,7 @@ async def test_get_jobs_no_filters(
     jobs: list[Job],
     async_session: AsyncSession,
 ):
-    query = select(Job).order_by(Job.name).options(selectinload(Job.location).selectinload(Location.addresses))
-    scalars = await async_session.scalars(query)
-    jobs_from_db = list(scalars.all())
-
+    jobs = await enrich_jobs(jobs, async_session)
     response = await test_client.get("v1/jobs")
 
     assert response.status_code == HTTPStatus.OK
@@ -144,7 +131,7 @@ async def test_get_jobs_no_filters(
         "meta": {
             "page": 1,
             "page_size": 20,
-            "total_count": len(jobs_from_db),
+            "total_count": len(jobs),
             "pages_count": 1,
             "has_next": False,
             "has_previous": False,
@@ -162,6 +149,6 @@ async def test_get_jobs_no_filters(
                     "addresses": [{"url": address.url} for address in job.location.addresses],
                 },
             }
-            for job in jobs_from_db
+            for job in sorted(jobs, key=lambda x: x.name)
         ],
     }

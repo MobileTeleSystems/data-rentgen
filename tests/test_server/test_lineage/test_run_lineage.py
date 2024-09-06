@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import select
 
 from data_rentgen.db.models import Dataset, Interaction, Job, Location, Operation, Run
+from tests.test_server.utils.enrich import enrich_datasets, enrich_runs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
@@ -22,22 +23,16 @@ async def test_get_run_lineage(
     _, runs, datasets, operations, _ = lineage
     run = runs[0]
     operation = operations[1]
+
+    datasets = await enrich_datasets(datasets, async_session)
     dataset = datasets[1]
-    # Get location for dataset from db
-    query = (
-        select(Location)
-        .join(Dataset, Dataset.location_id == Location.id)
-        .options(selectinload(Location.addresses))
-        .where(Dataset.id == dataset.id)
-    )
-    location = await async_session.scalar(query)
 
     response = await test_client.get(
         "v1/lineage",
         params={
             "since": runs[0].created_at.isoformat(),
             "point_kind": "RUN",
-            "point_id": runs[0].id,
+            "point_id": str(runs[0].id),
             "direction": "FROM",
         },
     )
@@ -93,9 +88,9 @@ async def test_get_run_lineage(
                 "format": dataset.format,
                 "name": dataset.name,
                 "location": {
-                    "name": location.name,
-                    "type": location.type,
-                    "addresses": [{"url": address.url} for address in location.addresses],
+                    "name": dataset.location.name,
+                    "type": dataset.location.type,
+                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
                 },
             },
         ],
@@ -111,25 +106,14 @@ async def test_get_run_lineage_with_until(
     run_lineage: run_lineage_annotation,
 ):
     run, datasets, operations = run_lineage
-    # Get location for dataset from db
-    query = (
-        select(Location)
-        .join(Dataset, Dataset.location_id == Location.id)
-        .options(selectinload(Location.addresses))
-        .where(Dataset.id == datasets[0].id)
-    )
-    location_0 = await async_session.scalar(query)
-    query = (
-        select(Location)
-        .join(Dataset, Dataset.location_id == Location.id)
-        .options(selectinload(Location.addresses))
-        .where(Dataset.id == datasets[1].id)
-    )
-    location_1 = await async_session.scalar(query)
-    locations = [location_0, location_1]
+
+    datasets = await enrich_datasets(datasets, async_session)
+
+    runs = await enrich_runs([run], async_session)
+    run = runs[0]
     since = run.created_at
     until = since + timedelta(seconds=1)
-    # Create expected results
+
     run_nodes = [
         {
             "kind": "RUN",
@@ -170,12 +154,12 @@ async def test_get_run_lineage_with_until(
             "format": dataset.format,
             "name": dataset.name,
             "location": {
-                "name": location.name,
-                "type": location.type,
-                "addresses": [{"url": address.url} for address in location.addresses],
+                "name": dataset.location.name,
+                "type": dataset.location.type,
+                "addresses": [{"url": address.url} for address in dataset.location.addresses],
             },
         }
-        for dataset, location in zip(datasets[:2], locations)
+        for dataset in datasets[:2]
     ]
     run_relations = [
         {
@@ -202,7 +186,7 @@ async def test_get_run_lineage_with_until(
             "since": since.isoformat(),
             "until": until.isoformat(),
             "point_kind": "RUN",
-            "point_id": run.id,
+            "point_id": str(run.id),
             "direction": "FROM",
         },
     )

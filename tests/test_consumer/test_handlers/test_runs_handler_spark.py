@@ -105,9 +105,9 @@ async def test_runs_handler_spark(
     datasets = dataset_scalars.all()
     assert len(datasets) == 3
 
-    hive_table = datasets[0]
-    clickhouse_table = datasets[1]
-    hdfs_warehouse = datasets[2]
+    hdfs_warehouse = datasets[0]
+    hive_table = datasets[1]
+    clickhouse_table = datasets[2]
 
     assert clickhouse_table.name == "mydb.myschema.mytable"
     assert clickhouse_table.location.type == "clickhouse"

@@ -33,21 +33,18 @@ async def location(
 
     async with async_session_maker() as async_session:
         async_session.add(item)
-        # this is not required for backend tests, but needed by client tests
-        await async_session.commit()
 
-        # remove current object from async_session. this is required to compare object against new state fetched
-        # from database, and also to remove it from cache
-        location_id = item.id
+        await async_session.commit()
         await async_session.refresh(item)
-        async_session.expunge(item)
+
+        async_session.expunge_all()
 
     yield item
 
-    query = delete(Location).where(Location.id == location_id)
+    delete_query = delete(Location).where(Location.id == item.id)
     # Add teardown cause fixture async_session doesn't used
     async with async_session_maker() as async_session:
-        await async_session.execute(query)
+        await async_session.execute(delete_query)
         await async_session.commit()
 
 
@@ -63,20 +60,17 @@ async def locations(
         for item in items:
             del item.id
             async_session.add(item)
-        # this is not required for backend tests, but needed by client tests
-        await async_session.commit()
 
-        # remove current object from async_session. this is required to compare object against new state fetched
-        # from database, and also to remove it from cache
+        await async_session.commit()
         for item in items:
             await async_session.refresh(item)
-            async_session.expunge(item)
+
+        async_session.expunge_all()
 
     yield items
 
-    for item in items:
-        query = delete(Location).where(Location.id == item.id)
-        # Add teardown cause fixture async_session doesn't used
-        async with async_session_maker() as async_session:
-            await async_session.execute(query)
-            await async_session.commit()
+    delete_query = delete(Location).where(Location.id.in_([item.id for item in items]))
+    # Add teardown cause fixture async_session doesn't used
+    async with async_session_maker() as async_session:
+        await async_session.execute(delete_query)
+        await async_session.commit()
