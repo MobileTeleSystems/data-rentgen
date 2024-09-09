@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import (
     Dataset,
+    DatasetSymlink,
     Interaction,
     InteractionType,
     Job,
@@ -206,6 +207,71 @@ async def lineage_with_depth(
         async_session.expunge_all()
 
     yield actual_jobs, actual_runs, operations, datasets, interactions
+
+    delete_interaction = delete(Interaction).where(
+        Interaction.operation_id.in_([operation.id for operation in operations]),
+    )
+    async with async_session_maker() as async_session:
+        await async_session.execute(delete_interaction)
+        await async_session.commit()
+
+
+@pytest_asyncio.fixture()
+async def lineage_with_symlinks(
+    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    jobs: list[Job],
+    runs: list[Run],
+    operations: list[Operation],
+    datasets_with_symlinks: tuple[list[Dataset], list[DatasetSymlink]],
+) -> AsyncGenerator[
+    tuple[list[Job], list[Run], list[Operation], list[Dataset], list[DatasetSymlink], list[Interaction]],
+    None,
+]:
+    datasets, dataset_symlinks = datasets_with_symlinks
+    interactions = []
+    # Make graph like this:
+    # Dataset0 - READ - Operation0 - APPEND - Dataset0
+    # Dataset1 - READ - Operation1 - APPEND - Dataset1
+    # ...
+    for operation, dataset in zip(operations, datasets):
+        interactions.append(
+            interaction_factory(
+                created_at=operation.created_at,
+                operation_id=operation.id,
+                dataset_id=dataset.id,
+                type=InteractionType.READ,
+            ),
+        )
+        interactions.append(
+            interaction_factory(
+                created_at=operation.created_at,
+                operation_id=operation.id,
+                dataset_id=dataset.id,
+                type=InteractionType.APPEND,
+            ),
+        )
+
+    # operations are randomly distributed along runs. select only those which will appear in lineage graph
+    run_ids = {operation.run_id for operation in operations}
+    actual_runs = [run for run in runs if run.id in run_ids]
+
+    # same for jobs
+    job_ids = {run.job_id for run in actual_runs}
+    actual_jobs = [job for job in jobs if job.id in job_ids]
+
+    async with async_session_maker() as async_session:
+        for item in interactions:
+            async_session.add(item)
+        await async_session.commit()
+
+        # remove current object from async_session. this is required to compare object against new state fetched
+        # from database, and also to remove it from cache
+        for item in interactions:
+            await async_session.refresh(item)
+
+        async_session.expunge_all()
+
+    yield actual_jobs, actual_runs, operations, datasets, dataset_symlinks, interactions
 
     delete_interaction = delete(Interaction).where(
         Interaction.operation_id.in_([operation.id for operation in operations]),

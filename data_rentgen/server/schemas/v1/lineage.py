@@ -44,6 +44,7 @@ class LineageDirectionV1(str, Enum):
 class LineageRelationKindV1(str, Enum):
     PARENT = "PARENT"
     INTERACTION = "INTERACTION"
+    SYMLINK = "SYMLINK"
 
     def __str__(self) -> str:
         return self.value

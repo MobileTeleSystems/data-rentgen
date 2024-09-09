@@ -7,7 +7,8 @@ import pytest_asyncio
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.db.models import Address, Dataset, Location
+from data_rentgen.db.models import Address, Dataset
+from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
 from tests.test_server.fixtures.factories.address import address_factory
 from tests.test_server.fixtures.factories.base import random_string
 from tests.test_server.fixtures.factories.location import location_factory
@@ -84,6 +85,65 @@ async def datasets(
     yield items
 
     delete_query = delete(Dataset).where(Dataset.id.in_([item.id for item in items]))
+    # Add teardown cause fixture async_session doesn't used
+    async with async_session_maker() as async_session:
+        await async_session.execute(delete_query)
+        await async_session.commit()
+
+
+@pytest_asyncio.fixture(params=[(10, {})])
+async def datasets_with_symlinks(
+    request: pytest.FixtureRequest,
+    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    addresses: list[Address],
+) -> AsyncGenerator[tuple[list[Dataset], list[DatasetSymlink]], None]:
+    size, params = request.param
+    datasets = [dataset_factory(location_id=choice(addresses).location_id, **params) for _ in range(size)]
+
+    async with async_session_maker() as async_session:
+        for dataset in datasets:
+            del dataset.id
+            async_session.add(dataset)
+
+        await async_session.commit()
+
+        for dataset in datasets:
+            await async_session.refresh(dataset)
+
+        async_session.expunge_all()
+
+    dataset_symlinks = []
+    # Connect datasets like this
+    # Dataset0 - METASTORE - Dataset1
+    # Dataset1 - WAREHOUSE - Dataset0
+    # ...
+    for dataset1, dataset2 in zip(datasets, datasets[1:] + datasets[:1]):
+        symlink1 = DatasetSymlink(
+            from_dataset_id=dataset1.id,
+            to_dataset_id=dataset2.id,
+            type=DatasetSymlinkType.METASTORE,
+        )
+        symlink2 = DatasetSymlink(
+            from_dataset_id=dataset2.id,
+            to_dataset_id=dataset1.id,
+            type=DatasetSymlinkType.WAREHOUSE,
+        )
+        dataset_symlinks.extend([symlink1, symlink2])
+
+    async with async_session_maker() as async_session:
+        for dataset_symlink in dataset_symlinks:
+            async_session.add(dataset_symlink)
+
+        await async_session.commit()
+
+        for dataset_symlink in dataset_symlinks:
+            await async_session.refresh(dataset_symlink)
+
+        async_session.expunge_all()
+
+    yield datasets, dataset_symlinks
+
+    delete_query = delete(Dataset).where(Dataset.id.in_([dataset.id for dataset in datasets]))
     # Add teardown cause fixture async_session doesn't used
     async with async_session_maker() as async_session:
         await async_session.execute(delete_query)
