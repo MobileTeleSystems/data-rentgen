@@ -79,6 +79,16 @@ async def get_lineage(
         )
         response.nodes.append(OperationResponseV1.model_validate(operation))
 
+    for symlink_id in sorted(lineage.dataset_symlinks):
+        dataset_symlink = lineage.dataset_symlinks[symlink_id]
+        relation = LineageRelationv1(
+            kind=LineageRelationKindV1.SYMLINK,
+            type=dataset_symlink.type,
+            from_=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=dataset_symlink.from_dataset_id),
+            to=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=dataset_symlink.to_dataset_id),
+        )
+        response.relations.append(relation)
+
     for interaction in lineage.interactions:
         operation_item = LineageEntityV1(kind=LineageEntityKindV1.OPERATION, id=interaction.operation_id)
         dataset_item = LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=interaction.dataset_id)

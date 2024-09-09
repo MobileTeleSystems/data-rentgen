@@ -13,6 +13,7 @@ from data_rentgen.db.models import (
     Operation,
     Run,
 )
+from data_rentgen.db.models.dataset_symlink import DatasetSymlink
 from tests.test_server.utils.enrich import enrich_datasets, enrich_jobs, enrich_runs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -31,10 +32,11 @@ async def test_get_dataset_lineage(
     datasets = await enrich_datasets(datasets, async_session)
     dataset = datasets[0]
 
+    since = min(run.created_at for run in runs)
     response = await test_client.get(
         "v1/lineage",
         params={
-            "since": runs[0].created_at.isoformat(),
+            "since": since.isoformat(),
             "point_kind": "DATASET",
             "point_id": dataset.id,
             "direction": "FROM",
@@ -565,5 +567,168 @@ async def test_get_dataset_lineage_with_depth_ignore_cycles(
                 "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
             }
             for operation in sorted(operations, key=lambda x: x.id)
+        ],
+    }
+
+
+async def test_get_dataset_lineage_with_symlinks(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_with_symlinks: tuple[
+        list[Job],
+        list[Run],
+        list[Operation],
+        list[Dataset],
+        list[DatasetSymlink],
+        list[Interaction],
+    ],
+):
+    all_jobs, all_runs, all_operations, all_datasets, all_dataset_symlinks, all_interactions = lineage_with_symlinks
+    initial_dataset = all_datasets[0]
+
+    dataset_symlinks = [
+        dataset_symlink
+        for dataset_symlink in all_dataset_symlinks
+        if dataset_symlink.from_dataset_id == initial_dataset.id or dataset_symlink.to_dataset_id == initial_dataset.id
+    ]
+    dataset_ids_from_symlink = {dataset_symlink.from_dataset_id for dataset_symlink in dataset_symlinks}
+    dataset_ids_to_symlink = {dataset_symlink.to_dataset_id for dataset_symlink in dataset_symlinks}
+    dataset_ids = {initial_dataset.id} | dataset_ids_from_symlink | dataset_ids_to_symlink
+    datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
+    assert datasets
+
+    # Thread all datasets from symlinks like they were passed as `point_id`
+    interactions = [
+        interaction
+        for interaction in all_interactions
+        if interaction.dataset_id in dataset_ids and interaction.type == InteractionType.READ
+    ]
+    assert interactions
+
+    operation_ids = {interaction.operation_id for interaction in interactions}
+    operations = [operation for operation in all_operations if operation.id in operation_ids]
+    assert operations
+
+    run_ids = {operation.run_id for operation in operations}
+    runs = [run for run in all_runs if run.id in run_ids]
+    assert runs
+
+    job_ids = {run.job_id for run in runs}
+    jobs = [job for job in all_jobs if job.id in job_ids]
+    assert jobs
+
+    jobs = await enrich_jobs(jobs, async_session)
+    runs = await enrich_runs(runs, async_session)
+    datasets = await enrich_datasets(datasets, async_session)
+
+    since = min(run.created_at for run in runs)
+    response = await test_client.get(
+        "v1/lineage",
+        params={
+            "since": since.isoformat(),
+            "point_kind": "DATASET",
+            "point_id": initial_dataset.id,
+            "direction": "FROM",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": [
+            {
+                "kind": "PARENT",
+                "from": {"kind": "JOB", "id": run.job_id},
+                "to": {"kind": "RUN", "id": str(run.id)},
+                "type": None,
+            }
+            for run in sorted(runs, key=lambda x: x.id)
+        ]
+        + [
+            {
+                "kind": "PARENT",
+                "from": {"kind": "RUN", "id": str(operation.run_id)},
+                "to": {"kind": "OPERATION", "id": str(operation.id)},
+                "type": None,
+            }
+            for operation in sorted(operations, key=lambda x: x.id)
+        ]
+        + [
+            {
+                "kind": "SYMLINK",
+                "from": {"kind": "DATASET", "id": symlink.from_dataset_id},
+                "to": {"kind": "DATASET", "id": symlink.to_dataset_id},
+                "type": symlink.type.value,
+            }
+            for symlink in sorted(dataset_symlinks, key=lambda x: (x.from_dataset_id, x.to_dataset_id))
+        ]
+        + [
+            {
+                "kind": "INTERACTION",
+                "from": {"kind": "DATASET", "id": interaction.dataset_id},
+                "to": {"kind": "OPERATION", "id": str(interaction.operation_id)},
+                "type": "READ",
+            }
+            for interaction in interactions
+        ],
+        "nodes": [
+            {
+                "kind": "JOB",
+                "id": job.id,
+                "name": job.name,
+                "location": {
+                    "name": job.location.name,
+                    "type": job.location.type,
+                    "addresses": [{"url": address.url} for address in job.location.addresses],
+                },
+            }
+            for job in jobs
+        ]
+        + [
+            {
+                "kind": "DATASET",
+                "id": dataset.id,
+                "format": dataset.format,
+                "name": dataset.name,
+                "location": {
+                    "name": dataset.location.name,
+                    "type": dataset.location.type,
+                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                },
+            }
+            for dataset in sorted(datasets, key=lambda x: x.id)
+        ]
+        + [
+            {
+                "kind": "RUN",
+                "id": str(run.id),
+                "job_id": run.job_id,
+                "parent_run_id": str(run.parent_run_id),
+                "status": run.status.value,
+                "external_id": run.external_id,
+                "attempt": run.attempt,
+                "persistent_log_url": run.persistent_log_url,
+                "running_log_url": run.running_log_url,
+                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "started_by_user": {"name": run.started_by_user.name},
+                "start_reason": run.start_reason.value,
+                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "end_reason": run.end_reason,
+            }
+            for run in runs
+        ]
+        + [
+            {
+                "kind": "OPERATION",
+                "id": str(operation.id),
+                "run_id": str(operation.run_id),
+                "name": operation.name,
+                "status": operation.status.value,
+                "type": operation.type.value,
+                "position": operation.position,
+                "description": operation.description,
+                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            }
+            for operation in operations
         ],
     }
