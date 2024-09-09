@@ -71,11 +71,22 @@ class LineageQueryV1(BaseModel):
         Query(description="Type of the Lineage start point", examples=["job"]),
     )
     point_id: int | UUID = Field(
-        Query(description="Id of the Lineage start point"),
-        examples=[42, "01913217-b761-7b1a-bb52-489da9c8b9c8"],
+        Query(
+            description="Id of the Lineage start point",
+            examples=[42, "01913217-b761-7b1a-bb52-489da9c8b9c8"],
+        ),
     )
     direction: LineageDirectionV1 = Field(
         Query(description="Direction of the lineage", examples=["from"]),
+    )
+    depth: int = Field(
+        Query(
+            default=1,
+            ge=1,
+            le=3,
+            description="Depth of the lineage",
+            examples=[1, 2, 3],
+        ),
     )
 
     @field_validator("until", mode="after")

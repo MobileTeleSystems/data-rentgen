@@ -72,6 +72,8 @@ class OperationRepository(Repository[Operation]):
         return list(result.all())
 
     async def list_by_ids(self, operation_ids: Iterable[UUID]) -> list[Operation]:
+        if not operation_ids:
+            return []
         created_at = extract_timestamp_from_uuid(min(i for i in operation_ids))
         query = select(Operation).where(Operation.created_at >= created_at, Operation.id.in_(operation_ids))
         result = await self._session.scalars(query)

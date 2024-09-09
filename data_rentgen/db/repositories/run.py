@@ -74,6 +74,8 @@ class RunRepository(Repository[Run]):
         return await self._paginate_by_query(order_by=[Run.id], page=page, page_size=page_size, query=query)
 
     async def list_by_ids(self, run_ids: Iterable[UUID]) -> list[Run]:
+        if not run_ids:
+            return []
         created_at = extract_timestamp_from_uuid(min(i for i in run_ids))
         query = (
             select(Run)

@@ -61,7 +61,7 @@ async def dataset(
         await async_session.commit()
 
 
-@pytest_asyncio.fixture(params=[(2, {})])
+@pytest_asyncio.fixture(params=[(10, {})])
 async def datasets(
     request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],

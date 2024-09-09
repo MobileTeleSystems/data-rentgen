@@ -67,7 +67,7 @@ async def operation(
         await async_session.commit()
 
 
-@pytest_asyncio.fixture(params=[(5, {})])
+@pytest_asyncio.fixture(params=[(10, {})])
 async def operations(
     request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
@@ -102,7 +102,7 @@ async def operations(
         await async_session.commit()
 
 
-@pytest_asyncio.fixture(params=[(5, {})])
+@pytest_asyncio.fixture(params=[(10, {})])
 async def operations_with_same_run(
     request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],

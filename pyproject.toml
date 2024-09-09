@@ -184,7 +184,7 @@ exclude_lines = [
   "raise NotImplementedError",
   "if __name__ == .__main__.:",
   "if TYPE_CHECKING:",
-  "if log.isEnabledFor(logging.DEBUG)",
+  "if logger.isEnabledFor",
   "if sys.version_info",
   "@(abc\\.)?abstractmethod",
   "\\.\\.\\.",

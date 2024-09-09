@@ -34,6 +34,8 @@ class DatasetRepository(Repository[Dataset]):
         return await self._paginate_by_query(order_by=[Dataset.name], page=page, page_size=page_size, query=query)
 
     async def list_by_ids(self, dataset_ids: Iterable[int]) -> list[Dataset]:
+        if not dataset_ids:
+            return []
         query = (
             select(Dataset)
             .where(Dataset.id.in_(dataset_ids))
