@@ -21,7 +21,7 @@ async def test_get_jobs_by_unknown_id(
         params={"job_id": new_job.id},
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,
@@ -50,7 +50,7 @@ async def test_get_jobs_by_one_id(
         params={"job_id": job.id},
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,
@@ -90,7 +90,7 @@ async def test_get_jobs_by_multiple_ids(
         params={"job_id": [job.id for job in selected_jobs]},
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,
@@ -126,7 +126,7 @@ async def test_get_jobs_no_filters(
     jobs = await enrich_jobs(jobs, async_session)
     response = await test_client.get("v1/jobs")
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,

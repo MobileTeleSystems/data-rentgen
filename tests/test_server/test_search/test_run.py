@@ -15,7 +15,19 @@ async def test_run_search_no_query(test_client: AsyncClient) -> None:
     response = await test_client.get("/v1/runs/search")
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert response.json() == {
-        "detail": [{"input": None, "loc": ["query", "search_query"], "msg": "Field required", "type": "missing"}],
+        "error": {
+            "code": "invalid_request",
+            "message": "Invalid request",
+            "details": [
+                {
+                    "location": ["query", "search_query"],
+                    "code": "missing",
+                    "message": "Field required",
+                    "input": None,
+                    "context": {},
+                },
+            ],
+        },
     }
 
 
@@ -65,7 +77,7 @@ async def test_run_search_in_external_id(
         params={"search_query": "1638922609021"},
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     # At this case the order is unstable
     response_diff = DeepDiff(expected_response, response.json(), ignore_order=True)
     assert not response_diff, f"Response diff: {response_diff.to_json()}"
@@ -114,7 +126,7 @@ async def test_run_search_in_job_name(
         params={"search_query": "airflow_dag"},
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     # At this case the order is unstable
     response_diff = DeepDiff(expected_response, response.json(), ignore_order=True)
     assert not response_diff, f"Response diff: {response_diff.to_json()}"
@@ -166,7 +178,7 @@ async def test_run_search_in_job_type(
         params={"search_query": "SPARK"},
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
 
     # At this case the order is unstable
     response_diff = DeepDiff(expected_response, response.json(), ignore_order=True)

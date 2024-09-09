@@ -7,6 +7,7 @@ import logging
 
 from asgi_correlation_id import correlation_id
 from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
 
 from data_rentgen.server.errors.base import APIErrorSchema, BaseErrorSchema
@@ -107,6 +108,10 @@ def exception_json_response(
 
 def apply_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(ApplicationError, application_exception_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(
+        RequestValidationError,
+        validation_exception_handler,  # type: ignore[arg-type]
+    )
     app.add_exception_handler(
         ValidationError,
         validation_exception_handler,  # type: ignore[arg-type]

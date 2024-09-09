@@ -69,7 +69,7 @@ async def test_get_runs_by_missing_id(
         params={"run_id": str(new_run.id)},
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,
@@ -98,7 +98,7 @@ async def test_get_runs_by_one_id(
         params={"run_id": str(run.id)},
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,
@@ -144,7 +144,7 @@ async def test_get_runs_by_multiple_ids(
         params={"run_id": [str(run.id) for run in selected_runs]},
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,

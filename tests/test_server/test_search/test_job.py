@@ -15,7 +15,19 @@ async def test_job_search_no_query(test_client: AsyncClient) -> None:
     response = await test_client.get("/v1/jobs/search")
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert response.json() == {
-        "detail": [{"input": None, "loc": ["query", "search_query"], "msg": "Field required", "type": "missing"}],
+        "error": {
+            "code": "invalid_request",
+            "message": "Invalid request",
+            "details": [
+                {
+                    "location": ["query", "search_query"],
+                    "code": "missing",
+                    "message": "Field required",
+                    "input": None,
+                    "context": {},
+                },
+            ],
+        },
     }
 
 
@@ -32,7 +44,7 @@ async def test_job_search_in_addres_url(
         params={"search_query": "airflow-host"},
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "items": [
             {
@@ -98,7 +110,7 @@ async def test_job_search_in_location_name(
         params={"search_query": "data-product"},
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
 
     response_diff = DeepDiff(expected_response, response.json(), ignore_order=True)
     assert not response_diff, f"Response diff: {response_diff.to_json()}"
@@ -190,7 +202,7 @@ async def test_job_search_in_location_name_and_address_url(
         params={"search_query": "my-cluster"},
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
 
     # At this case the order is unstable
     response_diff = DeepDiff(expected_response, response.json(), ignore_order=True)

@@ -34,7 +34,7 @@ async def test_get_operation_lineage(
         },
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "relations": [
             {
@@ -150,7 +150,7 @@ async def test_get_operation_lineage_with_direction_and_until(
         },
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "relations": [
             {

@@ -45,7 +45,7 @@ async def test_get_operations_by_missing_id(
         params={"operation_id": str(new_operation.id)},
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,
@@ -70,7 +70,7 @@ async def test_get_operations_by_one_id(
         params={"operation_id": str(operation.id)},
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,
@@ -111,7 +111,7 @@ async def test_get_operations_by_multiple_ids(
         params={"operation_id": [str(operation.id) for operation in selected_operations]},
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,
