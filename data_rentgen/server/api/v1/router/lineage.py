@@ -40,21 +40,25 @@ async def get_lineage(
             get_lineage_method = lineage_service.get_lineage_by_jobs  # type: ignore[assignment]
 
     lineage = await get_lineage_method(
-        point_id=pagination_args.point_id,  # type: ignore[arg-type]
+        point_ids=[pagination_args.point_id],  # type: ignore[list-item]
         direction=pagination_args.direction,
         since=pagination_args.since,
         until=pagination_args.until,
+        depth=pagination_args.depth,
     )
 
     response = LineageResponseV1()
 
-    for job in lineage.jobs:
+    for job_id in sorted(lineage.jobs):
+        job = lineage.jobs[job_id]
         response.nodes.append(JobResponseV1.model_validate(job))
 
-    for dataset in lineage.datasets:
+    for dataset_id in sorted(lineage.datasets):
+        dataset = lineage.datasets[dataset_id]
         response.nodes.append(DatasetResponseV1.model_validate(dataset))
 
-    for run in lineage.runs:
+    for run_id in sorted(lineage.runs):
+        run = lineage.runs[run_id]
         response.relations.append(
             LineageRelationv1(
                 kind=LineageRelationKindV1.PARENT,
@@ -64,7 +68,8 @@ async def get_lineage(
         )
         response.nodes.append(RunResponseV1.model_validate(run))
 
-    for operation in lineage.operations:
+    for operation_id in sorted(lineage.operations):
+        operation = lineage.operations[operation_id]
         response.relations.append(
             LineageRelationv1(
                 kind=LineageRelationKindV1.PARENT,

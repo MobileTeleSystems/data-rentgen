@@ -115,6 +115,7 @@ async def test_get_lineage_point_id_int_type_validation(
                     "code": "value_error",
                     "context": {},
                     "input": {
+                        "depth": 1,
                         "direction": "FROM",
                         "point_id": f"{point_id}",
                         "point_kind": f"{point_kind}",
@@ -160,6 +161,7 @@ async def test_get_lineage_point_id_uuid_type_validation(
                     "code": "value_error",
                     "context": {},
                     "input": {
+                        "depth": 1,
                         "direction": "FROM",
                         "point_id": point_id,
                         "point_kind": f"{point_kind}",
@@ -202,6 +204,51 @@ async def test_get_lineage_until_less_than_since(test_client: AsyncClient):
                     "message": "Value error, 'since' should be less than 'until'",
                     "context": {},
                     "input": until.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                },
+            ],
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    ["depth", "error_type", "error_message", "context"],
+    [
+        (0, "greater_than_equal", "Input should be greater than or equal to 1", {"ge": 1}),
+        (4, "less_than_equal", "Input should be less than or equal to 3", {"le": 3}),
+    ],
+    ids=["depth=0", "depth=4"],
+)
+async def test_get_lineage_depth_out_of_bounds(
+    test_client: AsyncClient,
+    depth: int,
+    error_type: str,
+    error_message: str,
+    context: dict,
+):
+    since = datetime.now(tz=timezone.utc)
+    response = await test_client.get(
+        "v1/lineage",
+        params={
+            "since": since.isoformat(),
+            "point_kind": "RUN",
+            "point_id": str(generate_new_uuid()),
+            "direction": "FROM",
+            "depth": depth,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.json() == {
+        "error": {
+            "code": "invalid_request",
+            "message": "Invalid request",
+            "details": [
+                {
+                    "location": ["query", "depth"],
+                    "code": error_type,
+                    "message": error_message,
+                    "context": context,
+                    "input": str(depth),
                 },
             ],
         },

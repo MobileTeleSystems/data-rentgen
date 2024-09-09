@@ -33,6 +33,8 @@ class JobRepository(Repository[Job]):
         return await self._update(result, job)
 
     async def list_by_ids(self, job_ids: Iterable[int]) -> list[Job]:
+        if not job_ids:
+            return []
         query = (
             select(Job).where(Job.id.in_(job_ids)).options(selectinload(Job.location).selectinload(Location.addresses))
         )
