@@ -124,7 +124,7 @@ async def test_get_operations_by_missing_run_id(
         },
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,
@@ -160,7 +160,7 @@ async def test_get_operations_by_run_id(
         },
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,
@@ -210,7 +210,7 @@ async def test_get_operations_by_run_id_with_until(
         },
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,

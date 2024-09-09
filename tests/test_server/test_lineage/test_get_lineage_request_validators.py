@@ -1,15 +1,12 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 
 import pytest
 from httpx import AsyncClient
 
-from data_rentgen.db.models import Dataset, Interaction, Job, Operation, Run
 from data_rentgen.db.utils.uuid import generate_new_uuid
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
-
-lineage_fixture_annotation = tuple[Job, list[Run], list[Dataset], list[Operation], list[Interaction]]
 
 
 async def test_get_lineage_no_filter(test_client: AsyncClient):
@@ -17,12 +14,40 @@ async def test_get_lineage_no_filter(test_client: AsyncClient):
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert response.json() == {
-        "detail": [
-            {"input": None, "loc": ["query", "since"], "msg": "Field required", "type": "missing"},
-            {"input": None, "loc": ["query", "point_kind"], "msg": "Field required", "type": "missing"},
-            {"input": None, "loc": ["query", "point_id"], "msg": "Field required", "type": "missing"},
-            {"input": None, "loc": ["query", "direction"], "msg": "Field required", "type": "missing"},
-        ],
+        "error": {
+            "code": "invalid_request",
+            "details": [
+                {
+                    "code": "missing",
+                    "context": {},
+                    "input": None,
+                    "location": ["query", "since"],
+                    "message": "Field required",
+                },
+                {
+                    "code": "missing",
+                    "context": {},
+                    "input": None,
+                    "location": ["query", "point_kind"],
+                    "message": "Field required",
+                },
+                {
+                    "code": "missing",
+                    "context": {},
+                    "input": None,
+                    "location": ["query", "point_id"],
+                    "message": "Field required",
+                },
+                {
+                    "code": "missing",
+                    "context": {},
+                    "input": None,
+                    "location": ["query", "direction"],
+                    "message": "Field required",
+                },
+            ],
+            "message": "Invalid request",
+        },
     }
 
 
@@ -53,7 +78,7 @@ async def test_get_lineage_missing_id(
         },
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "relations": [],
         "nodes": [],
@@ -69,14 +94,12 @@ async def test_get_lineage_point_id_int_type_validation(
     point_kind: str,
     point_id: str,
     test_client: AsyncClient,
-    lineage: lineage_fixture_annotation,
 ):
-    _, runs, _, _, _ = lineage
-
+    since = datetime.now(tz=timezone.utc)
     response = await test_client.get(
         "v1/lineage",
         params={
-            "since": runs[0].created_at.isoformat(),
+            "since": since.isoformat(),
             "point_kind": point_kind,
             "point_id": point_id,
             "direction": "FROM",
@@ -95,7 +118,7 @@ async def test_get_lineage_point_id_int_type_validation(
                         "direction": "FROM",
                         "point_id": f"{point_id}",
                         "point_kind": f"{point_kind}",
-                        "since": f'{runs[0].created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}',
+                        "since": since.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                         "until": None,
                     },
                     "location": [],
@@ -116,14 +139,12 @@ async def test_get_lineage_point_id_uuid_type_validation(
     point_kind: str,
     point_id: int,
     test_client: AsyncClient,
-    lineage: lineage_fixture_annotation,
 ):
-    _, runs, _, _, _ = lineage
-
+    since = datetime.now(tz=timezone.utc)
     response = await test_client.get(
         "v1/lineage",
         params={
-            "since": runs[0].created_at.isoformat(),
+            "since": since.isoformat(),
             "point_kind": point_kind,
             "point_id": point_id,
             "direction": "FROM",
@@ -142,7 +163,7 @@ async def test_get_lineage_point_id_uuid_type_validation(
                         "direction": "FROM",
                         "point_id": point_id,
                         "point_kind": f"{point_kind}",
-                        "since": f'{runs[0].created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ")}',
+                        "since": since.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                         "until": None,
                     },
                     "location": [],
@@ -154,12 +175,8 @@ async def test_get_lineage_point_id_uuid_type_validation(
     }
 
 
-async def test_get_lineage_until_less_than_since(
-    test_client: AsyncClient,
-    lineage: lineage_fixture_annotation,
-):
-    _, runs, _, _, _ = lineage
-    since = runs[0].created_at
+async def test_get_lineage_until_less_than_since(test_client: AsyncClient):
+    since = datetime.now(tz=timezone.utc)
     until = since - timedelta(days=1)
 
     response = await test_client.get(
@@ -168,7 +185,7 @@ async def test_get_lineage_until_less_than_since(
             "since": since.isoformat(),
             "until": until.isoformat(),
             "point_kind": "RUN",
-            "point_id": str(runs[0].id),
+            "point_id": str(generate_new_uuid()),
             "direction": "FROM",
         },
     )

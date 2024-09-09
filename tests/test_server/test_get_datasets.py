@@ -3,10 +3,8 @@ from http import HTTPStatus
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-from sqlalchemy.sql import select
 
-from data_rentgen.db.models import Dataset, Location
+from data_rentgen.db.models import Dataset
 from tests.test_server.utils.enrich import enrich_datasets
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -21,7 +19,7 @@ async def test_get_dataset_by_missing_id(
         params={"dataset_id": new_dataset.id},
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,
@@ -50,7 +48,7 @@ async def test_get_dataset(
         params={"dataset_id": dataset.id},
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,
@@ -91,7 +89,7 @@ async def test_get_datasets_by_multiple_ids(
         params={"dataset_id": [dataset.id for dataset in datasets]},
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,
@@ -128,12 +126,12 @@ async def test_get_datasets_no_filters(
     datasets = await enrich_datasets(datasets, async_session)
     response = await test_client.get("v1/datasets")
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,
             "page_size": 20,
-            "total_count": 2,
+            "total_count": len(datasets),
             "pages_count": 1,
             "has_next": False,
             "has_previous": False,

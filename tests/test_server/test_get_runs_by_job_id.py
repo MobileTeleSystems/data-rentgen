@@ -126,7 +126,7 @@ async def test_get_runs_by_job_id_missing(
         params={"since": new_run.created_at.isoformat(), "job_id": new_run.job_id},
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,
@@ -166,7 +166,7 @@ async def test_get_runs_by_job_id(
         },
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,
@@ -220,7 +220,7 @@ async def test_get_runs_time_range(
         },
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
             "page": 1,

@@ -4,10 +4,8 @@ from http import HTTPStatus
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
-from sqlalchemy.sql import select
 
-from data_rentgen.db.models import Dataset, Interaction, Job, Location, Operation, Run
+from data_rentgen.db.models import Dataset, Interaction, Job, Operation, Run
 from tests.test_server.utils.enrich import enrich_datasets, enrich_jobs, enrich_runs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -36,7 +34,7 @@ async def test_get_run_lineage(
         },
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "relations": [
             {
@@ -153,7 +151,7 @@ async def test_get_run_lineage_with_direction_and_until(
         },
     )
 
-    assert response.status_code == HTTPStatus.OK
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "relations": [
             {
