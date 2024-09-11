@@ -28,13 +28,21 @@ async def runs(
             page_size=pagination_args.page_size,
             run_ids=pagination_args.run_id,
         )
-    else:
+    elif pagination_args.job_id:
         pagination = await unit_of_work.run.pagination_by_job_id(
             page=pagination_args.page,
             page_size=pagination_args.page_size,
             job_id=pagination_args.job_id,  # type: ignore[arg-type]
             since=pagination_args.since,  # type: ignore[arg-type]
             until=pagination_args.until,
+        )
+    elif pagination_args.parent_run_id:
+        pagination = await unit_of_work.run.pagination_by_parent_run_id(
+            page=pagination_args.page,
+            page_size=pagination_args.page_size,
+            parent_run_id=pagination_args.parent_run_id,  # type: ignore[arg-type]
+            since=pagination_args.since,  # type: ignore[arg-type]
+            until=pagination_args.until,  # type: ignore[arg-type]
         )
     return PageResponseV1[RunResponseV1].from_pagination(pagination)
 

@@ -29,11 +29,12 @@ async def test_get_runs_by_job_id_missing_fields(
                 {
                     "location": [],
                     "code": "value_error",
-                    "message": "Value error, input should contain either 'job_id' and 'since', or 'run_id' field",
+                    "message": "Value error, input should contain either 'job_id' and 'since' or 'parent_run_id' with 'since' and 'until' or 'run_id'",
                     "context": {},
                     "input": {
                         "page": 1,
                         "page_size": 20,
+                        "parent_run_id": None,
                         "since": since.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                         "run_id": [],
                         "job_id": None,
@@ -68,11 +69,12 @@ async def test_get_runs_by_job_id_conflicting_fields(
                 {
                     "location": [],
                     "code": "value_error",
-                    "message": "Value error, fields 'job_id','since', 'until' cannot be used if 'run_id' is set",
+                    "message": "Value error, fields 'job_id','since', 'until', 'parent_run_id' cannot be used if 'run_id' is set",
                     "context": {},
                     "input": {
                         "page": 1,
                         "page_size": 20,
+                        "parent_run_id": None,
                         "run_id": [str(new_run.id)],
                         "job_id": new_run.job_id,
                         "since": since.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),

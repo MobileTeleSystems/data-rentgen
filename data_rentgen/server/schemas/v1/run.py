@@ -77,6 +77,14 @@ class RunsQueryV1(PaginateQueryV1):
         ),
     )
 
+    parent_run_id: UUID | None = Field(
+        Query(
+            default=None,
+            description="Parent run id, can be used only with 'since' and 'until'",
+            examples=["01913217-b761-7b1a-bb52-489da9c8b9c8"],
+        ),
+    )
+
     @field_validator("until", mode="after")
     @classmethod
     def _check_until(cls, value: datetime | None, info: ValidationInfo) -> datetime | None:
@@ -87,9 +95,32 @@ class RunsQueryV1(PaginateQueryV1):
 
     @model_validator(mode="after")
     def _check_fields(self):
-        if self.run_id:
-            if self.job_id or self.since or self.until:
-                raise ValueError("fields 'job_id','since', 'until' cannot be used if 'run_id' is set")
-        elif not self.job_id or not self.since:
-            raise ValueError("input should contain either 'job_id' and 'since', or 'run_id' field")
-        return self
+        error_messages = [
+            (
+                self.run_id and any([self.job_id, self.since, self.until, self.parent_run_id]),
+                "fields 'job_id','since', 'until', 'parent_run_id' cannot be used if 'run_id' is set",
+            ),
+            (
+                self.parent_run_id and any([self.job_id, self.run_id]),
+                "fields 'job_id' and 'run_id' cannot be used if 'parent_run_id' is set",
+            ),
+            (
+                self.parent_run_id and not any([self.since, self.until]),
+                "input should contain 'since' and 'until' fields if 'parent_run_id' is set",
+            ),
+            (
+                self.job_id and any([self.parent_run_id, self.run_id]),
+                "fields 'parent_run_id' and 'run_id' cannot be used if 'job_id' is set",
+            ),
+            (
+                self.job_id and not self.since,
+                "input should contain 'since' field if 'job_id' is set",
+            ),
+            (
+                not any([self.job_id, self.parent_run_id, self.run_id]),
+                "input should contain either 'job_id' and 'since' or 'parent_run_id' with 'since' and 'until' or 'run_id'",
+            ),
+        ]
+        for flag, error_message in error_messages:
+            if flag:
+                raise ValueError(error_message)
