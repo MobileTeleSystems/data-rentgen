@@ -1,9 +1,11 @@
+from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
-from uuid import uuid4
 
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+from sqlalchemy.sql import select
 from uuid6 import uuid7
 
 from data_rentgen.db.models import Run
@@ -12,13 +14,19 @@ from tests.test_server.utils.enrich import enrich_runs
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
-async def test_get_runs_by_id_missing_fields(
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("since", datetime.now(tz=timezone.utc)),
+        ("until", datetime.now(tz=timezone.utc)),
+    ],
+)
+async def test_get_runs_by_parent_run_id_missing_fields(
     test_client: AsyncClient,
-):
-    response = await test_client.get("v1/runs")
-
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert response.json() == {
+    field: str,
+    value: datetime,
+) -> None:
+    expected_response = {
         "error": {
             "code": "invalid_request",
             "message": "Invalid request",
@@ -41,31 +49,68 @@ async def test_get_runs_by_id_missing_fields(
             ],
         },
     }
+    expected_response["error"]["details"][0]["input"][field] = value.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
-
-@pytest.mark.parametrize(
-    "run_ids",
-    [(uuid4()), (uuid4(), uuid7())],
-)
-async def test_wrong_uuid_version(
-    test_client: AsyncClient,
-    run_ids,
-):
     response = await test_client.get(
         "v1/runs",
-        params={"run_id": run_ids},
+        params={field: value.isoformat()},
     )
 
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, response.json()
+    assert response.json() == expected_response
 
 
-async def test_get_runs_by_missing_id(
+async def test_get_runs_by_parent_run_id_parent_run_id_without_since_and_until(
     test_client: AsyncClient,
-    new_run: Run,
-):
+) -> None:
+    run_id = str(uuid7())
+    expected_response = {
+        "error": {
+            "code": "invalid_request",
+            "message": "Invalid request",
+            "details": [
+                {
+                    "location": [],
+                    "code": "value_error",
+                    "message": "Value error, input should contain 'since' and 'until' fields if 'parent_run_id' is set",
+                    "context": {},
+                    "input": {
+                        "page": 1,
+                        "page_size": 20,
+                        "parent_run_id": run_id,
+                        "since": None,
+                        "run_id": [],
+                        "job_id": None,
+                        "until": None,
+                    },
+                },
+            ],
+        },
+    }
+
     response = await test_client.get(
         "v1/runs",
-        params={"run_id": str(new_run.id)},
+        params={"parent_run_id": run_id},
+    )
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, response.json()
+    assert response.json() == expected_response
+
+
+async def test_get_runs_by_parent_run_id_missing(
+    test_client: AsyncClient,
+    new_run: Run,
+) -> None:
+    since = new_run.created_at
+    until = since + timedelta(days=1)
+
+    response = await test_client.get(
+        "v1/runs",
+        params={
+            "since": since.isoformat(),
+            "until": until.isoformat(),
+            "parent_run_id": str(new_run.parent_run_id),
+        },
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
@@ -84,17 +129,22 @@ async def test_get_runs_by_missing_id(
     }
 
 
-async def test_get_runs_by_one_id(
+async def test_get_runs_by_parent_run_id(
     test_client: AsyncClient,
-    run: Run,
     async_session: AsyncSession,
-):
-    runs = await enrich_runs([run], async_session)
-    run = runs[0]
+    runs_with_same_parent: list[Run],
+) -> None:
+    since = min(run.created_at for run in runs_with_same_parent)
+    until = max(run.created_at for run in runs_with_same_parent)
+    runs = await enrich_runs(runs_with_same_parent, async_session)
 
     response = await test_client.get(
         "v1/runs",
-        params={"run_id": str(run.id)},
+        params={
+            "since": since.isoformat(),
+            "until": until.isoformat(),
+            "parent_run_id": str(runs_with_same_parent[0].parent_run_id),
+        },
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
@@ -102,7 +152,7 @@ async def test_get_runs_by_one_id(
         "meta": {
             "page": 1,
             "page_size": 20,
-            "total_count": 1,
+            "total_count": 5,
             "pages_count": 1,
             "has_next": False,
             "has_previous": False,
@@ -125,53 +175,7 @@ async def test_get_runs_by_one_id(
                 "start_reason": run.start_reason.value,
                 "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "end_reason": run.end_reason,
-            },
-        ],
-    }
-
-
-async def test_get_runs_by_multiple_ids(
-    test_client: AsyncClient,
-    runs: list[Run],
-    async_session: AsyncSession,
-):
-    # create more objects than pass to endpoint, to test filtering
-    selected_runs = await enrich_runs(runs[:2], async_session)
-
-    response = await test_client.get(
-        "v1/runs",
-        params={"run_id": [str(run.id) for run in selected_runs]},
-    )
-
-    assert response.status_code == HTTPStatus.OK, response.json()
-    assert response.json() == {
-        "meta": {
-            "page": 1,
-            "page_size": 20,
-            "total_count": 2,
-            "pages_count": 1,
-            "has_next": False,
-            "has_previous": False,
-            "next_page": None,
-            "previous_page": None,
-        },
-        "items": [
-            {
-                "kind": "RUN",
-                "id": str(run.id),
-                "job_id": run.job_id,
-                "parent_run_id": str(run.parent_run_id),
-                "status": run.status.value,
-                "external_id": run.external_id,
-                "attempt": run.attempt,
-                "persistent_log_url": run.persistent_log_url,
-                "running_log_url": run.running_log_url,
-                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "started_by_user": {"name": run.started_by_user.name},
-                "start_reason": run.start_reason,
-                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "end_reason": run.end_reason,
             }
-            for run in sorted(selected_runs, key=lambda x: x.id)
+            for run in sorted(runs, key=lambda x: x.id)
         ],
     }

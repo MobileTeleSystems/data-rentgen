@@ -151,6 +151,43 @@ async def runs_with_same_job(
 
 
 @pytest_asyncio.fixture(params=[{}])
+async def runs_with_same_parent(
+    request: pytest.FixtureRequest,
+    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    user: User,
+    jobs: list[Job],
+) -> AsyncGenerator[list[Run], None]:
+    params = request.param
+    parrent_run_id = generate_new_uuid()
+    items = [
+        run_factory(
+            parent_run_id=parrent_run_id,
+            job_id=job.id,
+            started_by_user_id=user.id,
+            **params,
+        )
+        for job in jobs
+    ]
+
+    async with async_session_maker() as async_session:
+        async_session.add_all(items)
+
+        await async_session.commit()
+        for item in items:
+            await async_session.refresh(item)
+
+        async_session.expunge_all()
+
+    yield items
+
+    delete_query = delete(Run).where(Run.id.in_([item.id for item in items]))
+    # Add teardown cause fixture async_session doesn't used
+    async with async_session_maker() as async_session:
+        await async_session.execute(delete_query)
+        await async_session.commit()
+
+
+@pytest_asyncio.fixture(params=[{}])
 async def runs_search(
     request: pytest.FixtureRequest,
     async_session: AsyncSession,
