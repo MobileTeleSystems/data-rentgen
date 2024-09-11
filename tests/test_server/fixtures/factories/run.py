@@ -150,23 +150,24 @@ async def runs_with_same_job(
         await async_session.commit()
 
 
-@pytest_asyncio.fixture(params=[{}])
+@pytest_asyncio.fixture(params=[(5, {})])
 async def runs_with_same_parent(
     request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
     user: User,
     jobs: list[Job],
 ) -> AsyncGenerator[list[Run], None]:
-    params = request.param
+    size, params = request.param
+    started_at = datetime.now()
     parrent_run_id = generate_new_uuid()
     items = [
         run_factory(
             parent_run_id=parrent_run_id,
-            job_id=job.id,
+            created_at=started_at + timedelta(seconds=s),  # To be sure runs has different timestamps
             started_by_user_id=user.id,
             **params,
         )
-        for job in jobs
+        for s in range(size)
     ]
 
     async with async_session_maker() as async_session:

@@ -79,13 +79,15 @@ class RunRepository(Repository[Run]):
         page_size: int,
         parent_run_id: UUID,
         since: datetime,
-        until: datetime,
+        until: datetime | None,
     ) -> PaginationDTO[Run]:
         query = (
             select(Run)
-            .where(Run.created_at >= since, Run.created_at <= until, Run.parent_run_id == parent_run_id)
+            .where(Run.created_at >= since, Run.parent_run_id == parent_run_id)
             .options(selectinload(Run.started_by_user))
         )
+        if until:
+            query = query.where(Run.created_at <= until)
         return await self._paginate_by_query(order_by=[Run.id], page=page, page_size=page_size, query=query)
 
     async def list_by_ids(self, run_ids: Iterable[UUID]) -> list[Run]:
