@@ -42,7 +42,7 @@ async def runs(
             page_size=pagination_args.page_size,
             parent_run_id=pagination_args.parent_run_id,  # type: ignore[arg-type]
             since=pagination_args.since,  # type: ignore[arg-type]
-            until=pagination_args.until,  # type: ignore[arg-type]
+            until=pagination_args.until,
         )
     return PageResponseV1[RunResponseV1].from_pagination(pagination)
 

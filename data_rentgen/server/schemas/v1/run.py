@@ -105,8 +105,8 @@ class RunsQueryV1(PaginateQueryV1):
                 "fields 'job_id' and 'run_id' cannot be used if 'parent_run_id' is set",
             ),
             (
-                self.parent_run_id and not all([self.since, self.until]),
-                "input should contain 'since' and 'until' fields if 'parent_run_id' is set",
+                self.parent_run_id and not self.since,
+                "input should contain 'since' field if 'parent_run_id' is set",
             ),
             (
                 self.job_id and any([self.parent_run_id, self.run_id]),
