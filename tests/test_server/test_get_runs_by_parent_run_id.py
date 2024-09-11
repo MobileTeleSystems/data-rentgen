@@ -60,7 +60,7 @@ async def test_get_runs_by_parent_run_id_missing_fields(
     assert response.json() == expected_response
 
 
-async def test_get_runs_by_parent_run_id_parent_run_id_without_since_and_until(
+async def test_get_runs_by_parent_run_id_missing_since_and_until(
     test_client: AsyncClient,
 ) -> None:
     run_id = str(uuid7())
@@ -94,6 +94,44 @@ async def test_get_runs_by_parent_run_id_parent_run_id_without_since_and_until(
     )
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, response.json()
+    assert response.json() == expected_response
+
+
+async def test_get_runs_by_parent_run_id_missing_until(
+    test_client: AsyncClient,
+):
+    since = datetime.now(tz=timezone.utc)
+    run_id = str(uuid7())
+    expected_response = {
+        "error": {
+            "code": "invalid_request",
+            "message": "Invalid request",
+            "details": [
+                {
+                    "location": [],
+                    "code": "value_error",
+                    "message": "Value error, input should contain 'since' and 'until' fields if 'parent_run_id' is set",
+                    "context": {},
+                    "input": {
+                        "page": 1,
+                        "page_size": 20,
+                        "parent_run_id": run_id,
+                        "since": since.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                        "run_id": [],
+                        "job_id": None,
+                        "until": None,
+                    },
+                },
+            ],
+        },
+    }
+
+    response = await test_client.get(
+        "v1/runs",
+        params={"since": since.isoformat(), "parent_run_id": run_id},
+    )
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert response.json() == expected_response
 
 
