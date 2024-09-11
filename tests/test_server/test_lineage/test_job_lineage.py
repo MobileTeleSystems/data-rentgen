@@ -516,7 +516,7 @@ async def test_get_job_lineage_with_depth_ignore_cycles(
         params={
             "since": since.isoformat(),
             "point_kind": "JOB",
-            "point_id": str(job.id),
+            "point_id": job.id,
             "direction": "FROM",
             "depth": 3,
         },
@@ -637,7 +637,9 @@ async def test_get_job_lineage_with_symlinks(
 ):
     all_jobs, all_runs, all_operations, all_datasets, all_dataset_symlinks, all_interactions = lineage_with_symlinks
 
-    some_interaction = next(interaction for interaction in all_interactions if interaction.type == InteractionType.READ)
+    some_interaction = next(
+        interaction for interaction in all_interactions if interaction.type == InteractionType.APPEND
+    )
     some_operation = next(operation for operation in all_operations if operation.id == some_interaction.operation_id)
     some_run = next(run for run in all_runs if run.id == some_operation.run_id)
     job = next(job for job in all_jobs if job.id == some_run.job_id)
@@ -678,8 +680,8 @@ async def test_get_job_lineage_with_symlinks(
         "v1/lineage",
         params={
             "since": since.isoformat(),
-            "point_kind": "RUN",
-            "point_id": str(some_run.id),
+            "point_kind": "JOB",
+            "point_id": job.id,
             "direction": "FROM",
         },
     )
