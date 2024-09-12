@@ -95,15 +95,15 @@ class LineageService:
             logger.info("No jobs found")
             return LineageServiceResult()
 
-        runs = await self._uow.run.list_by_job_ids(jobs_by_id.keys(), since, until)
-        runs_by_id = {run.id: run for run in runs}
+        all_runs = await self._uow.run.list_by_job_ids(jobs_by_id.keys(), since, until)
+        run_ids = {run.id for run in all_runs}
 
-        operations = await self._uow.operation.list_by_run_ids(runs_by_id.keys(), since, until)
-        operations_by_id = {operation.id: operation for operation in operations}
+        all_operations = await self._uow.operation.list_by_run_ids(run_ids, since, until)
+        operations_ids = {operation.id for operation in all_operations}
 
         interaction_types = self.get_interaction_types(direction)
         interactions = await self._uow.interaction.list_by_operation_ids(
-            operations_by_id.keys(),
+            operations_ids,
             interaction_types,
             since,
             until,
@@ -120,6 +120,16 @@ class LineageService:
             (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
             for dataset_symlink in dataset_symlinks
         }
+
+        # Return only operations which have at least one interaction
+        operation_ids = {interaction.operation_id for interaction in interactions}
+        operations = [operation for operation in all_operations if operation.id in operation_ids]
+        operations_by_id = {operation.id: operation for operation in operations}
+
+        # Same for runs
+        run_ids = {operation.run_id for operation in operations}
+        runs = [run for run in all_runs if run.id in run_ids]
+        runs_by_id = {run.id: run for run in runs}
 
         result = LineageServiceResult(
             datasets=datasets_by_id,
@@ -177,12 +187,12 @@ class LineageService:
             logger.info("No runs found")
             return LineageServiceResult()
 
-        operations = await self._uow.operation.list_by_run_ids(runs_by_id.keys(), since, until)
-        operations_by_id = {operation.id: operation for operation in operations}
+        all_operations = await self._uow.operation.list_by_run_ids(runs_by_id.keys(), since, until)
+        operation_ids = {operation.id for operation in all_operations}
 
         interaction_types = self.get_interaction_types(direction)
         interactions = await self._uow.interaction.list_by_operation_ids(
-            operations_by_id.keys(),
+            operation_ids,
             interaction_types,
             since,
             until,
@@ -199,6 +209,11 @@ class LineageService:
             (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
             for dataset_symlink in dataset_symlinks
         }
+
+        # Remove operations that are not part of the lineage graph
+        operation_ids = {interaction.operation_id for interaction in interactions}
+        operations = [operation for operation in all_operations if operation.id in operation_ids]
+        operations_by_id = {operation.id: operation for operation in operations}
 
         jobs = await self._uow.job.list_by_ids({run.job_id for run in runs})
         jobs_by_id = {job.id: job for job in jobs}
