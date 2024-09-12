@@ -151,17 +151,17 @@ async def test_get_job_lineage_with_direction_and_until(
     since = min(run.created_at for run in all_runs if run.job_id == job.id)
     until = since + timedelta(seconds=1)
 
-    runs = [run for run in all_runs if run.job_id == job.id and since <= run.created_at <= until]
-    run_ids = {run.id for run in runs}
-    assert runs
+    raw_runs = [run for run in all_runs if run.job_id == job.id and since <= run.created_at <= until]
+    run_ids = {run.id for run in raw_runs}
+    assert raw_runs
 
-    operations = [
+    raw_operations = [
         operation
         for operation in all_operations
         if operation.run_id in run_ids and since <= operation.created_at <= until
     ]
-    operation_ids = {operation.id for operation in operations}
-    assert operations
+    operation_ids = {operation.id for operation in raw_operations}
+    assert raw_operations
 
     interactions = [
         interaction
@@ -171,6 +171,16 @@ async def test_get_job_lineage_with_direction_and_until(
         and since <= interaction.created_at <= until
     ]
     assert interactions
+
+    # Only operations with some interaction are returned
+    operation_ids = {interaction.operation_id for interaction in interactions}
+    operations = [operation for operation in all_operations if operation.id in operation_ids]
+    assert operations
+
+    # Same for runs
+    run_ids = {operation.run_id for operation in operations}
+    runs = [run for run in all_runs if run.id in run_ids]
+    assert runs
 
     dataset_ids = {interaction.dataset_id for interaction in interactions}
     datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
