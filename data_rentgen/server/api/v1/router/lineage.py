@@ -4,7 +4,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from data_rentgen.dto.interaction import InteractionTypeDTO
 from data_rentgen.server.errors import get_error_responses
 from data_rentgen.server.errors.schemas import InvalidRequestSchema
 from data_rentgen.server.schemas.v1 import (
@@ -89,25 +88,21 @@ async def get_lineage(
         )
         response.relations.append(relation)
 
-    for interaction in lineage.interactions:
-        operation_item = LineageEntityV1(kind=LineageEntityKindV1.OPERATION, id=interaction.operation_id)
-        dataset_item = LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=interaction.dataset_id)
+    for input in lineage.inputs:
+        relation = LineageRelationv1(
+            kind=LineageRelationKindV1.INPUT,
+            from_=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=input.dataset_id),
+            to=LineageEntityV1(kind=LineageEntityKindV1.OPERATION, id=input.operation_id),
+        )
+        response.relations.append(relation)
 
-        if interaction.type == InteractionTypeDTO.READ:
-            relation = LineageRelationv1(
-                kind=LineageRelationKindV1.INTERACTION,
-                type=interaction.type,
-                from_=dataset_item,
-                to=operation_item,
-            )
-        else:
-            relation = LineageRelationv1(
-                kind=LineageRelationKindV1.INTERACTION,
-                type=interaction.type,
-                from_=operation_item,
-                to=dataset_item,
-            )
-
+    for output in lineage.outputs:
+        relation = LineageRelationv1(
+            kind=LineageRelationKindV1.OUTPUT,
+            type=output.type,
+            from_=LineageEntityV1(kind=LineageEntityKindV1.OPERATION, id=output.operation_id),
+            to=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=output.dataset_id),
+        )
         response.relations.append(relation)
 
     return response

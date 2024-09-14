@@ -31,19 +31,17 @@ class LineageEntityKindV1(str, Enum):
 
 
 class LineageDirectionV1(str, Enum):
-    FROM = "FROM"
-    TO = "TO"
+    DOWNSTREAM = "DOWNSTREAM"
+    UPSTREAM = "UPSTREAM"
 
     def __str__(self) -> str:
         return self.value
 
-    def __invert__(self) -> "LineageDirectionV1":
-        return LineageDirectionV1.TO if self == LineageDirectionV1.FROM else LineageDirectionV1.FROM
-
 
 class LineageRelationKindV1(str, Enum):
     PARENT = "PARENT"
-    INTERACTION = "INTERACTION"
+    INPUT = "INPUT"
+    OUTPUT = "OUTPUT"
     SYMLINK = "SYMLINK"
 
     def __str__(self) -> str:
@@ -69,7 +67,7 @@ class LineageQueryV1(BaseModel):
         ),
     )
     point_kind: LineageEntityKindV1 = Field(
-        Query(description="Type of the Lineage start point", examples=["job"]),
+        Query(description="Type of the Lineage start point", examples=["JOB", "DATASET"]),
     )
     point_id: int | UUID = Field(
         Query(
@@ -78,7 +76,7 @@ class LineageQueryV1(BaseModel):
         ),
     )
     direction: LineageDirectionV1 = Field(
-        Query(description="Direction of the lineage", examples=["from"]),
+        Query(description="Direction of the lineage", examples=["DOWNSTREAM", "UPSTREAM"]),
     )
     depth: int = Field(
         Query(
@@ -86,7 +84,7 @@ class LineageQueryV1(BaseModel):
             ge=1,
             le=3,
             description="Depth of the lineage",
-            examples=[1, 2, 3],
+            examples=[1, 3],
         ),
     )
 
@@ -116,10 +114,10 @@ class LineageQueryV1(BaseModel):
 
 
 class LineageRelationv1(BaseModel):
-    kind: LineageRelationKindV1 = Field(description="Kind of relation", examples=["PARENT", "INTERACTION"])
+    kind: LineageRelationKindV1 = Field(description="Kind of relation", examples=["PARENT", "INPUT"])
     from_: LineageEntityV1 = Field(description="Start point of relation", serialization_alias="from")
     to: LineageEntityV1 = Field(description="End point of relation")
-    type: str | None = Field(description="Type of interaction", examples=["READ", "APPEND"], default=None)
+    type: str | None = Field(description="Type of relation", examples=["CREATE", "APPEND"], default=None)
 
 
 class LineageResponseV1(BaseModel):

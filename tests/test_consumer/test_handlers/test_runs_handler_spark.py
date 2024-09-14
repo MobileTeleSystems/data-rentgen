@@ -13,15 +13,15 @@ from data_rentgen.db.models import (
     Dataset,
     DatasetSymlink,
     DatasetSymlinkType,
-    Interaction,
-    InteractionType,
+    Input,
     Job,
     JobType,
     Location,
     Operation,
     OperationType,
+    Output,
+    OutputType,
     Run,
-    RunStartReason,
     Schema,
     Status,
 )
@@ -162,27 +162,31 @@ async def test_runs_handler_spark(
         {"name": "total_spent", "type": "float"},
     ]
 
-    interaction_query = select(Interaction).order_by(Interaction.dataset_id)
-    interaction_scalars = await async_session.scalars(interaction_query)
-    interactions = interaction_scalars.all()
-    assert len(interactions) == 2
+    input_query = select(Input).order_by(Input.dataset_id)
+    input_scalars = await async_session.scalars(input_query)
+    inputs = input_scalars.all()
+    assert len(inputs) == 1
 
-    clickhouse_interaction = interactions[1]
-    assert clickhouse_interaction.created_at == datetime(2024, 7, 5, 9, 6, 29, 463000, tzinfo=timezone.utc)
-    assert clickhouse_interaction.operation_id == job_operation.id
-    assert clickhouse_interaction.dataset_id == clickhouse_table.id
-    assert clickhouse_interaction.type == InteractionType.OVERWRITE
-    assert clickhouse_interaction.schema_id == clickhouse_schema.id
-    assert clickhouse_interaction.num_bytes == 5_000_000
-    assert clickhouse_interaction.num_rows == 10_000
-    assert clickhouse_interaction.num_files is None
+    hive_input = inputs[0]
+    assert hive_input.created_at == datetime(2024, 7, 5, 9, 6, 29, 463000, tzinfo=timezone.utc)
+    assert hive_input.operation_id == job_operation.id
+    assert hive_input.dataset_id == hdfs_warehouse.id
+    assert hive_input.schema_id == hive_schema.id
+    assert hive_input.num_bytes is None
+    assert hive_input.num_rows is None
+    assert hive_input.num_files is None
 
-    hive_interaction = interactions[0]
-    assert hive_interaction.created_at == datetime(2024, 7, 5, 9, 6, 29, 463000, tzinfo=timezone.utc)
-    assert hive_interaction.operation_id == job_operation.id
-    assert hive_interaction.dataset_id == hdfs_warehouse.id
-    assert hive_interaction.type == InteractionType.READ
-    assert hive_interaction.schema_id == hive_schema.id
-    assert hive_interaction.num_bytes is None
-    assert hive_interaction.num_rows is None
-    assert hive_interaction.num_files is None
+    output_query = select(Output).order_by(Output.dataset_id)
+    output_scalars = await async_session.scalars(output_query)
+    outputs = output_scalars.all()
+    assert len(outputs) == 1
+
+    clickhouse_output = outputs[0]
+    assert clickhouse_output.created_at == datetime(2024, 7, 5, 9, 6, 29, 463000, tzinfo=timezone.utc)
+    assert clickhouse_output.operation_id == job_operation.id
+    assert clickhouse_output.dataset_id == clickhouse_table.id
+    assert clickhouse_output.type == OutputType.OVERWRITE
+    assert clickhouse_output.schema_id == clickhouse_schema.id
+    assert clickhouse_output.num_bytes == 5_000_000
+    assert clickhouse_output.num_rows == 10_000
+    assert clickhouse_output.num_files is None

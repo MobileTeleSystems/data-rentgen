@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-"""Create interaction
+"""Create input
 
 Revision ID: 412d5fbdb362
 Revises: 0b9aac68402b
@@ -19,26 +19,25 @@ depends_on = None
 
 def upgrade() -> None:
     op.create_table(
-        "interaction",
+        "input",
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("operation_id", sa.UUID(), nullable=False),
         sa.Column("dataset_id", sa.BigInteger(), nullable=False),
-        sa.Column("type", sa.String(length=32), nullable=False),
         sa.Column("schema_id", sa.BigInteger(), nullable=True),
         sa.Column("num_bytes", sa.BigInteger(), nullable=True),
         sa.Column("num_rows", sa.BigInteger(), nullable=True),
         sa.Column("num_files", sa.BigInteger(), nullable=True),
-        sa.PrimaryKeyConstraint("created_at", "id", name=op.f("pk__interaction")),
+        sa.PrimaryKeyConstraint("created_at", "id", name=op.f("pk__input")),
         postgresql_partition_by="RANGE (created_at)",
     )
-    op.create_index(op.f("ix__interaction__dataset_id"), "interaction", ["dataset_id"], unique=False)
-    op.create_index(op.f("ix__interaction__operation_id"), "interaction", ["operation_id"], unique=False)
-    op.create_index(op.f("ix__interaction__schema_id"), "interaction", ["schema_id"], unique=False)
+    op.create_index(op.f("ix__input__dataset_id"), "input", ["dataset_id"], unique=False)
+    op.create_index(op.f("ix__input__operation_id"), "input", ["operation_id"], unique=False)
+    op.create_index(op.f("ix__input__schema_id"), "input", ["schema_id"], unique=False)
 
 
 def downgrade() -> None:
-    op.drop_index(op.f("ix__interaction__schema_id"), table_name="interaction")
-    op.drop_index(op.f("ix__interaction__operation_id"), table_name="interaction")
-    op.drop_index(op.f("ix__interaction__dataset_id"), table_name="interaction")
-    op.drop_table("interaction")
+    op.drop_index(op.f("ix__input__schema_id"), table_name="input")
+    op.drop_index(op.f("ix__input__operation_id"), table_name="input")
+    op.drop_index(op.f("ix__input__dataset_id"), table_name="input")
+    op.drop_table("input")

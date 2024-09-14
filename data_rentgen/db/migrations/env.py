@@ -23,7 +23,7 @@ if not config.get_main_option("sqlalchemy.url"):
 
 target_metadata = (Base.metadata,)
 
-PARTITION_PREFIXES = ["run_y", "operation_y", "interaction_y"]
+PARTITION_PREFIXES = ["run_y", "operation_y", "input_y", "output_y"]
 
 
 def include_all_except_partitions(object, name, type_, reflected, compare_to):

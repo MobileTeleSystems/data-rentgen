@@ -7,9 +7,7 @@ from dataclasses import dataclass
 from enum import Enum
 
 
-class InteractionTypeDTO(str, Enum):
-    READ = "READ"
-
+class OutputTypeDTO(str, Enum):
     CREATE = "CREATE"
     ALTER = "ALTER"
     RENAME = "RENAME"
@@ -23,14 +21,10 @@ class InteractionTypeDTO(str, Enum):
     def __str__(self) -> str:
         return self.value
 
-    @classmethod
-    def write_interactions(cls) -> list[InteractionTypeDTO]:
-        return [item for item in InteractionTypeDTO if item != InteractionTypeDTO.READ]
-
 
 @dataclass(slots=True)
-class InteractionDTO:
-    type: InteractionTypeDTO
+class OutputDTO:
+    type: OutputTypeDTO
     num_rows: int | None = None
     num_bytes: int | None = None
     num_files: int | None = None

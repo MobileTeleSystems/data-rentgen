@@ -17,16 +17,14 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.factory import create_session_factory
-from data_rentgen.db.models.interaction import Interaction
-from data_rentgen.db.models.operation import Operation
-from data_rentgen.db.models.run import Run
+from data_rentgen.db.models import Input, Operation, Output, Run
 from data_rentgen.db.settings import DatabaseSettings
 from data_rentgen.logging.settings import LoggingSettings
 from data_rentgen.logging.setup_logging import setup_logging
 
 logger = logging.getLogger(__name__)
 
-PARTITIONED_TABLES = [Run.__tablename__, Operation.__tablename__, Interaction.__tablename__]
+PARTITIONED_TABLES = [Run.__tablename__, Operation.__tablename__, Input.__tablename__, Output.__tablename__]
 
 
 class Granularity(str, Enum):
@@ -109,11 +107,12 @@ def generate_partition_statements(start: date, end: date, granularity: Granulari
     start_str = start.isoformat()
     end_str = end.isoformat()
 
-    return [
-        f"CREATE TABLE IF NOT EXISTS {Run.__tablename__}_{name} PARTITION OF {Run.__tablename__} FOR VALUES FROM ('{start_str}') TO ('{end_str}')",
-        f"CREATE TABLE IF NOT EXISTS {Operation.__tablename__}_{name} PARTITION OF {Operation.__tablename__} FOR VALUES FROM ('{start_str}') TO ('{end_str}')",
-        f"CREATE TABLE IF NOT EXISTS {Interaction.__tablename__}_{name} PARTITION OF {Interaction.__tablename__} FOR VALUES FROM ('{start_str}') TO ('{end_str}')",
-    ]
+    result = []
+    for table in PARTITIONED_TABLES:
+        result.append(
+            f"CREATE TABLE IF NOT EXISTS {table}_{name} PARTITION OF {table} FOR VALUES FROM ('{start_str}') TO ('{end_str}')",
+        )
+    return result
 
 
 async def create_partition(start: date, end: date, granularity: Granularity, session: AsyncSession):

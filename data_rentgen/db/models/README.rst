@@ -92,7 +92,19 @@ DB structure
         fields: JSON
     }
 
-    entity Interaction {
+    entity Input {
+        * id: UUIDv7
+        * created_at: Datetime
+        ----
+        * operation_id
+        * dataset_id
+        schema_id
+        num_bytes
+        num_rows
+        num_files
+    }
+
+    entity Output {
         * id: UUIDv7
         * created_at: Datetime
         ----
@@ -119,8 +131,12 @@ DB structure
 
     Operation ||--o{ Run
 
-    Interaction ||--o{ Operation
-    Interaction ||--o{ Dataset
-    Interaction |o--o{ Schema
+    Input ||--o{ Operation
+    Input ||--o{ Dataset
+    Input |o--o{ Schema
+
+    Output ||--o{ Operation
+    Output ||--o{ Dataset
+    Output |o--o{ Schema
 
     @enduml
