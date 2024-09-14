@@ -74,7 +74,7 @@ async def test_get_lineage_missing_id(
             "since": since.isoformat(),
             "point_kind": point_kind,
             "point_id": point_id,
-            "direction": "FROM",
+            "direction": "DOWNSTREAM",
         },
     )
 
@@ -102,7 +102,7 @@ async def test_get_lineage_point_id_int_type_validation(
             "since": since.isoformat(),
             "point_kind": point_kind,
             "point_id": point_id,
-            "direction": "FROM",
+            "direction": "DOWNSTREAM",
         },
     )
 
@@ -116,7 +116,7 @@ async def test_get_lineage_point_id_int_type_validation(
                     "context": {},
                     "input": {
                         "depth": 1,
-                        "direction": "FROM",
+                        "direction": "DOWNSTREAM",
                         "point_id": f"{point_id}",
                         "point_kind": f"{point_kind}",
                         "since": since.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
@@ -148,7 +148,7 @@ async def test_get_lineage_point_id_uuid_type_validation(
             "since": since.isoformat(),
             "point_kind": point_kind,
             "point_id": point_id,
-            "direction": "FROM",
+            "direction": "DOWNSTREAM",
         },
     )
 
@@ -162,7 +162,7 @@ async def test_get_lineage_point_id_uuid_type_validation(
                     "context": {},
                     "input": {
                         "depth": 1,
-                        "direction": "FROM",
+                        "direction": "DOWNSTREAM",
                         "point_id": point_id,
                         "point_kind": f"{point_kind}",
                         "since": since.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
@@ -188,7 +188,7 @@ async def test_get_lineage_until_less_than_since(test_client: AsyncClient):
             "until": until.isoformat(),
             "point_kind": "RUN",
             "point_id": str(generate_new_uuid()),
-            "direction": "FROM",
+            "direction": "DOWNSTREAM",
         },
     )
 
@@ -232,7 +232,7 @@ async def test_get_lineage_depth_out_of_bounds(
             "since": since.isoformat(),
             "point_kind": "RUN",
             "point_id": str(generate_new_uuid()),
-            "direction": "FROM",
+            "direction": "DOWNSTREAM",
             "depth": depth,
         },
     )

@@ -9,14 +9,14 @@ from data_rentgen.consumer.extractors import (
     extract_dataset,
     extract_dataset_aliases,
     extract_dataset_symlinks,
-    extract_input_interaction,
-    extract_interaction_schema,
+    extract_input,
     extract_job,
     extract_operation,
-    extract_output_interaction,
+    extract_output,
     extract_parent_run,
     extract_run,
     extract_run_user,
+    extract_schema,
 )
 from data_rentgen.consumer.openlineage.dataset import OpenLineageDataset
 from data_rentgen.consumer.openlineage.job_facets import OpenLineageJobType
@@ -25,9 +25,10 @@ from data_rentgen.db.models import (
     Dataset,
     DatasetSymlink,
     DatasetSymlinkType,
-    Interaction,
+    Input,
     Job,
     Operation,
+    Output,
     Run,
     Schema,
     User,
@@ -36,9 +37,10 @@ from data_rentgen.dependencies import Stub
 from data_rentgen.dto import (
     DatasetDTO,
     DatasetSymlinkTypeDTO,
-    InteractionDTO,
+    InputDTO,
     JobDTO,
     OperationDTO,
+    OutputDTO,
     RunDTO,
     SchemaDTO,
     UserDTO,
@@ -90,29 +92,33 @@ async def handle_operation(event: OpenLineageRunEvent, unit_of_work: UnitOfWork)
         raw_operation = extract_operation(event)
         operation = await create_or_update_operation(raw_operation, run, unit_of_work)
 
-    interaction_components = []
-    for input in event.inputs:
+    input_components = []
+    for raw_input in event.inputs:
         async with unit_of_work:
-            dataset = await handle_dataset(input, unit_of_work)
+            dataset = await handle_dataset(raw_input, unit_of_work)
         async with unit_of_work:
-            schema = await handle_schema(input, unit_of_work)
+            schema = await handle_schema(raw_input, unit_of_work)
 
-        interaction = extract_input_interaction(input)
-        interaction_components.append((interaction, operation, dataset, schema))
+        input = extract_input(raw_input)
+        input_components.append((input, operation, dataset, schema))
 
-    for output in event.outputs:
+    output_components = []
+    for raw_output in event.outputs:
         async with unit_of_work:
-            dataset = await handle_dataset(output, unit_of_work)
+            dataset = await handle_dataset(raw_output, unit_of_work)
         async with unit_of_work:
-            schema = await handle_schema(output, unit_of_work)
+            schema = await handle_schema(raw_output, unit_of_work)
 
-        interaction = extract_output_interaction(output)
-        interaction_components.append((interaction, operation, dataset, schema))
+        output = extract_output(raw_output)
+        output_components.append((output, operation, dataset, schema))
 
-    # create interaction only as a last step, to avoid partial lineage graph. Operation should be either empty or not.
+    # create inputs/outputs only as a last step, to avoid partial lineage graph. Operation should be either empty or not.
     async with unit_of_work:
-        for interaction, operation, dataset, schema in interaction_components:  # noqa: WPS440
-            await create_or_update_interaction(interaction, operation, dataset, schema, unit_of_work)
+        for input, operation, dataset, schema in input_components:  # noqa: WPS440
+            await create_or_update_input(input, operation, dataset, schema, unit_of_work)
+
+        for output, operation, dataset, schema in output_components:  # noqa: WPS440
+            await create_or_update_output(output, operation, dataset, schema, unit_of_work)
 
 
 async def handle_dataset(dataset: OpenLineageDataset, unit_of_work: UnitOfWork) -> Dataset:
@@ -137,11 +143,11 @@ async def handle_dataset(dataset: OpenLineageDataset, unit_of_work: UnitOfWork) 
 
 
 async def handle_schema(dataset: OpenLineageDataset, unit_of_work: UnitOfWork) -> Schema | None:
-    schema = extract_interaction_schema(dataset)
+    schema = extract_schema(dataset)
     if not schema:
         return None
     async with unit_of_work:
-        return await get_or_create_interaction_schema(schema, unit_of_work)
+        return await get_or_create_schema(schema, unit_of_work)
 
 
 async def get_or_create_parent_run(event: OpenLineageRunEvent, unit_of_work: UnitOfWork) -> Run | None:
@@ -197,16 +203,27 @@ async def get_or_create_dataset_symlink(
     )
 
 
-async def get_or_create_interaction_schema(schema: SchemaDTO, unit_of_work: UnitOfWork) -> Schema:
+async def get_or_create_schema(schema: SchemaDTO, unit_of_work: UnitOfWork) -> Schema:
     return await unit_of_work.schema.get_or_create(schema)
 
 
-async def create_or_update_interaction(
-    interaction: InteractionDTO,
+async def create_or_update_input(
+    input: InputDTO,
     operation: Operation,
     dataset: Dataset,
     schema: Schema | None,
     unit_of_work: UnitOfWork,
-) -> Interaction:
+) -> Input:
     schema_id = schema.id if schema else None
-    return await unit_of_work.interaction.create_or_update(interaction, operation.id, dataset.id, schema_id)
+    return await unit_of_work.input.create_or_update(input, operation.id, dataset.id, schema_id)
+
+
+async def create_or_update_output(
+    output: OutputDTO,
+    operation: Operation,
+    dataset: Dataset,
+    schema: Schema | None,
+    unit_of_work: UnitOfWork,
+) -> Output:
+    schema_id = schema.id if schema else None
+    return await unit_of_work.output.create_or_update(output, operation.id, dataset.id, schema_id)

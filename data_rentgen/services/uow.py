@@ -7,10 +7,11 @@ from typing_extensions import Annotated
 
 from data_rentgen.db.repositories.dataset import DatasetRepository
 from data_rentgen.db.repositories.dataset_symlink import DatasetSymlinkRepository
-from data_rentgen.db.repositories.interaction import InteractionRepository
+from data_rentgen.db.repositories.input import InputRepository
 from data_rentgen.db.repositories.job import JobRepository
 from data_rentgen.db.repositories.location import LocationRepository
 from data_rentgen.db.repositories.operation import OperationRepository
+from data_rentgen.db.repositories.output import OutputRepository
 from data_rentgen.db.repositories.run import RunRepository
 from data_rentgen.db.repositories.schema import SchemaRepository
 from data_rentgen.db.repositories.user import UserRepository
@@ -30,7 +31,8 @@ class UnitOfWork:
         self.dataset = DatasetRepository(session)
         self.dataset_symlink = DatasetSymlinkRepository(session)
         self.schema = SchemaRepository(session)
-        self.interaction = InteractionRepository(session)
+        self.input = InputRepository(session)
+        self.output = OutputRepository(session)
         self.user = UserRepository(session)
 
     async def __aenter__(self):

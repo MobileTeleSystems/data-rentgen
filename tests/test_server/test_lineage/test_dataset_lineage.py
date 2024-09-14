@@ -5,20 +5,13 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.db.models import (
-    Dataset,
-    Interaction,
-    InteractionType,
-    Job,
-    Operation,
-    Run,
-)
+from data_rentgen.db.models import Dataset, Input, Job, Operation, Output, Run
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink
 from tests.test_server.utils.enrich import enrich_datasets, enrich_jobs, enrich_runs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
-LINEAGE_FIXTURE_ANNOTATION = tuple[list[Job], list[Run], list[Operation], list[Dataset], list[Interaction]]
+LINEAGE_FIXTURE_ANNOTATION = tuple[list[Job], list[Run], list[Operation], list[Dataset], list[Input], list[Output]]
 
 
 async def test_get_dataset_lineage(
@@ -26,7 +19,7 @@ async def test_get_dataset_lineage(
     async_session: AsyncSession,
     lineage_with_same_dataset: LINEAGE_FIXTURE_ANNOTATION,
 ):
-    jobs, runs, operations, datasets, _ = lineage_with_same_dataset
+    jobs, runs, operations, datasets, *_ = lineage_with_same_dataset
     jobs = await enrich_jobs(jobs, async_session)
     runs = await enrich_runs(runs, async_session)
     datasets = await enrich_datasets(datasets, async_session)
@@ -39,7 +32,7 @@ async def test_get_dataset_lineage(
             "since": since.isoformat(),
             "point_kind": "DATASET",
             "point_id": dataset.id,
-            "direction": "FROM",
+            "direction": "DOWNSTREAM",
         },
     )
 
@@ -65,10 +58,10 @@ async def test_get_dataset_lineage(
         ]
         + [
             {
-                "kind": "INTERACTION",
+                "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": dataset.id},
                 "to": {"kind": "OPERATION", "id": str(operation.id)},
-                "type": "READ",
+                "type": None,
             }
             for operation in operations
         ],
@@ -140,7 +133,7 @@ async def test_get_dataset_lineage_with_direction_and_until(
     async_session: AsyncSession,
     lineage_with_same_dataset: LINEAGE_FIXTURE_ANNOTATION,
 ):
-    jobs, runs, all_operations, datasets, _ = lineage_with_same_dataset
+    jobs, runs, all_operations, datasets, *_ = lineage_with_same_dataset
     jobs = await enrich_jobs(jobs, async_session)
     runs = await enrich_runs(runs, async_session)
     datasets = await enrich_datasets(datasets, async_session)
@@ -159,7 +152,7 @@ async def test_get_dataset_lineage_with_direction_and_until(
             "until": until.isoformat(),
             "point_kind": "DATASET",
             "point_id": dataset.id,
-            "direction": "TO",
+            "direction": "UPSTREAM",
         },
     )
 
@@ -185,10 +178,10 @@ async def test_get_dataset_lineage_with_direction_and_until(
         ]
         + [
             {
-                "kind": "INTERACTION",
+                "kind": "OUTPUT",
                 "from": {"kind": "OPERATION", "id": str(operation.id)},
                 "to": {"kind": "DATASET", "id": dataset.id},
-                "type": "APPEND",  # <-- matching direction
+                "type": "APPEND",
             }
             for operation in operations
         ],
@@ -260,51 +253,40 @@ async def test_get_dataset_lineage_with_depth(
     async_session: AsyncSession,
     lineage_with_depth: LINEAGE_FIXTURE_ANNOTATION,
 ):
-    all_jobs, all_runs, all_operations, all_datasets, all_interactions = lineage_with_depth
+    all_jobs, all_runs, all_operations, all_datasets, all_inputs, all_outputs = lineage_with_depth
 
     # Go dataset -> operations[first level]
     first_level_dataset = all_datasets[0]
-    first_level_interactions = [
-        interaction
-        for interaction in all_interactions
-        if interaction.dataset_id == first_level_dataset.id and interaction.type == InteractionType.READ
-    ]
-    first_level_operation_ids = {interaction.operation_id for interaction in first_level_interactions}
+    first_level_inputs = [input for input in all_inputs if input.dataset_id == first_level_dataset.id]
+    first_level_operation_ids = {output.operation_id for output in first_level_inputs}
     first_level_operations = [operation for operation in all_operations if operation.id in first_level_operation_ids]
     assert first_level_operations
 
     # Go operations[first level] -> datasets[second level]
-    second_level_interactions = [
-        interaction
-        for interaction in all_interactions
-        if interaction.operation_id in first_level_operation_ids and interaction.type == InteractionType.APPEND
-    ]
-    second_level_dataset_ids = {interaction.dataset_id for interaction in second_level_interactions}
+    second_level_outputs = [output for output in all_outputs if output.operation_id in first_level_operation_ids]
+    second_level_dataset_ids = {output.dataset_id for output in second_level_outputs}
     second_level_datasets = [dataset for dataset in all_datasets if dataset.id in second_level_dataset_ids]
     assert second_level_datasets
 
-    second_level_operation_ids = {interaction.operation_id for interaction in second_level_interactions}
+    second_level_operation_ids = {output.operation_id for output in second_level_outputs}
     second_level_operations = [operation for operation in all_operations if operation.id in second_level_operation_ids]
     assert second_level_operations
 
     # Go datasets[second level] -> operations[third level]
     # There are more levels in this graph, but we stop here
     third_level_dataset_ids = second_level_dataset_ids - {first_level_dataset.id}
-    third_level_interactions = [
-        interaction
-        for interaction in all_interactions
-        if interaction.dataset_id in third_level_dataset_ids and interaction.type == InteractionType.READ
-    ]
+    third_level_inputs = [input for input in all_inputs if input.dataset_id in third_level_dataset_ids]
     third_level_datasets = [dataset for dataset in all_datasets if dataset.id in third_level_dataset_ids]
     assert third_level_datasets
 
     third_level_operation_ids = (
-        {interaction.operation_id for interaction in third_level_interactions}
-        - second_level_operation_ids
-        - first_level_operation_ids
+        {input.operation_id for input in third_level_inputs} - second_level_operation_ids - first_level_operation_ids
     )
     third_level_operations = [operation for operation in all_operations if operation.id in third_level_operation_ids]
     assert third_level_operations
+
+    inputs = first_level_inputs + third_level_inputs
+    outputs = second_level_outputs
 
     dataset_ids = {first_level_dataset.id} | second_level_dataset_ids | third_level_dataset_ids
     datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
@@ -329,7 +311,7 @@ async def test_get_dataset_lineage_with_depth(
             "since": since.isoformat(),
             "point_kind": "DATASET",
             "point_id": first_level_dataset.id,
-            "direction": "FROM",
+            "direction": "DOWNSTREAM",
             "depth": 3,
         },
     )
@@ -356,30 +338,21 @@ async def test_get_dataset_lineage_with_depth(
         ]
         + [
             {
-                "kind": "INTERACTION",
-                "from": {"kind": "DATASET", "id": interaction.dataset_id},
-                "to": {"kind": "OPERATION", "id": str(interaction.operation_id)},
-                "type": "READ",
+                "kind": "INPUT",
+                "from": {"kind": "DATASET", "id": input.dataset_id},
+                "to": {"kind": "OPERATION", "id": str(input.operation_id)},
+                "type": None,
             }
-            for interaction in first_level_interactions
+            for input in inputs
         ]
         + [
             {
-                "kind": "INTERACTION",
-                "from": {"kind": "OPERATION", "id": str(interaction.operation_id)},
-                "to": {"kind": "DATASET", "id": interaction.dataset_id},
+                "kind": "OUTPUT",
+                "from": {"kind": "OPERATION", "id": str(output.operation_id)},
+                "to": {"kind": "DATASET", "id": output.dataset_id},
                 "type": "APPEND",
             }
-            for interaction in second_level_interactions
-        ]
-        + [
-            {
-                "kind": "INTERACTION",
-                "from": {"kind": "DATASET", "id": interaction.dataset_id},
-                "to": {"kind": "OPERATION", "id": str(interaction.operation_id)},
-                "type": "READ",
-            }
-            for interaction in third_level_interactions
+            for output in outputs
         ],
         "nodes": [
             {
@@ -450,7 +423,7 @@ async def test_get_dataset_lineage_with_depth_ignore_cycles(
     async_session: AsyncSession,
     lineage_with_same_dataset: LINEAGE_FIXTURE_ANNOTATION,
 ):
-    jobs, runs, operations, [dataset], _ = lineage_with_same_dataset
+    jobs, runs, operations, [dataset], *_ = lineage_with_same_dataset
 
     # The there is a cycle dataset -> operation, so there is only one level of lineage.
     # All relations should be in the response, without duplicates.
@@ -465,7 +438,7 @@ async def test_get_dataset_lineage_with_depth_ignore_cycles(
             "since": since.isoformat(),
             "point_kind": "DATASET",
             "point_id": dataset.id,
-            "direction": "FROM",
+            "direction": "DOWNSTREAM",
             "depth": 3,
         },
     )
@@ -492,16 +465,16 @@ async def test_get_dataset_lineage_with_depth_ignore_cycles(
         ]
         + [
             {
-                "kind": "INTERACTION",
+                "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": dataset.id},
                 "to": {"kind": "OPERATION", "id": str(operation.id)},
-                "type": "READ",
+                "type": None,
             }
             for operation in sorted(operations, key=lambda x: x.id)
         ]
         + [
             {
-                "kind": "INTERACTION",
+                "kind": "OUTPUT",
                 "from": {"kind": "OPERATION", "id": str(operation.id)},
                 "to": {"kind": "DATASET", "id": dataset.id},
                 "type": "APPEND",
@@ -580,10 +553,11 @@ async def test_get_dataset_lineage_with_symlinks(
         list[Operation],
         list[Dataset],
         list[DatasetSymlink],
-        list[Interaction],
+        list[Input],
+        list[Output],
     ],
 ):
-    all_jobs, all_runs, all_operations, all_datasets, all_dataset_symlinks, all_interactions = lineage_with_symlinks
+    all_jobs, all_runs, all_operations, all_datasets, all_dataset_symlinks, all_inputs, _ = lineage_with_symlinks
     initial_dataset = all_datasets[0]
 
     dataset_symlinks = [
@@ -597,15 +571,11 @@ async def test_get_dataset_lineage_with_symlinks(
     datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
     assert datasets
 
-    # Thread all datasets from symlinks like they were passed as `point_id`
-    interactions = [
-        interaction
-        for interaction in all_interactions
-        if interaction.dataset_id in dataset_ids and interaction.type == InteractionType.READ
-    ]
-    assert interactions
+    # Threat all datasets from symlinks like they were passed as `point_id`
+    inputs = [input for input in all_inputs if input.dataset_id in dataset_ids]
+    assert inputs
 
-    operation_ids = {interaction.operation_id for interaction in interactions}
+    operation_ids = {input.operation_id for input in inputs}
     operations = [operation for operation in all_operations if operation.id in operation_ids]
     assert operations
 
@@ -628,7 +598,7 @@ async def test_get_dataset_lineage_with_symlinks(
             "since": since.isoformat(),
             "point_kind": "DATASET",
             "point_id": initial_dataset.id,
-            "direction": "FROM",
+            "direction": "DOWNSTREAM",
         },
     )
 
@@ -663,12 +633,12 @@ async def test_get_dataset_lineage_with_symlinks(
         ]
         + [
             {
-                "kind": "INTERACTION",
-                "from": {"kind": "DATASET", "id": interaction.dataset_id},
-                "to": {"kind": "OPERATION", "id": str(interaction.operation_id)},
-                "type": "READ",
+                "kind": "INPUT",
+                "from": {"kind": "DATASET", "id": input.dataset_id},
+                "to": {"kind": "OPERATION", "id": str(input.operation_id)},
+                "type": None,
             }
-            for interaction in interactions
+            for input in inputs
         ],
         "nodes": [
             {

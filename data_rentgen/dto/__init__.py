@@ -3,7 +3,7 @@
 
 from data_rentgen.dto.dataset import DatasetDTO
 from data_rentgen.dto.dataset_symlink import DatasetSymlinkDTO, DatasetSymlinkTypeDTO
-from data_rentgen.dto.interaction import InteractionDTO, InteractionTypeDTO
+from data_rentgen.dto.input import InputDTO
 from data_rentgen.dto.job import JobDTO, JobTypeDTO
 from data_rentgen.dto.location import LocationDTO
 from data_rentgen.dto.operation import (
@@ -11,6 +11,7 @@ from data_rentgen.dto.operation import (
     OperationStatusDTO,
     OperationTypeDTO,
 )
+from data_rentgen.dto.output import OutputDTO, OutputTypeDTO
 from data_rentgen.dto.pagination import PaginationDTO
 from data_rentgen.dto.run import RunDTO, RunStartReasonDTO, RunStatusDTO
 from data_rentgen.dto.schema import SchemaDTO
@@ -21,8 +22,9 @@ __all__ = [
     "DatasetSymlinkDTO",
     "DatasetSymlinkTypeDTO",
     "LocationDTO",
-    "InteractionDTO",
-    "InteractionTypeDTO",
+    "InputDTO",
+    "OutputDTO",
+    "OutputTypeDTO",
     "JobDTO",
     "JobTypeDTO",
     "OperationDTO",

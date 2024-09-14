@@ -12,12 +12,12 @@ from uuid6 import UUID
 from data_rentgen.db.models import (
     Dataset,
     DatasetSymlink,
-    Interaction,
+    Input,
     Job,
     Operation,
+    Output,
     Run,
 )
-from data_rentgen.dto.interaction import InteractionTypeDTO
 from data_rentgen.server.schemas.v1.lineage import LineageDirectionV1
 from data_rentgen.services.uow import UnitOfWork
 
@@ -31,7 +31,8 @@ class LineageServiceResult:
     operations: dict[UUID, Operation] = field(default_factory=dict)
     datasets: dict[int, Dataset] = field(default_factory=dict)
     dataset_symlinks: dict[tuple[int, int], DatasetSymlink] = field(default_factory=dict)
-    interactions: list[Interaction] = field(default_factory=list)
+    inputs: list[Input] = field(default_factory=list)
+    outputs: list[Output] = field(default_factory=list)
 
     def merge(self, other: "LineageServiceResult") -> "LineageServiceResult":
         self.jobs.update(other.jobs)
@@ -39,7 +40,8 @@ class LineageServiceResult:
         self.operations.update(other.operations)
         self.datasets.update(other.datasets)
         self.dataset_symlinks.update(other.dataset_symlinks)
-        self.interactions.extend(other.interactions)
+        self.inputs.extend(other.inputs)
+        self.outputs.extend(other.outputs)
         return self
 
 
@@ -101,15 +103,22 @@ class LineageService:
         all_operations = await self._uow.operation.list_by_run_ids(run_ids, since, until)
         operations_ids = {operation.id for operation in all_operations}
 
-        interaction_types = self.get_interaction_types(direction)
-        interactions = await self._uow.interaction.list_by_operation_ids(
-            operations_ids,
-            interaction_types,
-            since,
-            until,
-        )
+        inputs = []
+        outputs = []
+        if direction == LineageDirectionV1.DOWNSTREAM:
+            outputs = await self._uow.output.list_by_operation_ids(
+                operations_ids,
+                since,
+                until,
+            )
+        else:
+            inputs = await self._uow.input.list_by_operation_ids(
+                operations_ids,
+                since,
+                until,
+            )
 
-        dataset_ids = {interaction.dataset_id for interaction in interactions}
+        dataset_ids = {input.dataset_id for input in inputs} | {output.dataset_id for output in outputs}
         datasets = await self._uow.dataset.list_by_ids(dataset_ids)
 
         extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(dataset_ids)
@@ -121,8 +130,8 @@ class LineageService:
             for dataset_symlink in dataset_symlinks
         }
 
-        # Return only operations which have at least one interaction
-        operation_ids = {interaction.operation_id for interaction in interactions}
+        # Return only operations which have at least one input or output
+        operation_ids = {input.operation_id for input in inputs} | {output.operation_id for output in outputs}
         operations = [operation for operation in all_operations if operation.id in operation_ids]
         operations_by_id = {operation.id: operation for operation in operations}
 
@@ -132,12 +141,13 @@ class LineageService:
         runs_by_id = {run.id: run for run in runs}
 
         result = LineageServiceResult(
+            jobs=jobs_by_id,
+            runs=runs_by_id,
+            operations=operations_by_id,
             datasets=datasets_by_id,
             dataset_symlinks=dataset_symlinks_by_id,
-            interactions=interactions,
-            operations=operations_by_id,
-            runs=runs_by_id,
-            jobs=jobs_by_id,
+            inputs=inputs,
+            outputs=outputs,
         )
         if depth > 1:
             result.merge(
@@ -153,13 +163,14 @@ class LineageService:
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
-                "Found %d datasets, %d dataset symlinks, %d interactions, %d operations, %d runs, %d jobs",
+                "Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, %d inputs, %d outputs",
+                len(result.jobs),
+                len(result.runs),
+                len(result.operations),
                 len(result.datasets),
                 len(result.dataset_symlinks),
-                len(result.interactions),
-                len(result.operations),
-                len(result.runs),
-                len(result.jobs),
+                len(result.inputs),
+                len(result.outputs),
             )
         return result
 
@@ -190,15 +201,22 @@ class LineageService:
         all_operations = await self._uow.operation.list_by_run_ids(runs_by_id.keys(), since, until)
         operation_ids = {operation.id for operation in all_operations}
 
-        interaction_types = self.get_interaction_types(direction)
-        interactions = await self._uow.interaction.list_by_operation_ids(
-            operation_ids,
-            interaction_types,
-            since,
-            until,
-        )
+        inputs = []
+        outputs = []
+        if direction == LineageDirectionV1.DOWNSTREAM:
+            outputs = await self._uow.output.list_by_operation_ids(
+                operation_ids,
+                since,
+                until,
+            )
+        else:
+            inputs = await self._uow.input.list_by_operation_ids(
+                operation_ids,
+                since,
+                until,
+            )
 
-        dataset_ids = {interaction.dataset_id for interaction in interactions}
+        dataset_ids = {input.dataset_id for input in inputs} | {output.dataset_id for output in outputs}
         datasets = await self._uow.dataset.list_by_ids(dataset_ids)
 
         extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(dataset_ids)
@@ -210,8 +228,8 @@ class LineageService:
             for dataset_symlink in dataset_symlinks
         }
 
-        # Remove operations that are not part of the lineage graph
-        operation_ids = {interaction.operation_id for interaction in interactions}
+        # Return only operations which have at least one input or output
+        operation_ids = {input.operation_id for input in inputs} | {output.operation_id for output in outputs}
         operations = [operation for operation in all_operations if operation.id in operation_ids]
         operations_by_id = {operation.id: operation for operation in operations}
 
@@ -219,12 +237,13 @@ class LineageService:
         jobs_by_id = {job.id: job for job in jobs}
 
         result = LineageServiceResult(
+            jobs=jobs_by_id,
+            runs=runs_by_id,
+            operations=operations_by_id,
             datasets=datasets_by_id,
             dataset_symlinks=dataset_symlinks_by_id,
-            interactions=interactions,
-            operations=operations_by_id,
-            runs=runs_by_id,
-            jobs=jobs_by_id,
+            inputs=inputs,
+            outputs=outputs,
         )
         if depth > 1:
             result.merge(
@@ -240,13 +259,14 @@ class LineageService:
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
-                "Found %d datasets, %d dataset symlinks, %d interactions, %d operations, %d runs, %d jobs",
+                "Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, %d inputs, %d outputs",
+                len(result.jobs),
+                len(result.runs),
+                len(result.operations),
                 len(result.datasets),
                 len(result.dataset_symlinks),
-                len(result.interactions),
-                len(result.operations),
-                len(result.runs),
-                len(result.jobs),
+                len(result.inputs),
+                len(result.outputs),
             )
         return result
 
@@ -275,17 +295,24 @@ class LineageService:
             logger.info("No operations found")
             return LineageServiceResult()
 
-        interaction_types = self.get_interaction_types(direction)
-        interactions = await self._uow.interaction.list_by_operation_ids(
-            operations_by_id.keys(),
-            interaction_types,
-            since,
-            until,
-        )
+        inputs = []
+        outputs = []
+        if direction == LineageDirectionV1.DOWNSTREAM:
+            outputs = await self._uow.output.list_by_operation_ids(
+                operations_by_id.keys(),
+                since,
+                until,
+            )
+        else:
+            inputs = await self._uow.input.list_by_operation_ids(
+                operations_by_id.keys(),
+                since,
+                until,
+            )
 
         ids_to_skip = ids_to_skip or IdsToSkip()
-        dataset_ids = {interaction.dataset_id for interaction in interactions} - ids_to_skip.datasets
-        datasets = await self._uow.dataset.list_by_ids(dataset_ids)
+        dataset_ids = {input.dataset_id for input in inputs} | {output.dataset_id for output in outputs}
+        datasets = await self._uow.dataset.list_by_ids(dataset_ids - ids_to_skip.datasets)
 
         extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(
             dataset_ids,
@@ -299,21 +326,22 @@ class LineageService:
             for dataset_symlink in dataset_symlinks
         }
 
-        run_ids = {operation.run_id for operation in operations} - ids_to_skip.runs
-        runs = await self._uow.run.list_by_ids(run_ids)
+        run_ids = {operation.run_id for operation in operations}
+        runs = await self._uow.run.list_by_ids(run_ids - ids_to_skip.runs)
         runs_by_id = {run.id: run for run in runs}
 
-        job_ids = {run.job_id for run in runs} - ids_to_skip.jobs
-        jobs = await self._uow.job.list_by_ids(job_ids)
+        job_ids = {run.job_id for run in runs}
+        jobs = await self._uow.job.list_by_ids(job_ids - ids_to_skip.jobs)
         jobs_by_id = {job.id: job for job in jobs}
 
         result = LineageServiceResult(
+            jobs=jobs_by_id,
+            runs=runs_by_id,
+            operations=operations_by_id,
             datasets=datasets_by_id,
             dataset_symlinks=dataset_symlinks_by_id,
-            interactions=interactions,
-            operations=operations_by_id,
-            runs=runs_by_id,
-            jobs=jobs_by_id,
+            inputs=inputs,
+            outputs=outputs,
         )
         if depth > 1:
             result.merge(
@@ -329,13 +357,14 @@ class LineageService:
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
-                "Found %d datasets, %d dataset symlinks, %d interactions, %d operations, %d runs, %d jobs",
+                "Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, %d inputs, %d outputs",
+                len(result.jobs),
+                len(result.runs),
+                len(result.operations),
                 len(result.datasets),
                 len(result.dataset_symlinks),
-                len(result.interactions),
-                len(result.operations),
-                len(result.runs),
-                len(result.jobs),
+                len(result.inputs),
+                len(result.outputs),
             )
         return result
 
@@ -378,37 +407,44 @@ class LineageService:
             for dataset_symlink in dataset_symlinks
         }
 
-        # Get datasets -> interactions -> operations -> runs -> jobs
-        # Directions are inverted for datasets
-        interaction_types = self.get_interaction_types(~direction)
-        interactions = await self._uow.interaction.list_by_dataset_ids(
-            datasets_by_id.keys(),
-            interaction_types,
-            since,
-            until,
-        )
+        # Get datasets -> (inputs, outputs) -> operations -> runs -> jobs
+        inputs = []
+        outputs = []
+        if direction == LineageDirectionV1.DOWNSTREAM:
+            inputs = await self._uow.input.list_by_dataset_ids(
+                datasets_by_id.keys(),
+                since,
+                until,
+            )
+        else:
+            outputs = await self._uow.output.list_by_dataset_ids(
+                datasets_by_id.keys(),
+                since,
+                until,
+            )
 
         ids_to_skip = ids_to_skip or IdsToSkip()
-        operation_ids_to_load = {interaction.operation_id for interaction in interactions} - ids_to_skip.operations
-        operations = await self._uow.operation.list_by_ids(operation_ids_to_load)
+        operation_ids = {input.operation_id for input in inputs} | {output.operation_id for output in outputs}
+        operations = await self._uow.operation.list_by_ids(operation_ids - ids_to_skip.operations)
         operations_by_id = {operation.id: operation for operation in operations}
 
         # Get runs and jobs only on top level, to reduce number of queries made
-        run_ids = {operation.run_id for operation in operations} - ids_to_skip.runs
-        runs = await self._uow.run.list_by_ids(run_ids)
+        run_ids = {operation.run_id for operation in operations}
+        runs = await self._uow.run.list_by_ids(run_ids - ids_to_skip.runs)
         runs_by_id = {run.id: run for run in runs}
 
-        job_ids = {run.job_id for run in runs} - ids_to_skip.jobs
-        jobs = await self._uow.job.list_by_ids(job_ids)
+        job_ids = {run.job_id for run in runs}
+        jobs = await self._uow.job.list_by_ids(job_ids - ids_to_skip.jobs)
         jobs_by_id = {job.id: job for job in jobs}
 
         result = LineageServiceResult(
+            jobs=jobs_by_id,
+            runs=runs_by_id,
+            operations=operations_by_id,
             datasets=datasets_by_id,
             dataset_symlinks=dataset_symlinks_by_id,
-            interactions=interactions,
-            operations=operations_by_id,
-            runs=runs_by_id,
-            jobs=jobs_by_id,
+            inputs=inputs,
+            outputs=outputs,
         )
         if depth > 1:
             result.merge(
@@ -424,20 +460,16 @@ class LineageService:
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
-                "Found %d datasets, %d dataset symlinks, %d interactions, %d operations, %d runs, %d jobs",
+                "Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, %d inputs, %d outputs",
+                len(result.jobs),
+                len(result.runs),
+                len(result.operations),
                 len(result.datasets),
                 len(result.dataset_symlinks),
-                len(result.interactions),
-                len(result.operations),
-                len(result.runs),
-                len(result.jobs),
+                len(result.inputs),
+                len(result.outputs),
             )
         return result
-
-    def get_interaction_types(self, direction: LineageDirectionV1) -> list[str]:
-        if direction == LineageDirectionV1.TO:
-            return [InteractionTypeDTO.READ.value]
-        return [item.value for item in InteractionTypeDTO.write_interactions()]
 
     async def _extend_datasets_with_symlinks(
         self,

@@ -1,9 +1,9 @@
 import pytest
 
 from data_rentgen.consumer.extractors import (
-    extract_input_interaction,
-    extract_interaction_schema,
-    extract_output_interaction,
+    extract_input,
+    extract_output,
+    extract_schema,
 )
 from data_rentgen.consumer.openlineage.dataset import (
     OpenLineageDataset,
@@ -21,11 +21,11 @@ from data_rentgen.consumer.openlineage.dataset_facets import (
     OpenLineageSchemaDatasetFacet,
     OpenLineageSchemaField,
 )
-from data_rentgen.dto import InteractionDTO, InteractionTypeDTO, SchemaDTO
+from data_rentgen.dto import InputDTO, OutputDTO, OutputTypeDTO, SchemaDTO
 
 
 @pytest.mark.parametrize("dataset_type", [OpenLineageInputDataset, OpenLineageOutputDataset])
-def test_extractors_extract_interaction_schema(dataset_type: type[OpenLineageDataset]):
+def test_extractors_extract_input_output_schema(dataset_type: type[OpenLineageDataset]):
     dataset = dataset_type(
         namespace="hdfs://test-hadoop:9820",
         name="/user/hive/warehouse/mydb.db/mytable",
@@ -61,7 +61,7 @@ def test_extractors_extract_interaction_schema(dataset_type: type[OpenLineageDat
         ),
     )
 
-    assert extract_interaction_schema(dataset) == SchemaDTO(
+    assert extract_schema(dataset) == SchemaDTO(
         fields=[
             {"name": "dt", "type": "timestamp", "description": "Business date"},
             {"name": "customer_id", "type": "decimal(20,0)"},
@@ -92,7 +92,7 @@ def test_extractors_extract_interaction_schema(dataset_type: type[OpenLineageDat
         (None, None, None),
     ],
 )
-def test_extractors_extract_input_interaction(
+def test_extractors_extract_input(
     row_count: int | None,
     byte_count: int | None,
     file_count: int | None,
@@ -109,8 +109,7 @@ def test_extractors_extract_input_interaction(
         ),
     )
 
-    assert extract_input_interaction(input) == InteractionDTO(
-        type=InteractionTypeDTO.READ,
+    assert extract_input(input) == InputDTO(
         num_rows=row_count,
         num_bytes=byte_count,
         num_files=file_count,
@@ -118,16 +117,16 @@ def test_extractors_extract_input_interaction(
 
 
 @pytest.mark.parametrize(
-    ["lifecycle_state_change", "expected_interaction_type"],
+    ["lifecycle_state_change", "expected_type"],
     [
-        (OpenLineageDatasetLifecycleStateChange.CREATE, InteractionTypeDTO.CREATE),
-        (OpenLineageDatasetLifecycleStateChange.OVERWRITE, InteractionTypeDTO.OVERWRITE),
-        (OpenLineageDatasetLifecycleStateChange.ALTER, InteractionTypeDTO.ALTER),
-        (OpenLineageDatasetLifecycleStateChange.CREATE, InteractionTypeDTO.CREATE),
-        (OpenLineageDatasetLifecycleStateChange.DROP, InteractionTypeDTO.DROP),
-        (OpenLineageDatasetLifecycleStateChange.OVERWRITE, InteractionTypeDTO.OVERWRITE),
-        (OpenLineageDatasetLifecycleStateChange.RENAME, InteractionTypeDTO.RENAME),
-        (OpenLineageDatasetLifecycleStateChange.TRUNCATE, InteractionTypeDTO.TRUNCATE),
+        (OpenLineageDatasetLifecycleStateChange.CREATE, OutputTypeDTO.CREATE),
+        (OpenLineageDatasetLifecycleStateChange.OVERWRITE, OutputTypeDTO.OVERWRITE),
+        (OpenLineageDatasetLifecycleStateChange.ALTER, OutputTypeDTO.ALTER),
+        (OpenLineageDatasetLifecycleStateChange.CREATE, OutputTypeDTO.CREATE),
+        (OpenLineageDatasetLifecycleStateChange.DROP, OutputTypeDTO.DROP),
+        (OpenLineageDatasetLifecycleStateChange.OVERWRITE, OutputTypeDTO.OVERWRITE),
+        (OpenLineageDatasetLifecycleStateChange.RENAME, OutputTypeDTO.RENAME),
+        (OpenLineageDatasetLifecycleStateChange.TRUNCATE, OutputTypeDTO.TRUNCATE),
     ],
 )
 @pytest.mark.parametrize(
@@ -137,9 +136,9 @@ def test_extractors_extract_input_interaction(
         (None, None, None),
     ],
 )
-def test_extractors_extract_output_interaction(
+def test_extractors_extract_output(
     lifecycle_state_change: OpenLineageDatasetLifecycleStateChange,
-    expected_interaction_type: InteractionTypeDTO,
+    expected_type: OutputTypeDTO,
     row_count: int | None,
     byte_count: int | None,
     file_count: int | None,
@@ -161,8 +160,8 @@ def test_extractors_extract_output_interaction(
         ),
     )
 
-    assert extract_output_interaction(output) == InteractionDTO(
-        type=expected_interaction_type,
+    assert extract_output(output) == OutputDTO(
+        type=expected_type,
         num_rows=row_count,
         num_bytes=byte_count,
         num_files=file_count,

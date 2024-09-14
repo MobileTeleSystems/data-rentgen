@@ -18,8 +18,7 @@ from data_rentgen.db.models.operation import Operation
 from data_rentgen.db.models.schema import Schema
 
 
-class InteractionType(str, Enum):
-    READ = "READ"
+class OutputType(str, Enum):
 
     CREATE = "CREATE"
     ALTER = "ALTER"
@@ -36,8 +35,8 @@ class InteractionType(str, Enum):
 
 
 # no foreign keys to avoid scanning all the partitions
-class Interaction(Base):
-    __tablename__ = "interaction"
+class Output(Base):
+    __tablename__ = "output"
     __table_args__ = (
         PrimaryKeyConstraint("created_at", "id"),
         {"postgresql_partition_by": "RANGE (created_at)"},
@@ -54,11 +53,11 @@ class Interaction(Base):
         SQL_UUID,
         index=True,
         nullable=False,
-        doc="Operation caused this interaction",
+        doc="Operation caused this output",
     )
     operation: Mapped[Operation] = relationship(
         Operation,
-        primaryjoin="Interaction.operation_id == Operation.id",
+        primaryjoin="Output.operation_id == Operation.id",
         lazy="noload",
         foreign_keys=[operation_id],
     )
@@ -67,31 +66,31 @@ class Interaction(Base):
         BigInteger,
         index=True,
         nullable=False,
-        doc="Dataset the interaction is performed against",
+        doc="Dataset the output is performed against",
     )
     dataset: Mapped[Dataset] = relationship(
         Dataset,
-        primaryjoin="Interaction.dataset_id == Dataset.id",
+        primaryjoin="Output.dataset_id == Dataset.id",
         lazy="noload",
         foreign_keys=[dataset_id],
     )
 
-    type: Mapped[InteractionType] = mapped_column(
-        ChoiceType(InteractionType, impl=String(32)),
+    type: Mapped[OutputType] = mapped_column(
+        ChoiceType(OutputType, impl=String(32)),
         nullable=False,
-        default=InteractionType.APPEND,
-        doc="Type of the interaction, e.g. READ, CREATE, APPEND",
+        default=OutputType.APPEND,
+        doc="Type of the output, e.g. READ, CREATE, APPEND",
     )
 
     schema_id: Mapped[int | None] = mapped_column(
         BigInteger,
         index=True,
         nullable=True,
-        doc="Schema the interaction is performed with, if any",
+        doc="Schema the output is performed with, if any",
     )
     schema: Mapped[Schema | None] = relationship(
         Schema,
-        primaryjoin="Interaction.schema_id == Schema.id",
+        primaryjoin="Output.schema_id == Schema.id",
         lazy="noload",
         foreign_keys=[schema_id],
     )
@@ -99,17 +98,17 @@ class Interaction(Base):
     num_bytes: Mapped[int | None] = mapped_column(
         BigInteger,
         nullable=True,
-        doc="Amount of data moved during interaction, in bytes",
+        doc="Amount of data moved during Output, in bytes",
     )
 
     num_rows: Mapped[int | None] = mapped_column(
         BigInteger,
         nullable=True,
-        doc="Amount of data moved during interaction, in rows",
+        doc="Amount of data moved during Output, in rows",
     )
 
     num_files: Mapped[int | None] = mapped_column(
         BigInteger,
         nullable=True,
-        doc="Amount of data moved during interaction, in rows",
+        doc="Amount of data moved during Output, in rows",
     )
