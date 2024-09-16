@@ -144,5 +144,6 @@ class Run(Base):
             persisted=True,
         ),
         nullable=True,
+        deferred=True,
         doc="Full-text search vector",
     )
