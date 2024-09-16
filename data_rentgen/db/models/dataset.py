@@ -49,5 +49,6 @@ class Dataset(Base):
         TSVECTOR,
         Computed("to_tsvector('english'::regconfig, name || ' ' || (translate(name, '/.', '  ')))", persisted=True),
         nullable=False,
+        deferred=True,
         doc="Full-text search vector",
     )
