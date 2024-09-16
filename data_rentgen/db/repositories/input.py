@@ -48,7 +48,9 @@ class InputRepository(Repository[Input]):
         self,
         operation_ids: Iterable[UUID],
     ) -> list[Input]:
-        # Input created_at is always the same as operation's created_at
+        # Input created_at is always the same as operation's created_at.
+        # do not use `tuple_(Input.created_at, Input.operation_id).in_(...),
+        # as this is too complex filter for Postgres to make an optimal query plan
         min_created_at = extract_timestamp_from_uuid(min(operation_ids))
         max_created_at = extract_timestamp_from_uuid(max(operation_ids))
         query = select(Input).where(
