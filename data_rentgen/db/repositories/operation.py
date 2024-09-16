@@ -4,7 +4,7 @@
 from datetime import datetime, timezone
 from typing import Iterable
 
-from sqlalchemy import select, tuple_
+from sqlalchemy import select
 
 from data_rentgen.db.models import Operation, OperationType, Status
 from data_rentgen.db.repositories.base import Repository
@@ -35,8 +35,15 @@ class OperationRepository(Repository[Operation]):
         page_size: int,
         operation_ids: Iterable[UUID],
     ) -> PaginationDTO[Operation]:
-        tuples = [(extract_timestamp_from_uuid(i), i) for i in operation_ids]
-        query = select(Operation).where(tuple_(Operation.created_at, Operation.id).in_(tuples))
+        # do not use `tuple_(Operation.created_at, Operation.id).in_(...),
+        # as this is too complex filter for Postgres to make an optimal query plan
+        min_created_at = extract_timestamp_from_uuid(min(operation_ids))
+        max_created_at = extract_timestamp_from_uuid(max(operation_ids))
+        query = select(Operation).where(
+            Operation.created_at >= min_created_at,
+            Operation.created_at <= max_created_at,
+            Operation.id.in_(operation_ids),
+        )
         return await self._paginate_by_query(
             order_by=[Operation.run_id, Operation.id],
             page=page,
@@ -79,8 +86,15 @@ class OperationRepository(Repository[Operation]):
     async def list_by_ids(self, operation_ids: Iterable[UUID]) -> list[Operation]:
         if not operation_ids:
             return []
-        tuples = [(extract_timestamp_from_uuid(i), i) for i in operation_ids]
-        query = select(Operation).where(tuple_(Operation.created_at, Operation.id).in_(tuples))
+        # do not use `tuple_(Operation.created_at, Operation.id).in_(...),
+        # as this is too complex filter for Postgres to make an optimal query plan
+        min_created_at = extract_timestamp_from_uuid(min(operation_ids))
+        max_created_at = extract_timestamp_from_uuid(max(operation_ids))
+        query = select(Operation).where(
+            Operation.created_at >= min_created_at,
+            Operation.created_at <= max_created_at,
+            Operation.id.in_(operation_ids),
+        )
         result = await self._session.scalars(query)
         return list(result.all())
 
