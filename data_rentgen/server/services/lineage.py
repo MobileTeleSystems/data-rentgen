@@ -106,17 +106,9 @@ class LineageService:
         inputs = []
         outputs = []
         if direction == LineageDirectionV1.DOWNSTREAM:
-            outputs = await self._uow.output.list_by_operation_ids(
-                operation_ids,
-                since,
-                until,
-            )
+            outputs = await self._uow.output.list_by_operation_ids(operation_ids)
         else:
-            inputs = await self._uow.input.list_by_operation_ids(
-                operation_ids,
-                since,
-                until,
-            )
+            inputs = await self._uow.input.list_by_operation_ids(operation_ids)
 
         # Return only operations which have at least one input or output
         operation_ids = {input.operation_id for input in inputs} | {output.operation_id for output in outputs}
@@ -204,17 +196,9 @@ class LineageService:
         inputs = []
         outputs = []
         if direction == LineageDirectionV1.DOWNSTREAM:
-            outputs = await self._uow.output.list_by_operation_ids(
-                operation_ids,
-                since,
-                until,
-            )
+            outputs = await self._uow.output.list_by_operation_ids(operation_ids)
         else:
-            inputs = await self._uow.input.list_by_operation_ids(
-                operation_ids,
-                since,
-                until,
-            )
+            inputs = await self._uow.input.list_by_operation_ids(operation_ids)
 
         # Return only operations which have at least one input or output
         operation_ids = {input.operation_id for input in inputs} | {output.operation_id for output in outputs}
@@ -298,17 +282,9 @@ class LineageService:
         inputs = []
         outputs = []
         if direction == LineageDirectionV1.DOWNSTREAM:
-            outputs = await self._uow.output.list_by_operation_ids(
-                operations_by_id.keys(),
-                since,
-                until,
-            )
+            outputs = await self._uow.output.list_by_operation_ids(operations_by_id)
         else:
-            inputs = await self._uow.input.list_by_operation_ids(
-                operations_by_id.keys(),
-                since,
-                until,
-            )
+            inputs = await self._uow.input.list_by_operation_ids(operations_by_id)
 
         ids_to_skip = ids_to_skip or IdsToSkip()
         run_ids = {operation.run_id for operation in operations}
