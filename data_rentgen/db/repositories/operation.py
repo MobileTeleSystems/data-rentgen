@@ -1,10 +1,10 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Iterable
 
-from sqlalchemy import select
+from sqlalchemy import select, tuple_
 
 from data_rentgen.db.models import Operation, OperationType, Status
 from data_rentgen.db.repositories.base import Repository
@@ -35,10 +35,8 @@ class OperationRepository(Repository[Operation]):
         page_size: int,
         operation_ids: Iterable[UUID],
     ) -> PaginationDTO[Operation]:
-        minimal_created_at = extract_timestamp_from_uuid(min(id for id in operation_ids))
-        query = (
-            select(Operation).where(Operation.created_at >= minimal_created_at).where(Operation.id.in_(operation_ids))
-        )
+        tuples = [(extract_timestamp_from_uuid(i), i) for i in operation_ids]
+        query = select(Operation).where(tuple_(Operation.created_at, Operation.id).in_(tuples))
         return await self._paginate_by_query(
             order_by=[Operation.run_id, Operation.id],
             page=page,
@@ -54,7 +52,11 @@ class OperationRepository(Repository[Operation]):
         since: datetime,
         until: datetime | None,
     ) -> PaginationDTO[Operation]:
-        query = select(Operation).where(Operation.created_at >= since, Operation.run_id == run_id)
+        # All operations are created after run
+        run_created_at = extract_timestamp_from_uuid(run_id)
+        # But user may request a more narrow time window
+        min_operation_created_at = max(run_created_at, since.astimezone(timezone.utc))
+        query = select(Operation).where(Operation.created_at >= min_operation_created_at, Operation.run_id == run_id)
         if until:
             query = query.where(Operation.created_at <= until)
         return await self._paginate_by_query(order_by=[Operation.id], page=page, page_size=page_size, query=query)
@@ -65,7 +67,10 @@ class OperationRepository(Repository[Operation]):
         since: datetime,
         until: datetime | None,
     ) -> list[Operation]:
-        query = select(Operation).where(Operation.created_at >= since, Operation.run_id.in_(run_ids))
+        # All operations are created after run
+        min_run_created_at = extract_timestamp_from_uuid(min(run_ids))
+        min_operation_created_at = max(min_run_created_at, since.astimezone(timezone.utc))
+        query = select(Operation).where(Operation.created_at >= min_operation_created_at, Operation.run_id.in_(run_ids))
         if until:
             query = query.where(Operation.created_at <= until)
         result = await self._session.scalars(query)
@@ -74,8 +79,8 @@ class OperationRepository(Repository[Operation]):
     async def list_by_ids(self, operation_ids: Iterable[UUID]) -> list[Operation]:
         if not operation_ids:
             return []
-        created_at = extract_timestamp_from_uuid(min(i for i in operation_ids))
-        query = select(Operation).where(Operation.created_at >= created_at, Operation.id.in_(operation_ids))
+        tuples = [(extract_timestamp_from_uuid(i), i) for i in operation_ids]
+        query = select(Operation).where(tuple_(Operation.created_at, Operation.id).in_(tuples))
         result = await self._session.scalars(query)
         return list(result.all())
 
