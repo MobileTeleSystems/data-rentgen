@@ -37,7 +37,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-      migration:
+      db-migration:
         condition: service_completed_successfully
 
   kafka:
@@ -62,10 +62,10 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-      migration:
+      db-migration:
         condition: service_completed_successfully
 
-  migration:
+  db-migration:
     image: mtsrus/data-rentgen:develop
     command: |
       python -m data_rentgen.db.migrations upgrade head && python -m data_rentgen.db.scripts.create_partitions
