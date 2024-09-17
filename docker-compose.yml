@@ -15,7 +15,8 @@ services:
       retries: 3
 
   server:
-    image: mtsrus/data-rentgen-server:develop
+    image: mtsrus/data-rentgen:develop
+    command: python -m data_rentgen.server --host 0.0.0.0 --port 8000
     restart: unless-stopped
     env_file: .env.docker
     ports:
@@ -27,9 +28,17 @@ services:
     # tmpfs dir is cleaned up each container restart
     tmpfs:
       - /tmp/prometheus-metrics
+    healthcheck:
+      test: [CMD-SHELL, curl, -f, http://localhost:8000/monitoring/ping]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
     depends_on:
       db:
         condition: service_healthy
+      migration:
+        condition: service_completed_successfully
 
   kafka:
     image: bitnami/kafka:3.7
@@ -46,11 +55,23 @@ services:
       retries: 5
 
   consumer:
-    image: mtsrus/data-rentgen-consumer:develop
+    image: mtsrus/data-rentgen:develop
+    command: python -m data_rentgen.consumer
     restart: unless-stopped
     env_file: .env.docker
     depends_on:
       kafka:
+        condition: service_healthy
+      migration:
+        condition: service_completed_successfully
+
+  migration:
+    image: mtsrus/data-rentgen:develop
+    command: |
+      python -m data_rentgen.db.migrations upgrade head && python -m data_rentgen.db.scripts.create_partitions
+    env_file: .env.docker
+    depends_on:
+      db:
         condition: service_healthy
 
 volumes:
