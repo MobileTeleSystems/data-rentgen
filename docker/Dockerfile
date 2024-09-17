@@ -12,11 +12,8 @@ COPY ./pyproject.toml ./poetry.lock* ./
 RUN --mount=type=cache,target=/root/.cache/pypoetry \
     poetry install \
         --no-root \
-        --extras server \
+        --all-extras \
         --without dev,test,docs
-
-COPY ./docker/server.sh ./docker/
-RUN chmod +x ./docker/*.sh
 
 COPY ./data_rentgen/ ./data_rentgen/
 
@@ -31,7 +28,3 @@ ENV DATA_RENTGEN__SERVER__OPENAPI__SWAGGER__JS_URL=/static/swagger/swagger-ui-bu
     DATA_RENTGEN__SERVER__OPENAPI__SWAGGER__CSS_URL=/static/swagger/swagger-ui.css \
     DATA_RENTGEN__SERVER__OPENAPI__REDOC__JS_URL=/static/redoc/redoc.standalone.js \
     DATA_RENTGEN__SERVER__STATIC_FILES__DIRECTORY=/app/data_rentgen/server/static
-
-EXPOSE 8000
-ENTRYPOINT ["/app/docker/server.sh"]
-HEALTHCHECK --interval=30s --timeout=5s --start-period=5s --retries=3 CMD ["curl", "-f", "http://localhost:8000/monitoring/ping"]

@@ -85,8 +85,7 @@ dev-consumer: broker-start ##@Application Run development broker (without docker
 	${POETRY} run python -m data_rentgen.consumer $(ARGS)
 
 prod-build: ##@Application Build docker image
-	docker build --progress=plain --network=host -t mtsrus/data-rentgen-server:develop -f ./docker/Dockerfile.server $(ARGS) .
-	docker build --progress=plain --network=host -t mtsrus/data-rentgen-consumer:develop -f ./docker/Dockerfile.consumer $(ARGS) .
+	docker build --progress=plain --network=host -t mtsrus/data-rentgen:develop -f ./docker/Dockerfile $(ARGS) .
 
 prod: ##@Application Run production server (with docker)
 	docker compose up -d
