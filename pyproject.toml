@@ -48,14 +48,14 @@ pydantic = "^2.9.2"
 typing-extensions = "^4.12.2"
 pydantic-settings = {version = "^2.5.2", optional = true}
 alembic = {version = "^1.13.2", optional = true}
-sqlalchemy = {version = "^2.0.32", optional = true}
+sqlalchemy = {version = "^2.0.35", optional = true}
 sqlalchemy-utils = {version = "^0.41.2", optional = true}
 pyyaml = {version = "^6.0.2", optional = true}
 python-json-logger = {version = "^2.0.7", optional = true}
 coloredlogs = {version = "^15.0.1", optional = true}
 uuid6 = {version = "^2024.7.10", optional = true}
 python-dateutil = {version = "^2.9.0.post0", optional = true}
-fastapi = {version = "^0.114.1", optional = true}
+fastapi = {version = "^0.115.0", optional = true}
 starlette = {version = "^0.38.5", optional = true}
 starlette-exporter = {version = "^0.23.0", optional = true}
 uvicorn = {version = "^0.30.6", optional = true}
