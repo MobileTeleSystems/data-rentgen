@@ -14,14 +14,14 @@ Data.Rentgen
     :target: https://github.com/MobileTeleSystems/data-rentgen/blob/develop/LICENSE.txt
 .. |PyPI Python Version| image:: https://img.shields.io/pypi/pyversions/data-rentgen.svg
     :target: https://badge.fury.io/py/data-rentgen
-.. |Docker image| image:: https://img.shields.io/docker/v/mtsrus/data-rentgen-server?sort=semver&label=docker
-    :target: https://hub.docker.com/r/mtsrus/data-rentgen-server
+.. |Docker image| image:: https://img.shields.io/docker/v/mtsrus/data-rentgen?sort=semver&label=docker
+    :target: https://hub.docker.com/r/mtsrus/data-rentgen
 .. |Documentation| image:: https://readthedocs.org/projects/data-rentgen/badge/?version=stable
     :target: https://data-rentgen.readthedocs.io/
 .. |Build Status| image:: https://github.com/MobileTeleSystems/data-rentgen/workflows/Tests/badge.svg
     :target: https://github.com/MobileTeleSystems/data-rentgen/actions
-.. |Coverage| image:: https://codecov.io/gh/MobileTeleSystems/data-rentgen/graph/badge.svg?token=s0JztGZbq3
-    :target: https://codecov.io/gh/MobileTeleSystems/data-rentgen
+.. |Coverage| image:: https://codecov.io/github/MobileTeleSystems/data-rentgen/graph/badge.svg?token=s0JztGZbq3
+    :target: https://codecov.io/github/MobileTeleSystems/data-rentgen
 .. |pre-commit.ci| image:: https://results.pre-commit.ci/badge/github/MobileTeleSystems/data-rentgen/develop.svg
     :target: https://results.pre-commit.ci/latest/github/MobileTeleSystems/data-rentgen/develop
 
