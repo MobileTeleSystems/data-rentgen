@@ -26,7 +26,7 @@ Data.Rentgen
     :target: https://results.pre-commit.ci/latest/github/MobileTeleSystems/data-rentgen/develop
 
 What is Data.Rentgen?
---------------------
+---------------------
 
 Data.Rentgen is a DataLineage service compatible with `OpenLineage <https://openlineage.io/>`_ specification.
 
