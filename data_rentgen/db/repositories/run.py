@@ -49,11 +49,17 @@ class RunRepository(Repository[Run]):
         return await self._update(result, run, parent_run_id, started_by_user_id)
 
     async def pagination_by_id(self, page: int, page_size: int, run_ids: Iterable[UUID]) -> PaginationDTO[Run]:
-        minimal_created_at = extract_timestamp_from_uuid(min(id for id in run_ids))
+        # do not use `tuple_(Run.created_at, Run.id).in_(...),
+        # as this is too complex filter for Postgres to make an optimal query plan
+        min_created_at = extract_timestamp_from_uuid(min(run_ids))
+        max_created_at = extract_timestamp_from_uuid(max(run_ids))
         query = (
             select(Run)
-            .where(Run.created_at >= minimal_created_at)
-            .where(Run.id.in_(run_ids))
+            .where(
+                Run.created_at >= min_created_at,
+                Run.created_at <= max_created_at,
+                Run.id.in_(run_ids),
+            )
             .options(selectinload(Run.started_by_user))
         )
         return await self._paginate_by_query(order_by=[Run.id], page=page, page_size=page_size, query=query)
@@ -93,10 +99,17 @@ class RunRepository(Repository[Run]):
     async def list_by_ids(self, run_ids: Iterable[UUID]) -> list[Run]:
         if not run_ids:
             return []
-        created_at = extract_timestamp_from_uuid(min(i for i in run_ids))
+        # do not use `tuple_(Run.created_at, Run.id).in_(...),
+        # as this is too complex filter for Postgres to make an optimal query plan
+        min_created_at = extract_timestamp_from_uuid(min(run_ids))
+        max_created_at = extract_timestamp_from_uuid(max(run_ids))
         query = (
             select(Run)
-            .where(Run.created_at >= created_at, Run.id.in_(run_ids))
+            .where(
+                Run.created_at >= min_created_at,
+                Run.created_at <= max_created_at,
+                Run.id.in_(run_ids),
+            )
             .options(selectinload(Run.started_by_user))
         )
         result = await self._session.scalars(query)

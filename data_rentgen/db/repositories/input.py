@@ -24,8 +24,8 @@ class InputRepository(Repository[Input]):
         dataset_id: int,
         schema_id: int | None,
     ) -> Input:
-        # `created_at' and `id` fields of input should correlate with `operation.id`,
-        # to avoid scanning all partitions and speed up insert queries
+        # `created_at' field of input should be the same as operation's,
+        # to avoid scanning all partitions and speed up queries
         created_at = extract_timestamp_from_uuid(operation_id)
 
         # instead of using UniqueConstraint on multiple fields, one of which (schema_id) can be NULL,
@@ -47,16 +47,17 @@ class InputRepository(Repository[Input]):
     async def list_by_operation_ids(
         self,
         operation_ids: Iterable[UUID],
-        since: datetime,
-        until: datetime | None,
     ) -> list[Input]:
-        filters = [
-            Input.created_at >= since,
+        # Input created_at is always the same as operation's created_at.
+        # do not use `tuple_(Input.created_at, Input.operation_id).in_(...),
+        # as this is too complex filter for Postgres to make an optimal query plan
+        min_created_at = extract_timestamp_from_uuid(min(operation_ids))
+        max_created_at = extract_timestamp_from_uuid(max(operation_ids))
+        query = select(Input).where(
+            Input.created_at >= min_created_at,
+            Input.created_at <= max_created_at,
             Input.operation_id.in_(operation_ids),
-        ]
-        if until:
-            filters.append(Input.created_at <= until)
-        query = select(Input).where(and_(*filters))
+        )
         result = await self._session.scalars(query)
         return list(result.all())
 
