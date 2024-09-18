@@ -43,5 +43,6 @@ class Address(Base):
         TSVECTOR,
         Computed("to_tsvector('english'::regconfig, url || ' ' || (translate(url, '/.', '  ')))", persisted=True),
         nullable=False,
+        deferred=True,
         doc="Full-text search vector",
     )

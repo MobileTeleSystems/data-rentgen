@@ -48,5 +48,6 @@ class Location(Base):
             persisted=True,
         ),
         nullable=False,
+        deferred=True,
         doc="Full-text search vector",
     )
