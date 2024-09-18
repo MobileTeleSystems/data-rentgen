@@ -42,9 +42,6 @@ repos:
         exclude: ^(.*__main__\.py|data_rentgen/server/scripts/export_openapi_schema\.py|data_rentgen/db/scripts/create_partitions\.py)$
       - id: chmod
         args: ['755']
-        types: [shell]
-      - id: chmod
-        args: ['755']
         files: ^(.*__main__\.py|data_rentgen/server/scripts/export_openapi_schema\.py|data_rentgen/db/scripts/create_partitions\.py)$
       - id: insert-license
         files: .*\.py$
