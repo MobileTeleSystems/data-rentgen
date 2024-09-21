@@ -39,7 +39,7 @@ venv-install: ##@Env Install requirements to venv
 	${POETRY} install --no-root --all-extras --with dev,test,docs $(ARGS)
 
 
-db-prepare: db-start df-upgrade db-partitions ##@DB Prepare database (in docker)
+db: db-start db-upgrade db-partitions ##@DB Prepare database (in docker)
 
 db-start: ##@DB Start database
 	docker compose up -d --wait db $(DOCKER_COMPOSE_ARGS)
@@ -47,7 +47,7 @@ db-start: ##@DB Start database
 db-revision: ##@DB Generate migration file
 	${POETRY} run python -m data_rentgen.db.migrations revision --autogenerate $(ARGS)
 
-df-upgrade: ##@DB Run migrations to head
+db-upgrade: ##@DB Run migrations to head
 	${POETRY} run python -m data_rentgen.db.migrations upgrade head $(ARGS)
 
 db-downgrade: ##@DB Downgrade head migration
@@ -57,26 +57,26 @@ db-partitions: ##@DB Create partitions
 	${POETRY} run python -m data_rentgen.db.scripts.create_partitions --start 2024-07-01
 
 
-broker-prepare: broker-start ##@Broker Prepare broker (in docker)
+broker: broker-start ##@Broker Prepare broker (in docker)
 
 broker-start: ##Broker Start broker
 	docker compose -f docker-compose.test.yml up -d --wait kafka $(DOCKER_COMPOSE_ARGS)
 
 
-test: test-db-prepare test-broker-prepare ##@Test Run tests
+test: test-db test-broker ##@Test Run tests
 	${POETRY} run pytest $(PYTEST_ARGS)
 
-test-db-prepare: test-db-start df-upgrade db-partitions ##@TestDB Prepare database (in docker)
+test-db: test-db-start db-upgrade db-partitions ##@TestDB Prepare database (in docker)
 
 test-db-start: ##@TestDB Start database
 	docker compose -f docker-compose.test.yml up -d --wait db $(DOCKER_COMPOSE_ARGS)
 
-test-broker-prepare: test-broker-start ##@TestBroker Prepare broker (in docker)
+test-broker: test-broker-start ##@TestBroker Prepare broker (in docker)
 
 test-broker-start: ##@TestBroker Start broker
 	docker compose -f docker-compose.test.yml up -d --wait kafka $(DOCKER_COMPOSE_ARGS)
 
-test-ci: test-db-prepare test-broker-prepare ##@Test Run CI tests
+test-ci: test-db test-broker ##@Test Run CI tests
 	${POETRY} run coverage run -m pytest
 
 test-check-fixtures: ##@Test Check declared fixtures
@@ -87,19 +87,19 @@ test-cleanup: ##@Test Cleanup tests dependencies
 
 
 
-dev-server: db-prepare ##@Application Run development server (without docker)
+dev-server: db-start ##@Application Run development server (without docker)
 	${POETRY} run python -m data_rentgen.server $(ARGS)
 
-dev-consumer: db-prepare broker-prepare ##@Application Run development broker (without docker)
+dev-consumer: db-start broker-start ##@Application Run development broker (without docker)
 	${POETRY} run python -m data_rentgen.consumer $(ARGS)
 
 prod-build: ##@Application Build docker image
 	docker build --progress=plain --network=host -t mtsrus/data-rentgen:develop -f ./docker/Dockerfile $(ARGS) .
 
-prod: ##@Application Run production server (with docker)
+prod: ##@Application Run production containers
 	docker compose up -d
 
-prod-stop: ##@Application Stop production server
+prod-cleanup: ##@Application Stop production containers
 	docker compose down $(ARGS)
 
 
