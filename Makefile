@@ -70,10 +70,10 @@ test: db broker-start ##@Test Run tests
 test-ci: db broker-start ##@Test Run CI tests
 	${POETRY} run coverage run -m pytest
 
-check-fixtures: ##@Test Check declared fixtures
+test-check-fixtures: ##@Test Check declared fixtures
 	${POETRY} run pytest --dead-fixtures $(PYTEST_ARGS)
 
-cleanup: ##@Test Cleanup tests dependencies
+test-cleanup: ##@Test Cleanup tests dependencies
 	docker compose -f docker-compose.test.yml down $(ARGS)
 
 
