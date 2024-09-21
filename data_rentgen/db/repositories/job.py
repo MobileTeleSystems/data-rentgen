@@ -1,9 +1,9 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 from string import punctuation
-from typing import Iterable
+from typing import Sequence
 
-from sqlalchemy import desc, func, select, union
+from sqlalchemy import any_, desc, func, select, union
 from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Address, Job, JobType, Location
@@ -14,10 +14,10 @@ ts_query_punctuation_map = str.maketrans(punctuation, " " * len(punctuation))
 
 
 class JobRepository(Repository[Job]):
-    async def paginate(self, page: int, page_size: int, job_ids: list[int]) -> PaginationDTO[Job]:
+    async def paginate(self, page: int, page_size: int, job_ids: Sequence[int]) -> PaginationDTO[Job]:
         query = select(Job).options(selectinload(Job.location).selectinload(Location.addresses))
         if job_ids:
-            query = query.where(Job.id.in_(job_ids))
+            query = query.where(Job.id == any_(job_ids))  # type: ignore[arg-type]
         return await self._paginate_by_query(order_by=[Job.name], page=page, page_size=page_size, query=query)
 
     async def create_or_update(self, job: JobDTO, location_id: int) -> Job:
@@ -32,11 +32,13 @@ class JobRepository(Repository[Job]):
             return await self._create(job, location_id)
         return await self._update(result, job)
 
-    async def list_by_ids(self, job_ids: Iterable[int]) -> list[Job]:
+    async def list_by_ids(self, job_ids: Sequence[int]) -> list[Job]:
         if not job_ids:
             return []
         query = (
-            select(Job).where(Job.id.in_(job_ids)).options(selectinload(Job.location).selectinload(Location.addresses))
+            select(Job)
+            .where(Job.id == any_(job_ids))  # type: ignore[arg-type]
+            .options(selectinload(Job.location).selectinload(Location.addresses))
         )
         result = await self._session.scalars(query)
         return list(result.all())

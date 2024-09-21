@@ -1,9 +1,9 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import Iterable
+from typing import Sequence
 
-from sqlalchemy import or_, select
+from sqlalchemy import any_, or_, select
 
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
 from data_rentgen.db.repositories.base import Repository
@@ -27,14 +27,14 @@ class DatasetSymlinkRepository(Repository[DatasetSymlink]):
             return await self._create(from_dataset_id, to_dataset_id, symlink_type)
         return await self._update(result, symlink_type)
 
-    async def list_by_dataset_ids(self, dataset_ids: Iterable[int]) -> list[DatasetSymlink]:
+    async def list_by_dataset_ids(self, dataset_ids: Sequence[int]) -> list[DatasetSymlink]:
         if not dataset_ids:
             return []
 
         query = select(DatasetSymlink).where(
             or_(
-                DatasetSymlink.from_dataset_id.in_(dataset_ids),
-                DatasetSymlink.to_dataset_id.in_(dataset_ids),
+                DatasetSymlink.from_dataset_id == any_(dataset_ids),  # type: ignore[arg-type]
+                DatasetSymlink.to_dataset_id == any_(dataset_ids),  # type: ignore[arg-type]
             ),
         )
         scalars = await self._session.scalars(query)

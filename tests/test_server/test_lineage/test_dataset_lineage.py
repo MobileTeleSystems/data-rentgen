@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 
 import pytest
@@ -12,6 +12,68 @@ from tests.test_server.utils.enrich import enrich_datasets, enrich_jobs, enrich_
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 LINEAGE_FIXTURE_ANNOTATION = tuple[list[Job], list[Run], list[Operation], list[Dataset], list[Input], list[Output]]
+
+
+@pytest.mark.parametrize("direction", ["DOWNSTREAM", "UPSTREAM"])
+async def test_get_dataset_lineage_unknown_id(
+    test_client: AsyncClient,
+    new_dataset: Dataset,
+    direction: str,
+):
+    response = await test_client.get(
+        "v1/lineage",
+        params={
+            "since": datetime.now(tz=timezone.utc).isoformat(),
+            "point_kind": "DATASET",
+            "point_id": new_dataset.id,
+            "direction": direction,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": [],
+        "nodes": [],
+    }
+
+
+@pytest.mark.parametrize("direction", ["DOWNSTREAM", "UPSTREAM"])
+async def test_get_dataset_lineage_no_relations(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    dataset: Dataset,
+    direction: str,
+):
+    response = await test_client.get(
+        "v1/lineage",
+        params={
+            "since": datetime.now(tz=timezone.utc).isoformat(),
+            "point_kind": "DATASET",
+            "point_id": dataset.id,
+            "direction": direction,
+        },
+    )
+
+    [dataset] = await enrich_datasets([dataset], async_session)
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        # no symlinks, inputs or outputs, nothing to show in relations
+        "relations": [],
+        "nodes": [
+            {
+                "kind": "DATASET",
+                "id": dataset.id,
+                "format": dataset.format,
+                "name": dataset.name,
+                "location": {
+                    "name": dataset.location.name,
+                    "type": dataset.location.type,
+                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                },
+            },
+        ],
+    }
 
 
 async def test_get_dataset_lineage(
