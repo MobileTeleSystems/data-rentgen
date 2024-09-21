@@ -39,16 +39,15 @@ venv-install: ##@Env Install requirements to venv
 	${POETRY} install --no-root --all-extras --with dev,test,docs $(ARGS)
 
 
-
-db: db-start db-upgrade db-partitions ##@DB Prepare database (in docker)
+db-prepare: db-start df-upgrade db-partitions ##@DB Prepare database (in docker)
 
 db-start: ##@DB Start database
-	docker compose -f docker-compose.test.yml up -d --wait db $(DOCKER_COMPOSE_ARGS)
+	docker compose up -d --wait db $(DOCKER_COMPOSE_ARGS)
 
 db-revision: ##@DB Generate migration file
 	${POETRY} run python -m data_rentgen.db.migrations revision --autogenerate $(ARGS)
 
-db-upgrade: ##@DB Run migrations to head
+df-upgrade: ##@DB Run migrations to head
 	${POETRY} run python -m data_rentgen.db.migrations upgrade head $(ARGS)
 
 db-downgrade: ##@DB Downgrade head migration
@@ -58,16 +57,26 @@ db-partitions: ##@DB Create partitions
 	${POETRY} run python -m data_rentgen.db.scripts.create_partitions --start 2024-07-01
 
 
-broker: broker-start ##@Broker Prepare broker (in docker)
+broker-prepare: broker-start ##@Broker Prepare broker (in docker)
 
 broker-start: ##Broker Start broker
 	docker compose -f docker-compose.test.yml up -d --wait kafka $(DOCKER_COMPOSE_ARGS)
 
 
-test: db broker-start ##@Test Run tests
+test: test-db-prepare test-broker-prepare ##@Test Run tests
 	${POETRY} run pytest $(PYTEST_ARGS)
 
-test-ci: db broker-start ##@Test Run CI tests
+test-db-prepare: test-db-start df-upgrade db-partitions ##@TestDB Prepare database (in docker)
+
+test-db-start: ##@TestDB Start database
+	docker compose -f docker-compose.test.yml up -d --wait db $(DOCKER_COMPOSE_ARGS)
+
+test-broker-prepare: test-broker-start ##@TestBroker Prepare broker (in docker)
+
+test-broker-start: ##@TestBroker Start broker
+	docker compose -f docker-compose.test.yml up -d --wait kafka $(DOCKER_COMPOSE_ARGS)
+
+test-ci: test-db test-broker ##@Test Run CI tests
 	${POETRY} run coverage run -m pytest
 
 test-check-fixtures: ##@Test Check declared fixtures
@@ -78,10 +87,10 @@ test-cleanup: ##@Test Cleanup tests dependencies
 
 
 
-dev-server: db-start ##@Application Run development server (without docker)
+dev-server: db-prepare ##@Application Run development server (without docker)
 	${POETRY} run python -m data_rentgen.server $(ARGS)
 
-dev-consumer: broker-start ##@Application Run development broker (without docker)
+dev-consumer: db-prepare broker-prepare ##@Application Run development broker (without docker)
 	${POETRY} run python -m data_rentgen.consumer $(ARGS)
 
 prod-build: ##@Application Build docker image
