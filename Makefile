@@ -76,7 +76,7 @@ test-broker-prepare: test-broker-start ##@TestBroker Prepare broker (in docker)
 test-broker-start: ##@TestBroker Start broker
 	docker compose -f docker-compose.test.yml up -d --wait kafka $(DOCKER_COMPOSE_ARGS)
 
-test-ci: test-db test-broker ##@Test Run CI tests
+test-ci: test-db-prepare test-broker ##@Test Run CI tests
 	${POETRY} run coverage run -m pytest
 
 test-check-fixtures: ##@Test Check declared fixtures
