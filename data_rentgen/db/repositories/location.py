@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from sqlalchemy import select
+from sqlalchemy import any_, select
 from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Address, Location
@@ -24,7 +24,10 @@ class LocationRepository(Repository[Location]):
         by_addresses = (
             select(Location)
             .join(Location.addresses)
-            .where(Location.type == location.type, Address.url.in_(location.addresses))
+            .where(
+                Location.type == location.type,
+                Address.url == any_(location.addresses),  # type: ignore[arg-type]
+            )
         )
         statement = (
             select(Location).from_statement(by_name.union(by_addresses)).options(selectinload(Location.addresses))

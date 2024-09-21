@@ -1,9 +1,9 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 from string import punctuation
-from typing import Iterable
+from typing import Sequence
 
-from sqlalchemy import desc, func, select, union
+from sqlalchemy import any_, desc, func, select, union
 from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Address, Dataset, Location
@@ -27,18 +27,18 @@ class DatasetRepository(Repository[Dataset]):
             return await self._create(dataset, location_id)
         return await self._update(result, dataset)
 
-    async def paginate(self, page: int, page_size: int, dataset_ids: Iterable[int]) -> PaginationDTO[Dataset]:
+    async def paginate(self, page: int, page_size: int, dataset_ids: Sequence[int]) -> PaginationDTO[Dataset]:
         query = select(Dataset).options(selectinload(Dataset.location).selectinload(Location.addresses))
         if dataset_ids:
-            query = query.where(Dataset.id.in_(dataset_ids))
+            query = query.where(Dataset.id == any_(dataset_ids))  # type: ignore[arg-type]
         return await self._paginate_by_query(order_by=[Dataset.name], page=page, page_size=page_size, query=query)
 
-    async def list_by_ids(self, dataset_ids: Iterable[int]) -> list[Dataset]:
+    async def list_by_ids(self, dataset_ids: Sequence[int]) -> list[Dataset]:
         if not dataset_ids:
             return []
         query = (
             select(Dataset)
-            .where(Dataset.id.in_(dataset_ids))
+            .where(Dataset.id == any_(dataset_ids))  # type: ignore[arg-type]
             .options(selectinload(Dataset.location).selectinload(Location.addresses))
         )
         result = await self._session.scalars(query)

@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 from datetime import datetime
 from string import punctuation
-from typing import Iterable
+from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import desc, func, select, union
+from sqlalchemy import any_, desc, func, select, union
 from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Job, Run, RunStartReason, Status
@@ -48,7 +48,7 @@ class RunRepository(Repository[Run]):
             return await self._create(created_at, run, job_id, parent_run_id, started_by_user_id)
         return await self._update(result, run, parent_run_id, started_by_user_id)
 
-    async def pagination_by_id(self, page: int, page_size: int, run_ids: Iterable[UUID]) -> PaginationDTO[Run]:
+    async def pagination_by_id(self, page: int, page_size: int, run_ids: Sequence[UUID]) -> PaginationDTO[Run]:
         # do not use `tuple_(Run.created_at, Run.id).in_(...),
         # as this is too complex filter for Postgres to make an optimal query plan
         min_created_at = extract_timestamp_from_uuid(min(run_ids))
@@ -58,7 +58,7 @@ class RunRepository(Repository[Run]):
             .where(
                 Run.created_at >= min_created_at,
                 Run.created_at <= max_created_at,
-                Run.id.in_(run_ids),
+                Run.id == any_(run_ids),  # type: ignore[arg-type]
             )
             .options(selectinload(Run.started_by_user))
         )
@@ -96,7 +96,7 @@ class RunRepository(Repository[Run]):
             query = query.where(Run.created_at <= until)
         return await self._paginate_by_query(order_by=[Run.id], page=page, page_size=page_size, query=query)
 
-    async def list_by_ids(self, run_ids: Iterable[UUID]) -> list[Run]:
+    async def list_by_ids(self, run_ids: Sequence[UUID]) -> list[Run]:
         if not run_ids:
             return []
         # do not use `tuple_(Run.created_at, Run.id).in_(...),
@@ -108,17 +108,22 @@ class RunRepository(Repository[Run]):
             .where(
                 Run.created_at >= min_created_at,
                 Run.created_at <= max_created_at,
-                Run.id.in_(run_ids),
+                Run.id == any_(run_ids),  # type: ignore[arg-type]
             )
             .options(selectinload(Run.started_by_user))
         )
         result = await self._session.scalars(query)
         return list(result.all())
 
-    async def list_by_job_ids(self, job_ids: Iterable[int], since: datetime, until: datetime | None) -> list[Run]:
+    async def list_by_job_ids(self, job_ids: Sequence[int], since: datetime, until: datetime | None) -> list[Run]:
+        if not job_ids:
+            return []
         query = (
             select(Run)
-            .where(Run.created_at >= since, Run.job_id.in_(job_ids))
+            .where(
+                Run.created_at >= since,
+                Run.job_id == any_(job_ids),  # type: ignore[arg-type]
+            )
             .options(selectinload(Run.started_by_user))
         )
         if until:

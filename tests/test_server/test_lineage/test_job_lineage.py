@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 
 import pytest
@@ -19,6 +19,150 @@ from tests.test_server.utils.enrich import enrich_datasets, enrich_jobs, enrich_
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 LINEAGE_FIXTURE_ANNOTATION = tuple[list[Job], list[Run], list[Operation], list[Dataset], list[Input], list[Output]]
+
+
+@pytest.mark.parametrize("direction", ["DOWNSTREAM", "UPSTREAM"])
+async def test_get_job_lineage_unknown_id(
+    test_client: AsyncClient,
+    new_job: Job,
+    direction: str,
+):
+    response = await test_client.get(
+        "v1/lineage",
+        params={
+            "since": datetime.now(tz=timezone.utc).isoformat(),
+            "point_kind": "JOB",
+            "point_id": new_job.id,
+            "direction": direction,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": [],
+        "nodes": [],
+    }
+
+
+@pytest.mark.parametrize("direction", ["DOWNSTREAM", "UPSTREAM"])
+async def test_get_job_lineage_no_runs(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    job: Job,
+    direction: str,
+):
+    response = await test_client.get(
+        "v1/lineage",
+        params={
+            "since": datetime.now(tz=timezone.utc).isoformat(),
+            "point_kind": "JOB",
+            "point_id": job.id,
+            "direction": direction,
+        },
+    )
+
+    [job] = await enrich_jobs([job], async_session)
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        # no runs, nothing to show in relations
+        "relations": [],
+        "nodes": [
+            {
+                "kind": "JOB",
+                "id": job.id,
+                "name": job.name,
+                "location": {
+                    "type": job.location.type,
+                    "name": job.location.name,
+                    "addresses": [{"url": address.url} for address in job.location.addresses],
+                },
+            },
+        ],
+    }
+
+
+@pytest.mark.parametrize("direction", ["DOWNSTREAM", "UPSTREAM"])
+async def test_get_job_lineage_no_operations(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    job: Job,
+    run: Run,
+    direction: str,
+):
+    response = await test_client.get(
+        "v1/lineage",
+        params={
+            "since": run.created_at.isoformat(),
+            "point_kind": "JOB",
+            "point_id": job.id,
+            "direction": direction,
+        },
+    )
+
+    [run] = await enrich_runs([run], async_session)
+    [job] = await enrich_jobs([job], async_session)
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        # runs without operations are excluded,
+        # but job is left intact
+        "relations": [],
+        "nodes": [
+            {
+                "kind": "JOB",
+                "id": job.id,
+                "name": job.name,
+                "location": {
+                    "type": job.location.type,
+                    "name": job.location.name,
+                    "addresses": [{"url": address.url} for address in job.location.addresses],
+                },
+            },
+        ],
+    }
+
+
+@pytest.mark.parametrize("direction", ["DOWNSTREAM", "UPSTREAM"])
+async def test_get_job_lineage_no_inputs_outputs(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    job: Job,
+    run: Run,
+    operation: Operation,
+    direction: str,
+):
+    response = await test_client.get(
+        "v1/lineage",
+        params={
+            "since": run.created_at.isoformat(),
+            "point_kind": "JOB",
+            "point_id": job.id,
+            "direction": direction,
+        },
+    )
+
+    [run] = await enrich_runs([run], async_session)
+    [job] = await enrich_jobs([job], async_session)
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        # runs & operations without inputs/outputs are excluded,
+        # but job is left intact
+        "relations": [],
+        "nodes": [
+            {
+                "kind": "JOB",
+                "id": job.id,
+                "name": job.name,
+                "location": {
+                    "type": job.location.type,
+                    "name": job.location.name,
+                    "addresses": [{"url": address.url} for address in job.location.addresses],
+                },
+            },
+        ],
+    }
 
 
 async def test_get_job_lineage(

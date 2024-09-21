@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 
 import pytest
@@ -14,12 +14,161 @@ from data_rentgen.db.models import (
     Output,
     Run,
 )
-from data_rentgen.dto import output
 from tests.test_server.utils.enrich import enrich_datasets, enrich_jobs, enrich_runs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 LINEAGE_FIXTURE_ANNOTATION = tuple[list[Job], list[Run], list[Operation], list[Dataset], list[Input], list[Output]]
+
+
+@pytest.mark.parametrize("direction", ["DOWNSTREAM", "UPSTREAM"])
+async def test_get_run_lineage_unknown_id(
+    test_client: AsyncClient,
+    new_run: Run,
+    direction: str,
+):
+    response = await test_client.get(
+        "v1/lineage",
+        params={
+            "since": datetime.now(tz=timezone.utc).isoformat(),
+            "point_kind": "RUN",
+            "point_id": str(new_run.id),
+            "direction": direction,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": [],
+        "nodes": [],
+    }
+
+
+@pytest.mark.parametrize("direction", ["DOWNSTREAM", "UPSTREAM"])
+async def test_get_run_lineage_no_operations(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    job: Job,
+    run: Run,
+    direction: str,
+):
+    response = await test_client.get(
+        "v1/lineage",
+        params={
+            "since": datetime.now(tz=timezone.utc).isoformat(),
+            "point_kind": "RUN",
+            "point_id": str(run.id),
+            "direction": direction,
+        },
+    )
+
+    [job] = await enrich_jobs([job], async_session)
+    [run] = await enrich_runs([run], async_session)
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": [
+            {
+                "kind": "PARENT",
+                "from": {"kind": "JOB", "id": run.job_id},
+                "to": {"kind": "RUN", "id": str(run.id)},
+                "type": None,
+            },
+        ],
+        "nodes": [
+            {
+                "kind": "JOB",
+                "id": job.id,
+                "name": job.name,
+                "location": {
+                    "type": job.location.type,
+                    "name": job.location.name,
+                    "addresses": [{"url": address.url} for address in job.location.addresses],
+                },
+            },
+            {
+                "kind": "RUN",
+                "id": str(run.id),
+                "job_id": run.job_id,
+                "parent_run_id": str(run.parent_run_id),
+                "status": run.status.value,
+                "external_id": run.external_id,
+                "attempt": run.attempt,
+                "persistent_log_url": run.persistent_log_url,
+                "running_log_url": run.running_log_url,
+                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "started_by_user": {"name": run.started_by_user.name},
+                "start_reason": run.start_reason.value,
+                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "end_reason": run.end_reason,
+            },
+        ],
+    }
+
+
+@pytest.mark.parametrize("direction", ["DOWNSTREAM", "UPSTREAM"])
+async def test_get_run_lineage_no_inputs_outputs(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    job: Job,
+    run: Run,
+    operation: Operation,
+    direction: str,
+):
+    response = await test_client.get(
+        "v1/lineage",
+        params={
+            "since": run.created_at.isoformat(),
+            "point_kind": "RUN",
+            "point_id": str(run.id),
+            "direction": direction,
+        },
+    )
+
+    [run] = await enrich_runs([run], async_session)
+    [job] = await enrich_jobs([job], async_session)
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        # operations without inputs/outputs are excluded,
+        # but run is left intact
+        "relations": [
+            {
+                "kind": "PARENT",
+                "from": {"kind": "JOB", "id": run.job_id},
+                "to": {"kind": "RUN", "id": str(run.id)},
+                "type": None,
+            },
+        ],
+        "nodes": [
+            {
+                "kind": "JOB",
+                "id": job.id,
+                "name": job.name,
+                "location": {
+                    "type": job.location.type,
+                    "name": job.location.name,
+                    "addresses": [{"url": address.url} for address in job.location.addresses],
+                },
+            },
+            {
+                "kind": "RUN",
+                "id": str(run.id),
+                "job_id": run.job_id,
+                "parent_run_id": str(run.parent_run_id),
+                "status": run.status.value,
+                "external_id": run.external_id,
+                "attempt": run.attempt,
+                "persistent_log_url": run.persistent_log_url,
+                "running_log_url": run.running_log_url,
+                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "started_by_user": {"name": run.started_by_user.name},
+                "start_reason": run.start_reason.value,
+                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "end_reason": run.end_reason,
+            },
+        ],
+    }
 
 
 async def test_get_run_lineage(

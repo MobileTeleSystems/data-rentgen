@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from datetime import datetime
-from typing import Iterable
+from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import and_, select
+from sqlalchemy import and_, any_, select
 
 from data_rentgen.db.models import Input
 from data_rentgen.db.repositories.base import Repository
@@ -46,8 +46,11 @@ class InputRepository(Repository[Input]):
 
     async def list_by_operation_ids(
         self,
-        operation_ids: Iterable[UUID],
+        operation_ids: Sequence[UUID],
     ) -> list[Input]:
+        if not operation_ids:
+            return []
+
         # Input created_at is always the same as operation's created_at.
         # do not use `tuple_(Input.created_at, Input.operation_id).in_(...),
         # as this is too complex filter for Postgres to make an optimal query plan
@@ -56,20 +59,23 @@ class InputRepository(Repository[Input]):
         query = select(Input).where(
             Input.created_at >= min_created_at,
             Input.created_at <= max_created_at,
-            Input.operation_id.in_(operation_ids),
+            Input.operation_id == any_(operation_ids),  # type: ignore[arg-type]
         )
         result = await self._session.scalars(query)
         return list(result.all())
 
     async def list_by_dataset_ids(
         self,
-        dataset_ids: Iterable[int],
+        dataset_ids: Sequence[int],
         since: datetime,
         until: datetime | None,
     ) -> list[Input]:
+        if not dataset_ids:
+            return []
+
         filters = [
             Input.created_at >= since,
-            Input.dataset_id.in_(dataset_ids),
+            Input.dataset_id == any_(dataset_ids),  # type: ignore[arg-type]
         ]
         if until:
             filters.append(Input.created_at <= until)
