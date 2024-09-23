@@ -7,13 +7,16 @@ from data_rentgen.server.schemas.v1.dataset import (
 )
 from data_rentgen.server.schemas.v1.job import JobPaginateQueryV1, JobResponseV1
 from data_rentgen.server.schemas.v1.lineage import (
+    DatasetLineageQueryV1,
+    JobLineageQueryV1,
     LineageDirectionV1,
     LineageEntityKindV1,
     LineageEntityV1,
-    LineageQueryV1,
     LineageRelationKindV1,
     LineageRelationv1,
     LineageResponseV1,
+    OperationLineageQueryV1,
+    RunLineageQueryV1,
 )
 from data_rentgen.server.schemas.v1.location import LocationResponseV1
 from data_rentgen.server.schemas.v1.operation import (
@@ -33,10 +36,11 @@ __all__ = [
     "AddressResponseV1",
     "RunResponseV1",
     "RunsQueryV1",
+    "RunLineageQueryV1",
     "UserResponseV1",
     "DatasetPaginateQueryV1",
     "DatasetResponseV1",
-    "LineageQueryV1",
+    "DatasetLineageQueryV1",
     "LineageDirectionV1",
     "LineageEntityV1",
     "LineageEntityKindV1",
@@ -48,8 +52,10 @@ __all__ = [
     "PageResponseV1",
     "OperationQueryV1",
     "OperationResponseV1",
+    "OperationLineageQueryV1",
     "JobResponseV1",
     "JobPaginateQueryV1",
+    "JobLineageQueryV1",
     "PaginateQueryV1",
     "SearchPaginateQueryV1",
 ]

@@ -177,10 +177,9 @@ async def test_get_job_lineage(
     datasets = await enrich_datasets(datasets, async_session)
 
     response = await test_client.get(
-        "v1/lineage",
+        "v1/jobs/lineage",
         params={
             "since": runs[0].created_at.isoformat(),
-            "point_kind": "JOB",
             "point_id": job.id,
             "direction": "DOWNSTREAM",
         },
@@ -330,11 +329,10 @@ async def test_get_job_lineage_with_direction_and_until(
     datasets = await enrich_datasets(datasets, async_session)
 
     response = await test_client.get(
-        "v1/lineage",
+        "v1/jobs/lineage",
         params={
             "since": since.isoformat(),
             "until": until.isoformat(),
-            "point_kind": "JOB",
             "point_id": job.id,
             "direction": "UPSTREAM",
         },
@@ -493,10 +491,9 @@ async def test_get_job_lineage_with_depth(
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
-        "v1/lineage",
+        "v1/jobs/lineage",
         params={
             "since": since.isoformat(),
-            "point_kind": "JOB",
             "point_id": some_job.id,
             "direction": "DOWNSTREAM",
             "depth": 3,
@@ -630,10 +627,9 @@ async def test_get_job_lineage_with_depth_ignore_cycles(
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
-        "v1/lineage",
+        "v1/jobs/lineage",
         params={
             "since": since.isoformat(),
-            "point_kind": "JOB",
             "point_id": job.id,
             "direction": "DOWNSTREAM",
             "depth": 3,
@@ -792,10 +788,9 @@ async def test_get_job_lineage_with_symlinks(
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
-        "v1/lineage",
+        "v1/jobs/lineage",
         params={
             "since": since.isoformat(),
-            "point_kind": "JOB",
             "point_id": job.id,
             "direction": "DOWNSTREAM",
         },

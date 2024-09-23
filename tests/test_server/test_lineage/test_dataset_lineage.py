@@ -89,10 +89,9 @@ async def test_get_dataset_lineage(
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
-        "v1/lineage",
+        "v1/datasets/lineage",
         params={
             "since": since.isoformat(),
-            "point_kind": "DATASET",
             "point_id": dataset.id,
             "direction": "DOWNSTREAM",
         },
@@ -208,11 +207,10 @@ async def test_get_dataset_lineage_with_direction_and_until(
     operations = [operation for operation in all_operations if since <= operation.created_at <= until]
 
     response = await test_client.get(
-        "v1/lineage",
+        "v1/datasets/lineage",
         params={
             "since": since.isoformat(),
             "until": until.isoformat(),
-            "point_kind": "DATASET",
             "point_id": dataset.id,
             "direction": "UPSTREAM",
         },
@@ -368,10 +366,9 @@ async def test_get_dataset_lineage_with_depth(
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
-        "v1/lineage",
+        "v1/datasets/lineage",
         params={
             "since": since.isoformat(),
-            "point_kind": "DATASET",
             "point_id": first_level_dataset.id,
             "direction": "DOWNSTREAM",
             "depth": 3,
@@ -495,10 +492,9 @@ async def test_get_dataset_lineage_with_depth_ignore_cycles(
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
-        "v1/lineage",
+        "v1/datasets/lineage",
         params={
             "since": since.isoformat(),
-            "point_kind": "DATASET",
             "point_id": dataset.id,
             "direction": "DOWNSTREAM",
             "depth": 3,
@@ -655,10 +651,9 @@ async def test_get_dataset_lineage_with_symlinks(
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
-        "v1/lineage",
+        "v1/datasets/lineage",
         params={
             "since": since.isoformat(),
-            "point_kind": "DATASET",
             "point_id": initial_dataset.id,
             "direction": "DOWNSTREAM",
         },

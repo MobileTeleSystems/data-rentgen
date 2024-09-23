@@ -9,8 +9,12 @@ from data_rentgen.db.utils.uuid import generate_new_uuid
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
-async def test_get_lineage_no_filter(test_client: AsyncClient):
-    response = await test_client.get("v1/lineage")
+@pytest.mark.parametrize(
+    "entity_kind",
+    ["operations", "datasets", "runs", "jobs"],
+)
+async def test_get_lineage_no_filter(test_client: AsyncClient, entity_kind: str):
+    response = await test_client.get(f"v1/{entity_kind}/lineage")
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     assert response.json() == {
@@ -28,7 +32,7 @@ async def test_get_lineage_no_filter(test_client: AsyncClient):
                     "code": "missing",
                     "context": {},
                     "input": None,
-                    "location": ["query", "point_kind"],
+                    "location": ["query", "direction"],
                     "message": "Field required",
                 },
                 {
@@ -38,13 +42,6 @@ async def test_get_lineage_no_filter(test_client: AsyncClient):
                     "location": ["query", "point_id"],
                     "message": "Field required",
                 },
-                {
-                    "code": "missing",
-                    "context": {},
-                    "input": None,
-                    "location": ["query", "direction"],
-                    "message": "Field required",
-                },
             ],
             "message": "Invalid request",
         },
@@ -52,27 +49,26 @@ async def test_get_lineage_no_filter(test_client: AsyncClient):
 
 
 @pytest.mark.parametrize(
-    "point_kind, point_id",
+    "entity_kind, point_id",
     [
-        ("OPERATION", generate_new_uuid()),
-        ("DATASET", 1),
-        ("RUN", generate_new_uuid()),
-        ("JOB", 1),
+        ("operations", generate_new_uuid()),
+        ("datasets", 1),
+        ("runs", generate_new_uuid()),
+        ("jobs", 1),
     ],
-    ids=["OPERATION", "DATASET", "RUN", "JOB"],
+    ids=["operations", "datasets", "runs", "jobs"],
 )
 async def test_get_lineage_missing_id(
-    point_kind: str,
+    entity_kind: str,
     point_id: str,
     test_client: AsyncClient,
 ):
     since = datetime.now()
 
     response = await test_client.get(
-        "v1/lineage",
+        f"v1/{entity_kind}/lineage",
         params={
             "since": since.isoformat(),
-            "point_kind": point_kind,
             "point_id": point_id,
             "direction": "DOWNSTREAM",
         },
@@ -86,21 +82,20 @@ async def test_get_lineage_missing_id(
 
 
 @pytest.mark.parametrize(
-    "point_kind, point_id",
-    [("DATASET", generate_new_uuid()), ("JOB", generate_new_uuid())],
-    ids=["DATASET", "JOB"],
+    "entity_kind, point_id",
+    [("datasets", generate_new_uuid()), ("jobs", generate_new_uuid())],
+    ids=["datasets", "jobs"],
 )
 async def test_get_lineage_point_id_int_type_validation(
-    point_kind: str,
+    entity_kind: str,
     point_id: str,
     test_client: AsyncClient,
 ):
     since = datetime.now(tz=timezone.utc)
     response = await test_client.get(
-        "v1/lineage",
+        f"v1/{entity_kind}/lineage",
         params={
             "since": since.isoformat(),
-            "point_kind": point_kind,
             "point_id": point_id,
             "direction": "DOWNSTREAM",
         },
@@ -112,18 +107,14 @@ async def test_get_lineage_point_id_int_type_validation(
             "code": "invalid_request",
             "details": [
                 {
-                    "code": "value_error",
+                    "code": "int_parsing",
                     "context": {},
-                    "input": {
-                        "depth": 1,
-                        "direction": "DOWNSTREAM",
-                        "point_id": f"{point_id}",
-                        "point_kind": f"{point_kind}",
-                        "since": since.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                        "until": None,
-                    },
-                    "location": [],
-                    "message": f"Value error, 'point_id' should be int for '{point_kind}' kind",
+                    "input": str(point_id),
+                    "location": [
+                        "query",
+                        "point_id",
+                    ],
+                    "message": f"Input should be a valid integer, unable to parse string as an integer",
                 },
             ],
             "message": "Invalid request",
@@ -132,21 +123,20 @@ async def test_get_lineage_point_id_int_type_validation(
 
 
 @pytest.mark.parametrize(
-    "point_kind, point_id",
-    [("OPERATION", 1), ("RUN", 1)],
-    ids=["OPERATION", "RUN"],
+    "entity_kind, point_id",
+    [("operations", 1), ("runs", 1)],
+    ids=["operations", "runs"],
 )
 async def test_get_lineage_point_id_uuid_type_validation(
-    point_kind: str,
+    entity_kind: str,
     point_id: int,
     test_client: AsyncClient,
 ):
     since = datetime.now(tz=timezone.utc)
     response = await test_client.get(
-        "v1/lineage",
+        f"v1/{entity_kind}/lineage",
         params={
             "since": since.isoformat(),
-            "point_kind": point_kind,
             "point_id": point_id,
             "direction": "DOWNSTREAM",
         },
@@ -158,18 +148,14 @@ async def test_get_lineage_point_id_uuid_type_validation(
             "code": "invalid_request",
             "details": [
                 {
-                    "code": "value_error",
+                    "code": "uuid_parsing",
                     "context": {},
-                    "input": {
-                        "depth": 1,
-                        "direction": "DOWNSTREAM",
-                        "point_id": point_id,
-                        "point_kind": f"{point_kind}",
-                        "since": since.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                        "until": None,
-                    },
-                    "location": [],
-                    "message": f"Value error, 'point_id' should be UUIDv7 for '{point_kind}' kind",
+                    "input": "1",
+                    "location": [
+                        "query",
+                        "point_id",
+                    ],
+                    "message": "Input should be a valid UUID, invalid length: expected length 32 for simple format, found 1",
                 },
             ],
             "message": "Invalid request",
@@ -182,11 +168,10 @@ async def test_get_lineage_until_less_than_since(test_client: AsyncClient):
     until = since - timedelta(days=1)
 
     response = await test_client.get(
-        "v1/lineage",
+        f"v1/runs/lineage",
         params={
             "since": since.isoformat(),
             "until": until.isoformat(),
-            "point_kind": "RUN",
             "point_id": str(generate_new_uuid()),
             "direction": "DOWNSTREAM",
         },
@@ -227,10 +212,9 @@ async def test_get_lineage_depth_out_of_bounds(
 ):
     since = datetime.now(tz=timezone.utc)
     response = await test_client.get(
-        "v1/lineage",
+        "v1/runs/lineage",
         params={
             "since": since.isoformat(),
-            "point_kind": "RUN",
             "point_id": str(generate_new_uuid()),
             "direction": "DOWNSTREAM",
             "depth": depth,
