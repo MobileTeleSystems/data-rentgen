@@ -24,21 +24,21 @@ async def test_get_lineage_no_filter(test_client: AsyncClient, entity_kind: str)
                 {
                     "code": "missing",
                     "context": {},
-                    "input": None,
+                    "input": {"depth": 1},
                     "location": ["query", "since"],
                     "message": "Field required",
                 },
                 {
                     "code": "missing",
                     "context": {},
-                    "input": None,
+                    "input": {"depth": 1},
                     "location": ["query", "direction"],
                     "message": "Field required",
                 },
                 {
                     "code": "missing",
                     "context": {},
-                    "input": None,
+                    "input": {"depth": 1},
                     "location": ["query", "point_id"],
                     "message": "Field required",
                 },
@@ -148,14 +148,14 @@ async def test_get_lineage_point_id_uuid_type_validation(
             "code": "invalid_request",
             "details": [
                 {
-                    "code": "uuid_parsing",
+                    "code": "value_error",
                     "context": {},
                     "input": "1",
                     "location": [
                         "query",
                         "point_id",
                     ],
-                    "message": "Input should be a valid UUID, invalid length: expected length 32 for simple format, found 1",
+                    "message": "Value error, badly formed hexadecimal UUID string",
                 },
             ],
             "message": "Invalid request",
@@ -168,7 +168,7 @@ async def test_get_lineage_until_less_than_since(test_client: AsyncClient):
     until = since - timedelta(days=1)
 
     response = await test_client.get(
-        f"v1/runs/lineage",
+        "v1/runs/lineage",
         params={
             "since": since.isoformat(),
             "until": until.isoformat(),
@@ -184,11 +184,11 @@ async def test_get_lineage_until_less_than_since(test_client: AsyncClient):
             "message": "Invalid request",
             "details": [
                 {
-                    "location": ["until"],
+                    "location": ["query", "until"],
                     "code": "value_error",
                     "message": "Value error, 'since' should be less than 'until'",
                     "context": {},
-                    "input": until.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "input": until.isoformat(),
                 },
             ],
         },

@@ -21,7 +21,7 @@ async def test_get_dataset_lineage_unknown_id(
     direction: str,
 ):
     response = await test_client.get(
-        "v1/lineage",
+        "v1/datasets/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "point_kind": "DATASET",
@@ -45,7 +45,7 @@ async def test_get_dataset_lineage_no_relations(
     direction: str,
 ):
     response = await test_client.get(
-        "v1/lineage",
+        "v1/datasets/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "point_kind": "DATASET",

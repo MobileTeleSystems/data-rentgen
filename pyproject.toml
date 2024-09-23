@@ -44,7 +44,7 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
-pydantic = "^2.9.2"
+pydantic = "~2.8.0"
 typing-extensions = "^4.12.2"
 pydantic-settings = {version = "^2.5.2", optional = true}
 alembic = {version = "^1.13.2", optional = true}

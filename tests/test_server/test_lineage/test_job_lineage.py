@@ -28,7 +28,7 @@ async def test_get_job_lineage_unknown_id(
     direction: str,
 ):
     response = await test_client.get(
-        "v1/lineage",
+        "v1/jobs/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "point_kind": "JOB",
@@ -52,7 +52,7 @@ async def test_get_job_lineage_no_runs(
     direction: str,
 ):
     response = await test_client.get(
-        "v1/lineage",
+        "v1/jobs/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "point_kind": "JOB",
@@ -91,7 +91,7 @@ async def test_get_job_lineage_no_operations(
     direction: str,
 ):
     response = await test_client.get(
-        "v1/lineage",
+        "v1/jobs/lineage",
         params={
             "since": run.created_at.isoformat(),
             "point_kind": "JOB",
@@ -133,7 +133,7 @@ async def test_get_job_lineage_no_inputs_outputs(
     direction: str,
 ):
     response = await test_client.get(
-        "v1/lineage",
+        "v1/jobs/lineage",
         params={
             "since": run.created_at.isoformat(),
             "point_kind": "JOB",

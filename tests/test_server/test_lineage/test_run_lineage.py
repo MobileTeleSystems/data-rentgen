@@ -28,7 +28,7 @@ async def test_get_run_lineage_unknown_id(
     direction: str,
 ):
     response = await test_client.get(
-        "v1/lineage",
+        "v1/runs/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "point_kind": "RUN",
@@ -53,7 +53,7 @@ async def test_get_run_lineage_no_operations(
     direction: str,
 ):
     response = await test_client.get(
-        "v1/lineage",
+        "v1/runs/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "point_kind": "RUN",
@@ -116,7 +116,7 @@ async def test_get_run_lineage_no_inputs_outputs(
     direction: str,
 ):
     response = await test_client.get(
-        "v1/lineage",
+        "v1/runs/lineage",
         params={
             "since": run.created_at.isoformat(),
             "point_kind": "RUN",

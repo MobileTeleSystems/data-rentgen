@@ -28,7 +28,7 @@ async def test_get_operation_lineage_unknown_id(
     direction: str,
 ):
     response = await test_client.get(
-        "v1/lineage",
+        "v1/operations/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "point_kind": "OPERATION",
@@ -54,7 +54,7 @@ async def test_get_operation_lineage_no_inputs_outputs(
     direction: str,
 ):
     response = await test_client.get(
-        "v1/lineage",
+        "v1/operations/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "point_kind": "OPERATION",
