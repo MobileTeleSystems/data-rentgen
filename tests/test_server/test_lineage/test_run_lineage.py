@@ -32,7 +32,7 @@ async def test_get_run_lineage_unknown_id(
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "point_kind": "RUN",
-            "point_id": str(new_run.id),
+            "start_node_id": str(new_run.id),
             "direction": direction,
         },
     )
@@ -57,7 +57,7 @@ async def test_get_run_lineage_no_operations(
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "point_kind": "RUN",
-            "point_id": str(run.id),
+            "start_node_id": str(run.id),
             "direction": direction,
         },
     )
@@ -120,7 +120,7 @@ async def test_get_run_lineage_no_inputs_outputs(
         params={
             "since": run.created_at.isoformat(),
             "point_kind": "RUN",
-            "point_id": str(run.id),
+            "start_node_id": str(run.id),
             "direction": direction,
         },
     )
@@ -186,7 +186,7 @@ async def test_get_run_lineage(
         "v1/runs/lineage",
         params={
             "since": run.created_at.isoformat(),
-            "point_id": str(run.id),
+            "start_node_id": str(run.id),
             "direction": "DOWNSTREAM",
         },
     )
@@ -329,7 +329,7 @@ async def test_get_run_lineage_with_direction_and_until(
         params={
             "since": since.isoformat(),
             "until": until.isoformat(),
-            "point_id": str(run.id),
+            "start_node_id": str(run.id),
             "direction": "UPSTREAM",
         },
     )
@@ -481,7 +481,7 @@ async def test_get_run_lineage_with_depth(
         "v1/runs/lineage",
         params={
             "since": some_run.created_at.isoformat(),
-            "point_id": str(some_run.id),
+            "start_node_id": str(some_run.id),
             "direction": "DOWNSTREAM",
             "depth": 3,
         },
@@ -616,7 +616,7 @@ async def test_get_run_lineage_with_depth_ignore_cycles(
         "v1/runs/lineage",
         params={
             "since": run.created_at.isoformat(),
-            "point_id": str(run.id),
+            "start_node_id": str(run.id),
             "direction": "DOWNSTREAM",
             "depth": 3,
         },
@@ -770,7 +770,7 @@ async def test_get_run_lineage_with_symlinks(
         "v1/runs/lineage",
         params={
             "since": run.created_at.isoformat(),
-            "point_id": str(run.id),
+            "start_node_id": str(run.id),
             "direction": "DOWNSTREAM",
         },
     )

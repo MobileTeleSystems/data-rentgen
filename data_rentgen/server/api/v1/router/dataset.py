@@ -53,7 +53,7 @@ async def get_dataset_lineage(
     lineage_service: Annotated[LineageService, Depends()],
 ) -> LineageResponseV1:
     lineage = await lineage_service.get_lineage_by_datasets(
-        point_ids=[pagination_args.point_id],  # type: ignore[list-item]
+        start_node_ids=[pagination_args.start_node_id],  # type: ignore[list-item]
         direction=pagination_args.direction,
         since=pagination_args.since,
         until=pagination_args.until,

@@ -79,19 +79,19 @@ class BaseLineageQueryV1(BaseModel):
 
 
 class DatasetLineageQueryV1(BaseLineageQueryV1):
-    point_id: int = Field(description="Dataset id", examples=[42])
+    start_node_id: int = Field(description="Dataset id", examples=[42])
 
 
 class JobLineageQueryV1(BaseLineageQueryV1):
-    point_id: int = Field(description="Job id", examples=[42])
+    start_node_id: int = Field(description="Job id", examples=[42])
 
 
 class OperationLineageQueryV1(BaseLineageQueryV1):
-    point_id: UUID = Field(description="Operation id", examples=["00000000-0000-0000-0000-000000000000"])
+    start_node_id: UUID = Field(description="Operation id", examples=["00000000-0000-0000-0000-000000000000"])
 
 
 class RunLineageQueryV1(BaseLineageQueryV1):
-    point_id: UUID = Field(description="Run id", examples=["00000000-0000-0000-0000-000000000000"])
+    start_node_id: UUID = Field(description="Run id", examples=["00000000-0000-0000-0000-000000000000"])
 
 
 class LineageRelationv1(BaseModel):

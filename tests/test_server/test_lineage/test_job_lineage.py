@@ -32,7 +32,7 @@ async def test_get_job_lineage_unknown_id(
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "point_kind": "JOB",
-            "point_id": new_job.id,
+            "start_node_id": new_job.id,
             "direction": direction,
         },
     )
@@ -56,7 +56,7 @@ async def test_get_job_lineage_no_runs(
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "point_kind": "JOB",
-            "point_id": job.id,
+            "start_node_id": job.id,
             "direction": direction,
         },
     )
@@ -95,7 +95,7 @@ async def test_get_job_lineage_no_operations(
         params={
             "since": run.created_at.isoformat(),
             "point_kind": "JOB",
-            "point_id": job.id,
+            "start_node_id": job.id,
             "direction": direction,
         },
     )
@@ -137,7 +137,7 @@ async def test_get_job_lineage_no_inputs_outputs(
         params={
             "since": run.created_at.isoformat(),
             "point_kind": "JOB",
-            "point_id": job.id,
+            "start_node_id": job.id,
             "direction": direction,
         },
     )
@@ -180,7 +180,7 @@ async def test_get_job_lineage(
         "v1/jobs/lineage",
         params={
             "since": runs[0].created_at.isoformat(),
-            "point_id": job.id,
+            "start_node_id": job.id,
             "direction": "DOWNSTREAM",
         },
     )
@@ -333,7 +333,7 @@ async def test_get_job_lineage_with_direction_and_until(
         params={
             "since": since.isoformat(),
             "until": until.isoformat(),
-            "point_id": job.id,
+            "start_node_id": job.id,
             "direction": "UPSTREAM",
         },
     )
@@ -494,7 +494,7 @@ async def test_get_job_lineage_with_depth(
         "v1/jobs/lineage",
         params={
             "since": since.isoformat(),
-            "point_id": some_job.id,
+            "start_node_id": some_job.id,
             "direction": "DOWNSTREAM",
             "depth": 3,
         },
@@ -630,7 +630,7 @@ async def test_get_job_lineage_with_depth_ignore_cycles(
         "v1/jobs/lineage",
         params={
             "since": since.isoformat(),
-            "point_id": job.id,
+            "start_node_id": job.id,
             "direction": "DOWNSTREAM",
             "depth": 3,
         },
@@ -791,7 +791,7 @@ async def test_get_job_lineage_with_symlinks(
         "v1/jobs/lineage",
         params={
             "since": since.isoformat(),
-            "point_id": job.id,
+            "start_node_id": job.id,
             "direction": "DOWNSTREAM",
         },
     )

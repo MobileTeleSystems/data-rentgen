@@ -39,7 +39,7 @@ async def test_get_lineage_no_filter(test_client: AsyncClient, entity_kind: str)
                     "code": "missing",
                     "context": {},
                     "input": {"depth": 1},
-                    "location": ["query", "point_id"],
+                    "location": ["query", "start_node_id"],
                     "message": "Field required",
                 },
             ],
@@ -49,7 +49,7 @@ async def test_get_lineage_no_filter(test_client: AsyncClient, entity_kind: str)
 
 
 @pytest.mark.parametrize(
-    "entity_kind, point_id",
+    "entity_kind, start_node_id",
     [
         ("operations", generate_new_uuid()),
         ("datasets", 1),
@@ -60,7 +60,7 @@ async def test_get_lineage_no_filter(test_client: AsyncClient, entity_kind: str)
 )
 async def test_get_lineage_missing_id(
     entity_kind: str,
-    point_id: str,
+    start_node_id: str,
     test_client: AsyncClient,
 ):
     since = datetime.now()
@@ -69,7 +69,7 @@ async def test_get_lineage_missing_id(
         f"v1/{entity_kind}/lineage",
         params={
             "since": since.isoformat(),
-            "point_id": point_id,
+            "start_node_id": start_node_id,
             "direction": "DOWNSTREAM",
         },
     )
@@ -82,13 +82,13 @@ async def test_get_lineage_missing_id(
 
 
 @pytest.mark.parametrize(
-    "entity_kind, point_id",
+    "entity_kind, start_node_id",
     [("datasets", generate_new_uuid()), ("jobs", generate_new_uuid())],
     ids=["datasets", "jobs"],
 )
-async def test_get_lineage_point_id_int_type_validation(
+async def test_get_lineage_start_node_id_int_type_validation(
     entity_kind: str,
-    point_id: str,
+    start_node_id: str,
     test_client: AsyncClient,
 ):
     since = datetime.now(tz=timezone.utc)
@@ -96,7 +96,7 @@ async def test_get_lineage_point_id_int_type_validation(
         f"v1/{entity_kind}/lineage",
         params={
             "since": since.isoformat(),
-            "point_id": point_id,
+            "start_node_id": start_node_id,
             "direction": "DOWNSTREAM",
         },
     )
@@ -109,10 +109,10 @@ async def test_get_lineage_point_id_int_type_validation(
                 {
                     "code": "int_parsing",
                     "context": {},
-                    "input": str(point_id),
+                    "input": str(start_node_id),
                     "location": [
                         "query",
-                        "point_id",
+                        "start_node_id",
                     ],
                     "message": f"Input should be a valid integer, unable to parse string as an integer",
                 },
@@ -123,13 +123,13 @@ async def test_get_lineage_point_id_int_type_validation(
 
 
 @pytest.mark.parametrize(
-    "entity_kind, point_id",
+    "entity_kind, start_node_id",
     [("operations", 1), ("runs", 1)],
     ids=["operations", "runs"],
 )
-async def test_get_lineage_point_id_uuid_type_validation(
+async def test_get_lineage_start_node_id_uuid_type_validation(
     entity_kind: str,
-    point_id: int,
+    start_node_id: int,
     test_client: AsyncClient,
 ):
     since = datetime.now(tz=timezone.utc)
@@ -137,7 +137,7 @@ async def test_get_lineage_point_id_uuid_type_validation(
         f"v1/{entity_kind}/lineage",
         params={
             "since": since.isoformat(),
-            "point_id": point_id,
+            "start_node_id": start_node_id,
             "direction": "DOWNSTREAM",
         },
     )
@@ -153,7 +153,7 @@ async def test_get_lineage_point_id_uuid_type_validation(
                     "input": "1",
                     "location": [
                         "query",
-                        "point_id",
+                        "start_node_id",
                     ],
                     "message": "Value error, badly formed hexadecimal UUID string",
                 },
@@ -172,7 +172,7 @@ async def test_get_lineage_until_less_than_since(test_client: AsyncClient):
         params={
             "since": since.isoformat(),
             "until": until.isoformat(),
-            "point_id": str(generate_new_uuid()),
+            "start_node_id": str(generate_new_uuid()),
             "direction": "DOWNSTREAM",
         },
     )
@@ -215,7 +215,7 @@ async def test_get_lineage_depth_out_of_bounds(
         "v1/runs/lineage",
         params={
             "since": since.isoformat(),
-            "point_id": str(generate_new_uuid()),
+            "start_node_id": str(generate_new_uuid()),
             "direction": "DOWNSTREAM",
             "depth": depth,
         },

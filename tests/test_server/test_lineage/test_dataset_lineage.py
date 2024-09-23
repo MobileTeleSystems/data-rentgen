@@ -25,7 +25,7 @@ async def test_get_dataset_lineage_unknown_id(
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "point_kind": "DATASET",
-            "point_id": new_dataset.id,
+            "start_node_id": new_dataset.id,
             "direction": direction,
         },
     )
@@ -49,7 +49,7 @@ async def test_get_dataset_lineage_no_relations(
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "point_kind": "DATASET",
-            "point_id": dataset.id,
+            "start_node_id": dataset.id,
             "direction": direction,
         },
     )
@@ -92,7 +92,7 @@ async def test_get_dataset_lineage(
         "v1/datasets/lineage",
         params={
             "since": since.isoformat(),
-            "point_id": dataset.id,
+            "start_node_id": dataset.id,
             "direction": "DOWNSTREAM",
         },
     )
@@ -211,7 +211,7 @@ async def test_get_dataset_lineage_with_direction_and_until(
         params={
             "since": since.isoformat(),
             "until": until.isoformat(),
-            "point_id": dataset.id,
+            "start_node_id": dataset.id,
             "direction": "UPSTREAM",
         },
     )
@@ -369,7 +369,7 @@ async def test_get_dataset_lineage_with_depth(
         "v1/datasets/lineage",
         params={
             "since": since.isoformat(),
-            "point_id": first_level_dataset.id,
+            "start_node_id": first_level_dataset.id,
             "direction": "DOWNSTREAM",
             "depth": 3,
         },
@@ -495,7 +495,7 @@ async def test_get_dataset_lineage_with_depth_ignore_cycles(
         "v1/datasets/lineage",
         params={
             "since": since.isoformat(),
-            "point_id": dataset.id,
+            "start_node_id": dataset.id,
             "direction": "DOWNSTREAM",
             "depth": 3,
         },
@@ -629,7 +629,7 @@ async def test_get_dataset_lineage_with_symlinks(
     datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
     assert datasets
 
-    # Threat all datasets from symlinks like they were passed as `point_id`
+    # Threat all datasets from symlinks like they were passed as `start_node_id`
     inputs = [input for input in all_inputs if input.dataset_id in dataset_ids]
     assert inputs
 
@@ -654,7 +654,7 @@ async def test_get_dataset_lineage_with_symlinks(
         "v1/datasets/lineage",
         params={
             "since": since.isoformat(),
-            "point_id": initial_dataset.id,
+            "start_node_id": initial_dataset.id,
             "direction": "DOWNSTREAM",
         },
     )
