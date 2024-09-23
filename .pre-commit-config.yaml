@@ -82,7 +82,7 @@ repos:
           - black==24.8.0
 
   - repo: https://github.com/pycqa/bandit
-    rev: 1.7.9
+    rev: 1.7.10
     hooks:
       - id: bandit
         args:
