@@ -76,7 +76,7 @@ class LineageService:
 
     async def get_lineage_by_jobs(
         self,
-        point_ids: list[int],
+        start_node_ids: list[int],
         direction: LineageDirectionV1,
         since: datetime,
         until: datetime | None,
@@ -85,13 +85,13 @@ class LineageService:
         if logger.isEnabledFor(logging.INFO):
             logger.info(
                 "Get lineage by jobs %r, with direction %s, since %s, until %s, depth %s",
-                sorted(point_ids),
+                sorted(start_node_ids),
                 direction,
                 since,
                 until,
                 depth,
             )
-        jobs = await self._uow.job.list_by_ids(point_ids)
+        jobs = await self._uow.job.list_by_ids(start_node_ids)
         if not jobs:
             logger.info("No jobs found")
             return LineageServiceResult()
@@ -133,7 +133,7 @@ class LineageService:
         if depth > 1:
             result.merge(
                 await self.get_lineage_by_datasets(
-                    point_ids=dataset_ids,
+                    start_node_ids=dataset_ids,
                     direction=direction,
                     since=since,
                     until=until,
@@ -169,7 +169,7 @@ class LineageService:
 
     async def get_lineage_by_runs(
         self,
-        point_ids: list[UUID],
+        start_node_ids: list[UUID],
         direction: LineageDirectionV1,
         since: datetime,
         until: datetime | None,
@@ -178,14 +178,14 @@ class LineageService:
         if logger.isEnabledFor(logging.INFO):
             logger.info(
                 "Get lineage by runs %r, with direction %s, since %s, until %s, depth %s",
-                sorted(point_ids),
+                sorted(start_node_ids),
                 direction,
                 since,
                 until,
                 depth,
             )
 
-        runs = await self._uow.run.list_by_ids(point_ids)
+        runs = await self._uow.run.list_by_ids(start_node_ids)
         if not runs:
             logger.info("No runs found")
             return LineageServiceResult()
@@ -223,7 +223,7 @@ class LineageService:
             # datasets and symlinks will be populated by nested call
             result.merge(
                 await self.get_lineage_by_datasets(
-                    point_ids=dataset_ids,
+                    start_node_ids=dataset_ids,
                     direction=direction,
                     since=since,
                     until=until,
@@ -258,7 +258,7 @@ class LineageService:
 
     async def get_lineage_by_operations(
         self,
-        point_ids: list[UUID],
+        start_node_ids: list[UUID],
         direction: LineageDirectionV1,
         since: datetime,
         until: datetime | None,
@@ -268,14 +268,14 @@ class LineageService:
         if logger.isEnabledFor(logging.INFO):
             logger.info(
                 "Get lineage by operations %r, with direction %s, since %s, until %s, depth %s",
-                sorted(point_ids),
+                sorted(start_node_ids),
                 direction,
                 since,
                 until,
                 depth,
             )
 
-        operations = await self._uow.operation.list_by_ids(point_ids)
+        operations = await self._uow.operation.list_by_ids(start_node_ids)
         if not operations:
             logger.info("No operations found")
             return LineageServiceResult()
@@ -313,7 +313,7 @@ class LineageService:
             # datasets and symlinks will be populated by nested call
             result.merge(
                 await self.get_lineage_by_datasets(
-                    point_ids=dataset_ids_to_fetch,
+                    start_node_ids=dataset_ids_to_fetch,
                     direction=direction,
                     since=since,
                     until=until,
@@ -351,7 +351,7 @@ class LineageService:
 
     async def get_lineage_by_datasets(
         self,
-        point_ids: list[int],
+        start_node_ids: list[int],
         direction: LineageDirectionV1,
         since: datetime,
         until: datetime | None,
@@ -361,21 +361,21 @@ class LineageService:
         if logger.isEnabledFor(logging.INFO):
             logger.info(
                 "Get lineage by datasets %r, with direction %s, since %s, until %s, depth %s",
-                sorted(point_ids),
+                sorted(start_node_ids),
                 direction,
                 since,
                 until,
                 depth,
             )
 
-        datasets = await self._uow.dataset.list_by_ids(point_ids)
+        datasets = await self._uow.dataset.list_by_ids(start_node_ids)
         if not datasets:
             logger.info("No datasets found")
             return LineageServiceResult()
 
         datasets_by_id = {dataset.id: dataset for dataset in datasets}
 
-        # Threat dataset symlinks like they are specified in `point_ids`
+        # Threat dataset symlinks like they are specified in `start_node_ids`
         ids_to_skip = ids_to_skip or IdsToSkip()
         extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(
             sorted(datasets_by_id.keys()),
@@ -419,7 +419,7 @@ class LineageService:
             # operations, runs and jobs will be populated by nested call
             result.merge(
                 await self.get_lineage_by_operations(
-                    point_ids=operation_ids_to_fetch,
+                    start_node_ids=operation_ids_to_fetch,
                     direction=direction,
                     since=since,
                     until=until,

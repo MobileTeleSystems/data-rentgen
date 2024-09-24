@@ -3,15 +3,7 @@
 from datetime import datetime
 from enum import Enum
 
-from fastapi import Query
-from pydantic import (
-    BaseModel,
-    ConfigDict,
-    Field,
-    ValidationInfo,
-    field_validator,
-    model_validator,
-)
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
 from data_rentgen.server.schemas.v1.dataset import DatasetResponseV1
 from data_rentgen.server.schemas.v1.job import JobResponseV1
@@ -55,37 +47,26 @@ class LineageEntityV1(BaseModel):
     model_config = ConfigDict(from_attributes=True, use_enum_values=True)
 
 
-class LineageQueryV1(BaseModel):
+class BaseLineageQueryV1(BaseModel):
     since: datetime = Field(
-        Query(description="", examples=["2008-09-15T15:53:00+05:00"]),
+        description="",
+        examples=["2008-09-15T15:53:00+05:00"],
     )
     until: datetime | None = Field(
-        Query(
-            default=None,
-            description="",
-            examples=["2008-09-15T15:53:00+05:00"],
-        ),
-    )
-    point_kind: LineageEntityKindV1 = Field(
-        Query(description="Type of the Lineage start point", examples=["JOB", "DATASET"]),
-    )
-    point_id: int | UUID = Field(
-        Query(
-            description="Id of the Lineage start point",
-            examples=[42, "01913217-b761-7b1a-bb52-489da9c8b9c8"],
-        ),
+        default=None,
+        description="",
+        examples=["2008-09-15T15:53:00+05:00"],
     )
     direction: LineageDirectionV1 = Field(
-        Query(description="Direction of the lineage", examples=["DOWNSTREAM", "UPSTREAM"]),
+        description="Direction of the lineage",
+        examples=["DOWNSTREAM", "UPSTREAM"],
     )
     depth: int = Field(
-        Query(
-            default=1,
-            ge=1,
-            le=3,
-            description="Depth of the lineage",
-            examples=[1, 3],
-        ),
+        default=1,
+        ge=1,
+        le=3,
+        description="Depth of the lineage",
+        examples=[1, 3],
     )
 
     @field_validator("until", mode="after")
@@ -96,21 +77,21 @@ class LineageQueryV1(BaseModel):
             raise ValueError("'since' should be less than 'until'")
         return value
 
-    @model_validator(mode="after")
-    def _check_ids(self):
-        from uuid import UUID as OLD_UUID
 
-        if self.point_kind in {LineageEntityKindV1.JOB, LineageEntityKindV1.DATASET} and not isinstance(
-            self.point_id,
-            int,
-        ):
-            raise ValueError(f"'point_id' should be int for '{self.point_kind}' kind")
-        elif self.point_kind in {LineageEntityKindV1.RUN, LineageEntityKindV1.OPERATION} and not isinstance(
-            self.point_id,
-            OLD_UUID,
-        ):
-            raise ValueError(f"'point_id' should be UUIDv7 for '{self.point_kind}' kind")
-        return self
+class DatasetLineageQueryV1(BaseLineageQueryV1):
+    start_node_id: int = Field(description="Dataset id", examples=[42])
+
+
+class JobLineageQueryV1(BaseLineageQueryV1):
+    start_node_id: int = Field(description="Job id", examples=[42])
+
+
+class OperationLineageQueryV1(BaseLineageQueryV1):
+    start_node_id: UUID = Field(description="Operation id", examples=["00000000-0000-0000-0000-000000000000"])
+
+
+class RunLineageQueryV1(BaseLineageQueryV1):
+    start_node_id: UUID = Field(description="Run id", examples=["00000000-0000-0000-0000-000000000000"])
 
 
 class LineageRelationv1(BaseModel):

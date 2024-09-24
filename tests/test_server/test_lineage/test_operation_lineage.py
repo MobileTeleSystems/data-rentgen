@@ -28,11 +28,11 @@ async def test_get_operation_lineage_unknown_id(
     direction: str,
 ):
     response = await test_client.get(
-        "v1/lineage",
+        "v1/operations/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "point_kind": "OPERATION",
-            "point_id": str(new_operation.id),
+            "start_node_id": str(new_operation.id),
             "direction": direction,
         },
     )
@@ -54,11 +54,11 @@ async def test_get_operation_lineage_no_inputs_outputs(
     direction: str,
 ):
     response = await test_client.get(
-        "v1/lineage",
+        "v1/operations/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "point_kind": "OPERATION",
-            "point_id": str(operation.id),
+            "start_node_id": str(operation.id),
             "direction": direction,
         },
     )
@@ -137,11 +137,10 @@ async def test_get_operation_lineage(
     datasets = await enrich_datasets(datasets, async_session)
 
     response = await test_client.get(
-        "v1/lineage",
+        "v1/operations/lineage",
         params={
             "since": runs[0].created_at.isoformat(),
-            "point_kind": "OPERATION",
-            "point_id": str(operation.id),
+            "start_node_id": str(operation.id),
             "direction": "DOWNSTREAM",
         },
     )
@@ -267,12 +266,11 @@ async def test_get_operation_lineage_with_direction_and_until(
     datasets = await enrich_datasets(datasets, async_session)
 
     response = await test_client.get(
-        "v1/lineage",
+        "v1/operations/lineage",
         params={
             "since": since.isoformat(),
             "until": until.isoformat(),
-            "point_kind": "OPERATION",
-            "point_id": str(operation.id),
+            "start_node_id": str(operation.id),
             "direction": "UPSTREAM",
         },
     )
@@ -415,11 +413,10 @@ async def test_get_operation_lineage_with_depth(
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
-        "v1/lineage",
+        "v1/operations/lineage",
         params={
             "since": since.isoformat(),
-            "point_kind": "OPERATION",
-            "point_id": str(some_operation.id),
+            "start_node_id": str(some_operation.id),
             "direction": "DOWNSTREAM",
             "depth": 3,
         },
@@ -542,11 +539,10 @@ async def test_get_operation_lineage_with_depth_ignore_cycles(
     datasets = await enrich_datasets(datasets, async_session)
 
     response = await test_client.get(
-        "v1/lineage",
+        "v1/operations/lineage",
         params={
             "since": run.created_at.isoformat(),
-            "point_kind": "OPERATION",
-            "point_id": str(operation.id),
+            "start_node_id": str(operation.id),
             "direction": "DOWNSTREAM",
             "depth": 3,
         },
@@ -688,11 +684,10 @@ async def test_get_operation_lineage_with_symlinks(
     datasets = await enrich_datasets(datasets, async_session)
 
     response = await test_client.get(
-        "v1/lineage",
+        "v1/operations/lineage",
         params={
             "since": run.created_at.isoformat(),
-            "point_kind": "OPERATION",
-            "point_id": str(operation.id),
+            "start_node_id": str(operation.id),
             "direction": "DOWNSTREAM",
         },
     )

@@ -2,16 +2,20 @@
 # SPDX-License-Identifier: Apache-2.0
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from data_rentgen.server.errors import get_error_responses
 from data_rentgen.server.errors.schemas import InvalidRequestSchema
 from data_rentgen.server.schemas.v1 import (
+    JobLineageQueryV1,
     JobPaginateQueryV1,
     JobResponseV1,
+    LineageResponseV1,
     PageResponseV1,
     SearchPaginateQueryV1,
 )
+from data_rentgen.server.services import LineageService
+from data_rentgen.server.utils.lineage_response import build_lineage_response
 from data_rentgen.services import UnitOfWork
 
 router = APIRouter(prefix="/jobs", tags=["Jobs"], responses=get_error_responses(include={InvalidRequestSchema}))
@@ -42,3 +46,19 @@ async def search_jobs(
     )
 
     return PageResponseV1[JobResponseV1].from_pagination(pagination)
+
+
+@router.get("/lineage", summary="Get Jobs lineage graph")
+async def get_jobs_lineage(
+    pagination_args: Annotated[JobLineageQueryV1, Query()],
+    lineage_service: Annotated[LineageService, Depends()],
+) -> LineageResponseV1:
+    lineage = await lineage_service.get_lineage_by_jobs(
+        start_node_ids=[pagination_args.start_node_id],  # type: ignore[list-item]
+        direction=pagination_args.direction,
+        since=pagination_args.since,
+        until=pagination_args.until,
+        depth=pagination_args.depth,
+    )
+
+    return await build_lineage_response(lineage)

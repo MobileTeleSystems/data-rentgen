@@ -2,16 +2,20 @@
 # SPDX-License-Identifier: Apache-2.0
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from data_rentgen.server.errors import get_error_responses
 from data_rentgen.server.errors.schemas import InvalidRequestSchema
 from data_rentgen.server.schemas.v1 import (
+    DatasetLineageQueryV1,
     DatasetPaginateQueryV1,
     DatasetResponseV1,
+    LineageResponseV1,
     PageResponseV1,
     SearchPaginateQueryV1,
 )
+from data_rentgen.server.services import LineageService
+from data_rentgen.server.utils.lineage_response import build_lineage_response
 from data_rentgen.services import UnitOfWork
 
 router = APIRouter(prefix="/datasets", tags=["Datasets"], responses=get_error_responses(include={InvalidRequestSchema}))
@@ -41,3 +45,19 @@ async def search_datasets(
         search_query=pagination_args.search_query,
     )
     return PageResponseV1[DatasetResponseV1].from_pagination(pagination)
+
+
+@router.get("/lineage", summary="Get Dataset lineage graph")
+async def get_dataset_lineage(
+    pagination_args: Annotated[DatasetLineageQueryV1, Query()],
+    lineage_service: Annotated[LineageService, Depends()],
+) -> LineageResponseV1:
+    lineage = await lineage_service.get_lineage_by_datasets(
+        start_node_ids=[pagination_args.start_node_id],  # type: ignore[list-item]
+        direction=pagination_args.direction,
+        since=pagination_args.since,
+        until=pagination_args.until,
+        depth=pagination_args.depth,
+    )
+
+    return await build_lineage_response(lineage)

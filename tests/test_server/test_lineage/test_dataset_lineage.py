@@ -21,11 +21,11 @@ async def test_get_dataset_lineage_unknown_id(
     direction: str,
 ):
     response = await test_client.get(
-        "v1/lineage",
+        "v1/datasets/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "point_kind": "DATASET",
-            "point_id": new_dataset.id,
+            "start_node_id": new_dataset.id,
             "direction": direction,
         },
     )
@@ -45,11 +45,11 @@ async def test_get_dataset_lineage_no_relations(
     direction: str,
 ):
     response = await test_client.get(
-        "v1/lineage",
+        "v1/datasets/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "point_kind": "DATASET",
-            "point_id": dataset.id,
+            "start_node_id": dataset.id,
             "direction": direction,
         },
     )
@@ -89,11 +89,10 @@ async def test_get_dataset_lineage(
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
-        "v1/lineage",
+        "v1/datasets/lineage",
         params={
             "since": since.isoformat(),
-            "point_kind": "DATASET",
-            "point_id": dataset.id,
+            "start_node_id": dataset.id,
             "direction": "DOWNSTREAM",
         },
     )
@@ -208,12 +207,11 @@ async def test_get_dataset_lineage_with_direction_and_until(
     operations = [operation for operation in all_operations if since <= operation.created_at <= until]
 
     response = await test_client.get(
-        "v1/lineage",
+        "v1/datasets/lineage",
         params={
             "since": since.isoformat(),
             "until": until.isoformat(),
-            "point_kind": "DATASET",
-            "point_id": dataset.id,
+            "start_node_id": dataset.id,
             "direction": "UPSTREAM",
         },
     )
@@ -368,11 +366,10 @@ async def test_get_dataset_lineage_with_depth(
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
-        "v1/lineage",
+        "v1/datasets/lineage",
         params={
             "since": since.isoformat(),
-            "point_kind": "DATASET",
-            "point_id": first_level_dataset.id,
+            "start_node_id": first_level_dataset.id,
             "direction": "DOWNSTREAM",
             "depth": 3,
         },
@@ -495,11 +492,10 @@ async def test_get_dataset_lineage_with_depth_ignore_cycles(
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
-        "v1/lineage",
+        "v1/datasets/lineage",
         params={
             "since": since.isoformat(),
-            "point_kind": "DATASET",
-            "point_id": dataset.id,
+            "start_node_id": dataset.id,
             "direction": "DOWNSTREAM",
             "depth": 3,
         },
@@ -633,7 +629,7 @@ async def test_get_dataset_lineage_with_symlinks(
     datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
     assert datasets
 
-    # Threat all datasets from symlinks like they were passed as `point_id`
+    # Threat all datasets from symlinks like they were passed as `start_node_id`
     inputs = [input for input in all_inputs if input.dataset_id in dataset_ids]
     assert inputs
 
@@ -655,11 +651,10 @@ async def test_get_dataset_lineage_with_symlinks(
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
-        "v1/lineage",
+        "v1/datasets/lineage",
         params={
             "since": since.isoformat(),
-            "point_kind": "DATASET",
-            "point_id": initial_dataset.id,
+            "start_node_id": initial_dataset.id,
             "direction": "DOWNSTREAM",
         },
     )
