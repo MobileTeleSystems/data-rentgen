@@ -31,7 +31,6 @@ async def test_get_operation_lineage_unknown_id(
         "v1/operations/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
-            "point_kind": "OPERATION",
             "start_node_id": str(new_operation.id),
             "direction": direction,
         },
@@ -57,7 +56,6 @@ async def test_get_operation_lineage_no_inputs_outputs(
         "v1/operations/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
-            "point_kind": "OPERATION",
             "start_node_id": str(operation.id),
             "direction": direction,
         },

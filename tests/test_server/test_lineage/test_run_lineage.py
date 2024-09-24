@@ -31,7 +31,6 @@ async def test_get_run_lineage_unknown_id(
         "v1/runs/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
-            "point_kind": "RUN",
             "start_node_id": str(new_run.id),
             "direction": direction,
         },
@@ -56,7 +55,6 @@ async def test_get_run_lineage_no_operations(
         "v1/runs/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
-            "point_kind": "RUN",
             "start_node_id": str(run.id),
             "direction": direction,
         },
@@ -119,7 +117,6 @@ async def test_get_run_lineage_no_inputs_outputs(
         "v1/runs/lineage",
         params={
             "since": run.created_at.isoformat(),
-            "point_kind": "RUN",
             "start_node_id": str(run.id),
             "direction": direction,
         },
@@ -872,3 +869,27 @@ async def test_get_run_lineage_with_symlinks(
             for operation in sorted(operations, key=lambda x: x.id)
         ],
     }
+
+
+async def test_get_run_lineage_with_granularity(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_with_same_run: LINEAGE_FIXTURE_ANNOTATION,
+):
+    jobs, runs, operations, datasets, *_ = lineage_with_same_run
+
+    jobs = await enrich_jobs(jobs, async_session)
+    [run] = await enrich_runs(runs, async_session)
+    datasets = await enrich_datasets(datasets, async_session)
+
+    response = await test_client.get(
+        "v1/runs/lineage",
+        params={
+            "since": run.created_at.isoformat(),
+            "start_node_id": str(run.id),
+            "direction": "DOWNSTREAM",
+            "granularity": "OPERATION",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()

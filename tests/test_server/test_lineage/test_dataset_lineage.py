@@ -24,7 +24,6 @@ async def test_get_dataset_lineage_unknown_id(
         "v1/datasets/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
-            "point_kind": "DATASET",
             "start_node_id": new_dataset.id,
             "direction": direction,
         },
@@ -48,7 +47,6 @@ async def test_get_dataset_lineage_no_relations(
         "v1/datasets/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
-            "point_kind": "DATASET",
             "start_node_id": dataset.id,
             "direction": direction,
         },

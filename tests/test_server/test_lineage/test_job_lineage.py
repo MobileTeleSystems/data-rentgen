@@ -31,7 +31,6 @@ async def test_get_job_lineage_unknown_id(
         "v1/jobs/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
-            "point_kind": "JOB",
             "start_node_id": new_job.id,
             "direction": direction,
         },
@@ -55,7 +54,6 @@ async def test_get_job_lineage_no_runs(
         "v1/jobs/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
-            "point_kind": "JOB",
             "start_node_id": job.id,
             "direction": direction,
         },
@@ -94,7 +92,6 @@ async def test_get_job_lineage_no_operations(
         "v1/jobs/lineage",
         params={
             "since": run.created_at.isoformat(),
-            "point_kind": "JOB",
             "start_node_id": job.id,
             "direction": direction,
         },
@@ -136,7 +133,6 @@ async def test_get_job_lineage_no_inputs_outputs(
         "v1/jobs/lineage",
         params={
             "since": run.created_at.isoformat(),
-            "point_kind": "JOB",
             "start_node_id": job.id,
             "direction": direction,
         },

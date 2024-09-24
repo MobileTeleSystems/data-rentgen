@@ -66,6 +66,8 @@ class OperationQueryV1(PaginateQueryV1):
         ),
     )
 
+    model_config = ConfigDict(extra="forbid")
+
     @field_validator("until", mode="after")
     @classmethod
     def _check_until(cls, value: datetime | None, info: ValidationInfo) -> datetime | None:

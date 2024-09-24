@@ -69,6 +69,8 @@ class BaseLineageQueryV1(BaseModel):
         examples=[1, 3],
     )
 
+    model_config = ConfigDict(extra="forbid")
+
     @field_validator("until", mode="after")
     @classmethod
     def _check_until(cls, value: datetime | None, info: ValidationInfo) -> datetime | None:
@@ -80,6 +82,8 @@ class BaseLineageQueryV1(BaseModel):
 
 class DatasetLineageQueryV1(BaseLineageQueryV1):
     start_node_id: int = Field(description="Dataset id", examples=[42])
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class JobLineageQueryV1(BaseLineageQueryV1):
