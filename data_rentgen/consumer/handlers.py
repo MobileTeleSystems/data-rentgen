@@ -100,7 +100,7 @@ async def handle_operation(event: OpenLineageRunEvent, unit_of_work: UnitOfWork)
             schema = await handle_schema(raw_input, unit_of_work)
 
         input = extract_input(raw_input)
-        input_components.append((input, operation, dataset, schema))
+        input_components.append((input, operation, run, dataset, schema))
 
     output_components = []
     for raw_output in event.outputs:
@@ -110,15 +110,15 @@ async def handle_operation(event: OpenLineageRunEvent, unit_of_work: UnitOfWork)
             schema = await handle_schema(raw_output, unit_of_work)
 
         output = extract_output(raw_output)
-        output_components.append((output, operation, dataset, schema))
+        output_components.append((output, operation, run, dataset, schema))
 
     # create inputs/outputs only as a last step, to avoid partial lineage graph. Operation should be either empty or not.
     async with unit_of_work:
-        for input, operation, dataset, schema in input_components:  # noqa: WPS440
-            await create_or_update_input(input, operation, dataset, schema, unit_of_work)
+        for input, operation, run, dataset, schema in input_components:  # noqa: WPS440
+            await create_or_update_input(input, operation, run, dataset, schema, unit_of_work)  # type: ignore[arg-type]
 
-        for output, operation, dataset, schema in output_components:  # noqa: WPS440
-            await create_or_update_output(output, operation, dataset, schema, unit_of_work)
+        for output, operation, run, dataset, schema in output_components:  # noqa: WPS440
+            await create_or_update_output(output, operation, run, dataset, schema, unit_of_work)  # type: ignore[arg-type]
 
 
 async def handle_dataset(dataset: OpenLineageDataset, unit_of_work: UnitOfWork) -> Dataset:
@@ -210,20 +210,29 @@ async def get_or_create_schema(schema: SchemaDTO, unit_of_work: UnitOfWork) -> S
 async def create_or_update_input(
     input: InputDTO,
     operation: Operation,
+    run: Run,
     dataset: Dataset,
     schema: Schema | None,
     unit_of_work: UnitOfWork,
 ) -> Input:
     schema_id = schema.id if schema else None
-    return await unit_of_work.input.create_or_update(input, operation.id, dataset.id, schema_id)
+    return await unit_of_work.input.create_or_update(
+        input,
+        operation.id,
+        run.id,
+        run.job_id,
+        dataset_id=dataset.id,
+        schema_id=schema_id,
+    )
 
 
 async def create_or_update_output(
     output: OutputDTO,
     operation: Operation,
+    run: Run,
     dataset: Dataset,
     schema: Schema | None,
     unit_of_work: UnitOfWork,
 ) -> Output:
     schema_id = schema.id if schema else None
-    return await unit_of_work.output.create_or_update(output, operation.id, dataset.id, schema_id)
+    return await unit_of_work.output.create_or_update(output, operation.id, run.id, run.job_id, dataset.id, schema_id)

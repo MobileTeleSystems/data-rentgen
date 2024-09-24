@@ -872,3 +872,22 @@ async def test_get_run_lineage_with_symlinks(
             for operation in sorted(operations, key=lambda x: x.id)
         ],
     }
+
+
+async def test_get_run_lineage_with_granularity(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_with_same_run: LINEAGE_FIXTURE_ANNOTATION,
+):
+    [job], [run], operations, all_datasets, all_inputs, all_outputs = lineage_with_same_run
+    response = await test_client.get(
+        "v1/runs/lineage",
+        params={
+            "since": run.created_at.isoformat(),
+            "start_node_id": str(run.id),
+            "direction": "DOWNSTREAM",
+            "granularity": "OPERATION",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()

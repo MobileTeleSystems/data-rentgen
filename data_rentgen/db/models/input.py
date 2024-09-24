@@ -12,7 +12,9 @@ from uuid6 import UUID
 
 from data_rentgen.db.models.base import Base
 from data_rentgen.db.models.dataset import Dataset
+from data_rentgen.db.models.job import Job
 from data_rentgen.db.models.operation import Operation
+from data_rentgen.db.models.run import Run
 from data_rentgen.db.models.schema import Schema
 
 
@@ -42,6 +44,32 @@ class Input(Base):
         primaryjoin="Input.operation_id == Operation.id",
         lazy="noload",
         foreign_keys=[operation_id],
+    )
+
+    run_id: Mapped[UUID] = mapped_column(
+        SQL_UUID,
+        index=True,
+        nullable=False,
+        doc="Run caused this input operation",
+    )
+    run: Mapped[Run] = relationship(
+        Run,
+        primaryjoin="Input.run_id == Run.id",
+        lazy="noload",
+        foreign_keys=[run_id],
+    )
+
+    job_id: Mapped[int] = mapped_column(
+        BigInteger,
+        index=True,
+        nullable=False,
+        doc="Parent job of run",
+    )
+    job: Mapped[Job] = relationship(
+        Job,
+        primaryjoin="Input.job_id == Job.id",
+        lazy="noload",
+        foreign_keys=[job_id],
     )
 
     dataset_id: Mapped[int] = mapped_column(

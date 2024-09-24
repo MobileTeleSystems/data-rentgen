@@ -24,6 +24,8 @@ def upgrade() -> None:
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("operation_id", sa.UUID(), nullable=False),
         sa.Column("dataset_id", sa.BigInteger(), nullable=False),
+        sa.Column("run_id", sa.UUID(), nullable=False),
+        sa.Column("job_id", sa.BigInteger(), nullable=False),
         sa.Column("type", sa.String(length=32), nullable=False),
         sa.Column("schema_id", sa.BigInteger(), nullable=True),
         sa.Column("num_bytes", sa.BigInteger(), nullable=True),
@@ -34,11 +36,15 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix__output__dataset_id"), "output", ["dataset_id"], unique=False)
     op.create_index(op.f("ix__output__operation_id"), "output", ["operation_id"], unique=False)
+    op.create_index(op.f("ix__output__run_id"), "output", ["run_id"], unique=False)
+    op.create_index(op.f("ix__output__job_id"), "output", ["job_id"], unique=False)
     op.create_index(op.f("ix__output__schema_id"), "output", ["schema_id"], unique=False)
 
 
 def downgrade() -> None:
     op.drop_index(op.f("ix__output__schema_id"), table_name="output")
+    op.drop_index(op.f("ix__output__job_id"), table_name="output")
+    op.drop_index(op.f("ix__output__run_id"), table_name="output")
     op.drop_index(op.f("ix__output__operation_id"), table_name="output")
     op.drop_index(op.f("ix__output__dataset_id"), table_name="output")
     op.drop_table("output")
