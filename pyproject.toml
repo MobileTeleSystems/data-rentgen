@@ -44,7 +44,7 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
-pydantic = "~2.8.0"
+pydantic = "~2.9.2"
 typing-extensions = "^4.12.2"
 pydantic-settings = {version = "^2.5.2", optional = true}
 alembic = {version = "^1.13.2", optional = true}
@@ -120,7 +120,7 @@ mypy = "^1.11.2"
 black = "^24.8.0"
 isort = "^5.13.2"
 flake8 = "^7.1.1"
-bandit = "^1.7.9"
+bandit = "^1.7.10"
 sqlalchemy = {extras = ["mypy"], version = "^2.0.32"}
 wemake-python-styleguide = "^0.19.2"
 flake8-pyproject = "^1.2.3"
