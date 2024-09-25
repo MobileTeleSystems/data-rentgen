@@ -21,6 +21,8 @@ class InputRepository(Repository[Input]):
         self,
         input: InputDTO,
         operation_id: UUID,
+        run_id: UUID,
+        job_id: int,
         dataset_id: int,
         schema_id: int | None,
     ) -> Input:
@@ -41,7 +43,16 @@ class InputRepository(Repository[Input]):
             result = await self._get(created_at, input_id)
 
         if not result:
-            return await self._create(created_at, input_id, input, operation_id, dataset_id, schema_id)
+            return await self._create(
+                created_at=created_at,
+                input_id=input_id,
+                input=input,
+                operation_id=operation_id,
+                run_id=run_id,
+                job_id=job_id,
+                dataset_id=dataset_id,
+                schema_id=schema_id,
+            )
         return await self._update(result, input)
 
     async def list_by_operation_ids(
@@ -93,6 +104,8 @@ class InputRepository(Repository[Input]):
         input_id: UUID,
         input: InputDTO,
         operation_id: UUID,
+        run_id: UUID,
+        job_id: int,
         dataset_id: int,
         schema_id: int | None = None,
     ) -> Input:
@@ -100,6 +113,8 @@ class InputRepository(Repository[Input]):
             created_at=created_at,
             id=input_id,
             operation_id=operation_id,
+            run_id=run_id,
+            job_id=job_id,
             dataset_id=dataset_id,
             schema_id=schema_id,
             num_bytes=input.num_bytes,

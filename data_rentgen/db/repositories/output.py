@@ -21,6 +21,8 @@ class OutputRepository(Repository[Output]):
         self,
         output: OutputDTO,
         operation_id: UUID,
+        run_id: UUID,
+        job_id: int,
         dataset_id: int,
         schema_id: int | None,
     ) -> Output:
@@ -41,7 +43,16 @@ class OutputRepository(Repository[Output]):
             result = await self._get(created_at, output_id)
 
         if not result:
-            return await self._create(created_at, output_id, output, operation_id, dataset_id, schema_id)
+            return await self._create(
+                created_at=created_at,
+                output_id=output_id,
+                output=output,
+                operation_id=operation_id,
+                run_id=run_id,
+                job_id=job_id,
+                dataset_id=dataset_id,
+                schema_id=schema_id,
+            )
         return await self._update(result, output)
 
     async def list_by_operation_ids(
@@ -93,6 +104,8 @@ class OutputRepository(Repository[Output]):
         output_id: UUID,
         output: OutputDTO,
         operation_id: UUID,
+        run_id: UUID,
+        job_id: int,
         dataset_id: int,
         schema_id: int | None = None,
     ) -> Output:
@@ -100,6 +113,8 @@ class OutputRepository(Repository[Output]):
             created_at=created_at,
             id=output_id,
             operation_id=operation_id,
+            run_id=run_id,
+            job_id=job_id,
             dataset_id=dataset_id,
             type=OutputType(output.type),
             schema_id=schema_id,

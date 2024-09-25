@@ -170,6 +170,8 @@ async def test_runs_handler_spark(
     hive_input = inputs[0]
     assert hive_input.created_at == datetime(2024, 7, 5, 9, 6, 29, 463000, tzinfo=timezone.utc)
     assert hive_input.operation_id == job_operation.id
+    assert hive_input.run_id == application_run.id
+    assert hive_input.job_id == application_run.job_id
     assert hive_input.dataset_id == hdfs_warehouse.id
     assert hive_input.schema_id == hive_schema.id
     assert hive_input.num_bytes is None
@@ -184,6 +186,8 @@ async def test_runs_handler_spark(
     clickhouse_output = outputs[0]
     assert clickhouse_output.created_at == datetime(2024, 7, 5, 9, 6, 29, 463000, tzinfo=timezone.utc)
     assert clickhouse_output.operation_id == job_operation.id
+    assert clickhouse_output.run_id == application_run.id
+    assert clickhouse_output.job_id == application_run.job_id
     assert clickhouse_output.dataset_id == clickhouse_table.id
     assert clickhouse_output.type == OutputType.OVERWRITE
     assert clickhouse_output.schema_id == clickhouse_schema.id
