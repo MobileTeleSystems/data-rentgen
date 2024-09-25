@@ -173,6 +173,15 @@ async def lineage_with_depth(
     operations: list[Operation],
     datasets: list[Dataset],
 ) -> AsyncGenerator[LINEAGE_FIXTURE_ANNOTATION, None]:
+
+    # operations are randomly distributed along runs. select only those which will appear in lineage graph
+    run_ids = {operation.run_id for operation in operations}
+    actual_runs = [run for run in runs if run.id in run_ids]
+
+    # same for jobs
+    job_ids = {run.job_id for run in actual_runs}
+    actual_jobs = [job for job in jobs if job.id in job_ids]
+
     inputs = []
     outputs = []
     # Make graph like this:
@@ -182,6 +191,8 @@ async def lineage_with_depth(
             input_factory(
                 created_at=operation.created_at,
                 operation_id=operation.id,
+                run_id=operation.run_id,
+                job_id=next(run.job_id for run in actual_runs if run.id == operation.run_id),
                 dataset_id=dataset.id,
             ),
         )
@@ -191,18 +202,12 @@ async def lineage_with_depth(
             output_factory(
                 created_at=operation.created_at,
                 operation_id=operation.id,
+                run_id=operation.run_id,
+                job_id=next(run.job_id for run in actual_runs if run.id == operation.run_id),
                 dataset_id=dataset.id,
                 type=OutputType.APPEND,
             ),
         )
-
-    # operations are randomly distributed along runs. select only those which will appear in lineage graph
-    run_ids = {operation.run_id for operation in operations}
-    actual_runs = [run for run in runs if run.id in run_ids]
-
-    # same for jobs
-    job_ids = {run.job_id for run in actual_runs}
-    actual_jobs = [job for job in jobs if job.id in job_ids]
 
     async with async_session_maker() as async_session:
         for item in inputs + outputs:
@@ -242,6 +247,15 @@ async def lineage_with_symlinks(
     None,
 ]:
     datasets, dataset_symlinks = datasets_with_symlinks
+
+    # operations are randomly distributed along runs. select only those which will appear in lineage graph
+    run_ids = {operation.run_id for operation in operations}
+    actual_runs = [run for run in runs if run.id in run_ids]
+
+    # same for jobs
+    job_ids = {run.job_id for run in actual_runs}
+    actual_jobs = [job for job in jobs if job.id in job_ids]
+
     inputs = []
     outputs = []
     # Make graph like this:
@@ -253,6 +267,8 @@ async def lineage_with_symlinks(
             input_factory(
                 created_at=operation.created_at,
                 operation_id=operation.id,
+                run_id=operation.run_id,
+                job_id=next(run.job_id for run in actual_runs if run.id == operation.run_id),
                 dataset_id=dataset.id,
             ),
         )
@@ -260,18 +276,12 @@ async def lineage_with_symlinks(
             output_factory(
                 created_at=operation.created_at,
                 operation_id=operation.id,
+                run_id=operation.run_id,
+                job_id=next(run.job_id for run in actual_runs if run.id == operation.run_id),
                 dataset_id=dataset.id,
                 type=OutputType.APPEND,
             ),
         )
-
-    # operations are randomly distributed along runs. select only those which will appear in lineage graph
-    run_ids = {operation.run_id for operation in operations}
-    actual_runs = [run for run in runs if run.id in run_ids]
-
-    # same for jobs
-    job_ids = {run.job_id for run in actual_runs}
-    actual_jobs = [job for job in jobs if job.id in job_ids]
 
     async with async_session_maker() as async_session:
         for item in inputs + outputs:
