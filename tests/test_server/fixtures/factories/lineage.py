@@ -177,6 +177,7 @@ async def lineage_with_depth(
     # operations are randomly distributed along runs. select only those which will appear in lineage graph
     run_ids = {operation.run_id for operation in operations}
     actual_runs = [run for run in runs if run.id in run_ids]
+    run_to_job = {run.id: run.job_id for run in actual_runs}
 
     # same for jobs
     job_ids = {run.job_id for run in actual_runs}
@@ -192,7 +193,7 @@ async def lineage_with_depth(
                 created_at=operation.created_at,
                 operation_id=operation.id,
                 run_id=operation.run_id,
-                job_id=next(run.job_id for run in actual_runs if run.id == operation.run_id),
+                job_id=run_to_job[operation.run_id],
                 dataset_id=dataset.id,
             ),
         )
@@ -203,7 +204,7 @@ async def lineage_with_depth(
                 created_at=operation.created_at,
                 operation_id=operation.id,
                 run_id=operation.run_id,
-                job_id=next(run.job_id for run in actual_runs if run.id == operation.run_id),
+                job_id=run_to_job[operation.run_id],
                 dataset_id=dataset.id,
                 type=OutputType.APPEND,
             ),
@@ -251,6 +252,7 @@ async def lineage_with_symlinks(
     # operations are randomly distributed along runs. select only those which will appear in lineage graph
     run_ids = {operation.run_id for operation in operations}
     actual_runs = [run for run in runs if run.id in run_ids]
+    run_to_job = {run.id: run.job_id for run in actual_runs}
 
     # same for jobs
     job_ids = {run.job_id for run in actual_runs}
@@ -268,7 +270,7 @@ async def lineage_with_symlinks(
                 created_at=operation.created_at,
                 operation_id=operation.id,
                 run_id=operation.run_id,
-                job_id=next(run.job_id for run in actual_runs if run.id == operation.run_id),
+                job_id=run_to_job[operation.run_id],
                 dataset_id=dataset.id,
             ),
         )
@@ -277,7 +279,7 @@ async def lineage_with_symlinks(
                 created_at=operation.created_at,
                 operation_id=operation.id,
                 run_id=operation.run_id,
-                job_id=next(run.job_id for run in actual_runs if run.id == operation.run_id),
+                job_id=run_to_job[operation.run_id],
                 dataset_id=dataset.id,
                 type=OutputType.APPEND,
             ),
