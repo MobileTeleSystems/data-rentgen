@@ -43,7 +43,16 @@ class InputRepository(Repository[Input]):
             result = await self._get(created_at, input_id)
 
         if not result:
-            return await self._create(created_at, input_id, input, operation_id, run_id, job_id, dataset_id, schema_id)
+            return await self._create(
+                created_at=created_at,
+                input_id=input_id,
+                input=input,
+                operation_id=operation_id,
+                run_id=run_id,
+                job_id=job_id,
+                dataset_id=dataset_id,
+                schema_id=schema_id,
+            )
         return await self._update(result, input)
 
     async def list_by_operation_ids(

@@ -217,10 +217,10 @@ async def create_or_update_input(
 ) -> Input:
     schema_id = schema.id if schema else None
     return await unit_of_work.input.create_or_update(
-        input,
-        operation.id,
-        run.id,
-        run.job_id,
+        input=input,
+        operation_id=operation.id,
+        run_id=run.id,
+        job_id=run.job_id,
         dataset_id=dataset.id,
         schema_id=schema_id,
     )
@@ -235,4 +235,11 @@ async def create_or_update_output(
     unit_of_work: UnitOfWork,
 ) -> Output:
     schema_id = schema.id if schema else None
-    return await unit_of_work.output.create_or_update(output, operation.id, run.id, run.job_id, dataset.id, schema_id)
+    return await unit_of_work.output.create_or_update(
+        output=output,
+        operation_id=operation.id,
+        run_id=run.id,
+        job_id=run.job_id,
+        dataset_id=dataset.id,
+        schema_id=schema_id,
+    )

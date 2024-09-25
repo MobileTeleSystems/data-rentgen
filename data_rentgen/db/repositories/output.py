@@ -44,14 +44,14 @@ class OutputRepository(Repository[Output]):
 
         if not result:
             return await self._create(
-                created_at,
-                output_id,
-                output,
-                operation_id,
-                run_id,
-                job_id,
-                dataset_id,
-                schema_id,
+                created_at=created_at,
+                output_id=output_id,
+                output=output,
+                operation_id=operation_id,
+                run_id=run_id,
+                job_id=job_id,
+                dataset_id=dataset_id,
+                schema_id=schema_id,
             )
         return await self._update(result, output)
 
