@@ -10,15 +10,10 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
 @pytest.mark.parametrize(
-    "entity_kind,granularity",
-    [
-        ("operations", "OPERATION"),
-        ("datasets", "OPERATION"),
-        ("runs", "RUN"),
-        ("jobs", "JOB"),
-    ],
+    "entity_kind",
+    ["operations", "datasets", "runs", "jobs"],
 )
-async def test_get_lineage_no_filter(test_client: AsyncClient, entity_kind: str, granularity: str):
+async def test_get_lineage_no_filter(test_client: AsyncClient, entity_kind: str):
     response = await test_client.get(f"v1/{entity_kind}/lineage")
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
@@ -29,21 +24,21 @@ async def test_get_lineage_no_filter(test_client: AsyncClient, entity_kind: str,
                 {
                     "code": "missing",
                     "context": {},
-                    "input": {"depth": 1, "granularity": granularity},
+                    "input": {"depth": 1},
                     "location": ["query", "since"],
                     "message": "Field required",
                 },
                 {
                     "code": "missing",
                     "context": {},
-                    "input": {"depth": 1, "granularity": granularity},
+                    "input": {"depth": 1},
                     "location": ["query", "direction"],
                     "message": "Field required",
                 },
                 {
                     "code": "missing",
                     "context": {},
-                    "input": {"depth": 1, "granularity": granularity},
+                    "input": {"depth": 1},
                     "location": ["query", "start_node_id"],
                     "message": "Field required",
                 },
