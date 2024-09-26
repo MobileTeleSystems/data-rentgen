@@ -4,7 +4,7 @@
 import logging
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Literal
 
 from fastapi import Depends
 from uuid6 import UUID
@@ -78,6 +78,7 @@ class LineageService:
         self,
         start_node_ids: list[int],
         direction: LineageDirectionV1,
+        granularity: Literal["JOB", "RUN", "OPERATION"],
         since: datetime,
         until: datetime | None,
         depth: int,
@@ -135,6 +136,7 @@ class LineageService:
                 await self.get_lineage_by_datasets(
                     start_node_ids=dataset_ids,
                     direction=direction,
+                    granularity=granularity,
                     since=since,
                     until=until,
                     depth=depth - 1,
@@ -167,10 +169,11 @@ class LineageService:
             )
         return result
 
-    async def get_lineage_by_runs(
+    async def get_lineage_by_runs(  # noqa: WPS217
         self,
         start_node_ids: list[UUID],
         direction: LineageDirectionV1,
+        granularity: Literal["OPERATION", "RUN"],
         since: datetime,
         until: datetime | None,
         depth: int,
@@ -197,12 +200,21 @@ class LineageService:
 
         inputs = []
         outputs = []
-        if direction == LineageDirectionV1.DOWNSTREAM:
-            outputs = await self._uow.output.list_by_operation_ids(sorted(operation_ids))
-        else:
-            inputs = await self._uow.input.list_by_operation_ids(sorted(operation_ids))
+        match granularity:
+            case "OPERATION":
+                if direction == LineageDirectionV1.DOWNSTREAM:
+                    outputs = await self._uow.output.list_by_operation_ids(sorted(operation_ids))
+                else:
+                    inputs = await self._uow.input.list_by_operation_ids(sorted(operation_ids))
+
+            case "RUN":
+                if direction == LineageDirectionV1.DOWNSTREAM:
+                    outputs = await self._uow.output.list_by_operation_ids_grouped_by_run(sorted(operation_ids))
+                else:
+                    inputs = await self._uow.input.list_by_operation_ids_grouped_by_run(sorted(operation_ids))
 
         # Return only operations which have at least one input or output
+        # In case granularity == "RUN" operations will be empty
         operation_ids = {input.operation_id for input in inputs} | {output.operation_id for output in outputs}
         operations = [operation for operation in all_operations if operation.id in operation_ids]
         operations_by_id = {operation.id: operation for operation in operations}
@@ -225,6 +237,7 @@ class LineageService:
                 await self.get_lineage_by_datasets(
                     start_node_ids=dataset_ids,
                     direction=direction,
+                    granularity=granularity,
                     since=since,
                     until=until,
                     depth=depth - 1,
@@ -315,6 +328,7 @@ class LineageService:
                 await self.get_lineage_by_datasets(
                     start_node_ids=dataset_ids_to_fetch,
                     direction=direction,
+                    granularity="OPERATION",
                     since=since,
                     until=until,
                     depth=depth - 1,
@@ -349,10 +363,11 @@ class LineageService:
             )
         return result
 
-    async def get_lineage_by_datasets(
+    async def get_lineage_by_datasets(  # noqa: WPS217
         self,
         start_node_ids: list[int],
         direction: LineageDirectionV1,
+        granularity: Literal["JOB", "RUN", "OPERATION"],
         since: datetime,
         until: datetime | None,
         depth: int,
@@ -392,18 +407,48 @@ class LineageService:
         # Get datasets -> (inputs, outputs) -> operations -> runs -> jobs
         inputs = []
         outputs = []
-        if direction == LineageDirectionV1.DOWNSTREAM:
-            inputs = await self._uow.input.list_by_dataset_ids(
-                sorted(datasets_by_id.keys()),
-                since,
-                until,
-            )
-        else:
-            outputs = await self._uow.output.list_by_dataset_ids(
-                sorted(datasets_by_id.keys()),
-                since,
-                until,
-            )
+        match granularity:
+            case "OPERATION":
+                if direction == LineageDirectionV1.DOWNSTREAM:
+                    inputs = await self._uow.input.list_by_dataset_ids(
+                        sorted(datasets_by_id.keys()),
+                        since,
+                        until,
+                    )
+                else:
+                    outputs = await self._uow.output.list_by_dataset_ids(
+                        sorted(datasets_by_id.keys()),
+                        since,
+                        until,
+                    )
+            case "RUN":
+                if direction == LineageDirectionV1.DOWNSTREAM:
+                    inputs = await self._uow.input.list_by_dataset_ids_grouped_by_run(
+                        sorted(datasets_by_id.keys()),
+                        since,
+                        until,
+                    )
+                else:
+                    outputs = await self._uow.output.list_by_dataset_ids_grouped_by_run(
+                        sorted(datasets_by_id.keys()),
+                        since,
+                        until,
+                    )
+            case "JOB":
+                if direction == LineageDirectionV1.DOWNSTREAM:
+                    inputs = await self._uow.input.list_by_dataset_ids_grouped_by_job(
+                        sorted(datasets_by_id.keys()),
+                        since,
+                        until,
+                    )
+                else:
+                    outputs = await self._uow.output.list_by_dataset_ids_grouped_by_job(
+                        sorted(datasets_by_id.keys()),
+                        since,
+                        until,
+                    )
+            case _:
+                raise ValueError(f"Unknown granularity: {granularity}")
 
         result = LineageServiceResult(
             datasets=datasets_by_id,

@@ -73,6 +73,7 @@ async def get_jobs_lineage(
     lineage = await lineage_service.get_lineage_by_runs(
         start_node_ids=[pagination_args.start_node_id],  # type: ignore[list-item]
         direction=pagination_args.direction,
+        granularity=pagination_args.granularity,
         since=pagination_args.since,
         until=pagination_args.until,
         depth=pagination_args.depth,

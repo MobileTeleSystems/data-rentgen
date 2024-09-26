@@ -1,12 +1,13 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
+
 from data_rentgen.server.schemas.v1 import (
     DatasetResponseV1,
     JobResponseV1,
     LineageEntityKindV1,
     LineageEntityV1,
     LineageRelationKindV1,
-    LineageRelationv1,
+    LineageRelationV1,
     LineageResponseV1,
     OperationResponseV1,
     RunResponseV1,
@@ -27,7 +28,7 @@ async def build_lineage_response(lineage: LineageServiceResult) -> LineageRespon
     for run_id in sorted(lineage.runs):
         run = lineage.runs[run_id]
         response.relations.append(
-            LineageRelationv1(
+            LineageRelationV1(
                 kind=LineageRelationKindV1.PARENT,
                 from_=LineageEntityV1(kind=LineageEntityKindV1.JOB, id=run.job_id),
                 to=LineageEntityV1(kind=LineageEntityKindV1.RUN, id=run.id),
@@ -38,7 +39,7 @@ async def build_lineage_response(lineage: LineageServiceResult) -> LineageRespon
     for operation_id in sorted(lineage.operations):
         operation = lineage.operations[operation_id]
         response.relations.append(
-            LineageRelationv1(
+            LineageRelationV1(
                 kind=LineageRelationKindV1.PARENT,
                 from_=LineageEntityV1(kind=LineageEntityKindV1.RUN, id=operation.run_id),
                 to=LineageEntityV1(kind=LineageEntityKindV1.OPERATION, id=operation.id),
@@ -48,7 +49,7 @@ async def build_lineage_response(lineage: LineageServiceResult) -> LineageRespon
 
     for symlink_id in sorted(lineage.dataset_symlinks):
         dataset_symlink = lineage.dataset_symlinks[symlink_id]
-        relation = LineageRelationv1(
+        relation = LineageRelationV1(
             kind=LineageRelationKindV1.SYMLINK,
             type=dataset_symlink.type,
             from_=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=dataset_symlink.from_dataset_id),
@@ -56,21 +57,51 @@ async def build_lineage_response(lineage: LineageServiceResult) -> LineageRespon
         )
         response.relations.append(relation)
 
-    for input in lineage.inputs:
-        relation = LineageRelationv1(
-            kind=LineageRelationKindV1.INPUT,
-            from_=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=input.dataset_id),
-            to=LineageEntityV1(kind=LineageEntityKindV1.OPERATION, id=input.operation_id),
-        )
-        response.relations.append(relation)
+    input_relations = await _add_input_relations(lineage.inputs)
+    response.relations.extend(input_relations)
 
-    for output in lineage.outputs:
-        relation = LineageRelationv1(
-            kind=LineageRelationKindV1.OUTPUT,
-            type=output.type,
-            from_=LineageEntityV1(kind=LineageEntityKindV1.OPERATION, id=output.operation_id),
-            to=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=output.dataset_id),
-        )
-        response.relations.append(relation)
+    output_relations = await _add_output_relations(lineage.outputs)
+    response.relations.extend(output_relations)
 
     return response
+
+
+async def _add_input_relations(
+    inputs: list,
+) -> list[LineageRelationV1]:
+    relations = []
+    for input in inputs:
+        if input.operation_id is not None:
+            to = LineageEntityV1(kind=LineageEntityKindV1.OPERATION, id=input.operation_id)
+        elif input.run_id is not None:
+            to = LineageEntityV1(kind=LineageEntityKindV1.RUN, id=input.run_id)
+        elif input.job_id is not None:
+            to = LineageEntityV1(kind=LineageEntityKindV1.JOB, id=input.job_id)
+        relation = LineageRelationV1(
+            kind=LineageRelationKindV1.INPUT,
+            from_=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=input.dataset_id),
+            to=to,
+        )
+        relations.append(relation)
+    return relations
+
+
+async def _add_output_relations(
+    outputs: list,
+) -> list[LineageRelationV1]:
+    relations = []
+    for output in outputs:
+        if output.operation_id is not None:
+            from_ = LineageEntityV1(kind=LineageEntityKindV1.OPERATION, id=output.operation_id)
+        elif output.run_id is not None:
+            from_ = LineageEntityV1(kind=LineageEntityKindV1.RUN, id=output.run_id)
+        elif output.job_id is not None:
+            from_ = LineageEntityV1(kind=LineageEntityKindV1.JOB, id=output.job_id)
+        relation = LineageRelationV1(
+            kind=LineageRelationKindV1.OUTPUT,
+            type=output.type,
+            from_=from_,
+            to=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=output.dataset_id),
+        )
+        relations.append(relation)
+    return relations

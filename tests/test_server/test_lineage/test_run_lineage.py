@@ -33,6 +33,7 @@ async def test_get_run_lineage_unknown_id(
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "start_node_id": str(new_run.id),
             "direction": direction,
+            "granularity": "OPERATION",
         },
     )
 
@@ -57,6 +58,7 @@ async def test_get_run_lineage_no_operations(
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "start_node_id": str(run.id),
             "direction": direction,
+            "granularity": "OPERATION",
         },
     )
 
@@ -119,6 +121,7 @@ async def test_get_run_lineage_no_inputs_outputs(
             "since": run.created_at.isoformat(),
             "start_node_id": str(run.id),
             "direction": direction,
+            "granularity": "OPERATION",
         },
     )
 
@@ -185,6 +188,7 @@ async def test_get_run_lineage(
             "since": run.created_at.isoformat(),
             "start_node_id": str(run.id),
             "direction": "DOWNSTREAM",
+            "granularity": "OPERATION",
         },
     )
 
@@ -327,6 +331,7 @@ async def test_get_run_lineage_with_direction_and_until(
             "since": since.isoformat(),
             "until": until.isoformat(),
             "start_node_id": str(run.id),
+            "granularity": "OPERATION",
             "direction": "UPSTREAM",
         },
     )
@@ -480,6 +485,7 @@ async def test_get_run_lineage_with_depth(
             "since": some_run.created_at.isoformat(),
             "start_node_id": str(some_run.id),
             "direction": "DOWNSTREAM",
+            "granularity": "OPERATION",
             "depth": 3,
         },
     )
@@ -615,6 +621,7 @@ async def test_get_run_lineage_with_depth_ignore_cycles(
             "since": run.created_at.isoformat(),
             "start_node_id": str(run.id),
             "direction": "DOWNSTREAM",
+            "granularity": "OPERATION",
             "depth": 3,
         },
     )
@@ -769,6 +776,7 @@ async def test_get_run_lineage_with_symlinks(
             "since": run.created_at.isoformat(),
             "start_node_id": str(run.id),
             "direction": "DOWNSTREAM",
+            "granularity": "OPERATION",
         },
     )
 
@@ -888,8 +896,9 @@ async def test_get_run_lineage_with_granularity(
             "since": run.created_at.isoformat(),
             "start_node_id": str(run.id),
             "direction": "DOWNSTREAM",
-            "granularity": "OPERATION",
         },
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
+    # TODO: uncomment
+    # assert response.json() == {}
