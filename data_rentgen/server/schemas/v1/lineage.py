@@ -104,11 +104,6 @@ class JobLineageQueryV1(BaseLineageQueryV1):
 
 class OperationLineageQueryV1(BaseLineageQueryV1):
     start_node_id: UUID = Field(description="Operation id", examples=["00000000-0000-0000-0000-000000000000"])
-    granularity: Literal["OPERATION"] = Field(
-        description="Granularity of the operation lineage",
-        default="OPERATION",
-        examples=["OPERATION"],
-    )
 
 
 class RunLineageQueryV1(BaseLineageQueryV1):

@@ -47,7 +47,7 @@ async def operations(
 
 
 @router.get("/lineage", summary="Get Operations lineage graph")
-async def get_jobs_lineage(
+async def get_operations_lineage(
     pagination_args: Annotated[OperationLineageQueryV1, Query()],
     lineage_service: Annotated[LineageService, Depends()],
 ) -> LineageResponseV1:
