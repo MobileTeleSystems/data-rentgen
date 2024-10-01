@@ -1,11 +1,11 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from datetime import datetime
-from typing import Sequence
+from datetime import datetime, timezone
+from typing import Literal, Sequence
 from uuid import UUID
 
-from sqlalchemy import ColumnElement, and_, any_, func, select
+from sqlalchemy import ColumnElement, and_, any_, func, literal_column, select
 
 from data_rentgen.db.models import Output, OutputType
 from data_rentgen.db.repositories.base import Repository
@@ -75,69 +75,80 @@ class OutputRepository(Repository[Output]):
         result = await self._session.scalars(query)
         return list(result.all())
 
-    async def list_by_operation_ids_grouped_by_run(
+    async def list_by_run_ids(
         self,
-        operation_ids: Sequence[UUID],
+        run_ids: Sequence[UUID],
+        since: datetime,
+        until: datetime | None,
     ) -> list[Output]:
-        # Output created_at is always the same as operation's created_at
-        # do not use `tuple_(Output.created_at, Output.operation_id).in_(...),
-        # as this is too complex filter for Postgres to make an optimal query plan
-        if not operation_ids:
+        if not run_ids:
             return []
+        min_run_created_at = extract_timestamp_from_uuid(min(run_ids))
+        min_created_at = min(min_run_created_at, since.astimezone(timezone.utc))
 
-        min_created_at = extract_timestamp_from_uuid(min(operation_ids))
-        max_created_at = extract_timestamp_from_uuid(max(operation_ids))
-        filters = [
+        query = select(
+            Output.run_id,
+            Output.job_id,
+            Output.dataset_id,
+            Output.type,
+            Output.num_bytes,
+            Output.num_rows,
+            Output.num_files,
+        ).where(
             Output.created_at >= min_created_at,
-            Output.created_at <= max_created_at,
-            Output.operation_id == any_(operation_ids),  # type: ignore[arg-type]
-        ]
+            Output.run_id == any_(run_ids),  # type: ignore[arg-type]
+        )
+        if until:
+            query = query.where(Output.created_at <= until)
 
-        results = await self._list_with_aggregation(filters=filters, aggregation_field="run_id")
+        results = await self._session.execute(query)
         return [
             Output(
                 created_at=None,
-                id=None,
                 operation_id=None,
-                job_id=None,
                 run_id=row[0],
-                dataset_id=row[1],
-                type=row[2],
-                num_bytes=row[3],
-                num_rows=row[4],
-                num_files=row[5],
+                job_id=row[1],
+                dataset_id=row[2],
+                type=OutputType(row[3]),
+                num_bytes=row[4],
+                num_rows=row[5],
+                num_files=row[6],
             )
             for row in results
         ]
 
-    async def list_by_operation_ids_goruped_by_job(
+    async def list_by_job_ids(
         self,
-        operation_ids: Sequence[UUID],
+        job_ids: Sequence[int],
+        since: datetime,
+        until: datetime | None,
     ) -> list[Output]:
-        # Output created_at is always the same as operation's created_at
-        # do not use `tuple_(Output.created_at, Output.operation_id).in_(...),
-        # as this is too complex filter for Postgres to make an optimal query plan
-        if not operation_ids:
+        if not job_ids:
             return []
 
-        min_created_at = extract_timestamp_from_uuid(min(operation_ids))
-        max_created_at = extract_timestamp_from_uuid(max(operation_ids))
-        filters = [
-            Output.created_at >= min_created_at,
-            Output.created_at <= max_created_at,
-            Output.operation_id == any_(operation_ids),  # type: ignore[arg-type]
-        ]
+        query = select(
+            Output.job_id,
+            Output.dataset_id,
+            Output.type,
+            Output.num_bytes,
+            Output.num_rows,
+            Output.num_files,
+        ).where(
+            Output.created_at >= since,
+            Output.job_id == any_(job_ids),  # type: ignore[arg-type]
+        )
+        if until:
+            query = query.where(Output.created_at <= until)
 
-        results = await self._list_with_aggregation(filters=filters, aggregation_field="run_id")
+        results = await self._session.execute(query)
         return [
             Output(
                 created_at=None,
-                id=None,
                 operation_id=None,
-                job_id=row[0],
                 run_id=None,
+                job_id=row[0],
                 dataset_id=row[1],
-                type=row[2],
+                type=OutputType(row[2]),
                 num_bytes=row[3],
                 num_rows=row[4],
                 num_files=row[5],
@@ -150,6 +161,7 @@ class OutputRepository(Repository[Output]):
         dataset_ids: Sequence[int],
         since: datetime,
         until: datetime | None,
+        granularity: Literal["JOB", "RUN", "OPERATION"],
     ) -> list[Output]:
         if not dataset_ids:
             return []
@@ -160,68 +172,44 @@ class OutputRepository(Repository[Output]):
         ]
         if until:
             filters.append(Output.created_at <= until)
-        query = select(Output).where(and_(*filters))
-        result = await self._session.scalars(query)
-        return list(result.all())
 
-    async def list_by_dataset_ids_grouped_by_run(
-        self,
-        dataset_ids: Sequence[int],
-        since: datetime,
-        until: datetime | None,
-    ) -> list[Output]:
-        if not dataset_ids:
-            return []
-        filters = [
-            Output.created_at >= since,
-            Output.dataset_id == any_(dataset_ids),  # type: ignore[arg-type]
-        ]
-        if until:
-            filters.append(Output.created_at <= until)
-        results = await self._list_with_aggregation(filters=filters, aggregation_field="run_id")
-        return [
-            Output(
-                created_at=None,
-                id=None,
-                operation_id=None,
-                job_id=None,
-                run_id=row[0],
-                dataset_id=row[1],
-                type=row[2],
-                num_bytes=row[3],
-                num_rows=row[4],
-                num_files=row[5],
+        group_by = [Output.dataset_id, Output.type]
+        match granularity:
+            case "JOB":
+                group_by = [Output.job_id] + group_by
+            case "RUN":
+                group_by = [Output.run_id] + group_by
+            case "OPERATION":
+                group_by = [Output.operation_id] + group_by
+            case _:
+                raise ValueError(f"Invalid granularity for output by dataset_ids: {granularity}")
+        query = (
+            select(
+                Output.operation_id if granularity == "OPERATION" else literal_column("NULL").label("operation_id"),
+                Output.run_id if granularity == "RUN" else literal_column("NULL").label("run_id"),
+                Output.job_id if granularity == "JOB" else literal_column("NULL").label("job_id"),
+                Output.type,
+                Output.dataset_id,
+                func.sum(Output.num_bytes).label("num_bytes"),
+                func.sum(Output.num_rows).label("num_rows"),
+                func.sum(Output.num_files).label("num_files"),
             )
-            for row in results
-        ]
-
-    async def list_by_dataset_ids_grouped_by_job(
-        self,
-        dataset_ids: Sequence[int],
-        since: datetime,
-        until: datetime | None,
-    ):
-        if not dataset_ids:
-            return []
-        filters = [
-            Output.created_at >= since,
-            Output.dataset_id == any_(dataset_ids),  # type: ignore[arg-type]
-        ]
-        if until:
-            filters.append(Output.created_at <= until)
-        results = await self._list_with_aggregation(filters=filters, aggregation_field="job_id")
+            .where(and_(*filters))
+            .group_by(*group_by)
+        )
+        results = await self._session.execute(query)
         return [
             Output(
                 created_at=None,
                 id=None,
-                operation_id=None,
-                job_id=row[0],
-                run_id=None,
-                dataset_id=row[1],
-                type=row[2],
-                num_bytes=row[3],
-                num_rows=row[4],
-                num_files=row[5],
+                operation_id=row[0],
+                run_id=row[1],
+                job_id=row[2],
+                type=row[3],
+                dataset_id=row[4],
+                num_bytes=row[5],
+                num_rows=row[6],
+                num_files=row[7],
             )
             for row in results
         ]

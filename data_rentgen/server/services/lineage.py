@@ -214,9 +214,9 @@ class LineageService:
 
             case "RUN":
                 if direction == LineageDirectionV1.DOWNSTREAM:
-                    outputs = await self._uow.output.list_by_operation_ids_grouped_by_run(sorted(operation_ids))
+                    outputs = await self._uow.output.list_by_run_ids(sorted(start_node_ids), since, until)
                 else:
-                    inputs = await self._uow.input.list_by_operation_ids_grouped_by_run(sorted(operation_ids))
+                    inputs = await self._uow.input.list_by_run_ids(sorted(start_node_ids), since, until)
 
         # Return only operations which have at least one input or output
         # In case granularity == "RUN" operations will be empty
@@ -498,12 +498,14 @@ class LineageService:
                 sorted(datasets_by_id.keys() - ids_to_skip.datasets),
                 since,
                 until,
+                granularity="OPERATION",
             )
         else:
             outputs = await self._uow.output.list_by_dataset_ids(
                 sorted(datasets_by_id.keys() - ids_to_skip.datasets),
                 since,
                 until,
+                granularity="OPERATION",
             )
 
         result = LineageServiceResult(
@@ -555,16 +557,18 @@ class LineageService:
         inputs = []
         outputs = []
         if direction == LineageDirectionV1.DOWNSTREAM:
-            inputs = await self._uow.input.list_by_dataset_ids_grouped_by_run(
+            inputs = await self._uow.input.list_by_dataset_ids(
                 sorted(datasets_by_id.keys() - ids_to_skip.datasets),
                 since,
                 until,
+                granularity="RUN",
             )
         else:
-            outputs = await self._uow.output.list_by_dataset_ids_grouped_by_run(
+            outputs = await self._uow.output.list_by_dataset_ids(
                 sorted(datasets_by_id.keys() - ids_to_skip.datasets),
                 since,
                 until,
+                granularity="RUN",
             )
         result = LineageServiceResult(
             datasets=datasets_by_id,
@@ -612,16 +616,18 @@ class LineageService:
         inputs = []
         outputs = []
         if direction == LineageDirectionV1.DOWNSTREAM:
-            inputs = await self._uow.input.list_by_dataset_ids_grouped_by_job(
+            inputs = await self._uow.input.list_by_dataset_ids(
                 sorted(datasets_by_id.keys()),
                 since,
                 until,
+                granularity="JOB",
             )
         else:
-            outputs = await self._uow.output.list_by_dataset_ids_grouped_by_job(
+            outputs = await self._uow.output.list_by_dataset_ids(
                 sorted(datasets_by_id.keys()),
                 since,
                 until,
+                granularity="JOB",
             )
 
         result = LineageServiceResult(
