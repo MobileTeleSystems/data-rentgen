@@ -255,6 +255,118 @@ async def test_get_run_lineage(
     }
 
 
+async def test_get_run_lineage_with_operation_granularity(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_with_same_run: LINEAGE_FIXTURE_ANNOTATION,
+):
+    jobs, runs, operations, datasets, *_ = lineage_with_same_run
+
+    jobs = await enrich_jobs(jobs, async_session)
+    [run] = await enrich_runs(runs, async_session)
+    datasets = await enrich_datasets(datasets, async_session)
+
+    response = await test_client.get(
+        "v1/runs/lineage",
+        params={
+            "since": run.created_at.isoformat(),
+            "start_node_id": str(run.id),
+            "direction": "DOWNSTREAM",
+            "granularity": "OPERATION",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": [
+            {
+                "kind": "PARENT",
+                "from": {"kind": "JOB", "id": run.job_id},
+                "to": {"kind": "RUN", "id": str(run.id)},
+                "type": None,
+            },
+        ]
+        + [
+            {
+                "kind": "PARENT",
+                "from": {"kind": "RUN", "id": str(operation.run_id)},
+                "to": {"kind": "OPERATION", "id": str(operation.id)},
+                "type": None,
+            }
+            for operation in sorted(operations, key=lambda x: x.id)
+        ]
+        + [
+            {
+                "kind": "OUTPUT",
+                "from": {"kind": "OPERATION", "id": str(operation.id)},
+                "to": {"kind": "DATASET", "id": dataset.id},
+                "type": "APPEND",
+            }
+            for dataset, operation in zip(datasets, operations)
+        ],
+        "nodes": [
+            {
+                "kind": "JOB",
+                "id": job.id,
+                "name": job.name,
+                "location": {
+                    "type": job.location.type,
+                    "name": job.location.name,
+                    "addresses": [{"url": address.url} for address in job.location.addresses],
+                },
+            }
+            for job in sorted(jobs, key=lambda x: x.id)
+        ]
+        + [
+            {
+                "kind": "DATASET",
+                "id": dataset.id,
+                "format": dataset.format,
+                "name": dataset.name,
+                "location": {
+                    "name": dataset.location.name,
+                    "type": dataset.location.type,
+                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                },
+            }
+            for dataset in sorted(datasets, key=lambda x: x.id)
+        ]
+        + [
+            {
+                "kind": "RUN",
+                "id": str(run.id),
+                "job_id": run.job_id,
+                "parent_run_id": str(run.parent_run_id),
+                "status": run.status.value,
+                "external_id": run.external_id,
+                "attempt": run.attempt,
+                "persistent_log_url": run.persistent_log_url,
+                "running_log_url": run.running_log_url,
+                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "started_by_user": {"name": run.started_by_user.name},
+                "start_reason": run.start_reason.value,
+                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "end_reason": run.end_reason,
+            },
+        ]
+        + [
+            {
+                "kind": "OPERATION",
+                "id": str(operation.id),
+                "run_id": str(operation.run_id),
+                "name": operation.name,
+                "status": operation.status.value,
+                "type": operation.type.value,
+                "position": operation.position,
+                "description": operation.description,
+                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            }
+            for operation in sorted(operations, key=lambda x: x.id)
+        ],
+    }
+
+
 async def test_get_run_lineage_with_direction_and_until(
     test_client: AsyncClient,
     async_session: AsyncSession,
@@ -1294,118 +1406,6 @@ async def test_get_run_lineage_with_symlinks_and_operation_granularity(
                     "addresses": [{"url": address.url} for address in job.location.addresses],
                 },
             },
-        ]
-        + [
-            {
-                "kind": "DATASET",
-                "id": dataset.id,
-                "format": dataset.format,
-                "name": dataset.name,
-                "location": {
-                    "name": dataset.location.name,
-                    "type": dataset.location.type,
-                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
-                },
-            }
-            for dataset in sorted(datasets, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "RUN",
-                "id": str(run.id),
-                "job_id": run.job_id,
-                "parent_run_id": str(run.parent_run_id),
-                "status": run.status.value,
-                "external_id": run.external_id,
-                "attempt": run.attempt,
-                "persistent_log_url": run.persistent_log_url,
-                "running_log_url": run.running_log_url,
-                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "started_by_user": {"name": run.started_by_user.name},
-                "start_reason": run.start_reason.value,
-                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "end_reason": run.end_reason,
-            },
-        ]
-        + [
-            {
-                "kind": "OPERATION",
-                "id": str(operation.id),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.value,
-                "type": operation.type.value,
-                "position": operation.position,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            }
-            for operation in sorted(operations, key=lambda x: x.id)
-        ],
-    }
-
-
-async def test_get_run_lineage_with_operation_granularity(
-    test_client: AsyncClient,
-    async_session: AsyncSession,
-    lineage_with_same_run: LINEAGE_FIXTURE_ANNOTATION,
-):
-    jobs, runs, operations, datasets, *_ = lineage_with_same_run
-
-    jobs = await enrich_jobs(jobs, async_session)
-    [run] = await enrich_runs(runs, async_session)
-    datasets = await enrich_datasets(datasets, async_session)
-
-    response = await test_client.get(
-        "v1/runs/lineage",
-        params={
-            "since": run.created_at.isoformat(),
-            "start_node_id": str(run.id),
-            "direction": "DOWNSTREAM",
-            "granularity": "OPERATION",
-        },
-    )
-
-    assert response.status_code == HTTPStatus.OK, response.json()
-    assert response.json() == {
-        "relations": [
-            {
-                "kind": "PARENT",
-                "from": {"kind": "JOB", "id": run.job_id},
-                "to": {"kind": "RUN", "id": str(run.id)},
-                "type": None,
-            },
-        ]
-        + [
-            {
-                "kind": "PARENT",
-                "from": {"kind": "RUN", "id": str(operation.run_id)},
-                "to": {"kind": "OPERATION", "id": str(operation.id)},
-                "type": None,
-            }
-            for operation in sorted(operations, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "OUTPUT",
-                "from": {"kind": "OPERATION", "id": str(operation.id)},
-                "to": {"kind": "DATASET", "id": dataset.id},
-                "type": "APPEND",
-            }
-            for dataset, operation in zip(datasets, operations)
-        ],
-        "nodes": [
-            {
-                "kind": "JOB",
-                "id": job.id,
-                "name": job.name,
-                "location": {
-                    "type": job.location.type,
-                    "name": job.location.name,
-                    "addresses": [{"url": address.url} for address in job.location.addresses],
-                },
-            }
-            for job in sorted(jobs, key=lambda x: x.id)
         ]
         + [
             {

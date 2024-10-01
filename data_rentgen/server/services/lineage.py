@@ -201,12 +201,14 @@ class LineageService:
 
         runs_by_id = {run.id: run for run in runs}
 
-        all_operations = await self._uow.operation.list_by_run_ids(sorted(runs_by_id.keys()), since, until)
-        operation_ids = {operation.id for operation in all_operations}
+        all_operations = []
+        operation_ids = set()
         inputs = []
         outputs = []
         match granularity:
             case "OPERATION":
+                all_operations = await self._uow.operation.list_by_run_ids(sorted(runs_by_id.keys()), since, until)
+                operation_ids = {operation.id for operation in all_operations}
                 if direction == LineageDirectionV1.DOWNSTREAM:
                     outputs = await self._uow.output.list_by_operation_ids(sorted(operation_ids))
                 else:
