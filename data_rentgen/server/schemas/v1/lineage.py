@@ -94,12 +94,6 @@ class DatasetLineageQueryV1(BaseLineageQueryV1):
 
 class JobLineageQueryV1(BaseLineageQueryV1):
     start_node_id: int = Field(description="Job id", examples=[42])
-    granularity: Literal["JOB", "RUN", "OPERATION"] = Field(
-        description="Granularity of the job lineage",
-        # TODO: Change default to job in DOP-20060
-        default="OPERATION",
-        examples=["JOB", "RUN", "OPERATION"],
-    )
 
 
 class OperationLineageQueryV1(BaseLineageQueryV1):
