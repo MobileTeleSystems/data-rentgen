@@ -6,44 +6,41 @@ from httpx import AsyncClient
 
 from data_rentgen.db.utils.uuid import generate_new_uuid
 
-pytestmark = [pytest.mark.server, pytest.mark.asyncio]
+pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
 
 
 @pytest.mark.parametrize(
     "entity_kind,granularity",
     [
-        ("operations", "OPERATION"),
+        ("operations", None),
         ("datasets", "OPERATION"),
         ("runs", "RUN"),
         ("jobs", "OPERATION"),
     ],
 )
 async def test_get_lineage_no_filter(test_client: AsyncClient, entity_kind: str, granularity: str):
-    response = await test_client.get(f"v1/{entity_kind}/lineage")
-
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert response.json() == {
+    expected_response = {
         "error": {
             "code": "invalid_request",
             "details": [
                 {
                     "code": "missing",
                     "context": {},
-                    "input": {"depth": 1, "granularity": granularity},
+                    "input": {"depth": 1},
                     "location": ["query", "since"],
                     "message": "Field required",
                 },
                 {
                     "code": "missing",
                     "context": {},
-                    "input": {"depth": 1, "granularity": granularity},
+                    "input": {"depth": 1},
                     "location": ["query", "direction"],
                     "message": "Field required",
                 },
                 {
                     "code": "missing",
                     "context": {},
-                    "input": {"depth": 1, "granularity": granularity},
+                    "input": {"depth": 1},
                     "location": ["query", "start_node_id"],
                     "message": "Field required",
                 },
@@ -51,6 +48,13 @@ async def test_get_lineage_no_filter(test_client: AsyncClient, entity_kind: str,
             "message": "Invalid request",
         },
     }
+    if granularity:
+        [detail["input"].update({"granularity": granularity}) for detail in expected_response["error"]["details"]]
+
+    response = await test_client.get(f"v1/{entity_kind}/lineage")
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.json() == expected_response
 
 
 @pytest.mark.parametrize(

@@ -48,7 +48,7 @@ async def search_datasets(
 
 
 @router.get("/lineage", summary="Get Dataset lineage graph")
-async def get_dataset_lineage(
+async def get_datasets_lineage(
     pagination_args: Annotated[DatasetLineageQueryV1, Query()],
     lineage_service: Annotated[LineageService, Depends()],
 ) -> LineageResponseV1:

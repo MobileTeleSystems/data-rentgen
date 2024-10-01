@@ -9,7 +9,7 @@ from data_rentgen.db.models import Dataset, Input, Job, Operation, Output, Run
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink
 from tests.test_server.utils.enrich import enrich_datasets, enrich_jobs, enrich_runs
 
-pytestmark = [pytest.mark.server, pytest.mark.asyncio]
+pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
 
 LINEAGE_FIXTURE_ANNOTATION = tuple[list[Job], list[Run], list[Operation], list[Dataset], list[Input], list[Output]]
 

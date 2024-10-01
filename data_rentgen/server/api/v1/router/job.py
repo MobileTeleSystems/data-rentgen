@@ -48,7 +48,7 @@ async def search_jobs(
     return PageResponseV1[JobResponseV1].from_pagination(pagination)
 
 
-@router.get("/lineage", summary="Get Jobs lineage graph")
+@router.get("/lineage", summary="Get Job lineage graph")
 async def get_jobs_lineage(
     pagination_args: Annotated[JobLineageQueryV1, Query()],
     lineage_service: Annotated[LineageService, Depends()],

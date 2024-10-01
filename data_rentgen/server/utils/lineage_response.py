@@ -83,7 +83,7 @@ async def _add_input_relations(
             to=to,
         )
         relations.append(relation)
-    return relations
+    return sorted(relations, key=lambda x: (x.from_.id, x.to.id, x.type))
 
 
 async def _add_output_relations(
@@ -104,4 +104,4 @@ async def _add_output_relations(
             to=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=output.dataset_id),
         )
         relations.append(relation)
-    return relations
+    return sorted(relations, key=lambda x: (x.from_.id, x.to.id, x.type))

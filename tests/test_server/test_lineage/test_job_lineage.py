@@ -16,7 +16,7 @@ from data_rentgen.db.models import (
 )
 from tests.test_server.utils.enrich import enrich_datasets, enrich_jobs, enrich_runs
 
-pytestmark = [pytest.mark.server, pytest.mark.asyncio]
+pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
 
 LINEAGE_FIXTURE_ANNOTATION = tuple[list[Job], list[Run], list[Operation], list[Dataset], list[Input], list[Output]]
 
@@ -523,7 +523,7 @@ async def test_get_job_lineage_with_depth(
                 "to": {"kind": "OPERATION", "id": str(input.operation_id)},
                 "type": None,
             }
-            for input in inputs
+            for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
         ]
         + [
             {
@@ -532,7 +532,7 @@ async def test_get_job_lineage_with_depth(
                 "to": {"kind": "DATASET", "id": output.dataset_id},
                 "type": "APPEND",
             }
-            for output in outputs
+            for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))
         ],
         "nodes": [
             {

@@ -102,9 +102,10 @@ class OutputRepository(Repository[Output]):
                 job_id=None,
                 run_id=row[0],
                 dataset_id=row[1],
-                num_bytes=row[2],
-                num_rows=row[3],
-                num_files=row[4],
+                type=row[2],
+                num_bytes=row[3],
+                num_rows=row[4],
+                num_files=row[5],
             )
             for row in results
         ]
@@ -136,9 +137,10 @@ class OutputRepository(Repository[Output]):
                 job_id=row[0],
                 run_id=None,
                 dataset_id=row[1],
-                num_bytes=row[2],
-                num_rows=row[3],
-                num_files=row[4],
+                type=row[2],
+                num_bytes=row[3],
+                num_rows=row[4],
+                num_files=row[5],
             )
             for row in results
         ]
@@ -185,9 +187,10 @@ class OutputRepository(Repository[Output]):
                 job_id=None,
                 run_id=row[0],
                 dataset_id=row[1],
-                num_bytes=row[2],
-                num_rows=row[3],
-                num_files=row[4],
+                type=row[2],
+                num_bytes=row[3],
+                num_rows=row[4],
+                num_files=row[5],
             )
             for row in results
         ]
@@ -215,9 +218,10 @@ class OutputRepository(Repository[Output]):
                 job_id=row[0],
                 run_id=None,
                 dataset_id=row[1],
-                num_bytes=row[2],
-                num_rows=row[3],
-                num_files=row[4],
+                type=row[2],
+                num_bytes=row[3],
+                num_rows=row[4],
+                num_files=row[5],
             )
             for row in results
         ]
@@ -269,6 +273,7 @@ class OutputRepository(Repository[Output]):
             select(
                 getattr(Output, aggregation_field),
                 Output.dataset_id,
+                Output.type,
                 func.sum(Output.num_bytes).label("num_bytes"),
                 func.sum(Output.num_rows).label("num_rows"),
                 func.sum(Output.num_files).label("num_files"),
@@ -277,6 +282,7 @@ class OutputRepository(Repository[Output]):
             .group_by(
                 getattr(Output, aggregation_field),
                 Output.dataset_id,
+                Output.type,
             )
         )
         result = await self._session.execute(query)

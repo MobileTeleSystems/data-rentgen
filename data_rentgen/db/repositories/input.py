@@ -90,7 +90,7 @@ class InputRepository(Repository[Input]):
         filters = [
             Input.created_at >= min_created_at,
             Input.created_at <= max_created_at,
-            Input.run_id == any_(operation_ids),  # type: ignore[arg-type]
+            Input.operation_id == any_(operation_ids),  # type: ignore[arg-type]
         ]
 
         results = await self._list_with_aggregation(filters=filters, aggregation_field="run_id")
@@ -124,7 +124,7 @@ class InputRepository(Repository[Input]):
         filters = [
             Input.created_at >= min_created_at,
             Input.created_at <= max_created_at,
-            Input.run_id == any_(operation_ids),  # type: ignore[arg-type]
+            Input.operation_id == any_(operation_ids),  # type: ignore[arg-type]
         ]
 
         results = await self._list_with_aggregation(filters=filters, aggregation_field="run_id")

@@ -160,6 +160,7 @@ markers = [
     "server: tests for server (require running database)",
     "consumer: tests for consumer (require running database)",
     "db: tests for db",
+    "lineage: tests for lineage endpoints (require running database)"
 ]
 
 [tool.coverage.paths]
