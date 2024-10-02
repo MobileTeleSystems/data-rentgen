@@ -48,7 +48,7 @@ async def search_jobs(
     return PageResponseV1[JobResponseV1].from_pagination(pagination)
 
 
-@router.get("/lineage", summary="Get Jobs lineage graph")
+@router.get("/lineage", summary="Get Job lineage graph")
 async def get_jobs_lineage(
     pagination_args: Annotated[JobLineageQueryV1, Query()],
     lineage_service: Annotated[LineageService, Depends()],
@@ -56,6 +56,8 @@ async def get_jobs_lineage(
     lineage = await lineage_service.get_lineage_by_jobs(
         start_node_ids=[pagination_args.start_node_id],  # type: ignore[list-item]
         direction=pagination_args.direction,
+        # TODO: add pagination args in DOP-20060
+        granularity="OPERATION",
         since=pagination_args.since,
         until=pagination_args.until,
         depth=pagination_args.depth,

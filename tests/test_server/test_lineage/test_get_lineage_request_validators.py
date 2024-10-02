@@ -6,18 +6,20 @@ from httpx import AsyncClient
 
 from data_rentgen.db.utils.uuid import generate_new_uuid
 
-pytestmark = [pytest.mark.server, pytest.mark.asyncio]
+pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
 
 
 @pytest.mark.parametrize(
-    "entity_kind",
-    ["operations", "datasets", "runs", "jobs"],
+    "entity_kind,granularity",
+    [
+        ("operations", None),
+        ("datasets", None),
+        ("runs", "RUN"),
+        ("jobs", None),
+    ],
 )
-async def test_get_lineage_no_filter(test_client: AsyncClient, entity_kind: str):
-    response = await test_client.get(f"v1/{entity_kind}/lineage")
-
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert response.json() == {
+async def test_get_lineage_no_filter(test_client: AsyncClient, entity_kind: str, granularity: str):
+    expected_response = {
         "error": {
             "code": "invalid_request",
             "details": [
@@ -46,6 +48,13 @@ async def test_get_lineage_no_filter(test_client: AsyncClient, entity_kind: str)
             "message": "Invalid request",
         },
     }
+    if granularity:
+        [detail["input"].update({"granularity": granularity}) for detail in expected_response["error"]["details"]]
+
+    response = await test_client.get(f"v1/{entity_kind}/lineage")
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.json() == expected_response
 
 
 @pytest.mark.parametrize(

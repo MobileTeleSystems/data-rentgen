@@ -16,7 +16,7 @@ from data_rentgen.db.models import (
 )
 from tests.test_server.utils.enrich import enrich_datasets, enrich_jobs, enrich_runs
 
-pytestmark = [pytest.mark.server, pytest.mark.asyncio]
+pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
 
 LINEAGE_FIXTURE_ANNOTATION = tuple[list[Job], list[Run], list[Operation], list[Dataset], list[Input], list[Output]]
 
@@ -31,7 +31,6 @@ async def test_get_operation_lineage_unknown_id(
         "v1/operations/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
-            "point_kind": "OPERATION",
             "start_node_id": str(new_operation.id),
             "direction": direction,
         },
@@ -57,7 +56,6 @@ async def test_get_operation_lineage_no_inputs_outputs(
         "v1/operations/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
-            "point_kind": "OPERATION",
             "start_node_id": str(operation.id),
             "direction": direction,
         },

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from typing import Generic, List, TypeVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from data_rentgen.dto.pagination import PaginationDTO
 
@@ -33,6 +33,8 @@ class SearchPaginateQueryV1(PaginateQueryV1):
     """Query params for search paginate request."""
 
     search_query: str = Field(min_length=3, description="Search query")
+
+    model_config = ConfigDict(extra="forbid")
 
 
 class PageResponseV1(BaseModel, Generic[T]):

@@ -25,3 +25,5 @@ class DatasetPaginateQueryV1(PaginateQueryV1):
     """Query params for Dataset paginate request."""
 
     dataset_id: list[int] = Field(Query(default_factory=list), description="Dataset id")
+
+    model_config = ConfigDict(extra="forbid")

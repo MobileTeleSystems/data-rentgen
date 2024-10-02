@@ -66,6 +66,12 @@ broker-start: ##Broker Start broker
 test: test-db test-broker ##@Test Run tests
 	${POETRY} run pytest $(PYTEST_ARGS)
 
+test-lineage: test-db ##@Test Run linege tests
+	${POETRY} run pytest -m lineage $(PYTEST_ARGS)
+
+test-server: test-db ##@Test Run server tests
+	${POETRY} run pytest -m server $(PYTEST_ARGS)
+
 test-db: test-db-start db-upgrade db-partitions ##@TestDB Prepare database (in docker)
 
 test-db-start: ##@TestDB Start database

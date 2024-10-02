@@ -16,7 +16,7 @@ from data_rentgen.db.models import (
 )
 from tests.test_server.utils.enrich import enrich_datasets, enrich_jobs, enrich_runs
 
-pytestmark = [pytest.mark.server, pytest.mark.asyncio]
+pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
 
 LINEAGE_FIXTURE_ANNOTATION = tuple[list[Job], list[Run], list[Operation], list[Dataset], list[Input], list[Output]]
 
@@ -31,7 +31,6 @@ async def test_get_job_lineage_unknown_id(
         "v1/jobs/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
-            "point_kind": "JOB",
             "start_node_id": new_job.id,
             "direction": direction,
         },
@@ -55,7 +54,6 @@ async def test_get_job_lineage_no_runs(
         "v1/jobs/lineage",
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
-            "point_kind": "JOB",
             "start_node_id": job.id,
             "direction": direction,
         },
@@ -94,7 +92,6 @@ async def test_get_job_lineage_no_operations(
         "v1/jobs/lineage",
         params={
             "since": run.created_at.isoformat(),
-            "point_kind": "JOB",
             "start_node_id": job.id,
             "direction": direction,
         },
@@ -136,7 +133,6 @@ async def test_get_job_lineage_no_inputs_outputs(
         "v1/jobs/lineage",
         params={
             "since": run.created_at.isoformat(),
-            "point_kind": "JOB",
             "start_node_id": job.id,
             "direction": direction,
         },
@@ -527,7 +523,7 @@ async def test_get_job_lineage_with_depth(
                 "to": {"kind": "OPERATION", "id": str(input.operation_id)},
                 "type": None,
             }
-            for input in inputs
+            for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
         ]
         + [
             {
@@ -536,7 +532,7 @@ async def test_get_job_lineage_with_depth(
                 "to": {"kind": "DATASET", "id": output.dataset_id},
                 "type": "APPEND",
             }
-            for output in outputs
+            for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))
         ],
         "nodes": [
             {

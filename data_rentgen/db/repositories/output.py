@@ -1,11 +1,11 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from datetime import datetime
-from typing import Sequence
+from datetime import datetime, timezone
+from typing import Literal, Sequence
 from uuid import UUID
 
-from sqlalchemy import and_, any_, select
+from sqlalchemy import Select, any_, func, literal_column, select
 
 from data_rentgen.db.models import Output, OutputType
 from data_rentgen.db.repositories.base import Repository
@@ -75,24 +75,125 @@ class OutputRepository(Repository[Output]):
         result = await self._session.scalars(query)
         return list(result.all())
 
+    async def list_by_run_ids(
+        self,
+        run_ids: Sequence[UUID],
+        since: datetime,
+        until: datetime | None,
+        granularity: Literal["RUN", "OPERATION"],
+    ) -> list[Output]:
+        if not run_ids:
+            return []
+
+        min_run_created_at = extract_timestamp_from_uuid(min(run_ids))
+        min_created_at = min(min_run_created_at, since.astimezone(timezone.utc))
+
+        query = self._get_select(granularity).where(
+            Output.created_at >= min_created_at,
+            Output.run_id == any_(run_ids),  # type: ignore[arg-type]
+        )
+        if until:
+            query = query.where(Output.created_at <= until)
+
+        results = await self._session.execute(query)
+        # convert tuple of fields to Output object
+        return [Output(**row._asdict()) for row in results.all()]  # noqa: WPS437
+
+    async def list_by_job_ids(
+        self,
+        job_ids: Sequence[int],
+        since: datetime,
+        until: datetime | None,
+        granularity: Literal["JOB", "RUN", "OPERATION"],
+    ) -> list[Output]:
+        if not job_ids:
+            return []
+
+        query = self._get_select(granularity).where(
+            Output.created_at >= since,
+            Output.job_id == any_(job_ids),  # type: ignore[arg-type]
+        )
+        if until:
+            query = query.where(Output.created_at <= until)
+
+        results = await self._session.execute(query)
+        # convert tuple of fields to Output object
+        return [Output(**row._asdict()) for row in results.all()]  # noqa: WPS437
+
     async def list_by_dataset_ids(
         self,
         dataset_ids: Sequence[int],
         since: datetime,
         until: datetime | None,
+        granularity: Literal["JOB", "RUN", "OPERATION"],
     ) -> list[Output]:
         if not dataset_ids:
             return []
 
-        filters = [
+        query = self._get_select(granularity).where(
             Output.created_at >= since,
             Output.dataset_id == any_(dataset_ids),  # type: ignore[arg-type]
-        ]
+        )
         if until:
-            filters.append(Output.created_at <= until)
-        query = select(Output).where(and_(*filters))
-        result = await self._session.scalars(query)
-        return list(result.all())
+            query = query.where(Output.created_at <= until)
+
+        results = await self._session.execute(query)
+        # convert tuple of fields to Output object
+        return [Output(**row._asdict()) for row in results.all()]  # noqa: WPS437
+
+    def _get_select(
+        self,
+        granularity: Literal["JOB", "RUN", "OPERATION"],
+    ) -> Select:
+        if granularity == "OPERATION":
+            return select(
+                Output.created_at,
+                Output.id,
+                Output.operation_id,
+                Output.run_id,
+                Output.job_id,
+                Output.dataset_id,
+                Output.type,
+                Output.num_bytes,
+                Output.num_rows,
+                Output.num_files,
+            )
+
+        if granularity == "RUN":
+            return select(
+                func.max(Output.created_at).label("created_at"),
+                literal_column("NULL").label("id"),
+                literal_column("NULL").label("operation_id"),
+                Output.run_id,
+                Output.job_id,
+                Output.dataset_id,
+                Output.type,
+                func.sum(Output.num_bytes).label("num_bytes"),
+                func.sum(Output.num_rows).label("num_rows"),
+                func.sum(Output.num_files).label("num_files"),
+            ).group_by(
+                Output.run_id,
+                Output.job_id,
+                Output.dataset_id,
+                Output.type,
+            )
+
+        return select(
+            func.max(Output.created_at).label("created_at"),
+            literal_column("NULL").label("id"),
+            literal_column("NULL").label("operation_id"),
+            literal_column("NULL").label("run_id"),
+            Output.job_id,
+            Output.dataset_id,
+            Output.type,
+            func.sum(Output.num_bytes).label("num_bytes"),
+            func.sum(Output.num_rows).label("num_rows"),
+            func.sum(Output.num_files).label("num_files"),
+        ).group_by(
+            Output.job_id,
+            Output.dataset_id,
+            Output.type,
+        )
 
     async def _get(self, created_at: datetime, output_id: UUID) -> Output | None:
         query = select(Output).where(Output.created_at == created_at, Output.id == output_id)

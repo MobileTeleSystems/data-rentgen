@@ -65,14 +65,15 @@ async def search_runss(
     return PageResponseV1[RunResponseV1].from_pagination(pagination)
 
 
-@router.get("/lineage", summary="Get Runs lineage graph")
-async def get_jobs_lineage(
+@router.get("/lineage", summary="Get Run lineage graph")
+async def get_runs_lineage(
     pagination_args: Annotated[RunLineageQueryV1, Query()],
     lineage_service: Annotated[LineageService, Depends()],
 ) -> LineageResponseV1:
     lineage = await lineage_service.get_lineage_by_runs(
         start_node_ids=[pagination_args.start_node_id],  # type: ignore[list-item]
         direction=pagination_args.direction,
+        granularity=pagination_args.granularity,
         since=pagination_args.since,
         until=pagination_args.until,
         depth=pagination_args.depth,

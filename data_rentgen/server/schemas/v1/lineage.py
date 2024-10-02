@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from datetime import datetime
 from enum import Enum
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
@@ -69,6 +70,8 @@ class BaseLineageQueryV1(BaseModel):
         examples=[1, 3],
     )
 
+    model_config = ConfigDict(extra="forbid")
+
     @field_validator("until", mode="after")
     @classmethod
     def _check_until(cls, value: datetime | None, info: ValidationInfo) -> datetime | None:
@@ -81,6 +84,8 @@ class BaseLineageQueryV1(BaseModel):
 class DatasetLineageQueryV1(BaseLineageQueryV1):
     start_node_id: int = Field(description="Dataset id", examples=[42])
 
+    model_config = ConfigDict(extra="forbid")
+
 
 class JobLineageQueryV1(BaseLineageQueryV1):
     start_node_id: int = Field(description="Job id", examples=[42])
@@ -92,9 +97,14 @@ class OperationLineageQueryV1(BaseLineageQueryV1):
 
 class RunLineageQueryV1(BaseLineageQueryV1):
     start_node_id: UUID = Field(description="Run id", examples=["00000000-0000-0000-0000-000000000000"])
+    granularity: Literal["OPERATION", "RUN"] = Field(
+        description="Granularity of the run lineage",
+        default="RUN",
+        examples=["OPERATION", "RUN"],
+    )
 
 
-class LineageRelationv1(BaseModel):
+class LineageRelationV1(BaseModel):
     kind: LineageRelationKindV1 = Field(description="Kind of relation", examples=["PARENT", "INPUT"])
     from_: LineageEntityV1 = Field(description="Start point of relation", serialization_alias="from")
     to: LineageEntityV1 = Field(description="End point of relation")
@@ -102,5 +112,5 @@ class LineageRelationv1(BaseModel):
 
 
 class LineageResponseV1(BaseModel):
-    relations: list[LineageRelationv1] = []
+    relations: list[LineageRelationV1] = []
     nodes: list[RunResponseV1 | OperationResponseV1 | JobResponseV1 | DatasetResponseV1] = []
