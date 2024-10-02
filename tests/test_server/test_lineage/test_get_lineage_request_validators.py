@@ -13,7 +13,7 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
     "entity_kind,granularity",
     [
         ("operations", None),
-        ("datasets", "OPERATION"),
+        ("datasets", None),
         ("runs", "RUN"),
         ("jobs", None),
     ],

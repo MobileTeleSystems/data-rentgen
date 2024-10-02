@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Literal, Sequence
 from uuid import UUID
 
-from sqlalchemy import ColumnElement, and_, any_, func, literal_column, select
+from sqlalchemy import Select, any_, func, literal_column, select
 
 from data_rentgen.db.models import Input
 from data_rentgen.db.repositories.base import Repository
@@ -80,19 +80,15 @@ class InputRepository(Repository[Input]):
         run_ids: Sequence[UUID],
         since: datetime,
         until: datetime | None,
+        granularity: Literal["RUN", "OPERATION"],
     ) -> list[Input]:
         if not run_ids:
             return []
+
         min_run_created_at = extract_timestamp_from_uuid(min(run_ids))
         min_created_at = min(min_run_created_at, since.astimezone(timezone.utc))
-        query = select(
-            Input.run_id,
-            Input.job_id,
-            Input.dataset_id,
-            Input.num_bytes,
-            Input.num_rows,
-            Input.num_files,
-        ).where(
+
+        query = self._get_select(granularity).where(
             Input.created_at >= min_created_at,
             Input.run_id == any_(run_ids),  # type: ignore[arg-type]
         )
@@ -100,35 +96,20 @@ class InputRepository(Repository[Input]):
             query = query.where(Input.created_at <= until)
 
         results = await self._session.execute(query)
-        return [
-            Input(
-                created_at=None,
-                operation_id=None,
-                run_id=row[0],
-                job_id=row[1],
-                dataset_id=row[2],
-                num_bytes=row[3],
-                num_rows=row[4],
-                num_files=row[5],
-            )
-            for row in results
-        ]
+        # convert tuple of fields to Input object
+        return [Input(**row._asdict()) for row in results.all()]  # noqa: WPS437
 
     async def list_by_job_ids(
         self,
         job_ids: Sequence[int],
         since: datetime,
         until: datetime | None,
+        granularity: Literal["JOB", "RUN", "OPERATION"],
     ) -> list[Input]:
         if not job_ids:
             return []
-        query = select(
-            Input.job_id,
-            Input.dataset_id,
-            Input.num_bytes,
-            Input.num_rows,
-            Input.num_files,
-        ).where(
+
+        query = self._get_select(granularity).where(
             Input.created_at >= since,
             Input.job_id == any_(job_ids),  # type: ignore[arg-type]
         )
@@ -136,19 +117,8 @@ class InputRepository(Repository[Input]):
             query = query.where(Input.created_at <= until)
 
         results = await self._session.execute(query)
-        return [
-            Input(
-                created_at=None,
-                operation_id=None,
-                run_id=None,
-                job_id=row[0],
-                dataset_id=row[1],
-                num_bytes=row[2],
-                num_rows=row[3],
-                num_files=row[4],
-            )
-            for row in results
-        ]
+        # convert tuple of fields to Input object
+        return [Input(**row._asdict()) for row in results.all()]  # noqa: WPS437
 
     async def list_by_dataset_ids(
         self,
@@ -160,51 +130,65 @@ class InputRepository(Repository[Input]):
         if not dataset_ids:
             return []
 
-        filters = [
+        query = self._get_select(granularity).where(
             Input.created_at >= since,
             Input.dataset_id == any_(dataset_ids),  # type: ignore[arg-type]
-        ]
+        )
         if until:
-            filters.append(Input.created_at <= until)
+            query = query.where(Input.created_at <= until)
 
-        group_by = [Input.dataset_id]
-        match granularity:
-            case "JOB":
-                group_by = [Input.job_id] + group_by
-            case "RUN":
-                group_by = [Input.run_id] + group_by  # type: ignore[assignment]
-            case "OPERATION":
-                group_by = [Input.operation_id] + group_by  # type: ignore[assignment]
-            case _:
-                raise ValueError(f"Invalid granularity for input by dataset_ids: {granularity}")
-        query = (
-            select(
-                Input.operation_id if granularity == "OPERATION" else literal_column("NULL").label("operation_id"),
-                Input.run_id if granularity == "RUN" else literal_column("NULL").label("run_id"),
-                Input.job_id if granularity == "JOB" else literal_column("NULL").label("job_id"),
+        results = await self._session.execute(query)
+        # convert tuple of fields to Input object
+        return [Input(**row._asdict()) for row in results.all()]  # noqa: WPS437
+
+    def _get_select(
+        self,
+        granularity: Literal["JOB", "RUN", "OPERATION"],
+    ) -> Select:
+        if granularity == "OPERATION":
+            return select(
+                Input.created_at,
+                Input.id,
+                Input.operation_id,
+                Input.run_id,
+                Input.job_id,
+                Input.dataset_id,
+                Input.num_bytes,
+                Input.num_rows,
+                Input.num_files,
+            )
+
+        if granularity == "RUN":
+            return select(
+                func.max(Input.created_at).label("created_at"),
+                literal_column("NULL").label("id"),
+                literal_column("NULL").label("operation_id"),
+                Input.run_id,
+                Input.job_id,
                 Input.dataset_id,
                 func.sum(Input.num_bytes).label("num_bytes"),
                 func.sum(Input.num_rows).label("num_rows"),
                 func.sum(Input.num_files).label("num_files"),
+            ).group_by(
+                Input.run_id,
+                Input.job_id,
+                Input.dataset_id,
             )
-            .where(and_(*filters))
-            .group_by(*group_by)
+
+        return select(
+            func.max(Input.created_at).label("created_at"),
+            literal_column("NULL").label("id"),
+            literal_column("NULL").label("operation_id"),
+            literal_column("NULL").label("run_id"),
+            Input.job_id,
+            Input.dataset_id,
+            func.sum(Input.num_bytes).label("num_bytes"),
+            func.sum(Input.num_rows).label("num_rows"),
+            func.sum(Input.num_files).label("num_files"),
+        ).group_by(
+            Input.job_id,
+            Input.dataset_id,
         )
-        results = await self._session.execute(query)
-        return [
-            Input(
-                created_at=None,
-                id=None,
-                operation_id=row[0],
-                run_id=row[1],
-                job_id=row[2],
-                dataset_id=row[3],
-                num_bytes=row[4],
-                num_rows=row[5],
-                num_files=row[6],
-            )
-            for row in results
-        ]
 
     async def _get(self, created_at: datetime, input_id: UUID) -> Input | None:
         query = select(Input).where(Input.created_at == created_at, Input.id == input_id)
@@ -246,22 +230,3 @@ class InputRepository(Repository[Input]):
             existing.num_files = new.num_files
         await self._session.flush([existing])
         return existing
-
-    async def _list_with_aggregation(self, filters: list[ColumnElement[bool]], aggregation_field: str):
-        query = (
-            select(
-                getattr(Input, aggregation_field),
-                Input.dataset_id,
-                func.sum(Input.num_bytes).label("num_bytes"),
-                func.sum(Input.num_rows).label("num_rows"),
-                func.sum(Input.num_files).label("num_files"),
-            )
-            .where(and_(*filters))
-            .group_by(
-                getattr(Input, aggregation_field),
-                Input.dataset_id,
-            )
-        )
-        result = await self._session.execute(query)
-
-        return result.all()

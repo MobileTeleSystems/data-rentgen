@@ -100,30 +100,34 @@ class LineageService:
 
         jobs_by_id = {job.id: job for job in jobs}
 
-        all_runs = await self._uow.run.list_by_job_ids(sorted(jobs_by_id.keys()), since, until)
-        run_ids = {run.id for run in all_runs}
-
-        all_operations = await self._uow.operation.list_by_run_ids(sorted(run_ids), since, until)
-        operation_ids = {operation.id for operation in all_operations}
-
         inputs = []
         outputs = []
         if direction == LineageDirectionV1.DOWNSTREAM:
-            outputs = await self._uow.output.list_by_operation_ids(sorted(operation_ids))
+            outputs = await self._uow.output.list_by_job_ids(
+                sorted(jobs_by_id.keys()),
+                since=since,
+                until=until,
+                granularity=granularity,
+            )
         else:
-            inputs = await self._uow.input.list_by_operation_ids(sorted(operation_ids))
+            inputs = await self._uow.input.list_by_job_ids(
+                sorted(jobs_by_id.keys()),
+                since=since,
+                until=until,
+                granularity=granularity,
+            )
 
         ids_to_skip = ids_to_skip or IdsToSkip()
         # Return only operations which have at least one input or output
-        operation_ids = {input.operation_id for input in inputs} | {
-            output.operation_id for output in outputs
-        } - ids_to_skip.operations
-        operations = [operation for operation in all_operations if operation.id in operation_ids]
+        input_operation_ids = {input.operation_id for input in inputs if input.operation_id is not None}
+        output_operation_ids = {output.operation_id for output in outputs if output.operation_id is not None}
+        operation_ids = input_operation_ids | output_operation_ids - ids_to_skip.operations
+        operations = await self._uow.operation.list_by_ids(sorted(operation_ids))
         operations_by_id = {operation.id: operation for operation in operations}
 
         # Same for runs
         run_ids = {operation.run_id for operation in operations} - ids_to_skip.runs
-        runs = [run for run in all_runs if run.id in run_ids]
+        runs = await self._uow.run.list_by_ids(sorted(run_ids))
         runs_by_id = {run.id: run for run in runs}
 
         result = LineageServiceResult(
@@ -201,32 +205,30 @@ class LineageService:
 
         runs_by_id = {run.id: run for run in runs}
 
-        all_operations = []
-        operation_ids = set()
         inputs = []
         outputs = []
-        match granularity:
-            case "OPERATION":
-                all_operations = await self._uow.operation.list_by_run_ids(sorted(runs_by_id.keys()), since, until)
-                operation_ids = {operation.id for operation in all_operations}
-                if direction == LineageDirectionV1.DOWNSTREAM:
-                    outputs = await self._uow.output.list_by_operation_ids(sorted(operation_ids))
-                else:
-                    inputs = await self._uow.input.list_by_operation_ids(sorted(operation_ids))
-
-            case "RUN":
-                if direction == LineageDirectionV1.DOWNSTREAM:
-                    outputs = await self._uow.output.list_by_run_ids(sorted(start_node_ids), since, until)
-                else:
-                    inputs = await self._uow.input.list_by_run_ids(sorted(start_node_ids), since, until)
+        if direction == LineageDirectionV1.DOWNSTREAM:
+            outputs = await self._uow.output.list_by_run_ids(
+                sorted(runs_by_id.keys()),
+                since=since,
+                until=until,
+                granularity=granularity,
+            )
+        else:
+            inputs = await self._uow.input.list_by_run_ids(
+                sorted(runs_by_id.keys()),
+                since=since,
+                until=until,
+                granularity=granularity,
+            )
 
         # Return only operations which have at least one input or output
         # In case granularity == "RUN" operations will be empty
         ids_to_skip = ids_to_skip or IdsToSkip()
-        operation_ids = {input.operation_id for input in inputs} | {
-            output.operation_id for output in outputs
-        } - ids_to_skip.operations
-        operations = [operation for operation in all_operations if operation.id in operation_ids]
+        input_operation_ids = {input.operation_id for input in inputs if input.operation_id is not None}
+        output_operation_ids = {output.operation_id for output in outputs if output.operation_id is not None}
+        operation_ids = input_operation_ids | output_operation_ids - ids_to_skip.operations
+        operations = await self._uow.operation.list_by_ids(sorted(operation_ids))
         operations_by_id = {operation.id: operation for operation in operations}
 
         jobs = await self._uow.job.list_by_ids(sorted({run.job_id for run in runs} - ids_to_skip.jobs))
@@ -498,15 +500,15 @@ class LineageService:
         if direction == LineageDirectionV1.DOWNSTREAM:
             inputs = await self._uow.input.list_by_dataset_ids(
                 sorted(datasets_by_id.keys() - ids_to_skip.datasets),
-                since,
-                until,
+                since=since,
+                until=until,
                 granularity="OPERATION",
             )
         else:
             outputs = await self._uow.output.list_by_dataset_ids(
                 sorted(datasets_by_id.keys() - ids_to_skip.datasets),
-                since,
-                until,
+                since=since,
+                until=until,
                 granularity="OPERATION",
             )
 
@@ -561,15 +563,15 @@ class LineageService:
         if direction == LineageDirectionV1.DOWNSTREAM:
             inputs = await self._uow.input.list_by_dataset_ids(
                 sorted(datasets_by_id.keys() - ids_to_skip.datasets),
-                since,
-                until,
+                since=since,
+                until=until,
                 granularity="RUN",
             )
         else:
             outputs = await self._uow.output.list_by_dataset_ids(
                 sorted(datasets_by_id.keys() - ids_to_skip.datasets),
-                since,
-                until,
+                since=since,
+                until=until,
                 granularity="RUN",
             )
         result = LineageServiceResult(
@@ -620,15 +622,15 @@ class LineageService:
         if direction == LineageDirectionV1.DOWNSTREAM:
             inputs = await self._uow.input.list_by_dataset_ids(
                 sorted(datasets_by_id.keys()),
-                since,
-                until,
+                since=since,
+                until=until,
                 granularity="JOB",
             )
         else:
             outputs = await self._uow.output.list_by_dataset_ids(
                 sorted(datasets_by_id.keys()),
-                since,
-                until,
+                since=since,
+                until=until,
                 granularity="JOB",
             )
 
