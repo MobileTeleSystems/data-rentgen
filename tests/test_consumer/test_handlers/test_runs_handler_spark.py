@@ -52,10 +52,10 @@ async def test_runs_handler_spark(
 
     assert len(jobs) == 1
     assert jobs[0].name == "spark_session"
-    assert jobs[0].location.type == "host"
+    assert jobs[0].location.type == "local"
     assert jobs[0].location.name == "some.host.name"
     assert len(jobs[0].location.addresses) == 1
-    assert jobs[0].location.addresses[0].url == "host://some.host.name"
+    assert jobs[0].location.addresses[0].url == "local://some.host.name"
     assert jobs[0].type == JobType.SPARK_APPLICATION
 
     run_query = select(Run).order_by(Run.id).options(selectinload(Run.started_by_user))
