@@ -129,6 +129,7 @@ async def test_get_dataset_lineage(
                 "kind": "JOB",
                 "id": job.id,
                 "name": job.name,
+                "type": job.type,
                 "location": {
                     "name": job.location.name,
                     "type": job.location.type,
@@ -248,6 +249,7 @@ async def test_get_dataset_lineage_with_direction_and_until(
                 "kind": "JOB",
                 "id": job.id,
                 "name": job.name,
+                "type": job.type,
                 "location": {
                     "name": job.location.name,
                     "type": job.location.type,
@@ -416,6 +418,7 @@ async def test_get_dataset_lineage_with_depth(
                 "kind": "JOB",
                 "id": job.id,
                 "name": job.name,
+                "type": job.type,
                 "location": {
                     "name": job.location.name,
                     "type": job.location.type,
@@ -542,6 +545,7 @@ async def test_get_dataset_lineage_with_depth_ignore_cycles(
                 "kind": "JOB",
                 "id": job.id,
                 "name": job.name,
+                "type": job.type,
                 "location": {
                     "name": job.location.name,
                     "type": job.location.type,
@@ -700,6 +704,7 @@ async def test_get_dataset_lineage_with_symlinks(
                 "kind": "JOB",
                 "id": job.id,
                 "name": job.name,
+                "type": job.type,
                 "location": {
                     "name": job.location.name,
                     "type": job.location.type,

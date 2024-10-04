@@ -85,6 +85,7 @@ async def test_get_operation_lineage_no_inputs_outputs(
                 "kind": "JOB",
                 "id": job.id,
                 "name": job.name,
+                "type": job.type,
                 "location": {
                     "type": job.location.type,
                     "name": job.location.name,
@@ -176,6 +177,7 @@ async def test_get_operation_lineage(
                 "kind": "JOB",
                 "id": job.id,
                 "name": job.name,
+                "type": job.type,
                 "location": {
                     "type": job.location.type,
                     "name": job.location.name,
@@ -303,6 +305,7 @@ async def test_get_operation_lineage_with_direction_and_until(
                 "kind": "JOB",
                 "id": job.id,
                 "name": job.name,
+                "type": job.type,
                 "location": {
                     "type": job.location.type,
                     "name": job.location.name,
@@ -463,6 +466,7 @@ async def test_get_operation_lineage_with_depth(
                 "kind": "JOB",
                 "id": job.id,
                 "name": job.name,
+                "type": job.type,
                 "location": {
                     "name": job.location.name,
                     "type": job.location.type,
@@ -585,6 +589,7 @@ async def test_get_operation_lineage_with_depth_ignore_cycles(
                 "kind": "JOB",
                 "id": job.id,
                 "name": job.name,
+                "type": job.type,
                 "location": {
                     "name": job.location.name,
                     "type": job.location.type,
@@ -729,6 +734,7 @@ async def test_get_operation_lineage_with_symlinks(
                 "kind": "JOB",
                 "id": job.id,
                 "name": job.name,
+                "type": job.type,
                 "location": {
                     "name": job.location.name,
                     "type": job.location.type,
