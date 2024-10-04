@@ -16,6 +16,7 @@ class JobResponseV1(BaseModel):
     id: int = Field(description="Job id")
     location: LocationResponseV1 = Field(description="Corresponding Location")
     name: str = Field(description="Job name")
+    type: str = Field(description="Job type")
 
     model_config = ConfigDict(from_attributes=True)
 

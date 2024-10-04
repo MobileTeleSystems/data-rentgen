@@ -51,6 +51,7 @@ async def test_job_search_in_addres_url(
                 "kind": "JOB",
                 "id": job.id,
                 "name": job.name,
+                "type": job.type,
                 "location": {
                     "name": job.location.name,
                     "type": job.location.type,
@@ -85,6 +86,7 @@ async def test_job_search_in_location_name(
                 "kind": "JOB",
                 "id": job.id,
                 "name": job.name,
+                "type": job.type,
                 "location": {
                     "name": job.location.name,
                     "type": job.location.type,
@@ -133,6 +135,7 @@ async def test_job_search_in_job_name(
                 "kind": "JOB",
                 "id": job.id,
                 "name": job.name,
+                "type": job.type,
                 "location": {
                     "name": job.location.name,
                     "type": job.location.type,
@@ -177,6 +180,7 @@ async def test_job_search_in_location_name_and_address_url(
                 "kind": "JOB",
                 "id": job.id,
                 "name": job.name,
+                "type": job.type,
                 "location": {
                     "name": job.location.name,
                     "type": job.location.type,
