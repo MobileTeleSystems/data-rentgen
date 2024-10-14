@@ -53,7 +53,7 @@ repos:
           - --no-extra-eol
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.17.0
+    rev: v3.18.0
     hooks:
       - id: pyupgrade
         args: [--py37-plus, --keep-runtime-typing]
@@ -75,7 +75,7 @@ repos:
       - id: black
 
   - repo: https://github.com/asottile/blacken-docs
-    rev: 1.18.0
+    rev: 1.19.0
     hooks:
       - id: blacken-docs
         additional_dependencies:
@@ -117,7 +117,7 @@ repos:
           - tomli
 
   - repo: https://github.com/sbrunner/hooks
-    rev: 1.1.1
+    rev: 1.1.2
     hooks:
       - id: poetry-check
         additional_dependencies:
