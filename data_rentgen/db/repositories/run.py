@@ -5,7 +5,7 @@ from string import punctuation
 from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import any_, desc, func, select, union
+from sqlalchemy import CompoundSelect, Select, any_, desc, func, select, union
 from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Job, Run, RunStartReason, Status
@@ -48,53 +48,81 @@ class RunRepository(Repository[Run]):
             return await self._create(created_at, run, job_id, parent_run_id, started_by_user_id)
         return await self._update(result, run, parent_run_id, started_by_user_id)
 
-    async def pagination_by_id(self, page: int, page_size: int, run_ids: Sequence[UUID]) -> PaginationDTO[Run]:
+    async def paginate(
+        self,
+        page: int,
+        page_size: int,
+        since: datetime | None,
+        until: datetime | None,
+        run_ids: Sequence[UUID],
+        job_id: int | None,
+        parent_run_id: UUID | None,
+        search_query: str | None,
+    ) -> PaginationDTO[Run]:
         # do not use `tuple_(Run.created_at, Run.id).in_(...),
         # as this is too complex filter for Postgres to make an optimal query plan
-        min_created_at = extract_timestamp_from_uuid(min(run_ids))
-        max_created_at = extract_timestamp_from_uuid(max(run_ids))
-        query = (
-            select(Run)
-            .where(
+        where = []
+        if run_ids:
+            min_run_created_at = extract_timestamp_from_uuid(min(run_ids))
+            max_run_created_at = extract_timestamp_from_uuid(max(run_ids))
+            min_created_at = max(since, min_run_created_at) if since else min_run_created_at
+            max_created_at = min(until, max_run_created_at) if until else max_run_created_at
+            where = [
                 Run.created_at >= min_created_at,
                 Run.created_at <= max_created_at,
                 Run.id == any_(run_ids),  # type: ignore[arg-type]
+            ]
+        else:
+            if since:
+                where.append(Run.created_at >= since)
+            if until:
+                where.append(Run.created_at <= until)
+
+        if run_ids:
+            where.append(Run.id == any_(run_ids))  # type: ignore[arg-type]
+        if job_id:
+            where.append(Run.job_id == job_id)
+        if parent_run_id:
+            where.append(Run.parent_run_id == parent_run_id)
+
+        query: Select | CompoundSelect
+        if search_query:
+            # For more accurate full-text search, we create a tsquery by combining the `search_query` "as is" with
+            # a modified version of it using the '||' operator.
+            # The "as is" version is used so that an exact match with the query has the highest rank.
+            # The modified version is needed because, in some cases, PostgreSQL tokenizes words joined by punctuation marks
+            # (e.g., `database.schema.table`) as a single word. By replacing punctuation with spaces using `translate`,
+            # we split such strings into separate words, allowing us to search by parts of the name.
+            ts_query = select(
+                func.plainto_tsquery("english", search_query).op("||")(
+                    func.plainto_tsquery("english", search_query.translate(ts_query_punctuation_map)),
+                ),
+            ).scalar_subquery()
+
+            run_stmt = (
+                select(Run, func.ts_rank(Run.search_vector, ts_query).label("search_rank"))
+                .join(Job, Run.job_id == Job.id)
+                .where(Run.search_vector.op("@@")(ts_query), *where)
             )
-            .options(selectinload(Run.started_by_user))
-        )
-        return await self._paginate_by_query(order_by=[Run.id], page=page, page_size=page_size, query=query)
+            job_stmt = (
+                select(Run, func.ts_rank(Job.search_vector, ts_query).label("search_rank"))
+                .join(Run, Job.id == Run.job_id)
+                .where(Job.search_vector.op("@@")(ts_query), *where)
+            )
+            query = union(run_stmt, job_stmt)
+            order_by = [desc("search_rank"), Run.id]
+        else:
+            query = select(Run).where(*where)
+            order_by = [Run.id]
 
-    async def pagination_by_job_id(
-        self,
-        page: int,
-        page_size: int,
-        job_id: int,
-        since: datetime,
-        until: datetime | None,
-    ) -> PaginationDTO[Run]:
-        query = (
-            select(Run).where(Run.created_at >= since, Run.job_id == job_id).options(selectinload(Run.started_by_user))
+        options = [selectinload(Run.started_by_user)]
+        return await self._paginate_by_query(
+            query=query,
+            order_by=order_by,
+            options=options,
+            page=page,
+            page_size=page_size,
         )
-        if until:
-            query = query.where(Run.created_at <= until)
-        return await self._paginate_by_query(order_by=[Run.id], page=page, page_size=page_size, query=query)
-
-    async def pagination_by_parent_run_id(
-        self,
-        page: int,
-        page_size: int,
-        parent_run_id: UUID,
-        since: datetime,
-        until: datetime | None,
-    ) -> PaginationDTO[Run]:
-        query = (
-            select(Run)
-            .where(Run.created_at >= since, Run.parent_run_id == parent_run_id)
-            .options(selectinload(Run.started_by_user))
-        )
-        if until:
-            query = query.where(Run.created_at <= until)
-        return await self._paginate_by_query(order_by=[Run.id], page=page, page_size=page_size, query=query)
 
     async def list_by_ids(self, run_ids: Sequence[UUID]) -> list[Run]:
         if not run_ids:
@@ -130,40 +158,6 @@ class RunRepository(Repository[Run]):
             query = query.where(Run.created_at <= until)
         result = await self._session.scalars(query)
         return list(result.all())
-
-    async def search(self, search_query: str, page: int, page_size: int) -> PaginationDTO[Run]:
-        # For more accurate full-text search, we create a tsquery by combining the `search_query` "as is" with
-        # a modified version of it using the '||' operator.
-        # The "as is" version is used so that an exact match with the query has the highest rank.
-        # The modified version is needed because, in some cases, PostgreSQL tokenizes words joined by punctuation marks
-        # (e.g., `database.schema.table`) as a single word. By replacing punctuation with spaces using `translate`,
-        # we split such strings into separate words, allowing us to search by parts of the name.
-
-        ts_query = select(
-            func.plainto_tsquery("english", search_query).op("||")(
-                func.plainto_tsquery("english", search_query.translate(ts_query_punctuation_map)),
-            ),
-        ).scalar_subquery()
-        base_stmt = select(Run)
-        run_stmt = (
-            base_stmt.add_columns((func.ts_rank(Run.search_vector, ts_query)).label("search_rank"))
-            .join(Job, Run.job_id == Job.id)
-            .where(Run.search_vector.op("@@")(ts_query))
-        )
-        job_stmt = (
-            base_stmt.add_columns((func.ts_rank(Job.search_vector, ts_query)).label("search_rank"))
-            .join(Run, Job.id == Run.job_id)
-            .where(Job.search_vector.op("@@")(ts_query))
-        )
-        union_query = union(run_stmt, job_stmt).order_by(desc("search_rank"))
-
-        results = await self._session.execute(
-            union_query.limit(page_size).offset((page - 1) * page_size),
-        )
-        results = results.all()  # type: ignore[assignment]
-        run_ids = [result.id for result in results]
-        # TODO: refactor to explicit pagination
-        return await self.pagination_by_id(page=page, page_size=page_size, run_ids=run_ids)
 
     async def _get(self, created_at: datetime, run_id: UUID) -> Run | None:
         query = select(Run).where(Run.id == run_id, Run.created_at == created_at)

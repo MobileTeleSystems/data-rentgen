@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from http import HTTPStatus
 
 import pytest
@@ -11,56 +11,18 @@ from tests.test_server.utils.enrich import enrich_runs
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
-async def test_get_runs_by_job_id_missing_fields(
-    test_client: AsyncClient,
-):
-    since = datetime.now(tz=timezone.utc)
-    response = await test_client.get(
-        "v1/runs",
-        params={"since": since.isoformat()},
-    )
-
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert response.json() == {
-        "error": {
-            "code": "invalid_request",
-            "message": "Invalid request",
-            "details": [
-                {
-                    "location": [],
-                    "code": "value_error",
-                    "message": "Value error, input should contain either 'job_id' and 'since' or 'parent_run_id' with 'since' and 'until' or 'run_id'",
-                    "context": {},
-                    "input": {
-                        "page": 1,
-                        "page_size": 20,
-                        "parent_run_id": None,
-                        "since": since.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                        "run_id": [],
-                        "job_id": None,
-                        "until": None,
-                    },
-                },
-            ],
-        },
-    }
-
-
-async def test_get_runs_by_job_id_conflicting_fields(
+async def test_get_runs_by_job_id_missing_since(
     test_client: AsyncClient,
     new_run: Run,
 ):
-    since = datetime.now(tz=timezone.utc)
     response = await test_client.get(
         "v1/runs",
         params={
-            "since": since.isoformat(),
             "job_id": new_run.job_id,
-            "run_id": str(new_run.id),
         },
     )
 
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, response.json()
     assert response.json() == {
         "error": {
             "code": "invalid_request",
@@ -69,16 +31,17 @@ async def test_get_runs_by_job_id_conflicting_fields(
                 {
                     "location": [],
                     "code": "value_error",
-                    "message": "Value error, fields 'job_id','since', 'until', 'parent_run_id' cannot be used if 'run_id' is set",
+                    "message": "Value error, 'job_id' can be passed only with 'since'",
                     "context": {},
                     "input": {
                         "page": 1,
                         "page_size": 20,
-                        "parent_run_id": None,
-                        "run_id": [str(new_run.id)],
                         "job_id": new_run.job_id,
-                        "since": since.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                        "since": None,
                         "until": None,
+                        "parent_run_id": None,
+                        "run_id": [],
+                        "search_query": None,
                     },
                 },
             ],
@@ -86,40 +49,7 @@ async def test_get_runs_by_job_id_conflicting_fields(
     }
 
 
-async def test_get_runs_by_job_id_until_less_than_since(
-    test_client: AsyncClient,
-    new_run: Run,
-):
-    since = new_run.created_at
-    until = since - timedelta(days=1)
-    response = await test_client.get(
-        "v1/runs",
-        params={
-            "since": since.isoformat(),
-            "until": until.isoformat(),
-            "job_id": str(new_run.job_id),
-        },
-    )
-
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert response.json() == {
-        "error": {
-            "code": "invalid_request",
-            "message": "Invalid request",
-            "details": [
-                {
-                    "location": ["until"],
-                    "code": "value_error",
-                    "message": "Value error, 'since' should be less than 'until'",
-                    "context": {},
-                    "input": until.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                },
-            ],
-        },
-    }
-
-
-async def test_get_runs_by_missing_job_id(
+async def test_get_runs_by_unknown_job_id(
     test_client: AsyncClient,
     new_run: Run,
 ):

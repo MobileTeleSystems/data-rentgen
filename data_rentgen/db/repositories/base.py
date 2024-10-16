@@ -4,11 +4,19 @@ from __future__ import annotations
 
 from abc import ABC
 from hashlib import sha1
-from typing import Any, Generic, Tuple, TypeVar
+from typing import Any, Generic, Sequence, TypeVar
 
-from sqlalchemy import ScalarResult, Select, func, select
+from sqlalchemy import (
+    ColumnElement,
+    CompoundSelect,
+    ScalarResult,
+    Select,
+    SQLColumnExpression,
+    func,
+    select,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.sql import SQLColumnExpression
+from sqlalchemy.sql.base import ExecutableOption
 
 from data_rentgen.db.models import Base
 from data_rentgen.dto import PaginationDTO
@@ -34,18 +42,23 @@ class Repository(ABC, Generic[Model]):
 
     async def _paginate_by_query(
         self,
-        order_by: list[SQLColumnExpression],
+        query: Select | CompoundSelect,
+        order_by: Sequence[ColumnElement | SQLColumnExpression],
         page: int,
         page_size: int,
-        query: Select[Tuple[Model]],
+        options: Sequence[ExecutableOption] | None = None,
     ) -> PaginationDTO[Model]:
         model_type = self.model_type()
-        items_result: ScalarResult[Model] = await self._session.scalars(
+        items_query = select(model_type).from_statement(
             query.order_by(*order_by).limit(page_size).offset((page - 1) * page_size),
         )
-        total_count: int = await self._session.scalar(  # type: ignore[assignment]
-            select(func.count()).select_from(query.subquery()),
-        )
+        if options:
+            items_query = items_query.options(*options)
+
+        total_query = select(func.count()).select_from(query.subquery())
+
+        items_result: ScalarResult[Model] = await self._session.scalars(items_query)
+        total_count: int = await self._session.scalar(total_query)  # type: ignore[assignment]
         return PaginationDTO[model_type](  # type: ignore[valid-type]
             items=list(items_result.all()),
             total_count=total_count,

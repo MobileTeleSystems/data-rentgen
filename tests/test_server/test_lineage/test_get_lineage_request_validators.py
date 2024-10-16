@@ -53,7 +53,7 @@ async def test_get_lineage_no_filter(test_client: AsyncClient, entity_kind: str,
 
     response = await test_client.get(f"v1/{entity_kind}/lineage")
 
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, response.json()
     assert response.json() == expected_response
 
 
@@ -110,7 +110,7 @@ async def test_get_lineage_start_node_id_int_type_validation(
         },
     )
 
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, response.json()
     assert response.json() == {
         "error": {
             "code": "invalid_request",
@@ -151,7 +151,7 @@ async def test_get_lineage_start_node_id_uuid_type_validation(
         },
     )
 
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, response.json()
     assert response.json() == {
         "error": {
             "code": "invalid_request",
@@ -186,7 +186,7 @@ async def test_get_lineage_until_less_than_since(test_client: AsyncClient):
         },
     )
 
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, response.json()
     assert response.json() == {
         "error": {
             "code": "invalid_request",
@@ -230,7 +230,7 @@ async def test_get_lineage_depth_out_of_bounds(
         },
     )
 
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, response.json()
     assert response.json() == {
         "error": {
             "code": "invalid_request",

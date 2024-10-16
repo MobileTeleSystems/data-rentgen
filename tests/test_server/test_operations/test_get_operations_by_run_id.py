@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from http import HTTPStatus
 
 import pytest
@@ -9,52 +9,18 @@ from data_rentgen.db.models import Operation, Run
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
-async def test_get_operations_by_run_id_missing_fields(test_client: AsyncClient):
-    since = datetime.now(tz=timezone.utc)
-    response = await test_client.get(
-        "v1/operations",
-        params={"since": since.isoformat()},
-    )
-
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert response.json() == {
-        "error": {
-            "code": "invalid_request",
-            "message": "Invalid request",
-            "details": [
-                {
-                    "location": [],
-                    "code": "value_error",
-                    "message": "Value error, input should contain either 'run_id' and 'since', or 'operation_id' field",
-                    "context": {},
-                    "input": {
-                        "page": 1,
-                        "page_size": 20,
-                        "since": since.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                        "operation_id": [],
-                        "run_id": None,
-                        "until": None,
-                    },
-                },
-            ],
-        },
-    }
-
-
-async def test_get_operations_by_run_id_conflicting_fields(
+async def test_get_operations_missing_since(
     test_client: AsyncClient,
     new_operation: Operation,
 ):
     response = await test_client.get(
         "v1/operations",
         params={
-            "since": new_operation.created_at.isoformat(),
             "run_id": str(new_operation.run_id),
-            "operation_id": str(new_operation.id),
         },
     )
 
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, response.json()
     assert response.json() == {
         "error": {
             "code": "invalid_request",
@@ -63,15 +29,15 @@ async def test_get_operations_by_run_id_conflicting_fields(
                 {
                     "location": [],
                     "code": "value_error",
-                    "message": "Value error, fields 'run_id','since', 'until' cannot be used if 'operation_id' is set",
+                    "message": "Value error, 'run_id' can be passed only with 'since'",
                     "context": {},
                     "input": {
                         "page": 1,
                         "page_size": 20,
                         "run_id": str(new_operation.run_id),
-                        "operation_id": [str(new_operation.id)],
-                        "since": new_operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                        "since": None,
                         "until": None,
+                        "operation_id": [],
                     },
                 },
             ],
@@ -79,40 +45,7 @@ async def test_get_operations_by_run_id_conflicting_fields(
     }
 
 
-async def test_get_operations_by_run_id_until_less_than_since(
-    test_client: AsyncClient,
-    new_operation: Operation,
-):
-    since = new_operation.created_at
-    until = since - timedelta(days=1)
-    response = await test_client.get(
-        "v1/operations",
-        params={
-            "since": since.isoformat(),
-            "until": until.isoformat(),
-            "run_id": str(new_operation.run_id),
-        },
-    )
-
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert response.json() == {
-        "error": {
-            "code": "invalid_request",
-            "message": "Invalid request",
-            "details": [
-                {
-                    "location": ["until"],
-                    "code": "value_error",
-                    "message": "Value error, 'since' should be less than 'until'",
-                    "context": {},
-                    "input": until.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                },
-            ],
-        },
-    }
-
-
-async def test_get_operations_by_missing_run_id(
+async def test_get_operations_by_unknown_run_id(
     test_client: AsyncClient,
     new_operation: Operation,
 ):

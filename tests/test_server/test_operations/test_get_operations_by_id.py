@@ -8,34 +8,6 @@ from data_rentgen.db.models import Operation
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
-async def test_get_operations_no_filter(test_client: AsyncClient):
-    response = await test_client.get("v1/operations")
-
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert response.json() == {
-        "error": {
-            "code": "invalid_request",
-            "message": "Invalid request",
-            "details": [
-                {
-                    "location": [],
-                    "code": "value_error",
-                    "message": "Value error, input should contain either 'run_id' and 'since', or 'operation_id' field",
-                    "context": {},
-                    "input": {
-                        "page": 1,
-                        "page_size": 20,
-                        "since": None,
-                        "operation_id": [],
-                        "run_id": None,
-                        "until": None,
-                    },
-                },
-            ],
-        },
-    }
-
-
 async def test_get_operations_by_unknown_id(
     test_client: AsyncClient,
     new_operation: Operation,
@@ -108,7 +80,9 @@ async def test_get_operations_by_multiple_ids(
 
     response = await test_client.get(
         "v1/operations",
-        params={"operation_id": [str(operation.id) for operation in selected_operations]},
+        params={
+            "operation_id": [str(operation.id) for operation in selected_operations],
+        },
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()

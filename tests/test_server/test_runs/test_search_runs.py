@@ -11,26 +11,6 @@ from tests.test_server.utils.enrich import enrich_runs
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
-async def test_run_search_no_query(test_client: AsyncClient) -> None:
-    response = await test_client.get("/v1/runs/search")
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert response.json() == {
-        "error": {
-            "code": "invalid_request",
-            "message": "Invalid request",
-            "details": [
-                {
-                    "location": ["query", "search_query"],
-                    "code": "missing",
-                    "message": "Field required",
-                    "input": None,
-                    "context": {},
-                },
-            ],
-        },
-    }
-
-
 async def test_search_runs_by_external_id(
     test_client: AsyncClient,
     async_session: AsyncSession,
@@ -42,7 +22,7 @@ async def test_search_runs_by_external_id(
     )
 
     response = await test_client.get(
-        "/v1/runs/search",
+        "/v1/runs",
         params={"search_query": "1638922609021"},
     )
 
@@ -93,7 +73,7 @@ async def test_search_runs_by_job_name(
     runs = await enrich_runs([runs_search["extract_task_0001"], runs_search["extract_task_0002"]], async_session)
 
     response = await test_client.get(
-        "/v1/runs/search",
+        "/v1/runs",
         params={"search_query": "airflow_dag"},
     )
 
@@ -147,7 +127,7 @@ async def test_search_runs_by_job_type(
     )
 
     response = await test_client.get(
-        "/v1/runs/search",
+        "/v1/runs",
         params={"search_query": "SPARK"},
     )
 

@@ -11,27 +11,6 @@ from tests.test_server.utils.enrich import enrich_datasets
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
-async def test_dataset_search_no_query(test_client: AsyncClient) -> None:
-    response = await test_client.get("/v1/datasets/search")
-
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert response.json() == {
-        "error": {
-            "code": "invalid_request",
-            "message": "Invalid request",
-            "details": [
-                {
-                    "location": ["query", "search_query"],
-                    "code": "missing",
-                    "message": "Field required",
-                    "input": None,
-                    "context": {},
-                },
-            ],
-        },
-    }
-
-
 async def test_search_datasets_by_address_url(
     test_client: AsyncClient,
     async_session: AsyncSession,
@@ -41,7 +20,7 @@ async def test_search_datasets_by_address_url(
     datasets = await enrich_datasets([datasets_search["hdfs://my-cluster-namenode:2080"]], async_session)
 
     response = await test_client.get(
-        "/v1/datasets/search",
+        "/v1/datasets",
         params={"search_query": "namenode"},
     )
 
@@ -95,7 +74,7 @@ async def test_search_datasets_by_location_name(
     )
 
     response = await test_client.get(
-        "/v1/datasets/search",
+        "/v1/datasets",
         params={"search_query": "postgres.location"},
     )
 
@@ -141,7 +120,7 @@ async def test_search_datasets_by_dataset_name(
     datasets = await enrich_datasets([datasets_search["postgres.public.location_history"]], async_session)
 
     response = await test_client.get(
-        "/v1/datasets/search",
+        "/v1/datasets",
         params={"search_query": "location_history"},
     )
 
@@ -192,7 +171,7 @@ async def test_search_datasets_by_location_name_and_address_url(
     )
 
     response = await test_client.get(
-        "/v1/datasets/search",
+        "/v1/datasets",
         params={"search_query": "my-cluster"},
     )
 
