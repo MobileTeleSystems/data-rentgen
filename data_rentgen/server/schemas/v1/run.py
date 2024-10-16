@@ -50,12 +50,6 @@ class RunResponseV1(BaseModel):
 class RunsQueryV1(PaginateQueryV1):
     """Query params for Runs paginate request."""
 
-    run_id: list[UUID] = Field(
-        Query(
-            default_factory=list,
-            description="Run ids, for exact match",
-        ),
-    )
     since: datetime | None = Field(
         Query(
             default=None,
@@ -68,6 +62,12 @@ class RunsQueryV1(PaginateQueryV1):
             default=None,
             description="Maximum value of Run 'created_at' field, in ISO 8601 format",
             examples=["2008-09-15T15:53:00+05:00"],
+        ),
+    )
+    run_id: list[UUID] = Field(
+        Query(
+            default_factory=list,
+            description="Run ids, for exact match",
         ),
     )
     job_id: int | None = Field(
@@ -85,6 +85,14 @@ class RunsQueryV1(PaginateQueryV1):
         ),
     )
 
+    search_query: str | None = Field(
+        Query(
+            default=None,
+            min_length=3,
+            description="Search query",
+        ),
+    )
+
     model_config = ConfigDict(extra="forbid")
 
     @field_validator("until", mode="after")
@@ -97,34 +105,12 @@ class RunsQueryV1(PaginateQueryV1):
 
     @model_validator(mode="after")
     def _check_fields(self):
-        error_messages = [
-            (
-                self.run_id and any([self.job_id, self.since, self.until, self.parent_run_id]),
-                "fields 'job_id','since', 'until', 'parent_run_id' cannot be used if 'run_id' is set",
-            ),
-            (
-                self.parent_run_id and any([self.job_id, self.run_id]),
-                "fields 'job_id' and 'run_id' cannot be used if 'parent_run_id' is set",
-            ),
-            (
-                self.parent_run_id and not self.since,
-                "input should contain 'since' field if 'parent_run_id' is set",
-            ),
-            (
-                self.job_id and any([self.parent_run_id, self.run_id]),
-                "fields 'parent_run_id' and 'run_id' cannot be used if 'job_id' is set",
-            ),
-            (
-                self.job_id and not self.since,
-                "input should contain 'since' field if 'job_id' is set",
-            ),
-            (
-                not any([self.job_id, self.parent_run_id, self.run_id]),
-                "input should contain either 'job_id' and 'since' or 'parent_run_id' with 'since' and 'until' or 'run_id'",
-            ),
-        ]
-        for flag, error_message in error_messages:
-            if flag:
-                raise ValueError(error_message)
-
+        if not any([self.run_id, self.job_id, self.parent_run_id, self.search_query]):
+            raise ValueError(
+                "input should contain either 'run_id', 'job_id', 'parent_run_id' or 'search_query' field",
+            )
+        if self.job_id and not self.since:
+            raise ValueError("'job_id' can be passed only with 'since'")
+        if self.parent_run_id and not self.since:
+            raise ValueError("'parent_run_id' can be passed only with 'since'")
         return self

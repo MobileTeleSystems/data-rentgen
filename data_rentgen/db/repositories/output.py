@@ -86,7 +86,7 @@ class OutputRepository(Repository[Output]):
             return []
 
         min_run_created_at = extract_timestamp_from_uuid(min(run_ids))
-        min_created_at = min(min_run_created_at, since.astimezone(timezone.utc))
+        min_created_at = max(min_run_created_at, since.astimezone(timezone.utc))
 
         query = self._get_select(granularity).where(
             Output.created_at >= min_created_at,

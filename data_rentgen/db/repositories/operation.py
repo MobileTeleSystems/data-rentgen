@@ -29,44 +29,46 @@ class OperationRepository(Repository[Operation]):
             return await self._create(created_at, operation, run_id)  # type: ignore[arg-type]
         return await self._update(result, operation)
 
-    async def pagination_by_id(
+    async def paginate(
         self,
         page: int,
         page_size: int,
         operation_ids: Sequence[UUID],
+        since: datetime | None,
+        until: datetime | None,
+        run_id: UUID | None,
     ) -> PaginationDTO[Operation]:
         # do not use `tuple_(Operation.created_at, Operation.id).in_(...),
         # as this is too complex filter for Postgres to make an optimal query plan
-        min_created_at = extract_timestamp_from_uuid(min(operation_ids))
-        max_created_at = extract_timestamp_from_uuid(max(operation_ids))
-        query = select(Operation).where(
-            Operation.created_at >= min_created_at,
-            Operation.created_at <= max_created_at,
-            Operation.id == any_(operation_ids),  # type: ignore[arg-type]
-        )
+        where = []
+        if operation_ids:
+            min_operation_created_at = extract_timestamp_from_uuid(min(operation_ids))
+            max_operation_created_at = extract_timestamp_from_uuid(max(operation_ids))
+            min_created_at = max(since, min_operation_created_at) if since else min_operation_created_at
+            max_created_at = min(until, max_operation_created_at) if until else max_operation_created_at
+            where = [
+                Operation.created_at >= min_created_at,
+                Operation.created_at <= max_created_at,
+            ]
+        else:
+            if since:
+                where.append(Operation.created_at >= since)
+            if until:
+                where.append(Operation.created_at <= until)
+
+        if run_id:
+            where.append(Operation.run_id == run_id)
+        if operation_ids:
+            where.append(Operation.id == any_(operation_ids))  # type: ignore[arg-type]
+
+        query = select(Operation).where(*where)
+        order_by = [Operation.run_id, Operation.id]
         return await self._paginate_by_query(
-            order_by=[Operation.run_id, Operation.id],
+            query=query,
+            order_by=order_by,
             page=page,
             page_size=page_size,
-            query=query,
         )
-
-    async def pagination_by_run_id(
-        self,
-        page: int,
-        page_size: int,
-        run_id: UUID,
-        since: datetime,
-        until: datetime | None,
-    ) -> PaginationDTO[Operation]:
-        # All operations are created after run
-        run_created_at = extract_timestamp_from_uuid(run_id)
-        # But user may request a more narrow time window
-        min_operation_created_at = max(run_created_at, since.astimezone(timezone.utc))
-        query = select(Operation).where(Operation.created_at >= min_operation_created_at, Operation.run_id == run_id)
-        if until:
-            query = query.where(Operation.created_at <= until)
-        return await self._paginate_by_query(order_by=[Operation.id], page=page, page_size=page_size, query=query)
 
     async def list_by_run_ids(
         self,

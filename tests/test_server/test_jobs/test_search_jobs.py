@@ -11,26 +11,6 @@ from tests.test_server.utils.enrich import enrich_jobs
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
-async def test_job_search_no_query(test_client: AsyncClient) -> None:
-    response = await test_client.get("/v1/jobs/search")
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert response.json() == {
-        "error": {
-            "code": "invalid_request",
-            "message": "Invalid request",
-            "details": [
-                {
-                    "location": ["query", "search_query"],
-                    "code": "missing",
-                    "message": "Field required",
-                    "input": None,
-                    "context": {},
-                },
-            ],
-        },
-    }
-
-
 async def test_search_jobs_by_address_url(
     test_client: AsyncClient,
     async_session: AsyncSession,
@@ -40,7 +20,7 @@ async def test_search_jobs_by_address_url(
     jobs = await enrich_jobs([jobs_search["http://airflow-host:2080"]], async_session)
 
     response = await test_client.get(
-        "/v1/jobs/search",
+        "/v1/jobs",
         params={"search_query": "airflow-host"},
     )
 
@@ -85,7 +65,7 @@ async def test_search_jobs_by_location_name(
     jobs = await enrich_jobs([jobs_search["data-product-host"]], async_session)
 
     response = await test_client.get(
-        "/v1/jobs/search",
+        "/v1/jobs",
         params={"search_query": "data-product"},
     )
 
@@ -134,7 +114,7 @@ async def test_search_jobs_by_job_name(
     )
 
     response = await test_client.get(
-        "/v1/jobs/search",
+        "/v1/jobs",
         params={"search_query": "airflow"},
     )
 
@@ -182,7 +162,7 @@ async def test_search_jobs_by_location_name_and_address_url(
     jobs = await enrich_jobs([jobs_search["my-cluster"], jobs_search["yarn://my_cluster_1"]], async_session)
 
     response = await test_client.get(
-        "/v1/jobs/search",
+        "/v1/jobs",
         params={"search_query": "my-cluster"},
     )
 

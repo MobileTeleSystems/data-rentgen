@@ -25,5 +25,12 @@ class JobPaginateQueryV1(PaginateQueryV1):
     """Query params for Jobs paginate request."""
 
     job_id: list[int] = Field(Query(default_factory=list), description="Job id")
+    search_query: str | None = Field(
+        Query(
+            default=None,
+            min_length=3,
+            description="Search query",
+        ),
+    )
 
     model_config = ConfigDict(extra="forbid")

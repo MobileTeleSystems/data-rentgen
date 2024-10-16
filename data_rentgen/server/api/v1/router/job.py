@@ -12,7 +12,6 @@ from data_rentgen.server.schemas.v1 import (
     JobResponseV1,
     LineageResponseV1,
     PageResponseV1,
-    SearchPaginateQueryV1,
 )
 from data_rentgen.server.services import LineageService
 from data_rentgen.server.utils.lineage_response import build_lineage_response
@@ -23,44 +22,31 @@ router = APIRouter(prefix="/jobs", tags=["Jobs"], responses=get_error_responses(
 
 @router.get("", summary="Paginated list of Jobs")
 async def paginate_jobs(
-    pagination_args: Annotated[JobPaginateQueryV1, Depends()],
+    query_args: Annotated[JobPaginateQueryV1, Depends()],
     unit_of_work: Annotated[UnitOfWork, Depends()],
 ) -> PageResponseV1[JobResponseV1]:
     pagination = await unit_of_work.job.paginate(
-        page=pagination_args.page,
-        page_size=pagination_args.page_size,
-        job_ids=pagination_args.job_id,
+        page=query_args.page,
+        page_size=query_args.page_size,
+        job_ids=query_args.job_id,
+        search_query=query_args.search_query,
     )
-    return PageResponseV1[JobResponseV1].from_pagination(pagination)
-
-
-@router.get("/search", summary="Search Jobs")
-async def search_jobs(
-    pagination_args: Annotated[SearchPaginateQueryV1, Depends()],
-    unit_of_work: Annotated[UnitOfWork, Depends()],
-) -> PageResponseV1[JobResponseV1]:
-    pagination = await unit_of_work.job.search(
-        page=pagination_args.page,
-        page_size=pagination_args.page_size,
-        search_query=pagination_args.search_query,
-    )
-
     return PageResponseV1[JobResponseV1].from_pagination(pagination)
 
 
 @router.get("/lineage", summary="Get Job lineage graph")
 async def get_jobs_lineage(
-    pagination_args: Annotated[JobLineageQueryV1, Query()],
+    query_args: Annotated[JobLineageQueryV1, Query()],
     lineage_service: Annotated[LineageService, Depends()],
 ) -> LineageResponseV1:
     lineage = await lineage_service.get_lineage_by_jobs(
-        start_node_ids=[pagination_args.start_node_id],  # type: ignore[list-item]
-        direction=pagination_args.direction,
+        start_node_ids=[query_args.start_node_id],  # type: ignore[list-item]
+        direction=query_args.direction,
         # TODO: add pagination args in DOP-20060
         granularity="OPERATION",
-        since=pagination_args.since,
-        until=pagination_args.until,
-        depth=pagination_args.depth,
+        since=query_args.since,
+        until=query_args.until,
+        depth=query_args.depth,
     )
 
     return await build_lineage_response(lineage)

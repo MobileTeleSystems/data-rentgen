@@ -26,37 +26,31 @@ router = APIRouter(
 
 @router.get("", summary="Paginated list of Operations")
 async def operations(
-    pagination_args: Annotated[OperationQueryV1, Depends()],
+    query_args: Annotated[OperationQueryV1, Depends()],
     unit_of_work: Annotated[UnitOfWork, Depends()],
 ) -> PageResponseV1[OperationResponseV1]:
-    if pagination_args.operation_id:
-        pagination = await unit_of_work.operation.pagination_by_id(
-            page=pagination_args.page,
-            page_size=pagination_args.page_size,
-            operation_ids=pagination_args.operation_id,
-        )
-    else:
-        pagination = await unit_of_work.operation.pagination_by_run_id(
-            page=pagination_args.page,
-            page_size=pagination_args.page_size,
-            run_id=pagination_args.run_id,  # type: ignore[arg-type]
-            since=pagination_args.since,  # type: ignore[arg-type]
-            until=pagination_args.until,
-        )
+    pagination = await unit_of_work.operation.paginate(
+        page=query_args.page,
+        page_size=query_args.page_size,
+        since=query_args.since,
+        until=query_args.until,
+        operation_ids=query_args.operation_id,
+        run_id=query_args.run_id,
+    )
     return PageResponseV1[OperationResponseV1].from_pagination(pagination)
 
 
 @router.get("/lineage", summary="Get Operation lineage graph")
 async def get_operations_lineage(
-    pagination_args: Annotated[OperationLineageQueryV1, Query()],
+    query_args: Annotated[OperationLineageQueryV1, Query()],
     lineage_service: Annotated[LineageService, Depends()],
 ) -> LineageResponseV1:
     lineage = await lineage_service.get_lineage_by_operations(
-        start_node_ids=[pagination_args.start_node_id],  # type: ignore[list-item]
-        direction=pagination_args.direction,
-        since=pagination_args.since,
-        until=pagination_args.until,
-        depth=pagination_args.depth,
+        start_node_ids=[query_args.start_node_id],  # type: ignore[list-item]
+        direction=query_args.direction,
+        since=query_args.since,
+        until=query_args.until,
+        depth=query_args.depth,
     )
 
     return await build_lineage_response(lineage)

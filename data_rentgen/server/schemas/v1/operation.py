@@ -39,12 +39,6 @@ class OperationResponseV1(BaseModel):
 class OperationQueryV1(PaginateQueryV1):
     """Query params for Operations paginate request."""
 
-    operation_id: list[UUID] = Field(
-        Query(
-            default_factory=list,
-            description="Operation ids, for exact match",
-        ),
-    )
     since: datetime | None = Field(
         Query(
             default=None,
@@ -57,6 +51,12 @@ class OperationQueryV1(PaginateQueryV1):
             default=None,
             description="Maximum value of Operation 'created_at' field, in ISO 8601 format",
             examples=["2008-09-15T15:53:00+05:00"],
+        ),
+    )
+    operation_id: list[UUID] = Field(
+        Query(
+            default_factory=list,
+            description="Operation ids, for exact match",
         ),
     )
     run_id: UUID | None = Field(
@@ -78,9 +78,8 @@ class OperationQueryV1(PaginateQueryV1):
 
     @model_validator(mode="after")
     def _check_fields(self):
-        if self.operation_id:
-            if self.run_id or self.since or self.until:
-                raise ValueError("fields 'run_id','since', 'until' cannot be used if 'operation_id' is set")
-        elif not self.run_id or not self.since:
-            raise ValueError("input should contain either 'run_id' and 'since', or 'operation_id' field")
+        if not any([self.operation_id, self.run_id]):
+            raise ValueError("input should contain either 'run_id' or 'operation_id' field")
+        if self.run_id and not self.since:
+            raise ValueError("'run_id' can be passed only with 'since'")
         return self
