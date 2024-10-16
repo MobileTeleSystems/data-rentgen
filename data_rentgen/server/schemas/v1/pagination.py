@@ -28,6 +28,8 @@ class PaginateQueryV1(BaseModel):
     page: int = Field(gt=0, default=1, description="Page number")
     page_size: int = Field(gt=0, le=50, default=20, description="Number of items per page")  # noqa: WPS432
 
+    model_config = ConfigDict(extra="forbid")
+
 
 class SearchPaginateQueryV1(PaginateQueryV1):
     """Query params for search paginate request."""

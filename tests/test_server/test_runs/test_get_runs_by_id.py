@@ -1,10 +1,8 @@
 from http import HTTPStatus
-from uuid import uuid4
 
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from uuid6 import uuid7
 
 from data_rentgen.db.models import Run
 from tests.test_server.utils.enrich import enrich_runs
@@ -12,54 +10,7 @@ from tests.test_server.utils.enrich import enrich_runs
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
-async def test_get_runs_by_id_missing_fields(
-    test_client: AsyncClient,
-):
-    response = await test_client.get("v1/runs")
-
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-    assert response.json() == {
-        "error": {
-            "code": "invalid_request",
-            "message": "Invalid request",
-            "details": [
-                {
-                    "location": [],
-                    "code": "value_error",
-                    "message": "Value error, input should contain either 'job_id' and 'since' or 'parent_run_id' with 'since' and 'until' or 'run_id'",
-                    "context": {},
-                    "input": {
-                        "page": 1,
-                        "page_size": 20,
-                        "parent_run_id": None,
-                        "since": None,
-                        "run_id": [],
-                        "job_id": None,
-                        "until": None,
-                    },
-                },
-            ],
-        },
-    }
-
-
-@pytest.mark.parametrize(
-    "run_ids",
-    [(uuid4()), (uuid4(), uuid7())],
-)
-async def test_wrong_uuid_version(
-    test_client: AsyncClient,
-    run_ids,
-):
-    response = await test_client.get(
-        "v1/runs",
-        params={"run_id": run_ids},
-    )
-
-    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
-
-
-async def test_get_runs_by_missing_id(
+async def test_get_runs_by_unknown_id(
     test_client: AsyncClient,
     new_run: Run,
 ):

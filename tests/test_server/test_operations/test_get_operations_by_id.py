@@ -36,7 +36,7 @@ async def test_get_operations_no_filter(test_client: AsyncClient):
     }
 
 
-async def test_get_operations_by_missing_id(
+async def test_get_operations_by_unknown_id(
     test_client: AsyncClient,
     new_operation: Operation,
 ):
