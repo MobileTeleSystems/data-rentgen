@@ -11,6 +11,44 @@ from tests.test_server.utils.enrich import enrich_runs
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
+async def test_search_runs_missing_since(
+    test_client: AsyncClient,
+    new_run: Run,
+):
+    response = await test_client.get(
+        "v1/runs",
+        params={
+            "search_query": new_run.external_id,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, response.json()
+    assert response.json() == {
+        "error": {
+            "code": "invalid_request",
+            "message": "Invalid request",
+            "details": [
+                {
+                    "location": [],
+                    "code": "value_error",
+                    "message": "Value error, 'search_query' can be passed only with 'since'",
+                    "context": {},
+                    "input": {
+                        "page": 1,
+                        "page_size": 20,
+                        "job_id": None,
+                        "since": None,
+                        "until": None,
+                        "parent_run_id": None,
+                        "run_id": [],
+                        "search_query": new_run.external_id,
+                    },
+                },
+            ],
+        },
+    }
+
+
 async def test_search_runs_by_external_id(
     test_client: AsyncClient,
     async_session: AsyncSession,
@@ -20,10 +58,14 @@ async def test_search_runs_by_external_id(
         [runs_search["application_1638922609021_0001"], runs_search["application_1638922609021_0002"]],
         async_session,
     )
+    since = min(run.created_at for run in runs)
 
     response = await test_client.get(
         "/v1/runs",
-        params={"search_query": "1638922609021"},
+        params={
+            "since": since.isoformat(),
+            "search_query": "1638922609021",
+        },
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
@@ -71,10 +113,14 @@ async def test_search_runs_by_job_name(
     runs_search: dict[str, Run],
 ) -> None:
     runs = await enrich_runs([runs_search["extract_task_0001"], runs_search["extract_task_0002"]], async_session)
+    since = min(run.created_at for run in runs)
 
     response = await test_client.get(
         "/v1/runs",
-        params={"search_query": "airflow_dag"},
+        params={
+            "since": since.isoformat(),
+            "search_query": "airflow_dag",
+        },
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
@@ -125,10 +171,14 @@ async def test_search_runs_by_job_type(
         [runs_search["application_1638922609021_0001"], runs_search["application_1638922609021_0002"]],
         async_session,
     )
+    since = min(run.created_at for run in runs)
 
     response = await test_client.get(
         "/v1/runs",
-        params={"search_query": "SPARK"},
+        params={
+            "since": since.isoformat(),
+            "search_query": "SPARK",
+        },
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
@@ -168,3 +218,33 @@ async def test_search_runs_by_job_type(
     # At this case the order is unstable
     response_diff = DeepDiff(expected_response, response.json(), ignore_order=True)
     assert not response_diff, f"Response diff: {response_diff.to_json()}"
+
+
+async def test_search_runs_no_results(
+    test_client: AsyncClient,
+    runs_search: dict[str, Run],
+) -> None:
+    since = min(run.created_at for run in runs_search.values())
+
+    response = await test_client.get(
+        "/v1/runs",
+        params={
+            "since": since.isoformat(),
+            "search_query": "not-found",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 0,
+        },
+        "items": [],
+    }

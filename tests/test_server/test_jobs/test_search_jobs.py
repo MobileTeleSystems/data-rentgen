@@ -197,3 +197,28 @@ async def test_search_jobs_by_location_name_and_address_url(
     # At this case the order is unstable
     response_diff = DeepDiff(expected_response, response.json(), ignore_order=True)
     assert not response_diff, f"Response diff: {response_diff.to_json()}"
+
+
+async def test_search_jobs_no_results(
+    test_client: AsyncClient,
+    jobs_search: dict[str, Job],
+) -> None:
+    response = await test_client.get(
+        "/v1/jobs",
+        params={"search_query": "not-found"},
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 0,
+        },
+        "items": [],
+    }
