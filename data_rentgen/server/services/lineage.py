@@ -69,7 +69,6 @@ class IdsToSkip:
         return self
 
 
-# TODO: Add granularity logic: DOP-18988
 class LineageService:
     def __init__(self, uow: Annotated[UnitOfWork, Depends()]):
         self._uow = uow
@@ -125,8 +124,9 @@ class LineageService:
         operations = await self._uow.operation.list_by_ids(sorted(operation_ids))
         operations_by_id = {operation.id: operation for operation in operations}
 
-        # Same for runs
-        run_ids = {operation.run_id for operation in operations} - ids_to_skip.runs
+        input_run_ids = {input.run_id for input in inputs if input.run_id is not None}
+        output_run_ids = {output.run_id for output in outputs if output.run_id is not None}
+        run_ids = input_run_ids | output_run_ids - ids_to_skip.runs
         runs = await self._uow.run.list_by_ids(sorted(run_ids))
         runs_by_id = {run.id: run for run in runs}
 

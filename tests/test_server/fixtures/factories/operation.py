@@ -76,7 +76,7 @@ async def operations(
     size, params = request.param
     items = []
     for index in range(size):
-        run = choice(runs)
+        run = runs[index]
         items.append(
             operation_factory(
                 run_id=run.id,

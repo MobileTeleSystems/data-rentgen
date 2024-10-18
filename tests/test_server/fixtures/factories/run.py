@@ -75,7 +75,7 @@ async def run(
         await async_session.commit()
 
 
-@pytest_asyncio.fixture(params=[(5, {})])
+@pytest_asyncio.fixture(params=[(10, {})])
 async def runs(
     request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
@@ -86,7 +86,7 @@ async def runs(
     started_at = datetime.now()
     items = [
         run_factory(
-            job_id=choice(jobs).id,
+            job_id=jobs[i // 2].id,
             created_at=started_at + timedelta(seconds=0.1 * i),
             started_by_user_id=user.id,
             **params,
