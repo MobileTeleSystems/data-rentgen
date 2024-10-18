@@ -526,29 +526,19 @@ async def test_get_job_lineage_with_depth(
     async_session: AsyncSession,
     lineage_with_depth: LINEAGE_FIXTURE_ANNOTATION,
 ):
-    all_jobs, all_runs, all_operations, all_datasets, all_inputs, all_outputs = lineage_with_depth
+    all_jobs, all_runs, _, all_datasets, all_inputs, all_outputs = lineage_with_depth
 
     job = all_jobs[0]
 
-    # Go job -> runs -> operations
-    first_level_runs = [run for run in all_runs if run.job_id == job.id]
-    first_level_run_ids = {run.id for run in first_level_runs}
-    first_level_operations = [operation for operation in all_operations if operation.run_id in first_level_run_ids]
-    first_level_operation_ids = {operation.id for operation in first_level_operations}
-    assert first_level_operations
-    # Go operations[first level] -> datasets[second level]
-    first_level_outputs = [output for output in all_outputs if output.operation_id in first_level_operation_ids]
+    # Go job[first level] -> datasets[second level]
+    first_level_outputs = [output for output in all_outputs if output.job_id == job.id]
     first_level_dataset_ids = {output.dataset_id for output in first_level_outputs}
     first_level_datasets = [dataset for dataset in all_datasets if dataset.id in first_level_dataset_ids]
     assert first_level_datasets
 
-    # Go datasets[second level] -> operations[second level] -> runs[second level] -> jobs[second level]
+    # Go datasets[second level] -> jobs[second level]
     second_level_inputs = [input for input in all_inputs if input.dataset_id in first_level_dataset_ids]
-    second_level_operation_ids = {input.operation_id for input in second_level_inputs} - first_level_operation_ids
-    second_level_operations = [operation for operation in all_operations if operation.id in second_level_operation_ids]
-    second_level_run_ids = {operation.run_id for operation in second_level_operations} - first_level_run_ids
-    second_level_runs = [run for run in all_runs if run.id in second_level_run_ids]
-    second_level_job_ids = {run.job_id for run in second_level_runs} - {job.id}
+    second_level_job_ids = {input.job_id for input in second_level_inputs} - {job.id}
     second_level_jobs = [job for job in all_jobs if job.id in second_level_job_ids]
     assert second_level_jobs
 
@@ -570,7 +560,7 @@ async def test_get_job_lineage_with_depth(
     jobs = await enrich_jobs(jobs, async_session)
     datasets = await enrich_datasets(datasets, async_session)
 
-    since = first_level_runs[0].started_at
+    since = min(run.created_at for run in all_runs)
     response = await test_client.get(
         "v1/jobs/lineage",
         params={
@@ -784,16 +774,12 @@ async def test_get_job_lineage_with_depth_ignore_cycles(
     first_level_outputs = all_outputs
     first_level_dataset_ids = {output.dataset_id for output in first_level_outputs}
     first_level_datasets = [dataset for dataset in all_datasets if dataset.id in first_level_dataset_ids]
-    first_level_operation_ids = {output.operation_id for output in first_level_outputs}
     assert first_level_datasets
 
     # The there is a cycle dataset[second level] -> operation[first level], so there is only one level of lineage.
     second_level_inputs = [input for input in all_inputs if input.dataset_id in first_level_dataset_ids]
-    second_level_operation_ids = {input.operation_id for input in second_level_inputs} - first_level_operation_ids
-    assert not second_level_operation_ids
 
     [job] = await enrich_jobs([job], async_session)
-    runs = await enrich_runs(runs, async_session)
     datasets = await enrich_datasets(first_level_datasets, async_session)
 
     since = min(run.created_at for run in runs)
@@ -870,21 +856,10 @@ async def test_get_job_lineage_with_symlinks(
         list[Output],
     ],
 ):
-    all_jobs, all_runs, all_operations, all_datasets, all_dataset_symlinks, all_inputs, all_outputs = (
-        lineage_with_symlinks
-    )
+    all_jobs, all_runs, _, all_datasets, all_dataset_symlinks, _, all_outputs = lineage_with_symlinks
 
     job = all_jobs[0]
-
-    runs = [run for run in all_runs if run.job_id == job.id]
-    run_ids = {run.id for run in runs}
-    assert runs
-
-    operations = [operation for operation in all_operations if operation.run_id in run_ids]
-    operation_ids = {operation.id for operation in operations}
-    assert operations
-
-    outputs = [output for output in all_outputs if output.operation_id in operation_ids]
+    outputs = [output for output in all_outputs if output.job_id == job.id]
     dataset_ids = {output.dataset_id for output in outputs}
 
     # Dataset from symlinks appear only as SYMLINK location, but not as INPUT, because of depth=1
@@ -900,10 +875,9 @@ async def test_get_job_lineage_with_symlinks(
     assert datasets
 
     [job] = await enrich_jobs([job], async_session)
-    runs = await enrich_runs(runs, async_session)
     datasets = await enrich_datasets(datasets, async_session)
 
-    since = min(run.created_at for run in runs)
+    since = min(run.created_at for run in all_runs)
     response = await test_client.get(
         "v1/jobs/lineage",
         params={
