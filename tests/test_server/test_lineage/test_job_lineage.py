@@ -324,7 +324,7 @@ async def test_get_job_lineage_with_direction_and_until(
     async_session: AsyncSession,
     lineage: LINEAGE_FIXTURE_ANNOTATION,
 ):
-    all_jobs, all_runs, all_operations, all_datasets, all_inputs, _ = lineage
+    all_jobs, all_runs, _, all_datasets, all_inputs, _ = lineage
 
     job = all_jobs[0]
 
@@ -338,21 +338,10 @@ async def test_get_job_lineage_with_direction_and_until(
     inputs = [input for input in all_inputs if input.run_id in run_ids and since <= input.created_at <= until]
     assert inputs
 
-    # Only operations with some inputs are returned
-    operation_ids = {input.operation_id for input in inputs}
-    operations = [operation for operation in all_operations if operation.id in operation_ids]
-    assert operations
-
-    # Same for runs
-    run_ids = {operation.run_id for operation in operations}
-    runs = [run for run in all_runs if run.id in run_ids]
-    assert runs
-
     dataset_ids = {input.dataset_id for input in inputs}
     datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
 
     [job] = await enrich_jobs([job], async_session)
-    runs = await enrich_runs(runs, async_session)
     datasets = await enrich_datasets(datasets, async_session)
 
     response = await test_client.get(
@@ -577,15 +566,11 @@ async def test_get_job_lineage_with_depth(
     datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
 
     jobs = [job] + second_level_jobs
-    job_ids = {job.id for job in jobs}
-    run_ids = {run.id for run in all_runs if run.job_id in job_ids}
-    runs = [run for run in all_runs if run.id in run_ids]
 
     jobs = await enrich_jobs(jobs, async_session)
-    runs = await enrich_runs(runs, async_session)
     datasets = await enrich_datasets(datasets, async_session)
 
-    since = min(run.created_at for run in runs)
+    since = first_level_runs[0].started_at
     response = await test_client.get(
         "v1/jobs/lineage",
         params={
@@ -793,7 +778,7 @@ async def test_get_job_lineage_with_depth_ignore_cycles(
     async_session: AsyncSession,
     lineage_with_same_job: LINEAGE_FIXTURE_ANNOTATION,
 ):
-    [job], runs, operations, all_datasets, all_inputs, all_outputs = lineage_with_same_job
+    [job], runs, _, all_datasets, all_inputs, all_outputs = lineage_with_same_job
 
     # Go operations[first level] -> datasets[second level]
     first_level_outputs = all_outputs
