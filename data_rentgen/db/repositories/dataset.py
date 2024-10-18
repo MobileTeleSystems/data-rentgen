@@ -1,16 +1,25 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from string import punctuation
 from typing import Sequence
 
-from sqlalchemy import CompoundSelect, Select, any_, desc, func, select, union
+from sqlalchemy import (
+    ColumnElement,
+    CompoundSelect,
+    Select,
+    SQLColumnExpression,
+    any_,
+    asc,
+    desc,
+    func,
+    select,
+    union,
+)
 from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Address, Dataset, Location
 from data_rentgen.db.repositories.base import Repository
+from data_rentgen.db.utils.search import make_tsquery, ts_match, ts_rank
 from data_rentgen.dto import DatasetDTO, PaginationDTO
-
-ts_query_punctuation_map = str.maketrans(punctuation, " " * len(punctuation))
 
 
 class DatasetRepository(Repository[Dataset]):
@@ -39,39 +48,36 @@ class DatasetRepository(Repository[Dataset]):
             where.append(Dataset.id == any_(dataset_ids))  # type: ignore[arg-type]
 
         query: Select | CompoundSelect
+        order_by: list[ColumnElement | SQLColumnExpression]
         if search_query:
-            # For more accurate full-text search, we create a tsquery by combining the `search_query` "as is" with
-            # a modified version of it using the '||' operator.
-            # The "as is" version is used so that an exact match with the query has the highest rank.
-            # The modified version is needed because, in some cases, PostgreSQL tokenizes words joined by punctuation marks
-            # (e.g., `database.schema.table`) as a single word. By replacing punctuation with spaces using `translate`,
-            # we split such strings into separate words, allowing us to search by parts of the name.
-            ts_query = select(
-                func.plainto_tsquery("english", search_query).op("||")(
-                    func.plainto_tsquery("english", search_query.translate(ts_query_punctuation_map)),
-                ),
-            ).scalar_subquery()
+            tsquery = make_tsquery(search_query)
 
-            dataset_stmt = (
-                select(Dataset, func.ts_rank(Dataset.search_vector, ts_query).label("search_rank"))
-                .join(Location, Dataset.location_id == Location.id)
-                .join(Address, Location.id == Address.location_id)
-                .where(Dataset.search_vector.op("@@")(ts_query), *where)
+            dataset_stmt = select(Dataset, ts_rank(Dataset.search_vector, tsquery).label("search_rank")).where(
+                ts_match(Dataset.search_vector, tsquery),
+                *where,
             )
             location_stmt = (
-                select(Dataset, func.ts_rank(Location.search_vector, ts_query).label("search_rank"))
-                .join(Address, Location.id == Address.location_id)
+                select(Dataset, ts_rank(Location.search_vector, tsquery).label("search_rank"))
                 .join(Dataset, Location.id == Dataset.location_id)
-                .where(Location.search_vector.op("@@")(ts_query), *where)
+                .where(ts_match(Location.search_vector, tsquery), *where)
             )
             address_stmt = (
-                select(Dataset, func.ts_rank(Address.search_vector, ts_query).label("search_rank"))
+                select(Dataset, func.max(ts_rank(Address.search_vector, tsquery)).label("search_rank"))
                 .join(Location, Address.location_id == Location.id)
                 .join(Dataset, Location.id == Dataset.location_id)
-                .where(Address.search_vector.op("@@")(ts_query), *where)
+                .where(ts_match(Address.search_vector, tsquery), *where)
+                .group_by(Dataset.id, Location.id, Address.id)
             )
-            query = union(dataset_stmt, location_stmt, address_stmt)
-            order_by = [desc("search_rank"), Dataset.name]
+
+            union_cte = union(dataset_stmt, location_stmt, address_stmt).cte()
+
+            dataset_columns = [column for column in union_cte.columns if column.name != "search_rank"]
+
+            query = select(
+                *dataset_columns,
+                func.max(union_cte.c.search_rank).label("search_rank"),
+            ).group_by(*dataset_columns)
+            order_by = [desc("search_rank"), asc("name")]
         else:
             query = select(Dataset).where(*where)
             order_by = [Dataset.name]

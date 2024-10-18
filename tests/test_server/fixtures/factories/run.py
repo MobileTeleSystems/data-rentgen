@@ -217,10 +217,16 @@ async def runs_search(
         "extract_task_0002",
     ]
 
+    started_at = datetime.now()
     runs = [
-        run_factory(external_id=external_id, job_id=job.id, started_by_user_id=user.id)
+        run_factory(
+            created_at=started_at + timedelta(seconds=0.1 * i),
+            external_id=external_id,
+            job_id=job.id,
+            started_by_user_id=user.id,
+        )
         # Each job has 2 runs
-        for external_id, job in zip(runs_external_ids, [job for job in jobs for _ in range(2)])
+        for i, (external_id, job) in enumerate(zip(runs_external_ids, [job for job in jobs for _ in range(2)]))
     ]
     for item in runs:
         async_session.add(item)

@@ -47,7 +47,19 @@ class Dataset(Base):
 
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,
-        Computed("to_tsvector('english'::regconfig, name || ' ' || (translate(name, '/.', '  ')))", persisted=True),
+        Computed(
+            # Postgres treated values like `mydb.mytable` as a whole word (domain name),
+            # which does not allow user to search by name parts like `mytable`.
+            # Same for slashes which are treated like file paths.
+            # Keep both original name and one without punctuation to allow both full match and partial match.
+            #
+            # Also 'english' dictionary performs stemming,
+            # so name like 'my.database.table' is converted to tsvector `'databas':2 'tabl':3`,
+            # which does not match a tsquery like 'my:* & database:* & table:*'.
+            # Instead prefer 'simple' dictionary as it does not use stemming.
+            "to_tsvector('simple'::regconfig, name || ' ' || (translate(name, '/.', '  ')))",
+            persisted=True,
+        ),
         nullable=False,
         deferred=True,
         doc="Full-text search vector",

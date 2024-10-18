@@ -1,7 +1,6 @@
 from http import HTTPStatus
 
 import pytest
-from deepdiff import DeepDiff
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,10 +13,11 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 async def test_search_jobs_by_address_url(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    jobs_search: dict[str, Job],
+    jobs_search: tuple[dict[str, Job], dict[str, Job], dict[str, Job]],
 ) -> None:
+    _, _, jobs_by_address = jobs_search
     # Job with id 8 has two addresses urls: [http://airflow-host:2080, http://airflow-host:8020] and random name
-    jobs = await enrich_jobs([jobs_search["http://airflow-host:2080"]], async_session)
+    jobs = await enrich_jobs([jobs_by_address["http://airflow-host:2080"]], async_session)
 
     response = await test_client.get(
         "/v1/jobs",
@@ -25,8 +25,7 @@ async def test_search_jobs_by_address_url(
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
-
-    expected_response = {
+    assert response.json() == {
         "meta": {
             "has_next": False,
             "has_previous": False,
@@ -52,17 +51,16 @@ async def test_search_jobs_by_address_url(
             for job in jobs
         ],
     }
-    response_diff = DeepDiff(expected_response, response.json(), ignore_order=True)
-    assert not response_diff, f"Response diff: {response_diff.to_json()}"
 
 
 async def test_search_jobs_by_location_name(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    jobs_search: dict[str, Job],
+    jobs_search: tuple[dict[str, Job], dict[str, Job], dict[str, Job]],
 ) -> None:
+    _, jobs_by_location, _ = jobs_search
     # Job with id 5 has location names `data-product-host`
-    jobs = await enrich_jobs([jobs_search["data-product-host"]], async_session)
+    jobs = await enrich_jobs([jobs_by_location["data-product-host"]], async_session)
 
     response = await test_client.get(
         "/v1/jobs",
@@ -70,8 +68,7 @@ async def test_search_jobs_by_location_name(
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
-
-    expected_response = {
+    assert response.json() == {
         "meta": {
             "has_next": False,
             "has_previous": False,
@@ -97,30 +94,35 @@ async def test_search_jobs_by_location_name(
             for job in jobs
         ],
     }
-    response_diff = DeepDiff(expected_response, response.json(), ignore_order=True)
-    assert not response_diff, f"Response diff: {response_diff.to_json()}"
 
 
 async def test_search_jobs_by_job_name(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    jobs_search: dict[str, Job],
+    jobs_search: tuple[dict[str, Job], dict[str, Job], dict[str, Job]],
 ) -> None:
+    jobs_by_name, _, jobs_by_address = jobs_search
     # Jobs with ids 0 and 2 has job name `airflow-task` and `airflow-task`
     # Jobs with id 8 has two addresses urls: [http://airflow-host:2080, http://airflow-host:8020]
     jobs = await enrich_jobs(
-        [jobs_search["airflow-task"], jobs_search["airflow-dag"], jobs_search["http://airflow-host:8020"]],
+        [
+            # on top of the search are results with shorter name,
+            # then sorted alphabetically
+            jobs_by_name["airflow-dag"],
+            jobs_by_name["airflow-task"],
+            jobs_by_address["http://airflow-host:8020"],
+        ],
         async_session,
     )
 
     response = await test_client.get(
         "/v1/jobs",
-        params={"search_query": "airflow"},
+        # search by word prefix
+        params={"search_query": "airflo"},
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
-
-    expected_response = {
+    assert response.json() == {
         "meta": {
             "has_next": False,
             "has_previous": False,
@@ -147,19 +149,16 @@ async def test_search_jobs_by_job_name(
         ],
     }
 
-    # At this case the order is unstable
-    response_diff = DeepDiff(expected_response, response.json(), ignore_order=True)
-    assert not response_diff, f"Response diff: {response_diff.to_json()}"
-
 
 async def test_search_jobs_by_location_name_and_address_url(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    jobs_search: dict[str, Job],
+    jobs_search: tuple[dict[str, Job], dict[str, Job], dict[str, Job]],
 ) -> None:
+    _, jobs_by_location, jobs_by_address = jobs_search
     # Job with id 4 has location name `my-cluster`
     # Job with id 6 has address urls: [`yarn://my_cluster_1`, `yarn://my_cluster_2`]
-    jobs = await enrich_jobs([jobs_search["my-cluster"], jobs_search["yarn://my_cluster_1"]], async_session)
+    jobs = await enrich_jobs([jobs_by_location["my-cluster"], jobs_by_address["yarn://my_cluster_1"]], async_session)
 
     response = await test_client.get(
         "/v1/jobs",
@@ -167,8 +166,7 @@ async def test_search_jobs_by_location_name_and_address_url(
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
-
-    expected_response = {
+    assert response.json() == {
         "meta": {
             "has_next": False,
             "has_previous": False,
@@ -194,14 +192,11 @@ async def test_search_jobs_by_location_name_and_address_url(
             for job in jobs
         ],
     }
-    # At this case the order is unstable
-    response_diff = DeepDiff(expected_response, response.json(), ignore_order=True)
-    assert not response_diff, f"Response diff: {response_diff.to_json()}"
 
 
 async def test_search_jobs_no_results(
     test_client: AsyncClient,
-    jobs_search: dict[str, Job],
+    jobs_search: tuple[dict[str, Job], dict[str, Job], dict[str, Job]],
 ) -> None:
     response = await test_client.get(
         "/v1/jobs",

@@ -110,6 +110,6 @@ async def test_get_operations_by_multiple_ids(
                 "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
             }
-            for operation in sorted(selected_operations, key=lambda x: (x.run_id.bytes, x.id.bytes))
+            for operation in sorted(selected_operations, key=lambda x: (x.run_id.int, -x.id.int))
         ],
     }
