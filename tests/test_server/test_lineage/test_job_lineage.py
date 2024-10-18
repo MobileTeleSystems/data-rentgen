@@ -326,12 +326,7 @@ async def test_get_job_lineage_with_direction_and_until(
 ):
     all_jobs, all_runs, all_operations, all_datasets, all_inputs, _ = lineage
 
-    # There is no guarantee that first job will have any inputs.
-    # so we need to search for any job
-    some_input = all_inputs[0]
-    some_operation = next(operation for operation in all_operations if operation.id == some_input.operation_id)
-    some_run = next(run for run in all_runs if run.id == some_operation.run_id)
-    job = next(job for job in all_jobs if job.id == some_run.job_id)
+    job = all_jobs[0]
 
     since = min(run.created_at for run in all_runs if run.job_id == job.id)
     until = since + timedelta(seconds=1)
@@ -340,17 +335,7 @@ async def test_get_job_lineage_with_direction_and_until(
     run_ids = {run.id for run in raw_runs}
     assert raw_runs
 
-    raw_operations = [
-        operation
-        for operation in all_operations
-        if operation.run_id in run_ids and since <= operation.created_at <= until
-    ]
-    operation_ids = {operation.id for operation in raw_operations}
-    assert raw_operations
-
-    inputs = [
-        input for input in all_inputs if input.operation_id in operation_ids and since <= input.created_at <= until
-    ]
+    inputs = [input for input in all_inputs if input.run_id in run_ids and since <= input.created_at <= until]
     assert inputs
 
     # Only operations with some inputs are returned
@@ -428,12 +413,7 @@ async def test_get_job_lineage_with_direction_and_until_and_run_granularity(
 ):
     all_jobs, all_runs, all_operations, all_datasets, all_inputs, _ = lineage
 
-    # There is no guarantee that first job will have any inputs.
-    # so we need to search for any job
-    some_input = all_inputs[0]
-    some_operation = next(operation for operation in all_operations if operation.id == some_input.operation_id)
-    some_run = next(run for run in all_runs if run.id == some_operation.run_id)
-    job = next(job for job in all_jobs if job.id == some_run.job_id)
+    job = all_jobs[0]
 
     since = min(run.created_at for run in all_runs if run.job_id == job.id)
     until = since + timedelta(seconds=1)
@@ -559,15 +539,10 @@ async def test_get_job_lineage_with_depth(
 ):
     all_jobs, all_runs, all_operations, all_datasets, all_inputs, all_outputs = lineage_with_depth
 
-    # There is no guarantee that first job will have any output,
-    # so we need to search for any job
-    some_output = all_outputs[0]
-    some_operation = next(operation for operation in all_operations if operation.id == some_output.operation_id)
-    some_run = next(run for run in all_runs if run.id == some_operation.run_id)
-    some_job = next(job for job in all_jobs if job.id == some_run.job_id)
+    job = all_jobs[0]
 
     # Go job -> runs -> operations
-    first_level_runs = [run for run in all_runs if run.job_id == some_job.id]
+    first_level_runs = [run for run in all_runs if run.job_id == job.id]
     first_level_run_ids = {run.id for run in first_level_runs}
     first_level_operations = [operation for operation in all_operations if operation.run_id in first_level_run_ids]
     first_level_operation_ids = {operation.id for operation in first_level_operations}
@@ -582,9 +557,9 @@ async def test_get_job_lineage_with_depth(
     second_level_inputs = [input for input in all_inputs if input.dataset_id in first_level_dataset_ids]
     second_level_operation_ids = {input.operation_id for input in second_level_inputs} - first_level_operation_ids
     second_level_operations = [operation for operation in all_operations if operation.id in second_level_operation_ids]
-    second_level_run_ids = {operation.run_id for operation in second_level_operations} - {some_run.id}
+    second_level_run_ids = {operation.run_id for operation in second_level_operations} - first_level_run_ids
     second_level_runs = [run for run in all_runs if run.id in second_level_run_ids]
-    second_level_job_ids = {run.job_id for run in second_level_runs} - {some_job.id}
+    second_level_job_ids = {run.job_id for run in second_level_runs} - {job.id}
     second_level_jobs = [job for job in all_jobs if job.id in second_level_job_ids]
     assert second_level_jobs
 
@@ -601,7 +576,7 @@ async def test_get_job_lineage_with_depth(
     dataset_ids = first_level_dataset_ids | third_level_dataset_ids
     datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
 
-    jobs = [some_job] + second_level_jobs
+    jobs = [job] + second_level_jobs
     job_ids = {job.id for job in jobs}
     run_ids = {run.id for run in all_runs if run.job_id in job_ids}
     runs = [run for run in all_runs if run.id in run_ids]
@@ -615,7 +590,7 @@ async def test_get_job_lineage_with_depth(
         "v1/jobs/lineage",
         params={
             "since": since.isoformat(),
-            "start_node_id": some_job.id,
+            "start_node_id": job.id,
             "direction": "DOWNSTREAM",
             "depth": 3,
         },
@@ -679,15 +654,10 @@ async def test_get_job_lineage_with_depth_and_run_granularity(
 ):
     all_jobs, all_runs, all_operations, all_datasets, all_inputs, all_outputs = lineage_with_depth
 
-    # There is no guarantee that first job will have any output,
-    # so we need to search for any job
-    some_output = all_outputs[0]
-    some_operation = next(operation for operation in all_operations if operation.id == some_output.operation_id)
-    some_run = next(run for run in all_runs if run.id == some_operation.run_id)
-    some_job = next(job for job in all_jobs if job.id == some_run.job_id)
+    job = all_jobs[0]
 
     # Go output[job] -> operations[first level] -> runs[first level]
-    first_level_outputs = [output for output in all_outputs if output.job_id == some_job.id]
+    first_level_outputs = [output for output in all_outputs if output.job_id == job.id]
     first_level_operation_ids = {output.operation_id for output in first_level_outputs}
     first_level_operations = [operation for operation in all_operations if operation.id in first_level_operation_ids]
     assert first_level_operations
@@ -702,7 +672,7 @@ async def test_get_job_lineage_with_depth_and_run_granularity(
     second_level_operations = [operation for operation in all_operations if operation.id in second_level_operation_ids]
     second_level_run_ids = {operation.run_id for operation in second_level_operations} - first_level_run_ids
     second_level_runs = [run for run in all_runs if run.id in second_level_run_ids]
-    second_level_job_ids = {run.job_id for run in second_level_runs} - {some_job.id}
+    second_level_job_ids = {run.job_id for run in second_level_runs} - {job.id}
     second_level_jobs = [job for job in all_jobs if job.id in second_level_job_ids]
     assert second_level_jobs
 
@@ -718,7 +688,7 @@ async def test_get_job_lineage_with_depth_and_run_granularity(
     dataset_ids = first_level_dataset_ids | third_level_dataset_ids
     datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
 
-    jobs = [some_job] + second_level_jobs
+    jobs = [job] + second_level_jobs
     run_ids = first_level_run_ids | second_level_run_ids
 
     runs = [run for run in all_runs if run.id in run_ids]
@@ -732,7 +702,7 @@ async def test_get_job_lineage_with_depth_and_run_granularity(
         "v1/jobs/lineage",
         params={
             "since": since.isoformat(),
-            "start_node_id": some_job.id,
+            "start_node_id": job.id,
             "direction": "DOWNSTREAM",
             "granularity": "RUN",
             "depth": 3,
@@ -919,10 +889,7 @@ async def test_get_job_lineage_with_symlinks(
         lineage_with_symlinks
     )
 
-    some_input = all_inputs[0]
-    some_operation = next(operation for operation in all_operations if operation.id == some_input.operation_id)
-    some_run = next(run for run in all_runs if run.id == some_operation.run_id)
-    job = next(job for job in all_jobs if job.id == some_run.job_id)
+    job = all_jobs[0]
 
     runs = [run for run in all_runs if run.job_id == job.id]
     run_ids = {run.id for run in runs}
