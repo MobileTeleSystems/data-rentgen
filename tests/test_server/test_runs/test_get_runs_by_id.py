@@ -123,6 +123,6 @@ async def test_get_runs_by_multiple_ids(
                 "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "end_reason": run.end_reason,
             }
-            for run in sorted(selected_runs, key=lambda x: x.id)
+            for run in sorted(selected_runs, key=lambda x: x.id, reverse=True)
         ],
     }

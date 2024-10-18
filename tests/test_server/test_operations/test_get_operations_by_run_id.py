@@ -118,7 +118,7 @@ async def test_get_operations_by_run_id(
                 "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
             }
-            for operation in sorted(selected_operations, key=lambda x: x.id)
+            for operation in sorted(selected_operations, key=lambda x: x.id, reverse=True)
         ],
     }
 
@@ -168,6 +168,6 @@ async def test_get_operations_by_run_id_with_until(
                 "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
             }
-            for operation in sorted(selected_operations, key=lambda x: x.id)
+            for operation in sorted(selected_operations, key=lambda x: x.id, reverse=True)
         ],
     }

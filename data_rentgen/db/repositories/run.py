@@ -1,19 +1,27 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 from datetime import datetime
-from string import punctuation
 from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import CompoundSelect, Select, any_, desc, func, select, union
+from sqlalchemy import (
+    ColumnElement,
+    CompoundSelect,
+    Select,
+    SQLColumnExpression,
+    any_,
+    desc,
+    func,
+    select,
+    union,
+)
 from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Job, Run, RunStartReason, Status
 from data_rentgen.db.repositories.base import Repository
+from data_rentgen.db.utils.search import make_tsquery, ts_match, ts_rank
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid
 from data_rentgen.dto import PaginationDTO, RunDTO
-
-ts_query_punctuation_map = str.maketrans(punctuation, " " * len(punctuation))
 
 
 class RunRepository(Repository[Run]):
@@ -86,34 +94,33 @@ class RunRepository(Repository[Run]):
             where.append(Run.parent_run_id == parent_run_id)
 
         query: Select | CompoundSelect
+        order_by: list[ColumnElement | SQLColumnExpression]
         if search_query:
-            # For more accurate full-text search, we create a tsquery by combining the `search_query` "as is" with
-            # a modified version of it using the '||' operator.
-            # The "as is" version is used so that an exact match with the query has the highest rank.
-            # The modified version is needed because, in some cases, PostgreSQL tokenizes words joined by punctuation marks
-            # (e.g., `database.schema.table`) as a single word. By replacing punctuation with spaces using `translate`,
-            # we split such strings into separate words, allowing us to search by parts of the name.
-            ts_query = select(
-                func.plainto_tsquery("english", search_query).op("||")(
-                    func.plainto_tsquery("english", search_query.translate(ts_query_punctuation_map)),
-                ),
-            ).scalar_subquery()
+            tsquery = make_tsquery(search_query)
 
-            run_stmt = (
-                select(Run, func.ts_rank(Run.search_vector, ts_query).label("search_rank"))
-                .join(Job, Run.job_id == Job.id)
-                .where(Run.search_vector.op("@@")(ts_query), *where)
+            run_stmt = select(Run, ts_rank(Run.search_vector, tsquery).label("search_rank")).where(
+                ts_match(Run.search_vector, tsquery),
+                *where,
             )
             job_stmt = (
-                select(Run, func.ts_rank(Job.search_vector, ts_query).label("search_rank"))
-                .join(Run, Job.id == Run.job_id)
-                .where(Job.search_vector.op("@@")(ts_query), *where)
+                select(Run, ts_rank(Job.search_vector, tsquery).label("search_rank"))
+                .join(Job, Job.id == Run.job_id)
+                .where(ts_match(Job.search_vector, tsquery), *where)
             )
-            query = union(run_stmt, job_stmt)
-            order_by = [desc("search_rank"), Run.id]
+
+            union_cte = union(run_stmt, job_stmt).cte()
+
+            run_columns = [column for column in union_cte.columns if column.name != "search_rank"]
+
+            query = select(
+                *run_columns,
+                func.max(union_cte.c.search_rank).label("search_rank"),
+            ).group_by(*run_columns)
+            # place the most recent runs on top
+            order_by = [desc("search_rank"), desc("id")]
         else:
             query = select(Run).where(*where)
-            order_by = [Run.id]
+            order_by = [Run.id.desc()]
 
         options = [selectinload(Run.started_by_user)]
         return await self._paginate_by_query(

@@ -59,7 +59,19 @@ class Job(Base):
 
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,
-        Computed("to_tsvector('english'::regconfig, name || ' ' || (translate(name, '/.', '  ')))", persisted=True),
+        Computed(
+            # Postgres treats values like `mydag.mytask` as a whole word (domain name),
+            # which does not allow user to search by name parts like `mydag`.
+            # Same for slashes which are treated like file paths.
+            # Keep both original name and one without punctuation to allow both full match and partial match.
+            #
+            # Also 'english' dictionary performs stemming,
+            # so name like 'my.dag.task' is converted to tsvector `'dag':2 'task':3`,
+            # which does not match a tsquery like 'my:* & dag:* & task:*'.
+            # Instead prefer 'simple' dictionary as it does not use stemming.
+            "to_tsvector('simple'::regconfig, name || ' ' || (translate(name, '/.', '  ')))",
+            persisted=True,
+        ),
         nullable=False,
         deferred=True,
         doc="Full-text search vector",

@@ -44,7 +44,15 @@ class Location(Base):
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,
         Computed(
-            "to_tsvector('english'::regconfig, name || ' ' || (translate(name, '/.', ' ')) || ' ' || type)",
+            # Postgres threats host like `my.host.name` as a whole word,
+            # which does not allow user to search by parts like `host.name`.
+            # Keep both original name and one without punctuation to allow both full match and partial match.
+            #
+            # Also 'english' dictionary performs stemming,
+            # so name like 'my.host.name' is converted to tsvector `'host':2 'name':3`,
+            # which does not match a tsquery like 'my:* & host:* & name:*'.
+            # Instead prefer 'simple' dictionary as it does not use stemming.
+            "to_tsvector('simple', name || ' ' || (translate(name, '/.', ' ')) || ' ' || type)",
             persisted=True,
         ),
         nullable=False,
