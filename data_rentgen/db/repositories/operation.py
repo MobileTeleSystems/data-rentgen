@@ -62,7 +62,7 @@ class OperationRepository(Repository[Operation]):
             where.append(Operation.id == any_(operation_ids))  # type: ignore[arg-type]
 
         query = select(Operation).where(*where)
-        order_by = [Operation.run_id, Operation.id]
+        order_by = [Operation.run_id, Operation.id.desc()]
         return await self._paginate_by_query(
             query=query,
             order_by=order_by,

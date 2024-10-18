@@ -1,7 +1,6 @@
 from http import HTTPStatus
 
 import pytest
-from deepdiff import DeepDiff
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -14,18 +13,20 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 async def test_search_datasets_by_address_url(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    datasets_search: dict[str, Dataset],
+    datasets_search: tuple[dict[str, Dataset], dict[str, Dataset], dict[str, Dataset]],
 ) -> None:
+    _, _, datasets_by_address = datasets_search
     # dataset with id 8 has two addresses urls: [hdfs://my-cluster-namenode:2080, hdfs://my-cluster-namenode:8020] and random name
-    datasets = await enrich_datasets([datasets_search["hdfs://my-cluster-namenode:2080"]], async_session)
+    datasets = await enrich_datasets([datasets_by_address["hdfs://my-cluster-namenode:2080"]], async_session)
 
     response = await test_client.get(
         "/v1/datasets",
-        params={"search_query": "namenode"},
+        # search by word prefix
+        params={"search_query": "nameno"},
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
-    expected_response = {
+    assert response.json() == {
         "meta": {
             "has_next": False,
             "has_previous": False,
@@ -51,24 +52,24 @@ async def test_search_datasets_by_address_url(
             for dataset in datasets
         ],
     }
-    # At this case the order is unstable
-    response_diff = DeepDiff(expected_response, response.json(), ignore_order=True)
-    assert not response_diff, f"Response diff: {response_diff.to_json()}"
 
 
 async def test_search_datasets_by_location_name(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    datasets_search: dict[str, Dataset],
+    datasets_search: tuple[dict[str, Dataset], dict[str, Dataset], dict[str, Dataset]],
 ) -> None:
+    datasets_by_name, datasets_by_location, _ = datasets_search
     # Datasets with ids 3 and 4 has location names `postgres.location` and `postgres.history_location`
     # Dataset with id 1 has dataset name `postgres.public.location_history`
     # So this test also cover case: `search in dataset.name + location.name`
     datasets = await enrich_datasets(
         [
-            datasets_search["postgres.public.location_history"],
-            datasets_search["postgres.location"],
-            datasets_search["postgres.history_location"],
+            # on top of the search are results with shorter name,
+            # then sorted alphabetically
+            datasets_by_location["postgres.history_location"],
+            datasets_by_location["postgres.location"],
+            datasets_by_name["postgres.public.location_history"],
         ],
         async_session,
     )
@@ -79,8 +80,7 @@ async def test_search_datasets_by_location_name(
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
-
-    expected_response = {
+    assert response.json() == {
         "meta": {
             "has_next": False,
             "has_previous": False,
@@ -106,18 +106,16 @@ async def test_search_datasets_by_location_name(
             for dataset in datasets
         ],
     }
-    # At this case the order is unstable
-    response_diff = DeepDiff(expected_response, response.json(), ignore_order=True)
-    assert not response_diff, f"Response diff: {response_diff.to_json()}"
 
 
 async def test_search_datasets_by_dataset_name(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    datasets_search: dict[str, Dataset],
+    datasets_search: tuple[dict[str, Dataset], dict[str, Dataset], dict[str, Dataset]],
 ) -> None:
+    datasets_by_name, _, _ = datasets_search
     # Dataset with id 1 has dataset name `postgres.public.location_history`
-    datasets = await enrich_datasets([datasets_search["postgres.public.location_history"]], async_session)
+    datasets = await enrich_datasets([datasets_by_name["postgres.public.location_history"]], async_session)
 
     response = await test_client.get(
         "/v1/datasets",
@@ -125,8 +123,7 @@ async def test_search_datasets_by_dataset_name(
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
-
-    expected_response = {
+    assert response.json() == {
         "meta": {
             "has_next": False,
             "has_previous": False,
@@ -153,20 +150,20 @@ async def test_search_datasets_by_dataset_name(
         ],
     }
 
-    # At this case the order is unstable
-    response_diff = DeepDiff(expected_response, response.json(), ignore_order=True)
-    assert not response_diff, f"Response diff: {response_diff.to_json()}"
-
 
 async def test_search_datasets_by_location_name_and_address_url(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    datasets_search: dict[str, Dataset],
+    datasets_search: tuple[dict[str, Dataset], dict[str, Dataset], dict[str, Dataset]],
 ) -> None:
+    _, datasets_by_location, datasets_by_address = datasets_search
     # Dataset with id 5 has location name `my-cluster`
     # Dataset with id 8 has address url `hdfs://my-cluster-namenode:2080` and `hdfs://my-cluster-namenode:8020`
     datasets = await enrich_datasets(
-        [datasets_search["my-cluster"], datasets_search["hdfs://my-cluster-namenode:8020"]],
+        [
+            datasets_by_location["my-cluster"],
+            datasets_by_address["hdfs://my-cluster-namenode:8020"],
+        ],
         async_session,
     )
 
@@ -176,8 +173,7 @@ async def test_search_datasets_by_location_name_and_address_url(
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
-
-    expected_response = {
+    assert response.json() == {
         "meta": {
             "has_next": False,
             "has_previous": False,
@@ -204,14 +200,10 @@ async def test_search_datasets_by_location_name_and_address_url(
         ],
     }
 
-    # At this case the order is unstable
-    response_diff = DeepDiff(expected_response, response.json(), ignore_order=True)
-    assert not response_diff, f"Response diff: {response_diff.to_json()}"
-
 
 async def test_search_datasets_no_results(
     test_client: AsyncClient,
-    datasets_search: dict[str, Dataset],
+    datasets_search: tuple[dict[str, Dataset], dict[str, Dataset], dict[str, Dataset]],
 ) -> None:
     response = await test_client.get(
         "/v1/datasets",

@@ -1,16 +1,25 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from string import punctuation
 from typing import Sequence
 
-from sqlalchemy import CompoundSelect, Select, any_, desc, func, select, union
+from sqlalchemy import (
+    ColumnElement,
+    CompoundSelect,
+    Select,
+    SQLColumnExpression,
+    any_,
+    asc,
+    desc,
+    func,
+    select,
+    union,
+)
 from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Address, Job, JobType, Location
 from data_rentgen.db.repositories.base import Repository
+from data_rentgen.db.utils.search import make_tsquery, ts_match, ts_rank
 from data_rentgen.dto import JobDTO, PaginationDTO
-
-ts_query_punctuation_map = str.maketrans(punctuation, " " * len(punctuation))
 
 
 class JobRepository(Repository[Job]):
@@ -26,40 +35,36 @@ class JobRepository(Repository[Job]):
             where.append(Job.id == any_(job_ids))  # type: ignore[arg-type]
 
         query: Select | CompoundSelect
+        order_by: list[ColumnElement | SQLColumnExpression]
         if search_query:
-            # For more accurate full-text search, we create a tsquery by combining the `search_query` "as is" with
-            # a modified version of it using the '||' operator.
-            # The "as is" version is used so that an exact match with the query has the highest rank.
-            # The modified version is needed because, in some cases, PostgreSQL tokenizes words joined by punctuation marks
-            # (e.g., `database.schema.table`) as a single word. By replacing punctuation with spaces using `translate`,
-            # we split such strings into separate words, allowing us to search by parts of the name.
-            ts_query = select(
-                func.plainto_tsquery("english", search_query).op("||")(
-                    func.plainto_tsquery("english", search_query.translate(ts_query_punctuation_map)),
-                ),
-            ).scalar_subquery()
+            tsquery = make_tsquery(search_query)
 
-            job_stmt = (
-                select(Job, func.ts_rank(Job.search_vector, ts_query).label("search_rank"))
-                .join(Location, Job.location_id == Location.id)
-                .join(Address, Location.id == Address.location_id)
-                .where(Job.search_vector.op("@@")(ts_query), *where)
+            job_stmt = select(Job, ts_rank(Job.search_vector, tsquery).label("search_rank")).where(
+                ts_match(Job.search_vector, tsquery),
+                *where,
             )
             location_stmt = (
-                select(Job, func.ts_rank(Location.search_vector, ts_query).label("search_rank"))
-                .join(Address, Location.id == Address.location_id)
+                select(Job, ts_rank(Location.search_vector, tsquery).label("search_rank"))
                 .join(Job, Location.id == Job.location_id)
-                .where(Location.search_vector.op("@@")(ts_query), *where)
+                .where(ts_match(Location.search_vector, tsquery), *where)
             )
             address_stmt = (
-                select(Job, func.ts_rank(Address.search_vector, ts_query).label("search_rank"))
+                select(Job, func.max(ts_rank(Address.search_vector, tsquery).label("search_rank")))
                 .join(Location, Address.location_id == Location.id)
                 .join(Job, Location.id == Job.location_id)
-                .where(Address.search_vector.op("@@")(ts_query), *where)
+                .where(ts_match(Address.search_vector, tsquery), *where)
+                .group_by(Job.id, Location.id, Address.id)
             )
 
-            query = union(job_stmt, location_stmt, address_stmt)
-            order_by = [desc("search_rank"), Job.name]
+            union_cte = union(job_stmt, location_stmt, address_stmt).cte()
+
+            job_columns = [column for column in union_cte.columns if column.name != "search_rank"]
+
+            query = select(
+                *job_columns,
+                func.max(union_cte.c.search_rank).label("search_rank"),
+            ).group_by(*job_columns)
+            order_by = [desc("search_rank"), asc("name")]
         else:
             query = select(Job).where(*where)
             order_by = [Job.name]

@@ -55,7 +55,11 @@ async def test_search_runs_by_external_id(
     runs_search: dict[str, Run],
 ) -> None:
     runs = await enrich_runs(
-        [runs_search["application_1638922609021_0001"], runs_search["application_1638922609021_0002"]],
+        [
+            # runs sorted by id in descending order
+            runs_search["application_1638922609021_0002"],
+            runs_search["application_1638922609021_0001"],
+        ],
         async_session,
     )
     since = min(run.created_at for run in runs)
@@ -64,13 +68,13 @@ async def test_search_runs_by_external_id(
         "/v1/runs",
         params={
             "since": since.isoformat(),
-            "search_query": "1638922609021",
+            # search by word prefix
+            "search_query": "1638922",
         },
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
-
-    expected_response = {
+    assert response.json() == {
         "meta": {
             "has_next": False,
             "has_previous": False,
@@ -102,17 +106,20 @@ async def test_search_runs_by_external_id(
         ],
     }
 
-    # At this case the order is unstable
-    response_diff = DeepDiff(expected_response, response.json(), ignore_order=True)
-    assert not response_diff, f"Response diff: {response_diff.to_json()}"
-
 
 async def test_search_runs_by_job_name(
     test_client: AsyncClient,
     async_session: AsyncSession,
     runs_search: dict[str, Run],
 ) -> None:
-    runs = await enrich_runs([runs_search["extract_task_0001"], runs_search["extract_task_0002"]], async_session)
+    runs = await enrich_runs(
+        [
+            # runs sorted by id in descending order
+            runs_search["extract_task_0002"],
+            runs_search["extract_task_0001"],
+        ],
+        async_session,
+    )
     since = min(run.created_at for run in runs)
 
     response = await test_client.get(
@@ -124,8 +131,7 @@ async def test_search_runs_by_job_name(
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
-
-    expected_response = {
+    assert response.json() == {
         "meta": {
             "has_next": False,
             "has_previous": False,
@@ -157,10 +163,6 @@ async def test_search_runs_by_job_name(
         ],
     }
 
-    # At this case the order is unstable
-    response_diff = DeepDiff(expected_response, response.json(), ignore_order=True)
-    assert not response_diff, f"Response diff: {response_diff.to_json()}"
-
 
 async def test_search_runs_by_job_type(
     test_client: AsyncClient,
@@ -168,7 +170,11 @@ async def test_search_runs_by_job_type(
     runs_search: dict[str, Run],
 ) -> None:
     runs = await enrich_runs(
-        [runs_search["application_1638922609021_0001"], runs_search["application_1638922609021_0002"]],
+        [
+            # runs sorted by id in descending order
+            runs_search["application_1638922609021_0002"],
+            runs_search["application_1638922609021_0001"],
+        ],
         async_session,
     )
     since = min(run.created_at for run in runs)
@@ -182,8 +188,7 @@ async def test_search_runs_by_job_type(
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
-
-    expected_response = {
+    assert response.json() == {
         "meta": {
             "has_next": False,
             "has_previous": False,
@@ -214,10 +219,6 @@ async def test_search_runs_by_job_type(
             for run in runs
         ],
     }
-
-    # At this case the order is unstable
-    response_diff = DeepDiff(expected_response, response.json(), ignore_order=True)
-    assert not response_diff, f"Response diff: {response_diff.to_json()}"
 
 
 async def test_search_runs_no_results(

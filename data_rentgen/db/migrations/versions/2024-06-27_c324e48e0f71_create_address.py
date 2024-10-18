@@ -28,7 +28,7 @@ def upgrade() -> None:
             "search_vector",
             postgresql.TSVECTOR(),
             sa.Computed(
-                "to_tsvector('english'::regconfig, url || ' ' || (translate(url, '/.', '  ')))",
+                "to_tsvector('simple'::regconfig, url || ' ' || (translate(url, '/.', '  ')))",
                 persisted=True,
             ),
             nullable=False,

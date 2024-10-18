@@ -140,7 +140,16 @@ class Run(Base):
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,
         Computed(
-            "to_tsvector('english'::regconfig, external_id || ' ' || (translate(external_id, '/.', '  ')))",
+            # Postgres treats values like `my.app.id` as a whole word (domain name),
+            # which does not allow user to search by parts like `some` or `value`.
+            # Same for slashes which are treated like file paths.
+            # Keep both original name and one without punctuation to allow both full match and partial match.
+            #
+            # Also 'english' dictionary performs stemming,
+            # so name like 'my.app.id' is converted to tsvector `'app':2 'id':3`,
+            # which does not match a tsquery like 'my:* & app:* & id:*'.
+            # Instead prefer 'simple' dictionary as it does not use stemming.
+            "to_tsvector('simple'::regconfig, external_id || ' ' || (translate(external_id, '/.', '  ')))",
             persisted=True,
         ),
         nullable=True,
