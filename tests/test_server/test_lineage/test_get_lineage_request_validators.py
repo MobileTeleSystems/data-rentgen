@@ -15,7 +15,7 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
         ("operations", None),
         ("datasets", None),
         ("runs", "RUN"),
-        ("jobs", None),
+        ("jobs", "JOB"),
     ],
 )
 async def test_get_lineage_no_filter(test_client: AsyncClient, entity_kind: str, granularity: str):

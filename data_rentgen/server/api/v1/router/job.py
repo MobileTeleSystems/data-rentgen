@@ -42,8 +42,7 @@ async def get_jobs_lineage(
     lineage = await lineage_service.get_lineage_by_jobs(
         start_node_ids=[query_args.start_node_id],  # type: ignore[list-item]
         direction=query_args.direction,
-        # TODO: add pagination args in DOP-20060
-        granularity="OPERATION",
+        granularity=query_args.granularity,
         since=query_args.since,
         until=query_args.until,
         depth=query_args.depth,
