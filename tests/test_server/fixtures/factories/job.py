@@ -94,7 +94,7 @@ async def jobs(
 async def jobs_search(
     request: pytest.FixtureRequest,
     async_session: AsyncSession,
-) -> AsyncGenerator[dict[str, Job], None]:
+) -> AsyncGenerator[tuple[dict[str, Job], dict[str, Job], dict[str, Job]], None]:
     """
     Fixture with explicit jobs, locations names and addresses urls for search tests.
     The fixtures create database structure like this:
@@ -172,18 +172,14 @@ async def jobs_search(
         await async_session.refresh(item)
         async_session.expunge(item)
 
-    entities = {name: job for name, job in zip(jobs_names, jobs[:3])}
-    entities.update(
-        {
-            name: job
-            for name, job in zip(
-                [name for name, _ in location_names_types],
-                jobs[3:6],
-            )
-        },
-    )
-    entities.update(
-        {name: job for name, job in zip(addresses_url, [job for job in jobs[6:] for _ in range(2)])},
-    )
+    jobs_by_name = {name: job for name, job in zip(jobs_names, jobs[:3])}
+    jobs_by_location = {
+        name: job
+        for name, job in zip(
+            [name for name, _ in location_names_types],
+            jobs[3:6],
+        )
+    }
+    jobs_by_address = {name: job for name, job in zip(addresses_url, [job for job in jobs[6:] for _ in range(2)])}
 
-    yield entities
+    yield jobs_by_name, jobs_by_location, jobs_by_address

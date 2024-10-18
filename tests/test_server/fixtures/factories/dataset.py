@@ -154,7 +154,7 @@ async def datasets_with_symlinks(
 async def datasets_search(
     request: pytest.FixtureRequest,
     async_session: AsyncSession,
-) -> AsyncGenerator[dict[str, Dataset], None]:
+) -> AsyncGenerator[tuple[dict[str, Dataset], dict[str, Dataset], dict[str, Dataset]], None]:
     """
     Fixture with explicit dataset, locations names and addresses urls for search tests.
     The fixtures create database structure like this:
@@ -239,21 +239,16 @@ async def datasets_search(
         await async_session.refresh(item)
         async_session.expunge(item)
 
-    entities = {name: dataset for name, dataset in zip(datasets_names, datasets[:3])}
-    entities.update(
-        {
-            name: dataset
-            for name, dataset in zip(
-                [name for name, _ in location_names_types],
-                datasets[3:6],
-            )
-        },
-    )
-    entities.update(
-        {
-            name: dataset
-            for name, dataset in zip(addresses_url, [dataset for dataset in datasets[6:] for _ in range(2)])
-        },
-    )
+    datasets_by_name = {name: dataset for name, dataset in zip(datasets_names, datasets[:3])}
+    datasets_by_location = {
+        name: dataset
+        for name, dataset in zip(
+            [name for name, _ in location_names_types],
+            datasets[3:6],
+        )
+    }
+    datasets_by_address = {
+        name: dataset for name, dataset in zip(addresses_url, [dataset for dataset in datasets[6:] for _ in range(2)])
+    }
 
-    yield entities
+    yield datasets_by_name, datasets_by_location, datasets_by_address

@@ -130,7 +130,7 @@ async def test_get_runs_by_job_id(
                 "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "end_reason": run.end_reason,
             }
-            for run in sorted(selected_runs, key=lambda x: x.id)
+            for run in sorted(selected_runs, key=lambda x: x.id, reverse=True)
         ],
     }
 
@@ -184,6 +184,6 @@ async def test_get_runs_by_job_id_with_until(
                 "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
                 "end_reason": run.end_reason,
             }
-            for run in sorted(runs, key=lambda x: x.id)
+            for run in sorted(runs, key=lambda x: x.id, reverse=True)
         ],
     }
