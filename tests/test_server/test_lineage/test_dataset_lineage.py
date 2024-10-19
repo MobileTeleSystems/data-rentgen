@@ -79,7 +79,7 @@ async def test_get_dataset_lineage(
     async_session: AsyncSession,
     lineage_with_same_dataset: LINEAGE_FIXTURE_ANNOTATION,
 ):
-    jobs, runs, operations, datasets, *_ = lineage_with_same_dataset
+    jobs, runs, _, datasets, *_ = lineage_with_same_dataset
     jobs = await enrich_jobs(jobs, async_session)
     runs = await enrich_runs(runs, async_session)
     datasets = await enrich_datasets(datasets, async_session)
@@ -108,21 +108,12 @@ async def test_get_dataset_lineage(
         ]
         + [
             {
-                "kind": "PARENT",
-                "from": {"kind": "RUN", "id": str(operation.run_id)},
-                "to": {"kind": "OPERATION", "id": str(operation.id)},
-                "type": None,
-            }
-            for operation in sorted(operations, key=lambda x: x.id)
-        ]
-        + [
-            {
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": dataset.id},
-                "to": {"kind": "OPERATION", "id": str(operation.id)},
+                "to": {"kind": "RUN", "id": str(run.id)},
                 "type": None,
             }
-            for operation in operations
+            for run in runs
         ],
         "nodes": [
             {
@@ -169,21 +160,6 @@ async def test_get_dataset_lineage(
                 "end_reason": run.end_reason,
             }
             for run in runs
-        ]
-        + [
-            {
-                "kind": "OPERATION",
-                "id": str(operation.id),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.value,
-                "type": operation.type.value,
-                "position": operation.position,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            }
-            for operation in operations
         ],
     }
 
@@ -193,7 +169,7 @@ async def test_get_dataset_lineage_with_direction_and_until(
     async_session: AsyncSession,
     lineage_with_same_dataset: LINEAGE_FIXTURE_ANNOTATION,
 ):
-    jobs, runs, all_operations, datasets, *_ = lineage_with_same_dataset
+    jobs, runs, _, datasets, *_ = lineage_with_same_dataset
     jobs = await enrich_jobs(jobs, async_session)
     runs = await enrich_runs(runs, async_session)
     datasets = await enrich_datasets(datasets, async_session)
@@ -202,9 +178,6 @@ async def test_get_dataset_lineage_with_direction_and_until(
     since = runs[0].created_at
     # took only first two operations
     until = since + timedelta(seconds=1)
-
-    operations = [operation for operation in all_operations if since <= operation.created_at <= until]
-
     response = await test_client.get(
         "v1/datasets/lineage",
         params={
@@ -228,21 +201,12 @@ async def test_get_dataset_lineage_with_direction_and_until(
         ]
         + [
             {
-                "kind": "PARENT",
-                "from": {"kind": "RUN", "id": str(operation.run_id)},
-                "to": {"kind": "OPERATION", "id": str(operation.id)},
-                "type": None,
-            }
-            for operation in operations
-        ]
-        + [
-            {
                 "kind": "OUTPUT",
-                "from": {"kind": "OPERATION", "id": str(operation.id)},
+                "from": {"kind": "RUN", "id": str(run.id)},
                 "to": {"kind": "DATASET", "id": dataset.id},
                 "type": "APPEND",
             }
-            for operation in operations
+            for run in runs
         ],
         "nodes": [
             {
@@ -289,21 +253,6 @@ async def test_get_dataset_lineage_with_direction_and_until(
                 "end_reason": run.end_reason,
             }
             for run in sorted(runs, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "OPERATION",
-                "id": str(operation.id),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.value,
-                "type": operation.type.value,
-                "position": operation.position,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            }
-            for operation in sorted(operations, key=lambda x: x.id)
         ],
     }
 
@@ -388,18 +337,9 @@ async def test_get_dataset_lineage_with_depth(
         ]
         + [
             {
-                "kind": "PARENT",
-                "from": {"kind": "RUN", "id": str(operation.run_id)},
-                "to": {"kind": "OPERATION", "id": str(operation.id)},
-                "type": None,
-            }
-            for operation in sorted(operations, key=lambda x: x.id)
-        ]
-        + [
-            {
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": input.dataset_id},
-                "to": {"kind": "OPERATION", "id": str(input.operation_id)},
+                "to": {"kind": "RUN", "id": str(input.run_id)},
                 "type": None,
             }
             for input in inputs
@@ -407,7 +347,7 @@ async def test_get_dataset_lineage_with_depth(
         + [
             {
                 "kind": "OUTPUT",
-                "from": {"kind": "OPERATION", "id": str(output.operation_id)},
+                "from": {"kind": "RUN", "id": str(output.run_id)},
                 "to": {"kind": "DATASET", "id": output.dataset_id},
                 "type": "APPEND",
             }
@@ -459,21 +399,6 @@ async def test_get_dataset_lineage_with_depth(
                 "end_reason": run.end_reason,
             }
             for run in sorted(runs, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "OPERATION",
-                "id": str(operation.id),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.value,
-                "type": operation.type.value,
-                "position": operation.position,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            }
-            for operation in sorted(operations, key=lambda x: x.id)
         ],
     }
 
@@ -483,7 +408,7 @@ async def test_get_dataset_lineage_with_depth_ignore_cycles(
     async_session: AsyncSession,
     lineage_with_same_dataset: LINEAGE_FIXTURE_ANNOTATION,
 ):
-    jobs, runs, operations, [dataset], *_ = lineage_with_same_dataset
+    jobs, runs, _, [dataset], *_ = lineage_with_same_dataset
 
     # The there is a cycle dataset -> operation, so there is only one level of lineage.
     # All relations should be in the response, without duplicates.
@@ -515,30 +440,21 @@ async def test_get_dataset_lineage_with_depth_ignore_cycles(
         ]
         + [
             {
-                "kind": "PARENT",
-                "from": {"kind": "RUN", "id": str(operation.run_id)},
-                "to": {"kind": "OPERATION", "id": str(operation.id)},
-                "type": None,
-            }
-            for operation in sorted(operations, key=lambda x: x.id)
-        ]
-        + [
-            {
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": dataset.id},
-                "to": {"kind": "OPERATION", "id": str(operation.id)},
+                "to": {"kind": "RUN", "id": str(run.id)},
                 "type": None,
             }
-            for operation in sorted(operations, key=lambda x: x.id)
+            for run in sorted(runs, key=lambda x: x.id)
         ]
         + [
             {
                 "kind": "OUTPUT",
-                "from": {"kind": "OPERATION", "id": str(operation.id)},
+                "from": {"kind": "RUN", "id": str(run.id)},
                 "to": {"kind": "DATASET", "id": dataset.id},
                 "type": "APPEND",
             }
-            for operation in sorted(operations, key=lambda x: x.id)
+            for run in sorted(runs, key=lambda x: x.id)
         ],
         "nodes": [
             {
@@ -585,21 +501,6 @@ async def test_get_dataset_lineage_with_depth_ignore_cycles(
                 "end_reason": run.end_reason,
             }
             for run in sorted(runs, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "OPERATION",
-                "id": str(operation.id),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.value,
-                "type": operation.type.value,
-                "position": operation.position,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            }
-            for operation in sorted(operations, key=lambda x: x.id)
         ],
     }
 
@@ -674,15 +575,6 @@ async def test_get_dataset_lineage_with_symlinks(
         ]
         + [
             {
-                "kind": "PARENT",
-                "from": {"kind": "RUN", "id": str(operation.run_id)},
-                "to": {"kind": "OPERATION", "id": str(operation.id)},
-                "type": None,
-            }
-            for operation in sorted(operations, key=lambda x: x.id)
-        ]
-        + [
-            {
                 "kind": "SYMLINK",
                 "from": {"kind": "DATASET", "id": symlink.from_dataset_id},
                 "to": {"kind": "DATASET", "id": symlink.to_dataset_id},
@@ -694,7 +586,7 @@ async def test_get_dataset_lineage_with_symlinks(
             {
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": input.dataset_id},
-                "to": {"kind": "OPERATION", "id": str(input.operation_id)},
+                "to": {"kind": "RUN", "id": str(input.run_id)},
                 "type": None,
             }
             for input in inputs
@@ -745,20 +637,5 @@ async def test_get_dataset_lineage_with_symlinks(
                 "end_reason": run.end_reason,
             }
             for run in runs
-        ]
-        + [
-            {
-                "kind": "OPERATION",
-                "id": str(operation.id),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.value,
-                "type": operation.type.value,
-                "position": operation.position,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            }
-            for operation in operations
         ],
     }

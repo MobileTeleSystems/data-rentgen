@@ -42,7 +42,7 @@ async def get_datasets_lineage(
     lineage = await lineage_service.get_lineage_by_datasets(
         start_node_ids=[query_args.start_node_id],  # type: ignore[list-item]
         direction=query_args.direction,
-        granularity="OPERATION",
+        granularity=query_args.granularity,
         since=query_args.since,
         until=query_args.until,
         depth=query_args.depth,
