@@ -82,8 +82,7 @@ async def test_get_dataset_lineage_with_granularity_run(
     jobs, runs, _, datasets, *_ = lineage_with_same_dataset
     jobs = await enrich_jobs(jobs, async_session)
     runs = await enrich_runs(runs, async_session)
-    datasets = await enrich_datasets(datasets, async_session)
-    dataset = datasets[0]
+    [dataset] = await enrich_datasets(datasets, async_session)
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
@@ -172,8 +171,7 @@ async def test_get_dataset_lineage_with_granularity_job(
     jobs, runs, _, datasets, *_ = lineage_with_same_dataset
 
     jobs = await enrich_jobs(jobs, async_session)
-    datasets = await enrich_datasets(datasets, async_session)
-    dataset = datasets[0]
+    [dataset] = await enrich_datasets(datasets, async_session)
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
@@ -236,8 +234,7 @@ async def test_get_dataset_lineage_with_granularity_operation(
 
     jobs = await enrich_jobs(jobs, async_session)
     runs = await enrich_runs(runs, async_session)
-    datasets = await enrich_datasets(datasets, async_session)
-    dataset = datasets[0]
+    [dataset] = await enrich_datasets(datasets, async_session)
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
@@ -351,8 +348,7 @@ async def test_get_dataset_lineage_with_direction_and_until_and_granularity_oper
     jobs, runs, all_operations, datasets, *_ = lineage_with_same_dataset
     jobs = await enrich_jobs(jobs, async_session)
     runs = await enrich_runs(runs, async_session)
-    datasets = await enrich_datasets(datasets, async_session)
-    dataset = datasets[0]
+    [dataset] = await enrich_datasets(datasets, async_session)
 
     since = min(run.created_at for run in runs)
     # took only first two operations
@@ -970,7 +966,7 @@ async def test_get_dataset_lineage_with_depth_and_granularity_run_ignore_cycles(
     }
 
 
-async def test_get_dataset_lineage_with_dept_and_granularity_operationh_ignore_cycles(
+async def test_get_dataset_lineage_with_depth_and_granularity_operation_ignore_cycles(
     test_client: AsyncClient,
     async_session: AsyncSession,
     lineage_with_same_dataset: LINEAGE_FIXTURE_ANNOTATION,
