@@ -26,6 +26,7 @@ class LineageEntityKindV1(str, Enum):
 class LineageDirectionV1(str, Enum):
     DOWNSTREAM = "DOWNSTREAM"
     UPSTREAM = "UPSTREAM"
+    BOTH = "BOTH"
 
     def __str__(self) -> str:
         return self.value
@@ -60,7 +61,7 @@ class BaseLineageQueryV1(BaseModel):
     )
     direction: LineageDirectionV1 = Field(
         description="Direction of the lineage",
-        examples=["DOWNSTREAM", "UPSTREAM"],
+        examples=["DOWNSTREAM", "UPSTREAM", "BOTH"],
     )
     depth: int = Field(
         default=1,

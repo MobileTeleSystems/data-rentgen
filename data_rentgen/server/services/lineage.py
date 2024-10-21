@@ -101,14 +101,14 @@ class LineageService:
 
         inputs = []
         outputs = []
-        if direction == LineageDirectionV1.DOWNSTREAM:
+        if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             outputs = await self._uow.output.list_by_job_ids(
                 sorted(jobs_by_id.keys()),
                 since=since,
                 until=until,
                 granularity=granularity,
             )
-        else:
+        if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
             inputs = await self._uow.input.list_by_job_ids(
                 sorted(jobs_by_id.keys()),
                 since=since,
@@ -207,14 +207,14 @@ class LineageService:
 
         inputs = []
         outputs = []
-        if direction == LineageDirectionV1.DOWNSTREAM:
+        if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             outputs = await self._uow.output.list_by_run_ids(
                 sorted(runs_by_id.keys()),
                 since=since,
                 until=until,
                 granularity=granularity,
             )
-        else:
+        if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
             inputs = await self._uow.input.list_by_run_ids(
                 sorted(runs_by_id.keys()),
                 since=since,
@@ -312,9 +312,9 @@ class LineageService:
 
         inputs = []
         outputs = []
-        if direction == LineageDirectionV1.DOWNSTREAM:
+        if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             outputs = await self._uow.output.list_by_operation_ids(operation_ids)
-        else:
+        if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
             inputs = await self._uow.input.list_by_operation_ids(operation_ids)
 
         ids_to_skip = ids_to_skip or IdsToSkip()
@@ -497,14 +497,14 @@ class LineageService:
         ids_to_skip = ids_to_skip or IdsToSkip()
         inputs = []
         outputs = []
-        if direction == LineageDirectionV1.DOWNSTREAM:
+        if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             inputs = await self._uow.input.list_by_dataset_ids(
                 sorted(datasets_by_id.keys() - ids_to_skip.datasets),
                 since=since,
                 until=until,
                 granularity="OPERATION",
             )
-        else:
+        if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
             outputs = await self._uow.output.list_by_dataset_ids(
                 sorted(datasets_by_id.keys() - ids_to_skip.datasets),
                 since=since,
@@ -560,14 +560,14 @@ class LineageService:
         ids_to_skip = ids_to_skip or IdsToSkip()
         inputs = []
         outputs = []
-        if direction == LineageDirectionV1.DOWNSTREAM:
+        if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             inputs = await self._uow.input.list_by_dataset_ids(
                 sorted(datasets_by_id.keys() - ids_to_skip.datasets),
                 since=since,
                 until=until,
                 granularity="RUN",
             )
-        else:
+        if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
             outputs = await self._uow.output.list_by_dataset_ids(
                 sorted(datasets_by_id.keys() - ids_to_skip.datasets),
                 since=since,
@@ -619,14 +619,14 @@ class LineageService:
     ) -> LineageServiceResult:
         inputs = []
         outputs = []
-        if direction == LineageDirectionV1.DOWNSTREAM:
+        if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             inputs = await self._uow.input.list_by_dataset_ids(
                 sorted(datasets_by_id.keys()),
                 since=since,
                 until=until,
                 granularity="JOB",
             )
-        else:
+        if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
             outputs = await self._uow.output.list_by_dataset_ids(
                 sorted(datasets_by_id.keys()),
                 since=since,
