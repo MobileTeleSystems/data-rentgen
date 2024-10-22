@@ -68,6 +68,7 @@ async def test_get_dataset_lineage_no_relations(
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                    "external_id": dataset.location.external_id,
                 },
             },
         ],
@@ -124,6 +125,7 @@ async def test_get_dataset_lineage_with_granularity_run(
                     "name": job.location.name,
                     "type": job.location.type,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
                 },
             }
             for job in jobs
@@ -138,6 +140,7 @@ async def test_get_dataset_lineage_with_granularity_run(
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                    "external_id": dataset.location.external_id,
                 },
             },
         ]
@@ -205,6 +208,7 @@ async def test_get_dataset_lineage_with_granularity_job(
                     "name": job.location.name,
                     "type": job.location.type,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
                 },
             }
             for job in jobs
@@ -219,6 +223,7 @@ async def test_get_dataset_lineage_with_granularity_job(
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                    "external_id": dataset.location.external_id,
                 },
             },
         ],
@@ -286,6 +291,7 @@ async def test_get_dataset_lineage_with_granularity_operation(
                     "name": job.location.name,
                     "type": job.location.type,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
                 },
             }
             for job in jobs
@@ -300,6 +306,7 @@ async def test_get_dataset_lineage_with_granularity_operation(
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                    "external_id": dataset.location.external_id,
                 },
             },
         ]
@@ -399,6 +406,7 @@ async def test_get_dataset_lineage_with_direction_both(
                     "name": job.location.name,
                     "type": job.location.type,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
                 },
             }
             for job in sorted(jobs, key=lambda x: x.id)
@@ -413,6 +421,7 @@ async def test_get_dataset_lineage_with_direction_both(
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                    "external_id": dataset.location.external_id,
                 },
             },
         ]
@@ -504,6 +513,7 @@ async def test_get_dataset_lineage_with_direction_and_until_and_granularity_oper
                     "name": job.location.name,
                     "type": job.location.type,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
                 },
             }
             for job in sorted(jobs, key=lambda x: x.id)
@@ -518,6 +528,7 @@ async def test_get_dataset_lineage_with_direction_and_until_and_granularity_oper
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                    "external_id": dataset.location.external_id,
                 },
             },
         ]
@@ -659,6 +670,7 @@ async def test_get_dataset_lineage_with_depth_and_granularity_run(
                     "name": job.location.name,
                     "type": job.location.type,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
                 },
             }
             for job in sorted(jobs, key=lambda x: x.id)
@@ -673,6 +685,7 @@ async def test_get_dataset_lineage_with_depth_and_granularity_run(
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                    "external_id": dataset.location.external_id,
                 },
             }
             for dataset in sorted(datasets, key=lambda x: x.id)
@@ -778,6 +791,7 @@ async def test_get_dataset_lineage_with_depth_and_granularity_job(
                     "name": job.location.name,
                     "type": job.location.type,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
                 },
             }
             for job in sorted(jobs, key=lambda x: x.id)
@@ -792,6 +806,7 @@ async def test_get_dataset_lineage_with_depth_and_granularity_job(
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                    "external_id": dataset.location.external_id,
                 },
             }
             for dataset in sorted(datasets, key=lambda x: x.id)
@@ -907,6 +922,7 @@ async def test_get_dataset_lineage_with_depth_and_granularity_operation(
                     "name": job.location.name,
                     "type": job.location.type,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
                 },
             }
             for job in sorted(jobs, key=lambda x: x.id)
@@ -921,6 +937,7 @@ async def test_get_dataset_lineage_with_depth_and_granularity_operation(
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                    "external_id": dataset.location.external_id,
                 },
             }
             for dataset in sorted(datasets, key=lambda x: x.id)
@@ -1025,6 +1042,7 @@ async def test_get_dataset_lineage_with_depth_and_granularity_run_ignore_cycles(
                     "name": job.location.name,
                     "type": job.location.type,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
                 },
             }
             for job in sorted(jobs, key=lambda x: x.id)
@@ -1039,6 +1057,7 @@ async def test_get_dataset_lineage_with_depth_and_granularity_run_ignore_cycles(
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                    "external_id": dataset.location.external_id,
                 },
             },
         ]
@@ -1137,6 +1156,7 @@ async def test_get_dataset_lineage_with_depth_and_granularity_operation_ignore_c
                     "name": job.location.name,
                     "type": job.location.type,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
                 },
             }
             for job in sorted(jobs, key=lambda x: x.id)
@@ -1151,6 +1171,7 @@ async def test_get_dataset_lineage_with_depth_and_granularity_operation_ignore_c
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                    "external_id": dataset.location.external_id,
                 },
             },
         ]
@@ -1287,6 +1308,7 @@ async def test_get_dataset_lineage_with_symlink_and_granularity_run(
                     "name": job.location.name,
                     "type": job.location.type,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
                 },
             }
             for job in jobs
@@ -1301,6 +1323,7 @@ async def test_get_dataset_lineage_with_symlink_and_granularity_run(
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                    "external_id": dataset.location.external_id,
                 },
             }
             for dataset in sorted(datasets, key=lambda x: x.id)

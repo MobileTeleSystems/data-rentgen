@@ -40,6 +40,7 @@ async def test_get_jobs_no_filters(
                     "type": job.location.type,
                     "name": job.location.name,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
                 },
             }
             for job in sorted(jobs, key=lambda x: x.name)

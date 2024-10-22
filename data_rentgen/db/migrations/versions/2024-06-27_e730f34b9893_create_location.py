@@ -25,6 +25,7 @@ def upgrade() -> None:
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("type", sa.String(length=32), nullable=False),
         sa.Column("name", sa.String(), nullable=False),
+        sa.Column("external_id", sa.String(), nullable=True),
         sa.Column(
             "search_vector",
             postgresql.TSVECTOR(),
