@@ -22,6 +22,7 @@ class OperationResponseV1(BaseModel):
 
     kind: Literal["OPERATION"] = "OPERATION"
     id: UUID = Field(description="Operation id")
+    created_at: datetime = Field(description="Operation creation time")
     run_id: UUID = Field(description="Run operation is a part of")
     status: str = Field(description="Operation status")
     name: str = Field(description="Operation name")
