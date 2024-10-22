@@ -70,6 +70,7 @@ async def test_get_jobs_by_one_id(
                     "type": job.location.type,
                     "name": job.location.name,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
                 },
             },
         ],
@@ -111,6 +112,7 @@ async def test_get_jobs_by_multiple_ids(
                     "type": job.location.type,
                     "name": job.location.name,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
                 },
             }
             for job in sorted(selected_jobs, key=lambda x: x.name)

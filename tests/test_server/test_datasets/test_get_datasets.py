@@ -40,6 +40,7 @@ async def test_get_datasets_no_filters(
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                    "external_id": dataset.location.external_id,
                 },
             }
             for dataset in sorted(datasets, key=lambda x: x.name)

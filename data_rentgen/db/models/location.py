@@ -34,6 +34,11 @@ class Location(Base):
         nullable=False,
         doc="Location name, e.g. cluster name",
     )
+    external_id: Mapped[str | None] = mapped_column(
+        String,
+        nullable=True,
+        doc="External ID for integration with other systems",
+    )
 
     addresses: Mapped[list[Address]] = relationship(
         "Address",

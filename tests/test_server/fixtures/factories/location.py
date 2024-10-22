@@ -16,6 +16,7 @@ def location_factory(**kwargs):
         "id": randint(0, 10000000),
         "type": choice(["kafka", "postgres", "hdfs"]),
         "name": random_string(),
+        "external_id": random_string(),
     }
     data.update(kwargs)
     return Location(**data)

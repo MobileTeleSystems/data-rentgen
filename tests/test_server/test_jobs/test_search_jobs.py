@@ -46,6 +46,7 @@ async def test_search_jobs_by_address_url(
                     "name": job.location.name,
                     "type": job.location.type,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
                 },
             }
             for job in jobs
@@ -89,6 +90,7 @@ async def test_search_jobs_by_location_name(
                     "name": job.location.name,
                     "type": job.location.type,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
                 },
             }
             for job in jobs
@@ -143,6 +145,7 @@ async def test_search_jobs_by_job_name(
                     "name": job.location.name,
                     "type": job.location.type,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
                 },
             }
             for job in jobs
@@ -187,6 +190,7 @@ async def test_search_jobs_by_location_name_and_address_url(
                     "name": job.location.name,
                     "type": job.location.type,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
                 },
             }
             for job in jobs
