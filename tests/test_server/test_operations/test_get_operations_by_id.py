@@ -58,6 +58,7 @@ async def test_get_operations_by_one_id(
             {
                 "kind": "OPERATION",
                 "id": str(operation.id),
+                "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "run_id": str(operation.run_id),
                 "name": operation.name,
                 "status": operation.status.value,
@@ -101,6 +102,7 @@ async def test_get_operations_by_multiple_ids(
             {
                 "kind": "OPERATION",
                 "id": str(operation.id),
+                "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
                 "run_id": str(operation.run_id),
                 "name": operation.name,
                 "status": operation.status.value,

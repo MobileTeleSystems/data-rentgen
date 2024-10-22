@@ -23,6 +23,7 @@ class RunResponseV1(BaseModel):
 
     kind: Literal["RUN"] = "RUN"
     id: UUID = Field(description="Run id")
+    created_at: datetime = Field(description="Run creation time")
     job_id: int = Field(description="Job the run is associated with")
     parent_run_id: UUID | None = Field(description="Parent of current run", default=None)
     status: str = Field(description="Status")
