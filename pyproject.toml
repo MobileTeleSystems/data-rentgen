@@ -47,7 +47,7 @@ python = "^3.10"
 pydantic = "~2.8.2"
 typing-extensions = "^4.12.2"
 # TODO: remove after https://github.com/pydantic/pydantic-settings/issues/445
-pydantic-settings = "~2.5"
+pydantic-settings = {version = "~2.5", optional = true}
 alembic = {version = "^1.13.2", optional = true}
 sqlalchemy = {version = "^2.0.35", optional = true}
 sqlalchemy-utils = {version = "^0.41.2", optional = true}
