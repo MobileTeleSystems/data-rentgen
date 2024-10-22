@@ -28,6 +28,7 @@ DB structure
         ----
         * type
         * name
+        external_id
     }
 
     entity Dataset {
@@ -70,6 +71,7 @@ DB structure
         start_reason
         ended_at
         end_reason
+        external_id
     }
 
     entity Operation {
