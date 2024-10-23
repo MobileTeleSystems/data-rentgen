@@ -61,13 +61,20 @@ def test_extractors_extract_operation_spark_job_no_details():
 
 
 @pytest.mark.parametrize(
-    ["job_id", "job_description", "job_group", "job_call_site", "expected_position", "expected_description"],
+    ["job_id", "job_description", "job_group", "job_call_site"],
     [
-        (1, None, None, "toPandas af file.py:212", 1, "toPandas af file.py:212"),
-        (1, None, "some group", "toPandas af file.py:212", 1, "some group"),
-        (1, "some description", "some group", "toPandas af file.py:212", 1, "some description"),
-        (1, "some description", "some group", None, 1, "some description"),
-        (1, "some description", None, None, 1, "some description"),
+        pytest.param(1, None, None, None, id="no details"),
+        pytest.param(1, "some description", None, None, id="only description"),
+        pytest.param(1, "some description", None, "toPandas af file.py:212", id="description with call site"),
+        pytest.param(1, None, "some group", None, id="only group"),
+        pytest.param(1, "some description", "some group", None, id="description and group"),
+        pytest.param(
+            1,
+            "some description",
+            "some group",
+            "toPandas af file.py:212",
+            id="description, group and call site",
+        ),
     ],
 )
 def test_extractors_extract_operation_spark_job_with_details(
@@ -75,8 +82,6 @@ def test_extractors_extract_operation_spark_job_with_details(
     job_description: str | None,
     job_group: str | None,
     job_call_site: str | None,
-    expected_position: int,
-    expected_description: str,
 ):
     now = datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
     operation_id = UUID("01908225-1fd7-746b-910C-70d24f2898b1")
@@ -111,8 +116,9 @@ def test_extractors_extract_operation_spark_job_with_details(
         id=operation_id,
         name="mysession.execute_some_command",
         type=OperationTypeDTO.STREAMING,
-        position=expected_position,
-        description=expected_description,
+        position=job_id,
+        group=job_group,
+        description=job_description,
         status=OperationStatusDTO.STARTED,
         started_at=None,
         ended_at=None,

@@ -29,7 +29,8 @@ class OperationResponseV1(BaseModel):
     type: str = Field(description="Operation type")
 
     position: int | None = Field(description="Sequentinal position of operation within the run, e.g. Spark jobId")
-    description: str | None = Field(description="Operation description")
+    group: str | None = Field(description="Operation group, e.g. Spark jobGroup")
+    description: str | None = Field(description="Operation description, e.g. Spark jobDescription")
 
     started_at: datetime | None = Field(description="Start time of the Operation")
     ended_at: datetime | None = Field(description="End time of the Operation")

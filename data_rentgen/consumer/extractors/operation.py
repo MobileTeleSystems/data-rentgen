@@ -51,7 +51,6 @@ def enrich_operation_description(operation: OperationDTO, event: OpenLineageRunE
     spark_job_details = event.run.facets.spark_jobDetails
     if spark_job_details:
         operation.position = spark_job_details.jobId
-        operation.description = (
-            spark_job_details.jobDescription or spark_job_details.jobGroup or spark_job_details.jobCallSite
-        )
+        operation.group = spark_job_details.jobGroup
+        operation.description = spark_job_details.jobDescription
     return operation

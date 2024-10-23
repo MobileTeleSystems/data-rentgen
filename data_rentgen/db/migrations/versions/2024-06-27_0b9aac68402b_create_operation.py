@@ -28,6 +28,7 @@ def upgrade() -> None:
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("type", sa.String(length=32), nullable=False),
         sa.Column("position", sa.Integer(), nullable=True),
+        sa.Column("group", sa.String(), nullable=True),
         sa.Column("description", sa.String(), nullable=True),
         sa.Column("started_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("ended_at", sa.DateTime(timezone=True), nullable=True),
