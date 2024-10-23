@@ -17,23 +17,19 @@ from data_rentgen.dto import OutputDTO
 
 
 class OutputRepository(Repository[Output]):
-    async def create_or_update(
-        self,
-        output: OutputDTO,
-        operation_id: UUID,
-        run_id: UUID,
-        job_id: int,
-        dataset_id: int,
-        schema_id: int | None,
-    ) -> Output:
+    async def create_or_update(self, output: OutputDTO) -> Output:
         # `created_at' field of output should be the same as operation's,
         # to avoid scanning all partitions and speed up queries
-        created_at = extract_timestamp_from_uuid(operation_id)
+        created_at = extract_timestamp_from_uuid(output.operation.id)
 
         # instead of using UniqueConstraint on multiple fields, one of which (schema_id) can be NULL,
         # use them to calculate unique id
-        id_components = f"{operation_id}.{dataset_id}.{output.type}.{schema_id}"
-        output_id = generate_incremental_uuid(created_at, id_components.encode("utf-8"))
+        id_components = [
+            str(output.operation.id),
+            str(output.dataset.id),
+            str(output.schema.id) if output.schema else "",
+        ]
+        output_id = generate_incremental_uuid(created_at, ".".join(id_components).encode("utf-8"))
 
         result = await self._get(created_at, output_id)
         if not result:
@@ -47,11 +43,11 @@ class OutputRepository(Repository[Output]):
                 created_at=created_at,
                 output_id=output_id,
                 output=output,
-                operation_id=operation_id,
-                run_id=run_id,
-                job_id=job_id,
-                dataset_id=dataset_id,
-                schema_id=schema_id,
+                operation_id=output.operation.id,
+                run_id=output.operation.run.id,
+                job_id=output.operation.run.job.id,  # type: ignore[arg-type]
+                dataset_id=output.dataset.id,  # type: ignore[arg-type]
+                schema_id=output.schema.id if output.schema else None,
             )
         return await self._update(result, output)
 

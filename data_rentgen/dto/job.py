@@ -1,7 +1,9 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from dataclasses import dataclass
+from __future__ import annotations
+
+from dataclasses import dataclass, field
 from enum import Enum
 
 from data_rentgen.dto.location import LocationDTO
@@ -21,3 +23,4 @@ class JobDTO:
     name: str
     location: LocationDTO
     type: JobTypeDTO | None = None
+    id: int | None = field(default=None, compare=False)

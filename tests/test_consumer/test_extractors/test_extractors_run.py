@@ -41,6 +41,7 @@ from data_rentgen.dto import (
     RunStartReasonDTO,
     RunStatusDTO,
 )
+from data_rentgen.dto.user import UserDTO
 
 
 def test_extractors_extract_run_spark_app_yarn():
@@ -87,6 +88,7 @@ def test_extractors_extract_run_spark_app_yarn():
         status=RunStatusDTO.STARTED,
         started_at=now,
         start_reason=None,
+        user=UserDTO(name="myuser"),
         ended_at=None,
         external_id="application_1234_5678",
         attempt=None,
@@ -138,6 +140,7 @@ def test_extractors_extract_run_spark_app_local():
         status=RunStatusDTO.STARTED,
         started_at=None,
         start_reason=None,
+        user=UserDTO(name="myuser"),
         external_id="local-1234-5678",
         attempt=None,
         persistent_log_url=None,
@@ -197,6 +200,7 @@ def test_extractors_extract_run_airflow_dag_2_3_plus():
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
         start_reason=RunStartReasonDTO.MANUAL,
+        user=None,
         ended_at=now,
         external_id="manual__2024-07-05T09:04:13:979349+00:00",
         attempt=None,
@@ -259,6 +263,7 @@ def test_extractors_extract_run_airflow_dag_2_x():
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
         start_reason=RunStartReasonDTO.MANUAL,
+        user=None,
         ended_at=now,
         external_id="manual__2024-07-05T09:04:13:979349+00:00",
         attempt=None,
@@ -330,6 +335,7 @@ def test_extractors_extract_run_airflow_task_with_ti_log_url():
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
         start_reason=RunStartReasonDTO.MANUAL,
+        user=None,
         ended_at=now,
         external_id="manual__2024-07-05T09:04:13:979349+00:00",
         attempt="1",
@@ -398,6 +404,7 @@ def test_extractors_extract_run_airflow_task_2_9_plus():
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
         start_reason=RunStartReasonDTO.AUTOMATIC,
+        user=None,
         ended_at=now,
         external_id="backfill__2024-07-05T09:04:13:979349+00:00",
         attempt="1",
@@ -461,6 +468,7 @@ def test_extractors_extract_run_airflow_task_2_x():
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
         start_reason=RunStartReasonDTO.AUTOMATIC,
+        user=None,
         ended_at=now,
         external_id="scheduled__2024-07-05T09:04:13:979349+00:00",
         attempt="1",
@@ -503,6 +511,7 @@ def test_extractors_extract_run_unknown(event_type: OpenLineageRunEventType, exp
         status=expected_status,
         started_at=None,
         start_reason=None,
+        user=None,
         ended_at=ended_at,
         external_id=None,
         attempt=None,

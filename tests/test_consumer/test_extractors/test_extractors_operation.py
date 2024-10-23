@@ -25,11 +25,15 @@ from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageSparkJobDetailsRunFacet,
 )
 from data_rentgen.dto import OperationDTO, OperationStatusDTO
+from data_rentgen.dto.job import JobDTO
+from data_rentgen.dto.location import LocationDTO
 from data_rentgen.dto.operation import OperationTypeDTO
+from data_rentgen.dto.run import RunDTO
 
 
 def test_extractors_extract_operation_spark_job_no_details():
     now = datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
+    run_id = UUID("01908224-8410-79a2-8de6-a769ad6944c9")
     operation_id = UUID("01908225-1fd7-746b-910c-70d24f2898b1")
 
     operation = OpenLineageRunEvent(
@@ -46,11 +50,35 @@ def test_extractors_extract_operation_spark_job_no_details():
                 ),
             ),
         ),
-        run=OpenLineageRun(runId=operation_id),
+        run=OpenLineageRun(
+            runId=operation_id,
+            facets=OpenLineageRunFacets(
+                parent=OpenLineageParentRunFacet(
+                    job=OpenLineageParentJob(
+                        namespace="anything",
+                        name="mysession",
+                    ),
+                    run=OpenLineageParentRun(
+                        runId=run_id,
+                    ),
+                ),
+            ),
+        ),
     )
     assert extract_operation(operation) == OperationDTO(
         id=operation_id,
-        name="mysession.execute_some_command",
+        run=RunDTO(
+            id=run_id,
+            job=JobDTO(
+                name="mysession",
+                location=LocationDTO(
+                    type="unknown",
+                    name="anything",
+                    addresses=["unknown://anything"],
+                ),
+            ),
+        ),
+        name="execute_some_command",
         type=OperationTypeDTO.BATCH,
         position=None,
         description=None,
@@ -84,6 +112,7 @@ def test_extractors_extract_operation_spark_job_with_details(
     job_call_site: str | None,
 ):
     now = datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
+    run_id = UUID("01908224-8410-79a2-8de6-a769ad6944c9")
     operation_id = UUID("01908225-1fd7-746b-910C-70d24f2898b1")
 
     operation = OpenLineageRunEvent(
@@ -109,12 +138,32 @@ def test_extractors_extract_operation_spark_job_with_details(
                     jobGroup=job_group,
                     jobCallSite=job_call_site,
                 ),
+                parent=OpenLineageParentRunFacet(
+                    job=OpenLineageParentJob(
+                        namespace="anything",
+                        name="mysession",
+                    ),
+                    run=OpenLineageParentRun(
+                        runId=run_id,
+                    ),
+                ),
             ),
         ),
     )
     assert extract_operation(operation) == OperationDTO(
         id=operation_id,
-        name="mysession.execute_some_command",
+        run=RunDTO(
+            id=run_id,
+            job=JobDTO(
+                name="mysession",
+                location=LocationDTO(
+                    type="unknown",
+                    name="anything",
+                    addresses=["unknown://anything"],
+                ),
+            ),
+        ),
+        name="execute_some_command",
         type=OperationTypeDTO.STREAMING,
         position=job_id,
         group=job_group,
@@ -125,54 +174,9 @@ def test_extractors_extract_operation_spark_job_with_details(
     )
 
 
-def test_extractors_extract_operation_spark_job_with_parent():
-    now = datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
-    operation_id = UUID("01908225-1fd7-746b-910c-70d24f2898b1")
-
-    operation = OpenLineageRunEvent(
-        eventType=OpenLineageRunEventType.START,
-        eventTime=now,
-        job=OpenLineageJob(
-            namespace="anything",
-            name="mysession.execute_some_command",
-            facets=OpenLineageJobFacets(
-                jobType=OpenLineageJobTypeJobFacet(
-                    jobType=OpenLineageJobType.JOB,
-                    processingType=OpenLineageJobProcessingType.BATCH,
-                    integration=OpenLineageJobIntegrationType.SPARK,
-                ),
-            ),
-        ),
-        run=OpenLineageRun(
-            runId=operation_id,
-            facets=OpenLineageRunFacets(
-                parent=OpenLineageParentRunFacet(
-                    job=OpenLineageParentJob(
-                        namespace="anything",
-                        name="mysession",
-                    ),
-                    run=OpenLineageParentRun(
-                        runId=UUID("01908224-8410-79a2-8de6-a769ad6944c9"),
-                    ),
-                ),
-            ),
-        ),
-    )
-    assert extract_operation(operation) == OperationDTO(
-        id=operation_id,
-        # session name prefix is dropped
-        name="execute_some_command",
-        type=OperationTypeDTO.BATCH,
-        position=None,
-        description=None,
-        status=OperationStatusDTO.STARTED,
-        started_at=now,
-        ended_at=None,
-    )
-
-
 def test_extractors_extract_operation_spark_job_name_contains_newlines():
     now = datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
+    run_id = UUID("01908224-8410-79a2-8de6-a769ad6944c9")
     operation_id = UUID("01908225-1fd7-746b-910c-70d24f2898b1")
 
     operation = OpenLineageRunEvent(
@@ -191,12 +195,36 @@ def test_extractors_extract_operation_spark_job_name_contains_newlines():
                 ),
             ),
         ),
-        run=OpenLineageRun(runId=operation_id),
+        run=OpenLineageRun(
+            runId=operation_id,
+            facets=OpenLineageRunFacets(
+                parent=OpenLineageParentRunFacet(
+                    job=OpenLineageParentJob(
+                        namespace="anything",
+                        name="mysession",
+                    ),
+                    run=OpenLineageParentRun(
+                        runId=run_id,
+                    ),
+                ),
+            ),
+        ),
     )
     assert extract_operation(operation) == OperationDTO(
         id=operation_id,
+        run=RunDTO(
+            id=run_id,
+            job=JobDTO(
+                name="mysession",
+                location=LocationDTO(
+                    type="unknown",
+                    name="anything",
+                    addresses=["unknown://anything"],
+                ),
+            ),
+        ),
         # appName prefix is dropped
-        name="mysession.scan_jdbc_relation((SELECT * FROM some_table) T)",
+        name="scan_jdbc_relation((SELECT * FROM some_table) T)",
         type=OperationTypeDTO.BATCH,
         position=None,
         description=None,
@@ -220,18 +248,43 @@ def test_extractors_extract_operation_spark_job_finished(
     expected_status: OperationStatusDTO | None,
 ):
     now = datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
+    run_id = UUID("01908224-8410-79a2-8de6-a769ad6944c9")
     operation_id = UUID("01908225-1fd7-746b-910C-70d24f2898b1")
     operation = OpenLineageRunEvent(
         eventType=event_type,
         eventTime=now,
         job=OpenLineageJob(namespace="anything", name="mysession.execute_some_command"),
-        run=OpenLineageRun(runId=operation_id),
+        run=OpenLineageRun(
+            runId=operation_id,
+            facets=OpenLineageRunFacets(
+                parent=OpenLineageParentRunFacet(
+                    job=OpenLineageParentJob(
+                        namespace="anything",
+                        name="mysession",
+                    ),
+                    run=OpenLineageParentRun(
+                        runId=run_id,
+                    ),
+                ),
+            ),
+        ),
     )
 
     ended_at = now if expected_status else None
     assert extract_operation(operation) == OperationDTO(
         id=operation_id,
-        name="mysession.execute_some_command",
+        run=RunDTO(
+            id=run_id,
+            job=JobDTO(
+                name="mysession",
+                location=LocationDTO(
+                    type="unknown",
+                    name="anything",
+                    addresses=["unknown://anything"],
+                ),
+            ),
+        ),
+        name="execute_some_command",
         type=None,
         position=None,
         description=None,

@@ -25,24 +25,7 @@ from data_rentgen.dto import PaginationDTO, RunDTO
 
 
 class RunRepository(Repository[Run]):
-    async def get_or_create_minimal(self, run: RunDTO, job_id: int) -> Run:
-        # avoid calculating created_at twice
-        created_at = extract_timestamp_from_uuid(run.id)
-        result = await self._get(created_at, run.id)
-        if not result:
-            # try one more time, but with lock acquired.
-            # if another worker already created the same row, just use it. if not - create with holding the lock.
-            await self._lock(run.id)
-            result = await self._get(created_at, run.id) or await self._create(created_at, run, job_id)
-        return result
-
-    async def create_or_update(
-        self,
-        run: RunDTO,
-        job_id: int,
-        parent_run_id: UUID | None,
-        started_by_user_id: int | None,
-    ) -> Run:
+    async def create_or_update(self, run: RunDTO) -> Run:
         # avoid calculating created_at twice
         created_at = extract_timestamp_from_uuid(run.id)
         result = await self._get(created_at, run.id)
@@ -53,8 +36,9 @@ class RunRepository(Repository[Run]):
             result = await self._get(created_at, run.id)
 
         if not result:
-            return await self._create(created_at, run, job_id, parent_run_id, started_by_user_id)
-        return await self._update(result, run, parent_run_id, started_by_user_id)
+            return await self._create(created_at, run)
+
+        return await self._update(result, run)
 
     async def paginate(
         self,
@@ -174,18 +158,15 @@ class RunRepository(Repository[Run]):
         self,
         created_at: datetime,
         run: RunDTO,
-        job_id: int,
-        parent_run_id: UUID | None = None,
-        started_by_user_id: int | None = None,
     ) -> Run:
         result = Run(
             created_at=created_at,
             id=run.id,
-            job_id=job_id,
+            job_id=run.job.id,
             status=Status(run.status) if run.status else Status.UNKNOWN,
-            parent_run_id=parent_run_id,
+            parent_run_id=run.parent_run.id if run.parent_run else None,
             started_at=run.started_at,
-            started_by_user_id=started_by_user_id,
+            started_by_user_id=run.user.id if run.user else None,
             start_reason=RunStartReason(run.start_reason) if run.start_reason else None,
             ended_at=run.ended_at,
             external_id=run.external_id,
@@ -201,14 +182,12 @@ class RunRepository(Repository[Run]):
         self,
         existing: Run,
         new: RunDTO,
-        parent_run_id: UUID | None = None,
-        started_by_user_id: int | None = None,
     ) -> Run:
         optional_fields = {
             "status": Status(new.status) if new.status else None,
-            "parent_run_id": parent_run_id,
+            "parent_run_id": new.parent_run.id if new.parent_run else None,
             "started_at": new.started_at,
-            "started_by_user_id": started_by_user_id,
+            "started_by_user_id": new.user.id if new.user else None,
             "start_reason": RunStartReason(new.start_reason) if new.start_reason else None,
             "ended_at": new.ended_at,
             "external_id": new.external_id,

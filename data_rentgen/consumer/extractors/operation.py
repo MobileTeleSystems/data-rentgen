@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+from data_rentgen.consumer.extractors.run import extract_run_minimal
 from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEvent,
     OpenLineageRunEventType,
@@ -9,14 +10,19 @@ from data_rentgen.dto import OperationDTO, OperationStatusDTO, OperationTypeDTO
 
 
 def extract_operation(event: OpenLineageRunEvent) -> OperationDTO:
+    # operation always has parent
+    run = extract_run_minimal(event.run.facets.parent)  # type: ignore[arg-type]
+
     # in some cases, operation name may contain raw SELECT query with newlines
     operation_name = " ".join(line.strip() for line in event.job.name.splitlines()).strip()
-    if event.run.facets.parent and operation_name.startswith(event.run.facets.parent.job.name):
-        prefix = len(event.run.facets.parent.job.name) + 1
+    # remove parent job name from operation name
+    if operation_name.startswith(run.job.name):
+        prefix = len(run.job.name) + 1
         operation_name = operation_name[prefix:]
 
     operation = OperationDTO(
         id=event.run.runId,  # type: ignore [arg-type]
+        run=run,
         name=operation_name,
         type=OperationTypeDTO(event.job.facets.jobType.processingType) if event.job.facets.jobType else None,
     )

@@ -6,6 +6,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import Enum
 
+from data_rentgen.dto.dataset import DatasetDTO
+from data_rentgen.dto.operation import OperationDTO
+from data_rentgen.dto.schema import SchemaDTO
+
 
 class OutputTypeDTO(str, Enum):
     CREATE = "CREATE"
@@ -24,7 +28,10 @@ class OutputTypeDTO(str, Enum):
 
 @dataclass(slots=True)
 class OutputDTO:
+    operation: OperationDTO
+    dataset: DatasetDTO
     type: OutputTypeDTO
+    schema: SchemaDTO | None = None
     num_rows: int | None = None
     num_bytes: int | None = None
     num_files: int | None = None
