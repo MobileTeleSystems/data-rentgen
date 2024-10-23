@@ -78,10 +78,16 @@ class Operation(Base):
         doc="Sequentinal position of operation within the run, e.g. Spark jobId",
     )
 
+    group: Mapped[str | None] = mapped_column(
+        String,
+        nullable=True,
+        doc="Group of the operation, e.g. Spark jobGroup",
+    )
+
     description: Mapped[str | None] = mapped_column(
         String,
         nullable=True,
-        doc="Description of the operation, e.g. Spark jobDescription or jobCallSite",
+        doc="Description of the operation, e.g. Spark jobDescription",
     )
 
     started_at: Mapped[datetime | None] = mapped_column(

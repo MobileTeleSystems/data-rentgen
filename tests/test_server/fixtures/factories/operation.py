@@ -24,6 +24,7 @@ def operation_factory(**kwargs):
         "status": choice(list(Status)),
         "type": choice(list(OperationType)),
         "position": randint(1, 10),
+        "group": random_string(32),
         "description": random_string(32),
         "started_at": random_datetime(),
         "ended_at": random_datetime(),

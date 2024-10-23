@@ -34,8 +34,9 @@ class OperationDTO:
     id: UUID
     name: str
     type: OperationTypeDTO | None = None
+    position: int | None = None
+    group: str | None = None
     description: str | None = None
     status: OperationStatusDTO | None = None
-    position: int | None = None
     started_at: datetime | None = None
     ended_at: datetime | None = None

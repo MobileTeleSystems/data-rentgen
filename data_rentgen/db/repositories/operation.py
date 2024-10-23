@@ -121,6 +121,7 @@ class OperationRepository(Repository[Operation]):
             started_at=operation.started_at,
             ended_at=operation.ended_at,
             description=operation.description,
+            group=operation.group,
             position=operation.position,
         )
         self._session.add(result)
@@ -134,6 +135,7 @@ class OperationRepository(Repository[Operation]):
             "started_at": new.started_at,
             "ended_at": new.ended_at,
             "description": new.description,
+            "group": new.group,
             "position": new.position,
         }
         for column, value in optional_fields.items():
