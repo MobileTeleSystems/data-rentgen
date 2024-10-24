@@ -10,11 +10,16 @@ from data_rentgen.dto import LocationDTO
 
 
 class LocationRepository(Repository[Location]):
-    async def get_or_create(self, location: LocationDTO) -> Location:
+    async def create_or_update(self, location: LocationDTO) -> Location:
         result = await self._get(location)
         if not result:
+            # try one more time, but with lock acquired.
+            # if another worker already created the same row, just use it. if not - create with holding the lock.
             await self._lock(location.type, location.name)
-            result = await self._get(location) or await self._create(location)
+            result = await self._get(location)
+
+        if not result:
+            return await self._create(location)
 
         await self._update_addresses(result, location)
         return result

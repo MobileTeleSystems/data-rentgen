@@ -1,3 +1,5 @@
+from unittest.mock import Mock
+
 import pytest
 
 from data_rentgen.consumer.extractors import (
@@ -22,6 +24,9 @@ from data_rentgen.consumer.openlineage.dataset_facets import (
     OpenLineageSchemaField,
 )
 from data_rentgen.dto import InputDTO, OutputDTO, OutputTypeDTO, SchemaDTO
+from data_rentgen.dto.dataset import DatasetDTO
+from data_rentgen.dto.location import LocationDTO
+from data_rentgen.dto.operation import OperationDTO
 
 
 @pytest.mark.parametrize("dataset_type", [OpenLineageInputDataset, OpenLineageOutputDataset])
@@ -108,8 +113,18 @@ def test_extractors_extract_input(
             ),
         ),
     )
+    operation_dto = Mock(spec=OperationDTO)
 
-    assert extract_input(input) == InputDTO(
+    assert extract_input(operation_dto, input) == InputDTO(
+        operation=operation_dto,
+        dataset=DatasetDTO(
+            name="/user/hive/warehouse/mydb.db/mytable",
+            location=LocationDTO(
+                type="hdfs",
+                name="test-hadoop:9820",
+                addresses=["hdfs://test-hadoop:9820"],
+            ),
+        ),
         num_rows=row_count,
         num_bytes=byte_count,
         num_files=file_count,
@@ -159,9 +174,19 @@ def test_extractors_extract_output(
             ),
         ),
     )
+    operation_dto = Mock(spec=OperationDTO)
 
-    assert extract_output(output) == OutputDTO(
+    assert extract_output(operation_dto, output) == OutputDTO(
         type=expected_type,
+        operation=operation_dto,
+        dataset=DatasetDTO(
+            name="/user/hive/warehouse/mydb.db/mytable",
+            location=LocationDTO(
+                type="hdfs",
+                name="test-hadoop:9820",
+                addresses=["hdfs://test-hadoop:9820"],
+            ),
+        ),
         num_rows=row_count,
         num_bytes=byte_count,
         num_files=file_count,

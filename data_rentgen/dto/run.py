@@ -10,6 +10,7 @@ from enum import Enum
 from uuid6 import UUID
 
 from data_rentgen.dto.job import JobDTO
+from data_rentgen.dto.user import UserDTO
 
 
 class RunStatusDTO(str, Enum):
@@ -35,11 +36,13 @@ class RunStartReasonDTO(str, Enum):
 class RunDTO:
     id: UUID
     job: JobDTO
+    parent_run: RunDTO | None = None
     status: RunStatusDTO | None = None
     started_at: datetime | None = None
     start_reason: RunStartReasonDTO | None = None
+    user: UserDTO | None = None
     ended_at: datetime | None = None
     external_id: str | None = None
     attempt: str | None = None
-    persistent_log_url: str | None = None
     running_log_url: str | None = None
+    persistent_log_url: str | None = None

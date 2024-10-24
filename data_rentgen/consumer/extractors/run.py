@@ -5,7 +5,7 @@ from urllib.parse import quote
 
 from packaging.version import Version
 
-from data_rentgen.consumer.extractors import extract_job
+from data_rentgen.consumer.extractors.job import extract_job
 from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEvent,
     OpenLineageRunEventType,
@@ -17,24 +17,30 @@ from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageParentRunFacet,
 )
 from data_rentgen.dto import RunDTO, RunStartReasonDTO, RunStatusDTO
+from data_rentgen.dto.user import UserDTO
 
 
-def extract_parent_run(parent_facet: OpenLineageParentRunFacet) -> RunDTO:
+def extract_run_minimal(facet: OpenLineageRunEvent | OpenLineageParentRunFacet) -> RunDTO:
     return RunDTO(
-        id=parent_facet.run.runId,  # type: ignore [arg-type]
-        job=extract_job(parent_facet.job),
+        id=facet.run.runId,  # type: ignore [arg-type]
+        job=extract_job(facet.job),
     )
 
 
 def extract_run(event: OpenLineageRunEvent) -> RunDTO:
-    run = RunDTO(
-        id=event.run.runId,  # type: ignore [arg-type]
-        job=extract_job(event.job),
-    )
+    run = extract_run_minimal(event)
+    enrich_run_parent(run, event)
     enrich_run_status(run, event)
     enrich_run_start_reason(run, event)
     enrich_run_identifiers(run, event)
     enrich_run_logs(run, event)
+    enrich_run_user(run, event)
+    return run
+
+
+def enrich_run_parent(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
+    if event.run.facets.parent:
+        run.parent_run = extract_run_minimal(event.run.facets.parent)
     return run
 
 
@@ -169,4 +175,13 @@ def enrich_run_start_reason(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
         else:
             run.start_reason = RunStartReasonDTO.AUTOMATIC
     # For Spark session we cannot determine start reason
+    return run
+
+
+def enrich_run_user(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
+    spark_application_details = event.run.facets.spark_applicationDetails
+    if spark_application_details:
+        run.user = UserDTO(name=spark_application_details.userName)
+    # Airflow DAG and task have 'owner' field, but if can be either user or group name,
+    # and also it does not mean that this exact user started this run.
     return run

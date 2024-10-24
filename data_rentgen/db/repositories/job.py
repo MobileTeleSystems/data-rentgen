@@ -78,16 +78,16 @@ class JobRepository(Repository[Job]):
             page_size=page_size,
         )
 
-    async def create_or_update(self, job: JobDTO, location_id: int) -> Job:
-        result = await self._get(location_id, job.name)
+    async def create_or_update(self, job: JobDTO) -> Job:
+        result = await self._get(job)
         if not result:
             # try one more time, but with lock acquired.
             # if another worker already created the same row, just use it. if not - create with holding the lock.
-            await self._lock(location_id, job.name)
-            result = await self._get(location_id, job.name)
+            await self._lock(job.location.id, job.name)
+            result = await self._get(job)
 
         if not result:
-            return await self._create(job, location_id)
+            return await self._create(job)
         return await self._update(result, job)
 
     async def list_by_ids(self, job_ids: Sequence[int]) -> list[Job]:
@@ -101,13 +101,13 @@ class JobRepository(Repository[Job]):
         result = await self._session.scalars(query)
         return list(result.all())
 
-    async def _get(self, location_id: int, name: str) -> Job | None:
-        statement = select(Job).where(Job.location_id == location_id, Job.name == name)
+    async def _get(self, job: JobDTO) -> Job | None:
+        statement = select(Job).where(Job.location_id == job.location.id, Job.name == job.name)
         return await self._session.scalar(statement)
 
-    async def _create(self, job: JobDTO, location_id: int) -> Job:
+    async def _create(self, job: JobDTO) -> Job:
         result = Job(
-            location_id=location_id,
+            location_id=job.location.id,
             name=job.name,
             type=JobType(job.type) if job.type else JobType.UNKNOWN,
         )

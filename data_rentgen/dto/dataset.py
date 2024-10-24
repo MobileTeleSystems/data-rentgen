@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from data_rentgen.dto.location import LocationDTO
 
@@ -13,6 +13,7 @@ class DatasetDTO:
     location: LocationDTO
     name: str
     format: str | None = None
+    id: int | None = field(default=None, compare=False)
 
     @property
     def full_name(self) -> str:

@@ -9,6 +9,8 @@ from enum import Enum
 
 from uuid6 import UUID
 
+from data_rentgen.dto.run import RunDTO
+
 
 class OperationTypeDTO(str, Enum):
     BATCH = "BATCH"
@@ -33,6 +35,7 @@ class OperationStatusDTO(str, Enum):
 class OperationDTO:
     id: UUID
     name: str
+    run: RunDTO
     type: OperationTypeDTO | None = None
     position: int | None = None
     group: str | None = None

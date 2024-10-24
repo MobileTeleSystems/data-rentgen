@@ -14,7 +14,7 @@ from data_rentgen.utils import UUID
 
 
 class OperationRepository(Repository[Operation]):
-    async def create_or_update(self, operation: OperationDTO, run_id: UUID | None) -> Operation:
+    async def create_or_update(self, operation: OperationDTO) -> Operation:
         # avoid calculating created_at twice
         created_at = extract_timestamp_from_uuid(operation.id)
         result = await self._get(created_at, operation.id)
@@ -25,8 +25,7 @@ class OperationRepository(Repository[Operation]):
             result = await self._get(created_at, operation.id)
 
         if not result:
-            # run_id is always present in first event, but may be missing in later ones
-            return await self._create(created_at, operation, run_id)  # type: ignore[arg-type]
+            return await self._create(created_at, operation)
         return await self._update(result, operation)
 
     async def paginate(
@@ -110,11 +109,11 @@ class OperationRepository(Repository[Operation]):
         query = select(Operation).where(Operation.created_at == created_at, Operation.id == operation_id)
         return await self._session.scalar(query)
 
-    async def _create(self, created_at: datetime, operation: OperationDTO, run_id: UUID) -> Operation:
+    async def _create(self, created_at: datetime, operation: OperationDTO) -> Operation:
         result = Operation(
             created_at=created_at,
             id=operation.id,
-            run_id=run_id,
+            run_id=operation.run.id,
             name=operation.name,
             type=OperationType(operation.type),
             status=Status(operation.status) if operation.status else Status.UNKNOWN,

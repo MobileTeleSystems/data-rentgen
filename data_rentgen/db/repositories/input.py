@@ -17,23 +17,19 @@ from data_rentgen.dto import InputDTO
 
 
 class InputRepository(Repository[Input]):
-    async def create_or_update(
-        self,
-        input: InputDTO,
-        operation_id: UUID,
-        run_id: UUID,
-        job_id: int,
-        dataset_id: int,
-        schema_id: int | None,
-    ) -> Input:
+    async def create_or_update(self, input: InputDTO) -> Input:
         # `created_at' field of input should be the same as operation's,
         # to avoid scanning all partitions and speed up queries
-        created_at = extract_timestamp_from_uuid(operation_id)
+        created_at = extract_timestamp_from_uuid(input.operation.id)
 
         # instead of using UniqueConstraint on multiple fields, one of which (schema_id) can be NULL,
         # use them to calculate unique id
-        id_components = f"{operation_id}.{dataset_id}.{schema_id}"
-        input_id = generate_incremental_uuid(created_at, id_components.encode("utf-8"))
+        id_components = [
+            str(input.operation.id),
+            str(input.dataset.id),
+            str(input.schema.id) if input.schema else "",
+        ]
+        input_id = generate_incremental_uuid(created_at, ".".join(id_components).encode("utf-8"))
 
         result = await self._get(created_at, input_id)
         if not result:
@@ -47,11 +43,11 @@ class InputRepository(Repository[Input]):
                 created_at=created_at,
                 input_id=input_id,
                 input=input,
-                operation_id=operation_id,
-                run_id=run_id,
-                job_id=job_id,
-                dataset_id=dataset_id,
-                schema_id=schema_id,
+                operation_id=input.operation.id,
+                run_id=input.operation.run.id,
+                job_id=input.operation.run.job.id,  # type: ignore[arg-type]
+                dataset_id=input.dataset.id,  # type: ignore[arg-type]
+                schema_id=input.schema.id if input.schema else None,
             )
         return await self._update(result, input)
 
