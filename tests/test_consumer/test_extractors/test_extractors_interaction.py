@@ -122,7 +122,7 @@ def test_extractors_extract_input(
             location=LocationDTO(
                 type="hdfs",
                 name="test-hadoop:9820",
-                addresses=["hdfs://test-hadoop:9820"],
+                addresses={"hdfs://test-hadoop:9820"},
             ),
         ),
         num_rows=row_count,
@@ -184,7 +184,7 @@ def test_extractors_extract_output(
             location=LocationDTO(
                 type="hdfs",
                 name="test-hadoop:9820",
-                addresses=["hdfs://test-hadoop:9820"],
+                addresses={"hdfs://test-hadoop:9820"},
             ),
         ),
         num_rows=row_count,

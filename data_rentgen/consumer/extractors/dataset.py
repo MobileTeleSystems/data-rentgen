@@ -79,7 +79,7 @@ def extract_dataset_location(dataset: OpenLineageDataset | OpenLineageSymlinkIde
     return LocationDTO(
         type=scheme,
         name=hosts[0],
-        addresses=[f"{scheme}://{host}" for host in hosts],
+        addresses={f"{scheme}://{host}" for host in hosts},
     )
 
 

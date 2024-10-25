@@ -74,7 +74,7 @@ def test_extractors_extract_operation_spark_job_no_details():
                 location=LocationDTO(
                     type="unknown",
                     name="anything",
-                    addresses=["unknown://anything"],
+                    addresses={"unknown://anything"},
                 ),
             ),
         ),
@@ -159,7 +159,7 @@ def test_extractors_extract_operation_spark_job_with_details(
                 location=LocationDTO(
                     type="unknown",
                     name="anything",
-                    addresses=["unknown://anything"],
+                    addresses={"unknown://anything"},
                 ),
             ),
         ),
@@ -219,7 +219,7 @@ def test_extractors_extract_operation_spark_job_name_contains_newlines():
                 location=LocationDTO(
                     type="unknown",
                     name="anything",
-                    addresses=["unknown://anything"],
+                    addresses={"unknown://anything"},
                 ),
             ),
         ),
@@ -280,7 +280,7 @@ def test_extractors_extract_operation_spark_job_finished(
                 location=LocationDTO(
                     type="unknown",
                     name="anything",
-                    addresses=["unknown://anything"],
+                    addresses={"unknown://anything"},
                 ),
             ),
         ),

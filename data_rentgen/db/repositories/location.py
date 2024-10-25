@@ -31,7 +31,7 @@ class LocationRepository(Repository[Location]):
             .join(Location.addresses)
             .where(
                 Location.type == location.type,
-                Address.url == any_(location.addresses),  # type: ignore[arg-type]
+                Address.url == any_(sorted(location.addresses)),  # type: ignore[arg-type]
             )
         )
         statement = (
@@ -48,7 +48,7 @@ class LocationRepository(Repository[Location]):
 
     async def _update_addresses(self, existing: Location, new: LocationDTO) -> Location:
         existing_urls = {address.url for address in existing.addresses}
-        new_urls = set(new.addresses) - existing_urls
+        new_urls = new.addresses - existing_urls
         if new_urls:
             addresses = [Address(url=url, location_id=existing.id) for url in new_urls]
             existing.addresses.extend(addresses)

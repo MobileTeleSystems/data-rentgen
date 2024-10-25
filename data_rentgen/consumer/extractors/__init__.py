@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+from data_rentgen.consumer.extractors.batch import BatchExtractionResult, extract_batch
 from data_rentgen.consumer.extractors.dataset import (
     extract_dataset,
     extract_dataset_aliases,
@@ -24,4 +25,6 @@ __all__ = [
     "extract_input",
     "extract_output",
     "extract_schema",
+    "extract_batch",
+    "BatchExtractionResult",
 ]

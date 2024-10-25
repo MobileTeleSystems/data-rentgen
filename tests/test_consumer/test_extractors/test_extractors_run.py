@@ -82,7 +82,7 @@ def test_extractors_extract_run_spark_app_yarn():
         id=run_id,
         job=JobDTO(
             name="myjob",
-            location=LocationDTO(type="yarn", name="cluster", addresses=["yarn://cluster"]),
+            location=LocationDTO(type="yarn", name="cluster", addresses={"yarn://cluster"}),
             type=JobTypeDTO.SPARK_APPLICATION,
         ),
         status=RunStatusDTO.STARTED,
@@ -134,7 +134,7 @@ def test_extractors_extract_run_spark_app_local():
         id=run_id,
         job=JobDTO(
             name="myjob",
-            location=LocationDTO(type="host", name="some.host.com", addresses=["host://some.host.com"]),
+            location=LocationDTO(type="host", name="some.host.com", addresses={"host://some.host.com"}),
             type=JobTypeDTO.SPARK_APPLICATION,
         ),
         status=RunStatusDTO.STARTED,
@@ -193,7 +193,7 @@ def test_extractors_extract_run_airflow_dag_2_3_plus():
             location=LocationDTO(
                 type="http",
                 name="airflow-host:8081",
-                addresses=["http://airflow-host:8081"],
+                addresses={"http://airflow-host:8081"},
             ),
             type=JobTypeDTO.AIRFLOW_DAG,
         ),
@@ -256,7 +256,7 @@ def test_extractors_extract_run_airflow_dag_2_x():
             location=LocationDTO(
                 type="http",
                 name="airflow-host:8081",
-                addresses=["http://airflow-host:8081"],
+                addresses={"http://airflow-host:8081"},
             ),
             type=JobTypeDTO.AIRFLOW_DAG,
         ),
@@ -274,7 +274,7 @@ def test_extractors_extract_run_airflow_dag_2_x():
     )
 
 
-def test_extractors_extract_run_airflow_task_with_ti_log_url():
+def test_extractors_extract_run_airflow_task_with_ti_persistent_log_url():
     now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
     run_id = UUID("01908223-0e9b-7c52-9856-6cecfc842610")
     run = OpenLineageRunEvent(
@@ -328,7 +328,7 @@ def test_extractors_extract_run_airflow_task_with_ti_log_url():
             location=LocationDTO(
                 type="http",
                 name="airflow-host:8081",
-                addresses=["http://airflow-host:8081"],
+                addresses={"http://airflow-host:8081"},
             ),
             type=JobTypeDTO.AIRFLOW_TASK,
         ),
@@ -397,7 +397,7 @@ def test_extractors_extract_run_airflow_task_2_9_plus():
             location=LocationDTO(
                 type="http",
                 name="airflow-host:8081",
-                addresses=["http://airflow-host:8081"],
+                addresses={"http://airflow-host:8081"},
             ),
             type=JobTypeDTO.AIRFLOW_TASK,
         ),
@@ -461,7 +461,7 @@ def test_extractors_extract_run_airflow_task_2_x():
             location=LocationDTO(
                 type="http",
                 name="airflow-host:8081",
-                addresses=["http://airflow-host:8081"],
+                addresses={"http://airflow-host:8081"},
             ),
             type=JobTypeDTO.AIRFLOW_TASK,
         ),
@@ -505,7 +505,7 @@ def test_extractors_extract_run_unknown(event_type: OpenLineageRunEventType, exp
             location=LocationDTO(
                 type="unknown",
                 name="something",
-                addresses=["unknown://something"],
+                addresses={"unknown://something"},
             ),
         ),
         status=expected_status,
