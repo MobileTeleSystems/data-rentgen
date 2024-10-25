@@ -23,7 +23,7 @@ def test_extractors_extract_job_spark_yarn():
     )
     assert extract_job(job) == JobDTO(
         name="myjob",
-        location=LocationDTO(type="yarn", name="cluster", addresses=["yarn://cluster"]),
+        location=LocationDTO(type="yarn", name="cluster", addresses={"yarn://cluster"}),
         type=JobTypeDTO.SPARK_APPLICATION,
     )
 
@@ -42,7 +42,7 @@ def test_extractors_extract_job_spark_local():
     )
     assert extract_job(job) == JobDTO(
         name="myjob",
-        location=LocationDTO(type="host", name="some.host.com", addresses=["host://some.host.com"]),
+        location=LocationDTO(type="host", name="some.host.com", addresses={"host://some.host.com"}),
         type=JobTypeDTO.SPARK_APPLICATION,
     )
 
@@ -64,7 +64,7 @@ def test_extractors_extract_job_airflow_dag():
         location=LocationDTO(
             type="http",
             name="airflow-host:8081",
-            addresses=["http://airflow-host:8081"],
+            addresses={"http://airflow-host:8081"},
         ),
         type=JobTypeDTO.AIRFLOW_DAG,
     )
@@ -87,7 +87,7 @@ def test_extractors_extract_job_airflow_task():
         location=LocationDTO(
             type="http",
             name="airflow-host:8081",
-            addresses=["http://airflow-host:8081"],
+            addresses={"http://airflow-host:8081"},
         ),
         type=JobTypeDTO.AIRFLOW_TASK,
     )
@@ -100,6 +100,6 @@ def test_extractors_extract_job_unknown():
         location=LocationDTO(
             type="unknown",
             name="something",
-            addresses=["unknown://something"],
+            addresses={"unknown://something"},
         ),
     )

@@ -27,15 +27,12 @@ class OperationStatusDTO(str, Enum):
     FAILED = "FAILED"
     UNKNOWN = "UNKNOWN"
 
-    def __str__(self) -> str:
-        return str(self.value)
 
-
-@dataclass(slots=True)
+@dataclass
 class OperationDTO:
     id: UUID
-    name: str
     run: RunDTO
+    name: str
     type: OperationTypeDTO | None = None
     position: int | None = None
     group: str | None = None
@@ -43,3 +40,21 @@ class OperationDTO:
     status: OperationStatusDTO | None = None
     started_at: datetime | None = None
     ended_at: datetime | None = None
+
+    @property
+    def unique_key(self) -> tuple:
+        return (self.id,)
+
+    def merge(self, new: OperationDTO) -> OperationDTO:
+        return OperationDTO(
+            id=self.id,
+            run=self.run.merge(new.run),
+            name=new.name or self.name,
+            type=new.type or self.type,
+            group=new.group or self.group,
+            description=new.description or self.description,
+            status=new.status or self.status,
+            position=new.position or self.position,
+            started_at=new.started_at or self.started_at,
+            ended_at=new.ended_at or self.ended_at,
+        )

@@ -23,7 +23,7 @@ def extract_job_location(job: OpenLineageJob | OpenLineageParentJob) -> Location
     return LocationDTO(
         type=scheme,
         name=netloc,
-        addresses=[f"{scheme}://{netloc}"],
+        addresses={f"{scheme}://{netloc}"},
     )
 
 

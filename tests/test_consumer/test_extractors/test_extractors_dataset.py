@@ -31,7 +31,7 @@ def test_extractors_extract_dataset_hdfs():
         location=LocationDTO(
             type="hdfs",
             name="test-hadoop:9820",
-            addresses=["hdfs://test-hadoop:9820"],
+            addresses={"hdfs://test-hadoop:9820"},
         ),
         name="/user/hive/warehouse/mydb.db/mytable",
     )
@@ -60,7 +60,7 @@ def test_extractors_extract_dataset_hdfs_with_table_symlink():
         location=LocationDTO(
             type="hdfs",
             name="test-hadoop:9820",
-            addresses=["hdfs://test-hadoop:9820"],
+            addresses={"hdfs://test-hadoop:9820"},
         ),
         name="/warehouse/mydb.db/mytable",
     )
@@ -69,7 +69,7 @@ def test_extractors_extract_dataset_hdfs_with_table_symlink():
         location=LocationDTO(
             type="hive",
             name="test-hadoop:9083",
-            addresses=["hive://test-hadoop:9083"],
+            addresses={"hive://test-hadoop:9083"},
         ),
         name="mydb.mytable",
     )
@@ -107,7 +107,7 @@ def test_extractors_extract_dataset_hdfs_with_format(storage_layer: str, file_fo
         location=LocationDTO(
             type="hdfs",
             name="test-hadoop:9820",
-            addresses=["hdfs://test-hadoop:9820"],
+            addresses={"hdfs://test-hadoop:9820"},
         ),
         name="/user/hive/warehouse/mydb.db/mytable",
         format=expected_format,
@@ -125,7 +125,7 @@ def test_extractors_extract_dataset_s3():
         location=LocationDTO(
             type="s3",
             name="bucket",
-            addresses=["s3://bucket"],
+            addresses={"s3://bucket"},
         ),
         name="warehouse/mydb.db/mytable",
     )
@@ -143,7 +143,7 @@ def test_extractors_extract_dataset_file():
         location=LocationDTO(
             type="file",
             name="unknown",
-            addresses=["file://unknown"],
+            addresses={"file://unknown"},
         ),
         name="/warehouse/mydb.db/mytable",
     )
@@ -161,7 +161,7 @@ def test_extractors_extract_dataset_hive():
         location=LocationDTO(
             type="hive",
             name="test-hadoop:9083",
-            addresses=["hive://test-hadoop:9083"],
+            addresses={"hive://test-hadoop:9083"},
         ),
         name="mydb.mytable",
     )
@@ -191,7 +191,7 @@ def test_extractors_extract_dataset_hive_with_location_symlink():
         location=LocationDTO(
             type="hive",
             name="test-hadoop:9083",
-            addresses=["hive://test-hadoop:9083"],
+            addresses={"hive://test-hadoop:9083"},
         ),
         name="mydb.mytable",
     )
@@ -200,7 +200,7 @@ def test_extractors_extract_dataset_hive_with_location_symlink():
         location=LocationDTO(
             type="hdfs",
             name="test-hadoop:9820",
-            addresses=["hdfs://test-hadoop:9820"],
+            addresses={"hdfs://test-hadoop:9820"},
         ),
         name="/warehouse/mydb.db/mytable",
     )
@@ -223,7 +223,7 @@ def test_extractors_extract_dataset_postgres():
         location=LocationDTO(
             type="postgres",
             name="192.168.1.1:5432",
-            addresses=["postgres://192.168.1.1:5432"],
+            addresses={"postgres://192.168.1.1:5432"},
         ),
         name="mydb.myschema.mytable",
     )
@@ -241,7 +241,7 @@ def test_extractors_extract_dataset_kafka():
         location=LocationDTO(
             type="kafka",
             name="192.168.1.1:9092",
-            addresses=["kafka://192.168.1.1:9092", "kafka://192.168.1.2:9092"],
+            addresses={"kafka://192.168.1.1:9092", "kafka://192.168.1.2:9092"},
         ),
         name="mytopic",
     )
@@ -259,7 +259,7 @@ def test_extractors_extract_dataset_unknown():
         location=LocationDTO(
             type="unknown",
             name="some-namespace",
-            addresses=["unknown://some-namespace"],
+            addresses={"unknown://some-namespace"},
         ),
         name="some.name",
     )
