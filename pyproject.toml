@@ -47,7 +47,7 @@ python = "^3.10"
 pydantic = "~2.8.2"
 typing-extensions = "^4.12.2"
 # TODO: remove after https://github.com/pydantic/pydantic-settings/issues/445
-pydantic-settings = {version = "~2.5", optional = true}
+pydantic-settings = {version = "~2.6", optional = true}
 alembic = {version = "^1.13.2", optional = true}
 sqlalchemy = {version = "^2.0.35", optional = true}
 sqlalchemy-utils = {version = "^0.41.2", optional = true}
@@ -56,8 +56,8 @@ python-json-logger = {version = "^2.0.7", optional = true}
 coloredlogs = {version = "^15.0.1", optional = true}
 uuid6 = {version = "^2024.7.10", optional = true}
 python-dateutil = {version = "^2.9.0.post0", optional = true}
-fastapi = {version = "^0.115.2", optional = true}
-starlette = {version = "^0.40.0", optional = true}
+fastapi = {version = "^0.115.4", optional = true}
+starlette = {version = "^0.41.2", optional = true}
 starlette-exporter = {version = "^0.23.0", optional = true}
 uvicorn = {version = "^0.32.0", optional = true}
 asyncpg = {version = "^0.30.0", optional = true}
@@ -107,7 +107,7 @@ pytest = "^8.3.3"
 httpx = "^0.27.0"
 # TODO: remove version limit after fixing https://github.com/pytest-dev/pytest-asyncio/issues/706
 pytest-asyncio = "^0.21.1"
-pytest-randomly = "^3.15.0"
+pytest-randomly = "^3.16.0"
 pytest-deadfixtures = "^2.2.1"
 pytest-rerunfailures = "^14.0"
 coverage = "^7.6.4"
@@ -117,7 +117,7 @@ deepdiff = "^8.0.1"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.0.1"
-mypy = "^1.12.1"
+mypy = "^1.13.0"
 black = "^24.10.0"
 isort = "^5.13.2"
 flake8 = "^7.1.1"
