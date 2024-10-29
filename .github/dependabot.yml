@@ -24,6 +24,8 @@ updates:
       - dependency-name: towncrier
       # https://github.com/pydantic/pydantic/issues/10494
       - dependency-name: pydantic
+      # https://github.com/pydantic/pydantic-settings/issues/445
+      - dependency-name: pydantic-settings
     # https://til.simonwillison.net/github/dependabot-python-setup
     groups:
       python-packages:
