@@ -54,6 +54,7 @@ class DatasetSymlinkRepository(Repository[DatasetSymlink]):
         return result
 
     async def _update(self, existing: DatasetSymlink, new: DatasetSymlinkDTO) -> DatasetSymlink:
+        # almost of fields are immutable, so we can avoid UPDATE statements if row is unchanged
         existing.type = DatasetSymlinkType(new.type)
         await self._session.flush([existing])
         return existing

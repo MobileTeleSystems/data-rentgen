@@ -49,6 +49,7 @@ class LocationRepository(Repository[Location]):
     async def _update_addresses(self, existing: Location, new: LocationDTO) -> Location:
         existing_urls = {address.url for address in existing.addresses}
         new_urls = new.addresses - existing_urls
+        # in most cases, Location is unchanged, so we can avoid UPDATE statements
         if not new_urls:
             return existing
 

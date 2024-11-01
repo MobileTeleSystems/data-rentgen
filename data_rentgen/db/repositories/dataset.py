@@ -113,6 +113,7 @@ class DatasetRepository(Repository[Dataset]):
         return result
 
     async def _update(self, existing: Dataset, new: DatasetDTO) -> Dataset:
+        # almost of fields are immutable, so we can avoid UPDATE statements if row is unchanged
         if new.format:
             existing.format = new.format
             await self._session.flush([existing])

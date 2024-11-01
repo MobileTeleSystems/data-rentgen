@@ -35,9 +35,8 @@ async def runs_handler(
 
 
 async def save_to_db(data: BatchExtractionResult, unit_of_work: UnitOfWork, logger: Logger) -> None:  # noqa: WPS217
-    # To avoid issues when parallel consumer instances create the same object, and then fail at the end,
-    # commit changes as soon as possible. Yes, this is quite slow, but it's fine for a prototype.
-    # TODO: rewrite this to create objects in batch.
+    # To avoid deadlocks when parallel consumer instances insert/update the same row,
+    # commit changes for each row instead of committing the whole batch. Yes, this cloud be slow.
 
     logger.debug("Creating locations")
     for location_dto in data.locations():
@@ -75,24 +74,24 @@ async def save_to_db(data: BatchExtractionResult, unit_of_work: UnitOfWork, logg
             schema = await unit_of_work.schema.get_or_create(schema_dto)
             schema_dto.id = schema.id
 
+    # Some events related to specific run are send to the same Kafka partition,
+    # but at the same time we have parent_run which may be already inserted/updated by other worker
+    # (Kafka key maybe different for run and it's parent).
+    # In this case we cannot insert all the rows in one transaction, as it may lead to deadlocks.
     logger.debug("Creating runs")
     for run_dto in data.runs():
         async with unit_of_work:
             await unit_of_work.run.create_or_update(run_dto)
 
-    logger.debug("Creating operations")
-    for operation_dto in data.operations():
-        async with unit_of_work:
-            await unit_of_work.operation.create_or_update(operation_dto)
+    # All events related to same operation are always send to the same Kafka partition,
+    # so other workers never insert/update the same operation in parallel.
+    # These rows can be inserted/updated in bulk, in one transaction.
+    async with unit_of_work:
+        logger.debug("Creating operations")
+        await unit_of_work.operation.create_or_update_bulk(data.operations())
 
-    logger.debug("Creating inputs")
-    for input_dto in data.inputs():
-        async with unit_of_work:
-            input = await unit_of_work.input.create_or_update(input_dto)
-            input_dto.id = input.id
+        logger.debug("Creating inputs")
+        await unit_of_work.input.create_or_update_bulk(data.inputs())
 
-    logger.debug("Creating outputs")
-    for output_dto in data.outputs():
-        async with unit_of_work:
-            output = await unit_of_work.output.create_or_update(output_dto)
-            output_dto.id = output.id
+        logger.debug("Creating outputs")
+        await unit_of_work.output.create_or_update_bulk(data.outputs())

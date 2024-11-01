@@ -6,6 +6,7 @@ from typing import Literal, Sequence
 from uuid import UUID
 
 from sqlalchemy import Select, any_, func, literal_column, select
+from sqlalchemy.dialects.postgresql import insert
 
 from data_rentgen.db.models import Output, OutputType
 from data_rentgen.db.repositories.base import Repository
@@ -17,7 +18,7 @@ from data_rentgen.dto import OutputDTO
 
 
 class OutputRepository(Repository[Output]):
-    async def create_or_update(self, output: OutputDTO) -> Output:
+    def get_id(self, output: OutputDTO) -> UUID:
         # `created_at' field of output should be the same as operation's,
         # to avoid scanning all partitions and speed up queries
         created_at = extract_timestamp_from_uuid(output.operation.id)
@@ -29,27 +30,42 @@ class OutputRepository(Repository[Output]):
             str(output.dataset.id),
             str(output.schema.id) if output.schema else "",
         ]
-        output_id = generate_incremental_uuid(created_at, ".".join(id_components).encode("utf-8"))
+        return generate_incremental_uuid(created_at, ".".join(id_components).encode("utf-8"))
 
-        result = await self._get(created_at, output_id)
-        if not result:
-            # try one more time, but with lock acquired.
-            # if another worker already created the same row, just use it. if not - create with holding the lock.
-            await self._lock(output_id)
-            result = await self._get(created_at, output_id)
+    async def create_or_update_bulk(self, outputs: list[OutputDTO]) -> list[Output]:
+        if not outputs:
+            return []
 
-        if not result:
-            return await self._create(
-                created_at=created_at,
-                output_id=output_id,
-                output=output,
-                operation_id=output.operation.id,
-                run_id=output.operation.run.id,
-                job_id=output.operation.run.job.id,  # type: ignore[arg-type]
-                dataset_id=output.dataset.id,  # type: ignore[arg-type]
-                schema_id=output.schema.id if output.schema else None,
-            )
-        return await self._update(result, output)
+        insert_statement = insert(Output)
+        statement = insert_statement.on_conflict_do_update(
+            index_elements=[Output.created_at, Output.id],
+            set_={
+                "num_bytes": func.coalesce(insert_statement.excluded.num_bytes, Output.num_bytes),
+                "num_rows": func.coalesce(insert_statement.excluded.num_rows, Output.num_rows),
+                "num_files": func.coalesce(insert_statement.excluded.num_files, Output.num_files),
+            },
+        ).returning(Output)
+
+        result = await self._session.execute(
+            statement,
+            [
+                {
+                    "id": self.get_id(output),
+                    "created_at": extract_timestamp_from_uuid(output.operation.id),
+                    "type": OutputType(output.type),
+                    "operation_id": output.operation.id,
+                    "run_id": output.operation.run.id,
+                    "job_id": output.operation.run.job.id,  # type: ignore[arg-type]
+                    "dataset_id": output.dataset.id,  # type: ignore[arg-type]
+                    "schema_id": output.schema.id if output.schema else None,
+                    "num_bytes": output.num_bytes,
+                    "num_rows": output.num_rows,
+                    "num_files": output.num_files,
+                }
+                for output in outputs
+            ],
+        )
+        return list(result.scalars().all())
 
     async def list_by_operation_ids(
         self,
@@ -190,45 +206,3 @@ class OutputRepository(Repository[Output]):
             Output.dataset_id,
             Output.type,
         )
-
-    async def _get(self, created_at: datetime, output_id: UUID) -> Output | None:
-        query = select(Output).where(Output.created_at == created_at, Output.id == output_id)
-        return await self._session.scalar(query)
-
-    async def _create(
-        self,
-        created_at: datetime,
-        output_id: UUID,
-        output: OutputDTO,
-        operation_id: UUID,
-        run_id: UUID,
-        job_id: int,
-        dataset_id: int,
-        schema_id: int | None = None,
-    ) -> Output:
-        result = Output(
-            created_at=created_at,
-            id=output_id,
-            operation_id=operation_id,
-            run_id=run_id,
-            job_id=job_id,
-            dataset_id=dataset_id,
-            type=OutputType(output.type),
-            schema_id=schema_id,
-            num_bytes=output.num_bytes,
-            num_rows=output.num_rows,
-            num_files=output.num_files,
-        )
-        self._session.add(result)
-        await self._session.flush([result])
-        return result
-
-    async def _update(self, existing: Output, new: OutputDTO) -> Output:
-        if new.num_bytes is not None:
-            existing.num_bytes = new.num_bytes
-        if new.num_rows is not None:
-            existing.num_rows = new.num_rows
-        if new.num_files is not None:
-            existing.num_files = new.num_files
-        await self._session.flush([existing])
-        return existing
