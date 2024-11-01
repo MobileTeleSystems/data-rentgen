@@ -49,8 +49,22 @@ class LocationRepository(Repository[Location]):
     async def _update_addresses(self, existing: Location, new: LocationDTO) -> Location:
         existing_urls = {address.url for address in existing.addresses}
         new_urls = new.addresses - existing_urls
-        if new_urls:
-            addresses = [Address(url=url, location_id=existing.id) for url in new_urls]
-            existing.addresses.extend(addresses)
-            await self._session.flush([existing])
+        if not new_urls:
+            return existing
+
+        # take a lock, to avoid race conditions, and then
+        # get fresh state of the object, because it already could be updated by another worker
+        await self._lock(existing.type, existing.name)
+        await self._session.refresh(existing, ["addresses"])
+
+        # already has all required addresses - nothing to update
+        existing_urls = {address.url for address in existing.addresses}
+        new_urls = new.addresses - existing_urls
+        if not new_urls:
+            return existing
+
+        # add new addresses while holding the lock
+        addresses = [Address(url=url, location_id=existing.id) for url in new_urls]
+        existing.addresses.extend(addresses)
+        await self._session.flush([existing])
         return existing
