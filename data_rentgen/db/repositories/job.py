@@ -116,6 +116,7 @@ class JobRepository(Repository[Job]):
         return result
 
     async def _update(self, existing: Job, new: JobDTO) -> Job:
+        # almost of fields are immutable, so we can avoid UPDATE statements if row is unchanged
         if new.type:
             existing.type = JobType(new.type)
             await self._session.flush([existing])

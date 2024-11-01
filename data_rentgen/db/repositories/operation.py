@@ -4,7 +4,8 @@
 from datetime import datetime, timezone
 from typing import Sequence
 
-from sqlalchemy import any_, select
+from sqlalchemy import any_, func, select
+from sqlalchemy.dialects.postgresql import insert
 
 from data_rentgen.db.models import Operation, OperationType, Status
 from data_rentgen.db.repositories.base import Repository
@@ -14,19 +15,45 @@ from data_rentgen.utils import UUID
 
 
 class OperationRepository(Repository[Operation]):
-    async def create_or_update(self, operation: OperationDTO) -> Operation:
-        # avoid calculating created_at twice
-        created_at = extract_timestamp_from_uuid(operation.id)
-        result = await self._get(created_at, operation.id)
-        if not result:
-            # try one more time, but with lock acquired.
-            # if another worker already created the same row, just use it. if not - create with holding the lock.
-            await self._lock(operation.id)
-            result = await self._get(created_at, operation.id)
+    async def create_or_update_bulk(self, operations: list[OperationDTO]) -> list[Operation]:
+        if not operations:
+            return []
 
-        if not result:
-            return await self._create(created_at, operation)
-        return await self._update(result, operation)
+        insert_statement = insert(Operation)
+        statement = insert_statement.on_conflict_do_update(
+            index_elements=[Operation.created_at, Operation.id],
+            set_={
+                "name": func.coalesce(insert_statement.excluded.name, Operation.name),
+                "type": func.coalesce(insert_statement.excluded.type, Operation.type),
+                "status": func.coalesce(insert_statement.excluded.status, Operation.status),
+                "started_at": func.coalesce(insert_statement.excluded.started_at, Operation.started_at),
+                "ended_at": func.coalesce(insert_statement.excluded.ended_at, Operation.ended_at),
+                "description": func.coalesce(insert_statement.excluded.description, Operation.description),
+                "group": func.coalesce(insert_statement.excluded.group, Operation.group),
+                "position": func.coalesce(insert_statement.excluded.position, Operation.position),
+            },
+        ).returning(Operation)
+
+        result = await self._session.execute(
+            statement,
+            [
+                {
+                    "id": operation.id,
+                    "created_at": extract_timestamp_from_uuid(operation.id),
+                    "run_id": operation.run.id,
+                    "name": operation.name,
+                    "type": OperationType(operation.type) if operation.type else None,
+                    "status": Status(operation.status) if operation.status else None,
+                    "started_at": operation.started_at,
+                    "ended_at": operation.ended_at,
+                    "description": operation.description,
+                    "group": operation.group,
+                    "position": operation.position,
+                }
+                for operation in operations
+            ],
+        )
+        return list(result.scalars().all())
 
     async def paginate(
         self,
@@ -104,42 +131,3 @@ class OperationRepository(Repository[Operation]):
         )
         result = await self._session.scalars(query)
         return list(result.all())
-
-    async def _get(self, created_at: datetime, operation_id: UUID) -> Operation | None:
-        query = select(Operation).where(Operation.created_at == created_at, Operation.id == operation_id)
-        return await self._session.scalar(query)
-
-    async def _create(self, created_at: datetime, operation: OperationDTO) -> Operation:
-        result = Operation(
-            created_at=created_at,
-            id=operation.id,
-            run_id=operation.run.id,
-            name=operation.name,
-            type=OperationType(operation.type),
-            status=Status(operation.status) if operation.status else Status.UNKNOWN,
-            started_at=operation.started_at,
-            ended_at=operation.ended_at,
-            description=operation.description,
-            group=operation.group,
-            position=operation.position,
-        )
-        self._session.add(result)
-        await self._session.flush([result])
-        return result
-
-    async def _update(self, existing: Operation, new: OperationDTO) -> Operation:
-        optional_fields = {
-            "type": OperationType(new.type) if new.type else None,
-            "status": Status(new.status) if new.status else None,
-            "started_at": new.started_at,
-            "ended_at": new.ended_at,
-            "description": new.description,
-            "group": new.group,
-            "position": new.position,
-        }
-        for column, value in optional_fields.items():
-            if value is not None:
-                setattr(existing, column, value)
-
-        await self._session.flush([existing])
-        return existing

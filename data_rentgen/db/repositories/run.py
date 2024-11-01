@@ -37,7 +37,6 @@ class RunRepository(Repository[Run]):
 
         if not result:
             return await self._create(created_at, run)
-
         return await self._update(result, run)
 
     async def paginate(
@@ -183,6 +182,7 @@ class RunRepository(Repository[Run]):
         existing: Run,
         new: RunDTO,
     ) -> Run:
+        # for parent_run most of fields are None, so we can avoid UPDATE statements if row is unchanged
         optional_fields = {
             "status": Status(new.status) if new.status else None,
             "parent_run_id": new.parent_run.id if new.parent_run else None,
