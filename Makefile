@@ -2,8 +2,9 @@
 
 include .env.local
 
-PIP = .venv/bin/pip
-POETRY = .venv/bin/poetry
+VENV = .venv
+PIP = ${VENV}/bin/pip
+POETRY = ${VENV}/bin/poetry
 
 # Fix docker build and docker compose build using different backends
 COMPOSE_DOCKER_CLI_BUILD = 1
@@ -29,7 +30,7 @@ venv: venv-cleanup  venv-install##@Env Init venv and install poetry dependencies
 
 venv-cleanup: ##@Env Cleanup venv
 	@rm -rf .venv || true
-	python3.12 -m venv .venv
+	python -m venv ${VENV}
 	${PIP} install -U setuptools wheel pip
 	${PIP} install poetry
 
