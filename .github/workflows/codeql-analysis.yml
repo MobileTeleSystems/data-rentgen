@@ -14,8 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  # flake8-commas is failing on Python 3.12
-  DEFAULT_PYTHON: '3.11'
+  DEFAULT_PYTHON: '3.13'
 
 jobs:
   linters:
@@ -51,6 +50,7 @@ jobs:
       - name: Install dependencies
         run: |
           poetry install --no-root --all-extras --with dev --without docs,test
+          pip install -U flake8-commas
 
       - name: Run flake8
         run: poetry run flake8 data_rentgen/

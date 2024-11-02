@@ -1,4 +1,4 @@
-FROM python:3.12-slim as prod
+FROM python:3.13-slim as prod
 LABEL maintainer="DataOps.ETL"
 
 WORKDIR /app
