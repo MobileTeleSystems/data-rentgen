@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import Enum, IntEnum
 
 from sqlalchemy import UUID as SQL_UUID
 from sqlalchemy import (
@@ -13,6 +13,7 @@ from sqlalchemy import (
     DateTime,
     Index,
     PrimaryKeyConstraint,
+    SmallInteger,
     String,
 )
 from sqlalchemy.dialects.postgresql import TSVECTOR
@@ -22,8 +23,24 @@ from uuid6 import UUID
 
 from data_rentgen.db.models.base import Base
 from data_rentgen.db.models.job import Job
-from data_rentgen.db.models.status import Status
 from data_rentgen.db.models.user import User
+
+
+class RunStatus(IntEnum):
+    UNKNOWN = -1
+    """No data about status"""
+
+    STARTED = 0
+    """Received START event"""
+
+    SUCCEEDED = 1
+    """Finished successfully"""
+
+    FAILED = 2
+    """Internal failure"""
+
+    KILLED = 3
+    """Killed externally, e.g. by user request or in case of OOM"""
 
 
 class RunStartReason(str, Enum):
@@ -76,10 +93,10 @@ class Run(Base):
         foreign_keys=[parent_run_id],
     )
 
-    status: Mapped[Status] = mapped_column(
-        ChoiceType(Status, impl=String(32)),
+    status: Mapped[RunStatus] = mapped_column(
+        ChoiceType(RunStatus, impl=SmallInteger()),
         nullable=False,
-        default=Status.UNKNOWN,
+        default=RunStatus.UNKNOWN,
         doc="Run status info",
     )
 

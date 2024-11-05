@@ -8,11 +8,10 @@ from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlin
 from data_rentgen.db.models.input import Input
 from data_rentgen.db.models.job import Job, JobType
 from data_rentgen.db.models.location import Location
-from data_rentgen.db.models.operation import Operation, OperationType
+from data_rentgen.db.models.operation import Operation, OperationStatus, OperationType
 from data_rentgen.db.models.output import Output, OutputType
-from data_rentgen.db.models.run import Run, RunStartReason
+from data_rentgen.db.models.run import Run, RunStartReason, RunStatus
 from data_rentgen.db.models.schema import Schema
-from data_rentgen.db.models.status import Status
 from data_rentgen.db.models.user import User
 
 __all__ = [
@@ -29,9 +28,10 @@ __all__ = [
     "Location",
     "Operation",
     "OperationType",
+    "OperationStatus",
     "Run",
     "RunStartReason",
+    "RunStatus",
     "Schema",
-    "Status",
     "User",
 ]

@@ -355,8 +355,8 @@ def spark_operation_run_event_running() -> OpenLineageRunEvent:
                 ),
                 outputFacets=OpenLineageOutputDatasetFacets(
                     outputStatistics=OpenLineageOutputStatisticsOutputDatasetFacet(
-                        rowCount=1_000_000,
-                        size=1000 * 1024 * 1024,
+                        rowCount=1_000,
+                        size=10 * 1024 * 1024,
                     ),
                 ),
             ),
@@ -710,6 +710,20 @@ def extracted_hdfs_output(
     )
 
 
+@pytest.mark.parametrize(
+    "input_transformation",
+    [
+        # receiving data out of order does not change result
+        pytest.param(
+            list,
+            id="preserve order",
+        ),
+        pytest.param(
+            reversed,
+            id="reverse order",
+        ),
+    ],
+)
 def test_extractors_extract_batch_spark(
     spark_app_run_event_start: OpenLineageRunEvent,
     spark_app_run_event_stop: OpenLineageRunEvent,
@@ -732,6 +746,7 @@ def test_extractors_extract_batch_spark(
     extracted_spark_operation: OperationDTO,
     extracted_postgres_input: InputDTO,
     extracted_hdfs_output: OutputDTO,
+    input_transformation,
 ):
     events = [
         spark_app_run_event_start,
@@ -741,7 +756,7 @@ def test_extractors_extract_batch_spark(
         spark_app_run_event_stop,
     ]
 
-    extracted = extract_batch(events)
+    extracted = extract_batch(input_transformation(events))
 
     assert extracted.locations() == [
         extracted_spark_location,

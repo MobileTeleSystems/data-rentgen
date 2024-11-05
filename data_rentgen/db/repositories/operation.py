@@ -7,7 +7,7 @@ from typing import Sequence
 from sqlalchemy import any_, func, select
 from sqlalchemy.dialects.postgresql import insert
 
-from data_rentgen.db.models import Operation, OperationType, Status
+from data_rentgen.db.models import Operation, OperationStatus, OperationType
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid
 from data_rentgen.dto import OperationDTO, PaginationDTO
@@ -25,7 +25,7 @@ class OperationRepository(Repository[Operation]):
             set_={
                 "name": func.coalesce(insert_statement.excluded.name, Operation.name),
                 "type": func.coalesce(insert_statement.excluded.type, Operation.type),
-                "status": func.coalesce(insert_statement.excluded.status, Operation.status),
+                "status": func.greatest(insert_statement.excluded.status, Operation.status),
                 "started_at": func.coalesce(insert_statement.excluded.started_at, Operation.started_at),
                 "ended_at": func.coalesce(insert_statement.excluded.ended_at, Operation.ended_at),
                 "description": func.coalesce(insert_statement.excluded.description, Operation.description),
@@ -43,7 +43,7 @@ class OperationRepository(Repository[Operation]):
                     "run_id": operation.run.id,
                     "name": operation.name,
                     "type": OperationType(operation.type) if operation.type else None,
-                    "status": Status(operation.status) if operation.status else None,
+                    "status": OperationStatus(operation.status),
                     "started_at": operation.started_at,
                     "ended_at": operation.ended_at,
                     "description": operation.description,

@@ -8,7 +8,7 @@ import pytest_asyncio
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.db.models import Address, Job, Run, Status, User
+from data_rentgen.db.models import Address, Job, Run, RunStartReason, RunStatus, User
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
 from tests.test_server.fixtures.factories.base import random_datetime, random_string
 from tests.test_server.fixtures.factories.job import job_factory
@@ -22,14 +22,14 @@ def run_factory(**kwargs):
         "id": run_id,
         "job_id": randint(0, 10000000),
         "parent_run_id": generate_new_uuid(),
-        "status": choice(list(Status)),
+        "status": choice(list(RunStatus)),
         "external_id": random_string(128),
         "attempt": random_string(16),
         "persistent_log_url": random_string(32),
         "running_log_url": random_string(32),
         "started_at": random_datetime(),
         "started_by_user_id": randint(0, 10000000),
-        "start_reason": choice(["MANUAL", "AUTOMATIC"]),
+        "start_reason": choice(list(RunStartReason)),
         "ended_at": random_datetime(),
         "end_reason": random_string(8),
     }

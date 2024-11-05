@@ -18,12 +18,13 @@ from data_rentgen.db.models import (
     JobType,
     Location,
     Operation,
+    OperationStatus,
     OperationType,
     Output,
     OutputType,
     Run,
+    RunStatus,
     Schema,
-    Status,
 )
 
 RESOURCES_PATH = Path(__file__).parent.parent.joinpath("resources").resolve()
@@ -38,12 +39,27 @@ def events_spark() -> list[dict]:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "input_transformation",
+    [
+        # receiving data out of order does not change result
+        pytest.param(
+            list,
+            id="preserve order",
+        ),
+        pytest.param(
+            reversed,
+            id="reverse order",
+        ),
+    ],
+)
 async def test_runs_handler_spark(
     test_broker: KafkaBroker,
     async_session: AsyncSession,
     events_spark: list[dict],
+    input_transformation,
 ):
-    for event in events_spark:
+    for event in input_transformation(events_spark):
         await test_broker.publish(event, "input.runs")
 
     job_query = select(Job).order_by(Job.name).options(selectinload(Job.location).selectinload(Location.addresses))
@@ -67,7 +83,7 @@ async def test_runs_handler_spark(
     assert application_run.id == UUID("01908224-8410-79a2-8de6-a769ad6944c9")
     assert application_run.created_at == datetime(2024, 7, 5, 9, 5, 49, 584000, tzinfo=timezone.utc)
     assert application_run.job_id == jobs[0].id
-    assert application_run.status == Status.SUCCEEDED
+    assert application_run.status == RunStatus.SUCCEEDED
     assert application_run.started_at == datetime(2024, 7, 5, 9, 4, 48, 794900, tzinfo=timezone.utc)
     assert application_run.started_by_user is not None
     assert application_run.started_by_user.name == "myuser"
@@ -88,7 +104,7 @@ async def test_runs_handler_spark(
     assert job_operation.run_id == application_run.id
     assert job_operation.name == "execute_save_into_data_source_command"
     assert job_operation.type == OperationType.BATCH
-    assert job_operation.status == Status.SUCCEEDED
+    assert job_operation.status == OperationStatus.SUCCEEDED
     assert job_operation.started_at == datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
     assert job_operation.ended_at == datetime(2024, 7, 5, 9, 7, 15, 642000, tzinfo=timezone.utc)
     assert job_operation.position == 3

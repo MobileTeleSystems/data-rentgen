@@ -16,7 +16,7 @@ from data_rentgen.db.models import (
     Operation,
     Run,
     RunStartReason,
-    Status,
+    RunStatus,
 )
 
 RESOURCES_PATH = Path(__file__).parent.parent.joinpath("resources").resolve()
@@ -31,12 +31,27 @@ def events_airflow() -> list[dict]:
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "input_transformation",
+    [
+        # receiving data out of order does not change result
+        pytest.param(
+            list,
+            id="preserve order",
+        ),
+        pytest.param(
+            reversed,
+            id="reverse order",
+        ),
+    ],
+)
 async def test_runs_handler_airflow(
     test_broker: KafkaBroker,
     async_session: AsyncSession,
     events_airflow: list[dict],
+    input_transformation,
 ):
-    for event in events_airflow:
+    for event in input_transformation(events_airflow):
         await test_broker.publish(event, "input.runs")
 
     # both Spark application & jobs are in the same cluster/host, thus the same location
@@ -65,7 +80,7 @@ async def test_runs_handler_airflow(
     assert dag_run.id == UUID("01908223-0782-79b8-9495-b1c38aaee839")
     assert dag_run.created_at == datetime(2024, 7, 5, 9, 4, 12, 162000, tzinfo=timezone.utc)
     assert dag_run.job_id == jobs[0].id
-    assert dag_run.status == Status.SUCCEEDED
+    assert dag_run.status == RunStatus.SUCCEEDED
     assert dag_run.started_at == datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
     assert dag_run.ended_at == datetime(2024, 7, 5, 9, 8, 5, 691973, tzinfo=timezone.utc)
     assert dag_run.started_by_user_id is None
@@ -79,7 +94,7 @@ async def test_runs_handler_airflow(
     assert task_run.created_at == datetime(2024, 7, 5, 9, 4, 12, 162000, tzinfo=timezone.utc)
     assert task_run.job_id == jobs[1].id
     assert task_run.parent_run_id == dag_run.id
-    assert task_run.status == Status.SUCCEEDED
+    assert task_run.status == RunStatus.SUCCEEDED
     assert task_run.started_at == datetime(2024, 7, 5, 9, 4, 20, 783845, tzinfo=timezone.utc)
     assert task_run.ended_at == datetime(2024, 7, 5, 9, 7, 37, 858423, tzinfo=timezone.utc)
     assert task_run.started_by_user_id is None

@@ -17,7 +17,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import selectinload
 
-from data_rentgen.db.models import Job, Run, RunStartReason, Status
+from data_rentgen.db.models import Job, Run, RunStartReason, RunStatus
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.search import make_tsquery, ts_match, ts_rank
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid
@@ -162,7 +162,7 @@ class RunRepository(Repository[Run]):
             created_at=created_at,
             id=run.id,
             job_id=run.job.id,
-            status=Status(run.status) if run.status else Status.UNKNOWN,
+            status=RunStatus(run.status),
             parent_run_id=run.parent_run.id if run.parent_run else None,
             started_at=run.started_at,
             started_by_user_id=run.user.id if run.user else None,
@@ -184,7 +184,7 @@ class RunRepository(Repository[Run]):
     ) -> Run:
         # for parent_run most of fields are None, so we can avoid UPDATE statements if row is unchanged
         optional_fields = {
-            "status": Status(new.status) if new.status else None,
+            "status": max(RunStatus(new.status), existing.status),
             "parent_run_id": new.parent_run.id if new.parent_run else None,
             "started_at": new.started_at,
             "started_by_user_id": new.user.id if new.user else None,
