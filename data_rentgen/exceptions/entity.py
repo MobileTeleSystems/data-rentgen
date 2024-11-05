@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from typing import Any
 
-from data_rentgen.commons.exceptions.base import ApplicationError
+from data_rentgen.exceptions.base import ApplicationError
 
 
 class EntityNotFoundError(ApplicationError):
@@ -11,10 +11,10 @@ class EntityNotFoundError(ApplicationError):
     Examples
     --------
 
-    >>> from data_rentgen.commons.exceptions import EntityNotFoundError
+    >>> from data_rentgen.exceptions import EntityNotFoundError
     >>> raise EntityNotFoundError("User", "username", "test")
     Traceback (most recent call last):
-    data_rentgen.commons.exceptions.entity.EntityNotFoundError: User with username='test' not found
+    data_rentgen.exceptions.entity.EntityNotFoundError: User with username='test' not found
     """
 
     entity_type: str

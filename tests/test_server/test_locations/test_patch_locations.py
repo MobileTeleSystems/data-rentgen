@@ -81,3 +81,21 @@ async def test_update_location_not_found(
             "message": f"Location with id={new_location.id} not found",
         },
     }
+
+
+async def test_update_location_writinf_null_to_external_id(
+    test_client: AsyncClient,
+    location: Location,
+):
+    response = await test_client.patch(
+        f"v1/locations/{location.id}",
+        json={"external_id": None},
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "name": location.name,
+        "type": location.type,
+        "addresses": [{"url": address.url} for address in location.addresses],
+        "external_id": None,
+    }

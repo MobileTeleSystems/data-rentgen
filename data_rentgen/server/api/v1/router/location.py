@@ -4,8 +4,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
-from data_rentgen.commons.errors import get_error_responses
-from data_rentgen.commons.errors.schemas import InvalidRequestSchema, NotFoundSchema
+from data_rentgen.server.errors import get_error_responses
+from data_rentgen.server.errors.schemas import InvalidRequestSchema, NotFoundSchema
 from data_rentgen.server.schemas.v1 import (
     LocationPaginateQueryV1,
     LocationResponseV1,

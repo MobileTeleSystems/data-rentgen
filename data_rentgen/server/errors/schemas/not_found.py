@@ -6,9 +6,9 @@ from typing import Any
 from pydantic import BaseModel
 from typing_extensions import Literal
 
-from data_rentgen.commons.errors.base import BaseErrorSchema
-from data_rentgen.commons.errors.registration import register_error_response
-from data_rentgen.commons.exceptions.entity import EntityNotFoundError
+from data_rentgen.exceptions.entity import EntityNotFoundError
+from data_rentgen.server.errors.base import BaseErrorSchema
+from data_rentgen.server.errors.registration import register_error_response
 
 
 class NotFoundDetailsSchema(BaseModel):
