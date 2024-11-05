@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
+from enum import Enum, IntEnum
 
 from uuid6 import UUID
 
@@ -13,15 +13,12 @@ from data_rentgen.dto.job import JobDTO
 from data_rentgen.dto.user import UserDTO
 
 
-class RunStatusDTO(str, Enum):
-    STARTED = "STARTED"
-    SUCCEEDED = "SUCCEEDED"
-    KILLED = "KILLED"
-    FAILED = "FAILED"
-    UNKNOWN = "UNKNOWN"
-
-    def __str__(self) -> str:
-        return str(self.value)
+class RunStatusDTO(IntEnum):
+    UNKNOWN = -1
+    STARTED = 0
+    SUCCEEDED = 1
+    FAILED = 2
+    KILLED = 3
 
 
 class RunStartReasonDTO(str, Enum):
@@ -37,7 +34,7 @@ class RunDTO:
     id: UUID
     job: JobDTO
     parent_run: RunDTO | None = None
-    status: RunStatusDTO | None = None
+    status: RunStatusDTO = RunStatusDTO.UNKNOWN
     started_at: datetime | None = None
     start_reason: RunStartReasonDTO | None = None
     user: UserDTO | None = None
@@ -68,7 +65,7 @@ class RunDTO:
             id=self.id,
             job=self.job.merge(new.job),
             parent_run=parent_run,
-            status=new.status or self.status,
+            status=max(new.status, self.status),
             started_at=new.started_at or self.started_at,
             start_reason=new.start_reason or self.start_reason,
             user=user,

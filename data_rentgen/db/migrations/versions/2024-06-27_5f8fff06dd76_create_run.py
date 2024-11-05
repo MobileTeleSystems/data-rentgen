@@ -25,7 +25,7 @@ def upgrade() -> None:
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("job_id", sa.BigInteger(), nullable=False),
         sa.Column("parent_run_id", sa.UUID(), nullable=True),
-        sa.Column("status", sa.String(length=32), nullable=False),
+        sa.Column("status", sa.SmallInteger(), nullable=False),
         sa.Column("external_id", sa.String(), nullable=True),
         sa.Column("attempt", sa.String(length=64), nullable=True),
         sa.Column("persistent_log_url", sa.String(), nullable=True),

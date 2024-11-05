@@ -62,8 +62,8 @@ class OutputDTO:
             dataset=self.dataset.merge(new.dataset),
             type=self.type,
             schema=schema,
-            num_rows=new.num_rows or self.num_rows,
-            num_bytes=new.num_bytes or self.num_bytes,
-            num_files=new.num_files or self.num_files,
+            num_rows=max(filter(None, [new.num_rows, self.num_rows]), default=None),
+            num_bytes=max(filter(None, [new.num_bytes, self.num_bytes]), default=None),
+            num_files=max(filter(None, [new.num_files, self.num_files]), default=None),
             id=new.id or self.id,
         )

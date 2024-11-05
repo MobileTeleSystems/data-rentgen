@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 from datetime import datetime
+from enum import IntEnum
 from typing import Literal
 
 from fastapi import Query
@@ -9,6 +10,7 @@ from pydantic import (
     ConfigDict,
     Field,
     ValidationInfo,
+    field_serializer,
     field_validator,
     model_validator,
 )
@@ -16,6 +18,26 @@ from pydantic import (
 from data_rentgen.server.schemas.v1.pagination import PaginateQueryV1
 from data_rentgen.server.schemas.v1.user import UserResponseV1
 from data_rentgen.utils import UUID
+
+
+class RunStatusV1(IntEnum):
+    UNKNOWN = -1
+    """No data about status"""
+
+    STARTED = 0
+    """Received START event"""
+
+    SUCCEEDED = 1
+    """Finished successfully"""
+
+    FAILED = 2
+    """Internal failure"""
+
+    KILLED = 3
+    """Killed externally, e.g. by user request or in case of OOM"""
+
+    def __str__(self) -> str:
+        return self.name
 
 
 class RunResponseV1(BaseModel):
@@ -26,7 +48,7 @@ class RunResponseV1(BaseModel):
     created_at: datetime = Field(description="Run creation time")
     job_id: int = Field(description="Job the run is associated with")
     parent_run_id: UUID | None = Field(description="Parent of current run", default=None)
-    status: str = Field(description="Status")
+    status: RunStatusV1 = Field(description="Run status")
     external_id: str | None = Field(description="External id, e.g. Spark applicationid", default=None)
     attempt: str | None = Field(description="Attempt number of the run", default=None)
     persistent_log_url: str | None = Field(
@@ -43,9 +65,11 @@ class RunResponseV1(BaseModel):
     ended_at: datetime | None = Field(description="End time of the Run", default=None)
     end_reason: str | None = Field(description="End reason of the Run", default=None)
 
-    model_config = ConfigDict(
-        from_attributes=True,
-    )
+    model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer("status", when_used="json-unless-none")
+    def _serialize_status(self, value: RunStatusV1) -> str:
+        return str(value)
 
 
 class RunsQueryV1(PaginateQueryV1):

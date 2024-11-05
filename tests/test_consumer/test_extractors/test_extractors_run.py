@@ -484,10 +484,10 @@ def test_extractors_extract_run_airflow_task_2_x():
     [
         (OpenLineageRunEventType.FAIL, RunStatusDTO.FAILED),
         (OpenLineageRunEventType.ABORT, RunStatusDTO.KILLED),
-        (OpenLineageRunEventType.OTHER, None),
+        (OpenLineageRunEventType.OTHER, RunStatusDTO.UNKNOWN),
     ],
 )
-def test_extractors_extract_run_unknown(event_type: OpenLineageRunEventType, expected_status: RunStatusDTO | None):
+def test_extractors_extract_run_unknown(event_type: OpenLineageRunEventType, expected_status: RunStatusDTO):
     now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
     run_id = UUID("01908223-0e9b-7c52-9856-6cecfc842610")
     run = OpenLineageRunEvent(
@@ -497,7 +497,7 @@ def test_extractors_extract_run_unknown(event_type: OpenLineageRunEventType, exp
         run=OpenLineageRun(runId=run_id),
     )
 
-    ended_at = now if expected_status else None
+    ended_at = now if expected_status != RunStatusDTO.UNKNOWN else None
     assert extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(

@@ -256,6 +256,20 @@ def extracted_airflow_task_run(
     )
 
 
+@pytest.mark.parametrize(
+    "input_transformation",
+    [
+        # receiving data out of order does not change result
+        pytest.param(
+            list,
+            id="preserve order",
+        ),
+        pytest.param(
+            reversed,
+            id="reverse order",
+        ),
+    ],
+)
 def test_extractors_extract_batch_airflow(
     airflow_dag_run_event_start: OpenLineageRunEvent,
     airflow_dag_run_event_stop: OpenLineageRunEvent,
@@ -266,6 +280,7 @@ def test_extractors_extract_batch_airflow(
     extracted_airflow_task_job: JobDTO,
     extracted_airflow_dag_run: RunDTO,
     extracted_airflow_task_run: RunDTO,
+    input_transformation,
 ):
     events = [
         airflow_dag_run_event_start,
@@ -274,7 +289,7 @@ def test_extractors_extract_batch_airflow(
         airflow_dag_run_event_stop,
     ]
 
-    extracted = extract_batch(events)
+    extracted = extract_batch(input_transformation(events))
 
     assert extracted.locations() == [extracted_airflow_location]
     assert extracted.jobs() == [extracted_airflow_dag_job, extracted_airflow_task_job]

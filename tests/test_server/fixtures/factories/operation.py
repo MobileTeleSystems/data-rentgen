@@ -8,7 +8,7 @@ import pytest_asyncio
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.db.models import Operation, OperationType, Run, Status
+from data_rentgen.db.models import Operation, OperationStatus, OperationType, Run
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
 from tests.test_server.fixtures.factories.base import random_datetime, random_string
 
@@ -21,7 +21,7 @@ def operation_factory(**kwargs):
         "id": operation_id,
         "run_id": generate_new_uuid(),
         "name": random_string(),
-        "status": choice(list(Status)),
+        "status": choice(list(OperationStatus)),
         "type": choice(list(OperationType)),
         "position": randint(1, 10),
         "group": random_string(32),

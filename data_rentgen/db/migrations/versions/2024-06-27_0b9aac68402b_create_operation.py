@@ -24,7 +24,7 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("run_id", sa.UUID(), nullable=False),
-        sa.Column("status", sa.String(length=32), nullable=False),
+        sa.Column("status", sa.SmallInteger(), nullable=False),
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("type", sa.String(length=32), nullable=False),
         sa.Column("position", sa.Integer(), nullable=True),

@@ -4,17 +4,33 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import Enum, IntEnum
 
 from sqlalchemy import UUID as SQL_UUID
-from sqlalchemy import DateTime, Integer, PrimaryKeyConstraint, String
+from sqlalchemy import DateTime, Integer, PrimaryKeyConstraint, SmallInteger, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
 from uuid6 import UUID
 
 from data_rentgen.db.models.base import Base
 from data_rentgen.db.models.run import Run
-from data_rentgen.db.models.status import Status
+
+
+class OperationStatus(IntEnum):
+    UNKNOWN = -1
+    """No data about status"""
+
+    STARTED = 0
+    """Received START event"""
+
+    SUCCEEDED = 1
+    """Finished successfully"""
+
+    FAILED = 2
+    """Internal failure"""
+
+    KILLED = 3
+    """Killed externally, e.g. by user request or in case of OOM"""
 
 
 class OperationType(str, Enum):
@@ -52,11 +68,11 @@ class Operation(Base):
         foreign_keys=[run_id],
     )
 
-    status: Mapped[Status] = mapped_column(
-        ChoiceType(Status, impl=String(32)),
+    status: Mapped[OperationStatus] = mapped_column(
+        ChoiceType(OperationStatus, impl=SmallInteger()),
         nullable=False,
-        default=Status.UNKNOWN,
-        doc="Operation status info",
+        default=OperationStatus.UNKNOWN,
+        doc="Operation status",
     )
 
     name: Mapped[str] = mapped_column(

@@ -240,12 +240,12 @@ def test_extractors_extract_operation_spark_job_name_contains_newlines():
         (OpenLineageRunEventType.COMPLETE, OperationStatusDTO.SUCCEEDED),
         (OpenLineageRunEventType.FAIL, OperationStatusDTO.FAILED),
         (OpenLineageRunEventType.ABORT, OperationStatusDTO.KILLED),
-        (OpenLineageRunEventType.OTHER, None),
+        (OpenLineageRunEventType.OTHER, OperationStatusDTO.UNKNOWN),
     ],
 )
 def test_extractors_extract_operation_spark_job_finished(
     event_type: OpenLineageRunEventType,
-    expected_status: OperationStatusDTO | None,
+    expected_status: OperationStatusDTO,
 ):
     now = datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
     run_id = UUID("01908224-8410-79a2-8de6-a769ad6944c9")
@@ -270,7 +270,7 @@ def test_extractors_extract_operation_spark_job_finished(
         ),
     )
 
-    ended_at = now if expected_status else None
+    ended_at = now if expected_status != OperationStatusDTO.UNKNOWN else None
     assert extract_operation(operation) == OperationDTO(
         id=operation_id,
         run=RunDTO(

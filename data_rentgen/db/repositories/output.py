@@ -40,9 +40,9 @@ class OutputRepository(Repository[Output]):
         statement = insert_statement.on_conflict_do_update(
             index_elements=[Output.created_at, Output.id],
             set_={
-                "num_bytes": func.coalesce(insert_statement.excluded.num_bytes, Output.num_bytes),
-                "num_rows": func.coalesce(insert_statement.excluded.num_rows, Output.num_rows),
-                "num_files": func.coalesce(insert_statement.excluded.num_files, Output.num_files),
+                "num_bytes": func.greatest(insert_statement.excluded.num_bytes, Output.num_bytes),
+                "num_rows": func.greatest(insert_statement.excluded.num_rows, Output.num_rows),
+                "num_files": func.greatest(insert_statement.excluded.num_files, Output.num_files),
             },
         ).returning(Output)
 

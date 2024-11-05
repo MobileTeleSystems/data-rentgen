@@ -5,7 +5,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime
-from enum import Enum
+from enum import Enum, IntEnum
 
 from uuid6 import UUID
 
@@ -20,12 +20,12 @@ class OperationTypeDTO(str, Enum):
         return str(self.value)
 
 
-class OperationStatusDTO(str, Enum):
-    STARTED = "STARTED"
-    SUCCEEDED = "SUCCEEDED"
-    KILLED = "KILLED"
-    FAILED = "FAILED"
-    UNKNOWN = "UNKNOWN"
+class OperationStatusDTO(IntEnum):
+    UNKNOWN = -1
+    STARTED = 0
+    SUCCEEDED = 1
+    FAILED = 2
+    KILLED = 3
 
 
 @dataclass
@@ -37,7 +37,7 @@ class OperationDTO:
     position: int | None = None
     group: str | None = None
     description: str | None = None
-    status: OperationStatusDTO | None = None
+    status: OperationStatusDTO = OperationStatusDTO.UNKNOWN
     started_at: datetime | None = None
     ended_at: datetime | None = None
 
@@ -53,7 +53,7 @@ class OperationDTO:
             type=new.type or self.type,
             group=new.group or self.group,
             description=new.description or self.description,
-            status=new.status or self.status,
+            status=max(new.status, self.status),
             position=new.position or self.position,
             started_at=new.started_at or self.started_at,
             ended_at=new.ended_at or self.ended_at,
