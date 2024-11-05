@@ -21,7 +21,7 @@ router = APIRouter(
 
 
 @router.get("", summary="Paginated list of Locations")
-async def paginate_datasets(
+async def paginate_locations(
     query_args: Annotated[LocationPaginateQueryV1, Depends()],
     unit_of_work: Annotated[UnitOfWork, Depends()],
 ) -> PageResponseV1[LocationResponseV1]:
