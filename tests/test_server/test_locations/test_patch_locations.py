@@ -83,7 +83,7 @@ async def test_update_location_not_found(
     }
 
 
-async def test_update_location_writinf_null_to_external_id(
+async def test_update_location_writing_null_to_external_id(
     test_client: AsyncClient,
     location: Location,
 ):
