@@ -18,7 +18,10 @@ from data_rentgen.server.schemas.v1.lineage import (
     OperationLineageQueryV1,
     RunLineageQueryV1,
 )
-from data_rentgen.server.schemas.v1.location import LocationResponseV1
+from data_rentgen.server.schemas.v1.location import (
+    LocationPaginateQueryV1,
+    LocationResponseV1,
+)
 from data_rentgen.server.schemas.v1.operation import (
     OperationQueryV1,
     OperationResponseV1,
@@ -46,6 +49,7 @@ __all__ = [
     "LineageRelationV1",
     "LineageRelationKindV1",
     "LineageResponseV1",
+    "LocationPaginateQueryV1",
     "LocationResponseV1",
     "PageMetaResponseV1",
     "PageResponseV1",

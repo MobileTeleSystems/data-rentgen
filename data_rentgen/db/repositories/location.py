@@ -1,12 +1,25 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
+from typing import Sequence
 
-from sqlalchemy import any_, select
+from sqlalchemy import (
+    ColumnElement,
+    CompoundSelect,
+    Select,
+    SQLColumnExpression,
+    any_,
+    asc,
+    desc,
+    func,
+    select,
+    union,
+)
 from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Address, Location
 from data_rentgen.db.repositories.base import Repository
-from data_rentgen.dto import LocationDTO
+from data_rentgen.db.utils.search import make_tsquery, ts_match, ts_rank
+from data_rentgen.dto import LocationDTO, PaginationDTO
 
 
 class LocationRepository(Repository[Location]):
@@ -23,6 +36,60 @@ class LocationRepository(Repository[Location]):
 
         await self._update_addresses(result, location)
         return result
+
+    async def paginate(
+        self,
+        page: int,
+        page_size: int,
+        location_ids: Sequence[int],
+        location_type: str | None,
+        search_query: str | None,
+    ) -> PaginationDTO[Location]:
+        where = []
+
+        if location_ids:
+            where.append(Location.id == any_(location_ids))  # type: ignore[arg-type]
+
+        if location_type:
+            where.append(Location.type == location_type)
+
+        query: Select | CompoundSelect
+        order_by: list[ColumnElement | SQLColumnExpression]
+        if search_query:
+            tsquery = make_tsquery(search_query)
+
+            location_stmt = select(Location, ts_rank(Location.search_vector, tsquery).label("search_rank")).where(
+                ts_match(Location.search_vector, tsquery),
+                *where,
+            )
+            address_stmt = (
+                select(Location, func.max(ts_rank(Address.search_vector, tsquery)).label("search_rank"))
+                .join(Location, Address.location_id == Location.id)
+                .where(ts_match(Address.search_vector, tsquery), *where)
+                .group_by(Location.id, Address.id)
+            )
+
+            union_cte = union(location_stmt, address_stmt).cte()
+
+            location_columns = [column for column in union_cte.columns if column.name != "search_rank"]
+
+            query = select(
+                *location_columns,
+                func.max(union_cte.c.search_rank).label("search_rank"),
+            ).group_by(*location_columns)
+            order_by = [desc("search_rank"), asc("name")]
+        else:
+            query = select(Location).where(*where)
+            order_by = [Location.name]
+
+        options = [selectinload(Location.addresses)]
+        return await self._paginate_by_query(
+            query=query,
+            order_by=order_by,
+            options=options,
+            page=page,
+            page_size=page_size,
+        )
 
     async def _get(self, location: LocationDTO) -> Location | None:
         by_name = select(Location).where(Location.type == location.type, Location.name == location.name)
