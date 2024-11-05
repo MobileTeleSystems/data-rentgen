@@ -20,6 +20,7 @@ from data_rentgen.db.models import Address, Location
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.search import make_tsquery, ts_match, ts_rank
 from data_rentgen.dto import LocationDTO, PaginationDTO
+from data_rentgen.exceptions.entity import EntityNotFoundError
 
 
 class LocationRepository(Repository[Location]):
@@ -90,6 +91,15 @@ class LocationRepository(Repository[Location]):
             page=page,
             page_size=page_size,
         )
+
+    async def update_external_id(self, location_id: int, external_id: str | None) -> Location:
+        query = select(Location).where(Location.id == location_id)
+        location = await self._session.scalar(query)
+        if not location:
+            raise EntityNotFoundError("Location", "id", location_id)
+        location.external_id = external_id
+        await self._session.flush([location])
+        return location
 
     async def _get(self, location: LocationDTO) -> Location | None:
         by_name = select(Location).where(Location.type == location.type, Location.name == location.name)
