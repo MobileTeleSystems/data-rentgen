@@ -72,6 +72,6 @@ async def test_get_locations_with_type_filter(
                 "addresses": [{"url": address.url} for address in location.addresses],
                 "external_id": location.external_id,
             }
-            for location in locations
+            for location in sorted(locations, key=lambda x: x.name)
         ],
     }
