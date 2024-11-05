@@ -34,3 +34,12 @@ async def enrich_jobs(jobs: list[Job], async_session: AsyncSession) -> list[Job]
     jobs_by_id = {job.id: job for job in result.all()}
     # preserve original order
     return [jobs_by_id[job_id] for job_id in job_ids]
+
+
+async def enrich_locations(locations: list[Location], async_session: AsyncSession) -> list[Location]:
+    location_ids = [location.id for location in locations]
+    query = select(Location).where(Location.id.in_(location_ids)).options(selectinload(Location.addresses))
+    result = await async_session.scalars(query)
+    locations_by_id = {location.id: location for location in result.all()}
+    # preserve original order
+    return [locations_by_id[location_id] for location_id in location_ids]
