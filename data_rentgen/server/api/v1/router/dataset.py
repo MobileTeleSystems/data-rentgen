@@ -4,8 +4,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
-from data_rentgen.server.errors import get_error_responses
-from data_rentgen.server.errors.schemas import InvalidRequestSchema
+from data_rentgen.commons.errors import get_error_responses
+from data_rentgen.commons.errors.schemas import InvalidRequestSchema
 from data_rentgen.server.schemas.v1 import (
     DatasetLineageQueryV1,
     DatasetPaginateQueryV1,

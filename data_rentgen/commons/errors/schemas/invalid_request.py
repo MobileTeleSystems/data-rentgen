@@ -6,8 +6,8 @@ from typing import Any, List, Union
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from typing_extensions import Literal
 
-from data_rentgen.server.errors.base import BaseErrorSchema
-from data_rentgen.server.errors.registration import register_error_response
+from data_rentgen.commons.errors.base import BaseErrorSchema
+from data_rentgen.commons.errors.registration import register_error_response
 
 
 class InvalidRequestBaseErrorSchema(BaseModel):

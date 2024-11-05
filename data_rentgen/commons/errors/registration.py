@@ -5,7 +5,7 @@ from __future__ import annotations
 import http
 from typing import Any, NamedTuple, Type
 
-from data_rentgen.server.errors.base import APIErrorSchema, BaseErrorSchema
+from data_rentgen.commons.errors.base import APIErrorSchema, BaseErrorSchema
 
 
 class APIErrorResponse(NamedTuple):

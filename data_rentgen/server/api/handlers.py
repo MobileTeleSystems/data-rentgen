@@ -10,9 +10,9 @@ from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
 
-from data_rentgen.server.errors.base import APIErrorSchema, BaseErrorSchema
-from data_rentgen.server.errors.registration import get_response_for_exception
-from data_rentgen.server.exceptions import ApplicationError
+from data_rentgen.commons.errors.base import APIErrorSchema, BaseErrorSchema
+from data_rentgen.commons.errors.registration import get_response_for_exception
+from data_rentgen.commons.exceptions import ApplicationError
 from data_rentgen.server.settings.server import ServerSettings
 
 logger = logging.getLogger(__name__)

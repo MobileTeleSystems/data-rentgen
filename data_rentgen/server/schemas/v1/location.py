@@ -30,3 +30,9 @@ class LocationPaginateQueryV1(PaginateQueryV1):
     )
 
     model_config = ConfigDict(extra="forbid")
+
+
+class UpdateLocationRequestV1(BaseModel):
+    external_id: str = Field(description="External ID for integration with other systems")
+
+    model_config = ConfigDict(extra="forbid")

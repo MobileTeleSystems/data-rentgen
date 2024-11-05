@@ -21,6 +21,7 @@ from data_rentgen.server.schemas.v1.lineage import (
 from data_rentgen.server.schemas.v1.location import (
     LocationPaginateQueryV1,
     LocationResponseV1,
+    UpdateLocationRequestV1,
 )
 from data_rentgen.server.schemas.v1.operation import (
     OperationQueryV1,
@@ -51,6 +52,7 @@ __all__ = [
     "LineageResponseV1",
     "LocationPaginateQueryV1",
     "LocationResponseV1",
+    "UpdateLocationRequestV1",
     "PageMetaResponseV1",
     "PageResponseV1",
     "OperationQueryV1",

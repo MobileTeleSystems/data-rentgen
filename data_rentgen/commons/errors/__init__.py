@@ -1,8 +1,8 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from data_rentgen.server.errors.base import BaseErrorSchema
-from data_rentgen.server.errors.registration import (
+from data_rentgen.commons.errors.base import BaseErrorSchema
+from data_rentgen.commons.errors.registration import (
     APIErrorResponse,
     get_error_responses,
     get_response_for_exception,
