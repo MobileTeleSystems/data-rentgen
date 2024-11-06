@@ -78,10 +78,10 @@ class LocationRepository(Repository[Location]):
                 *location_columns,
                 func.max(union_cte.c.search_rank).label("search_rank"),
             ).group_by(*location_columns)
-            order_by = [desc("search_rank"), asc("name")]
+            order_by = [desc("search_rank"), asc("name"), asc("type")]
         else:
             query = select(Location).where(*where)
-            order_by = [Location.name]
+            order_by = [Location.name, Location.type]
 
         options = [selectinload(Location.addresses)]
         return await self._paginate_by_query(
