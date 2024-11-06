@@ -37,6 +37,7 @@ async def test_get_jobs_no_filters(
                 "name": job.name,
                 "type": job.type,
                 "location": {
+                    "id": job.location.id,
                     "type": job.location.type,
                     "name": job.location.name,
                     "addresses": [{"url": address.url} for address in job.location.addresses],

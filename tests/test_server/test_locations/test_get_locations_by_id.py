@@ -62,6 +62,7 @@ async def test_get_locations_by_one_id(
         },
         "items": [
             {
+                "id": location.id,
                 "name": location.name,
                 "type": location.type,
                 "addresses": [{"url": address.url} for address in location.addresses],
@@ -98,6 +99,7 @@ async def test_get_locations_by_multiple_ids(
         },
         "items": [
             {
+                "id": location.id,
                 "name": location.name,
                 "type": location.type,
                 "addresses": [{"url": address.url} for address in location.addresses],

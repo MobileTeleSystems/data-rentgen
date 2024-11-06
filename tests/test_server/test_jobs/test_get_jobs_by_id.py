@@ -67,6 +67,7 @@ async def test_get_jobs_by_one_id(
                 "name": job.name,
                 "type": job.type,
                 "location": {
+                    "id": job.location.id,
                     "type": job.location.type,
                     "name": job.location.name,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
@@ -109,6 +110,7 @@ async def test_get_jobs_by_multiple_ids(
                 "name": job.name,
                 "type": job.type,
                 "location": {
+                    "id": job.location.id,
                     "type": job.location.type,
                     "name": job.location.name,
                     "addresses": [{"url": address.url} for address in job.location.addresses],

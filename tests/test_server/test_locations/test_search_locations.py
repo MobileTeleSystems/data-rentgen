@@ -38,6 +38,7 @@ async def test_search_locations_by_address_url(
         },
         "items": [
             {
+                "id": location.id,
                 "name": location.name,
                 "type": location.type,
                 "addresses": [{"url": address.url} for address in location.addresses],
@@ -78,6 +79,7 @@ async def test_search_locations_by_location_name(
         },
         "items": [
             {
+                "id": location.id,
                 "name": location.name,
                 "type": location.type,
                 "addresses": [{"url": address.url} for address in location.addresses],
@@ -123,6 +125,7 @@ async def test_search_locations_by_location_name_and_address_url(
         },
         "items": [
             {
+                "id": location.id,
                 "name": location.name,
                 "type": location.type,
                 "addresses": [{"url": address.url} for address in location.addresses],

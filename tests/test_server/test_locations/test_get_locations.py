@@ -32,6 +32,7 @@ async def test_get_locations_no_filters(
         },
         "items": [
             {
+                "id": location.id,
                 "name": location.name,
                 "type": location.type,
                 "addresses": [{"url": address.url} for address in location.addresses],
@@ -67,6 +68,7 @@ async def test_get_locations_with_type_filter(
         },
         "items": [
             {
+                "id": location.id,
                 "name": location.name,
                 "type": location.type,
                 "addresses": [{"url": address.url} for address in location.addresses],

@@ -67,6 +67,7 @@ async def test_get_datasets_by_one_id(
                 "format": dataset.format,
                 "name": dataset.name,
                 "location": {
+                    "id": dataset.location.id,
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
@@ -109,6 +110,7 @@ async def test_get_datasets_by_multiple_ids(
                 "format": dataset.format,
                 "name": dataset.name,
                 "location": {
+                    "id": dataset.location.id,
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],

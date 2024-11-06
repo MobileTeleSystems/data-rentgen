@@ -44,6 +44,7 @@ async def test_search_datasets_by_address_url(
                 "format": dataset.format,
                 "name": dataset.name,
                 "location": {
+                    "id": dataset.location.id,
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
@@ -99,6 +100,7 @@ async def test_search_datasets_by_location_name(
                 "format": dataset.format,
                 "name": dataset.name,
                 "location": {
+                    "id": dataset.location.id,
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
@@ -143,6 +145,7 @@ async def test_search_datasets_by_dataset_name(
                 "format": dataset.format,
                 "name": dataset.name,
                 "location": {
+                    "id": dataset.location.id,
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
@@ -194,6 +197,7 @@ async def test_search_datasets_by_location_name_and_address_url(
                 "format": dataset.format,
                 "name": dataset.name,
                 "location": {
+                    "id": dataset.location.id,
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
