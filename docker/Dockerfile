@@ -4,14 +4,16 @@ LABEL maintainer="DataOps.ETL"
 WORKDIR /app
 ENV PYTHONPATH=/app
 
-# aiokafka 0.12 introduces wheels for Python 3.13: https://github.com/aio-libs/aiokafka/releases/tag/v0.12.0
-# but for faststream 0.5.28 requires aiokafka>=0.9,<0.12: https://github.com/airtai/faststream/pull/1896
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        # aiokafka 0.12 introduces wheels for Python 3.13: https://github.com/aio-libs/aiokafka/releases/tag/v0.12.0
+        # but for faststream 0.5.28 requires aiokafka>=0.9,<0.12: https://github.com/airtai/faststream/pull/1896
         autoconf \
         gcc \
         make \
         zlib1g-dev \
+        # curl is used for healthcheck
+        curl \
     && rm -rf /var/lib/apt/lists/*
 
 RUN pip install poetry \
