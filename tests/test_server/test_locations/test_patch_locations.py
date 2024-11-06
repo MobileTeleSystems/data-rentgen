@@ -17,7 +17,7 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio]
     ],
     indirect=True,
 )
-async def test_add_loction_external_id(
+async def test_add_location_external_id(
     test_client: AsyncClient,
     async_session: AsyncSession,
     location: Location,
@@ -33,6 +33,7 @@ async def test_add_loction_external_id(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
+        "id": location.id,
         "name": location.name,
         "type": location.type,
         "addresses": [{"url": address.url} for address in location.addresses],
@@ -53,6 +54,7 @@ async def test_update_location_external_id(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
+        "id": location.id,
         "name": location.name,
         "type": location.type,
         "addresses": [{"url": address.url} for address in location.addresses],
@@ -94,6 +96,7 @@ async def test_update_location_writing_null_to_external_id(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
+        "id": location.id,
         "name": location.name,
         "type": location.type,
         "addresses": [{"url": address.url} for address in location.addresses],

@@ -72,6 +72,7 @@ async def test_get_job_lineage_no_runs(
                 "name": job.name,
                 "type": job.type,
                 "location": {
+                    "id": job.location.id,
                     "type": job.location.type,
                     "name": job.location.name,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
@@ -114,6 +115,7 @@ async def test_get_job_lineage_no_operations(
                 "name": job.name,
                 "type": job.type,
                 "location": {
+                    "id": job.location.id,
                     "type": job.location.type,
                     "name": job.location.name,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
@@ -157,6 +159,7 @@ async def test_get_job_lineage_no_inputs_outputs(
                 "name": job.name,
                 "type": job.type,
                 "location": {
+                    "id": job.location.id,
                     "type": job.location.type,
                     "name": job.location.name,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
@@ -205,6 +208,7 @@ async def test_get_job_lineage(
                 "name": job.name,
                 "type": job.type,
                 "location": {
+                    "id": job.location.id,
                     "type": job.location.type,
                     "name": job.location.name,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
@@ -219,6 +223,7 @@ async def test_get_job_lineage(
                 "format": dataset.format,
                 "name": dataset.name,
                 "location": {
+                    "id": dataset.location.id,
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
@@ -282,6 +287,7 @@ async def test_get_job_lineage_with_run_granularity(
                 "name": job.name,
                 "type": job.type,
                 "location": {
+                    "id": job.location.id,
                     "type": job.location.type,
                     "name": job.location.name,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
@@ -296,6 +302,7 @@ async def test_get_job_lineage_with_run_granularity(
                 "format": dataset.format,
                 "name": dataset.name,
                 "location": {
+                    "id": dataset.location.id,
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
@@ -382,6 +389,7 @@ async def test_get_job_lineage_direction_both(
                 "name": job.name,
                 "type": job.type,
                 "location": {
+                    "id": job.location.id,
                     "type": job.location.type,
                     "name": job.location.name,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
@@ -396,6 +404,7 @@ async def test_get_job_lineage_direction_both(
                 "format": dataset.format,
                 "name": dataset.name,
                 "location": {
+                    "id": dataset.location.id,
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
@@ -460,6 +469,7 @@ async def test_get_job_lineage_with_direction_and_until(
                 "name": job.name,
                 "type": job.type,
                 "location": {
+                    "id": job.location.id,
                     "type": job.location.type,
                     "name": job.location.name,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
@@ -474,6 +484,7 @@ async def test_get_job_lineage_with_direction_and_until(
                 "format": dataset.format,
                 "name": dataset.name,
                 "location": {
+                    "id": dataset.location.id,
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
@@ -569,6 +580,7 @@ async def test_get_job_lineage_with_direction_and_until_and_run_granularity(
                 "name": job.name,
                 "type": job.type,
                 "location": {
+                    "id": job.location.id,
                     "type": job.location.type,
                     "name": job.location.name,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
@@ -583,6 +595,7 @@ async def test_get_job_lineage_with_direction_and_until_and_run_granularity(
                 "format": dataset.format,
                 "name": dataset.name,
                 "location": {
+                    "id": dataset.location.id,
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
@@ -691,6 +704,7 @@ async def test_get_job_lineage_with_depth(
                 "name": job.name,
                 "type": job.type,
                 "location": {
+                    "id": job.location.id,
                     "name": job.location.name,
                     "type": job.location.type,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
@@ -706,6 +720,7 @@ async def test_get_job_lineage_with_depth(
                 "format": dataset.format,
                 "name": dataset.name,
                 "location": {
+                    "id": dataset.location.id,
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
@@ -815,6 +830,7 @@ async def test_get_job_lineage_with_depth_and_run_granularity(
                 "name": job.name,
                 "type": job.type,
                 "location": {
+                    "id": job.location.id,
                     "name": job.location.name,
                     "type": job.location.type,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
@@ -830,6 +846,7 @@ async def test_get_job_lineage_with_depth_and_run_granularity(
                 "format": dataset.format,
                 "name": dataset.name,
                 "location": {
+                    "id": dataset.location.id,
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
@@ -918,6 +935,7 @@ async def test_get_job_lineage_with_depth_ignore_cycles(
                 "name": job.name,
                 "type": job.type,
                 "location": {
+                    "id": job.location.id,
                     "name": job.location.name,
                     "type": job.location.type,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
@@ -932,6 +950,7 @@ async def test_get_job_lineage_with_depth_ignore_cycles(
                 "format": dataset.format,
                 "name": dataset.name,
                 "location": {
+                    "id": dataset.location.id,
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
@@ -1014,6 +1033,7 @@ async def test_get_job_lineage_with_symlinks(
                 "name": job.name,
                 "type": job.type,
                 "location": {
+                    "id": job.location.id,
                     "name": job.location.name,
                     "type": job.location.type,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
@@ -1028,6 +1048,7 @@ async def test_get_job_lineage_with_symlinks(
                 "format": dataset.format,
                 "name": dataset.name,
                 "location": {
+                    "id": dataset.location.id,
                     "name": dataset.location.name,
                     "type": dataset.location.type,
                     "addresses": [{"url": address.url} for address in dataset.location.addresses],
