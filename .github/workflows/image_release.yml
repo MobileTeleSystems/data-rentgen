@@ -38,7 +38,7 @@ jobs:
             echo "TAG=mtsrus/data-rentgen:latest,mtsrus/data-rentgen:${{ github.ref_name }}" >> $GITHUB_ENV
           fi
 
-      - name: Build Backend Container
+      - name: Build Backend Image
         uses: docker/build-push-action@v6
         with:
           tags: ${{ env.TAG }}
