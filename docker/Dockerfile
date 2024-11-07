@@ -28,6 +28,7 @@ RUN --mount=type=cache,target=/root/.cache/pypoetry \
         --without dev,test,docs
 
 COPY ./data_rentgen/ ./data_rentgen/
+COPY ./docs/_static/*.svg ./data_rentgen/server/static/
 
 # Swagger UI
 ADD https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/swagger-ui-bundle.js /app/data_rentgen/server/static/swagger/swagger-ui-bundle.js

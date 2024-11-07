@@ -1,4 +1,12 @@
 .. include:: ../README.rst
+    :end-before: |Logo|
+
+.. include raw <svg> instead of <image source=".svg"> to make attribute fill="..." change text color depending on documentation theme
+.. raw:: html
+    :file: _static/logo_wide.svg
+
+.. include:: ../README.rst
+    :start-after: |Logo|
     :end-before: documentation
 
 .. toctree::

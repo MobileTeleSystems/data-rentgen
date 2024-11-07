@@ -116,9 +116,7 @@ html_theme = "furo"
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {
-    "sidebar_hide_name": True,
-}
+html_theme_options = {}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -129,12 +127,12 @@ html_css_files = [
     "custom.css",
 ]
 
-html_logo = "./_static/logo_no_title.svg"
+html_logo = "./_static/logo.svg"
+html_title = "Data.Rentgen"
 favicons = [
     {"rel": "icon", "href": "icon.svg", "type": "image/svg+xml"},
 ]
 
-# TODO: remove after https://github.com/mgeier/sphinx-last-updated-by-git/pull/77
 git_exclude_patterns = ["docs/_static/logo.svg"]
 
 # The master toctree document.
