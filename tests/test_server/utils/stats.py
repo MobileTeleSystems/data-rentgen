@@ -1,16 +1,22 @@
+from datetime import datetime
+from typing import Optional
+
 from data_rentgen.db.models import Input, Output
 
 
-async def relation_stats(relations: list[Input] | list[Output]):
-    dataset_ids = {relation.dataset_id for relation in relations}
-    stats = {}
-    for dataset_id in dataset_ids:
-        stats[dataset_id] = {
-            "num_bytes": sum([relation.num_bytes for relation in relations if relation.dataset_id == dataset_id]),
-            "num_rows": sum([relation.num_rows for relation in relations if relation.dataset_id == dataset_id]),
-            "num_files": sum([relation.num_files for relation in relations if relation.dataset_id == dataset_id]),
-            "created_at": max([relation.created_at for relation in relations if relation.dataset_id == dataset_id]),
-        }
+async def relation_stats(relations: list[Input] | list[Output]) -> dict[int, dict[str, int | Optional[datetime]]]:
+    stats: dict[int, dict[str, int | Optional[datetime]]] = {}
+    for relation in relations:
+        if relation.dataset_id not in stats:
+            stats[relation.dataset_id] = {"num_bytes": 0, "num_rows": 0, "num_files": 0, "created_at": None}
+
+        stats[relation.dataset_id]["num_bytes"] += relation.num_bytes
+        stats[relation.dataset_id]["num_rows"] += relation.num_rows
+        stats[relation.dataset_id]["num_files"] += relation.num_files
+        stats[relation.dataset_id]["created_at"] = max(
+            stats[relation.dataset_id]["created_at"] or relation.created_at,
+            relation.created_at,
+        )
 
     return stats
 

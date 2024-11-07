@@ -315,3 +315,80 @@ async def lineage_with_symlinks(
         await async_session.execute(delete_input)
         await async_session.execute(delete_output)
         await async_session.commit()
+
+
+@pytest_asyncio.fixture()
+async def lineage_with_empty_relation_stats(
+    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    jobs: list[Job],
+    runs: list[Run],
+    operations: list[Operation],
+    datasets: list[Dataset],
+) -> AsyncGenerator[LINEAGE_FIXTURE_ANNOTATION, None]:
+    inputs = []
+    outputs = []
+    # Make graph like this:
+    # Dataset0 -> Operation0 -> Dataset0
+    # Dataset1 -> Operation1 -> Dataset1
+    # ...
+
+    # operations are randomly distributed along runs. select only those which will appear in lineage graph
+    run_ids = {operation.run_id for operation in operations}
+    actual_runs = [run for run in runs if run.id in run_ids]
+    run_to_job = {run.id: run.job_id for run in actual_runs}
+
+    # same for jobs
+    job_ids = {run.job_id for run in actual_runs}
+    actual_jobs = [job for job in jobs if job.id in job_ids]
+
+    for operation, dataset in zip(operations, datasets):
+        inputs.append(
+            input_factory(
+                created_at=operation.created_at,
+                operation_id=operation.id,
+                run_id=operation.run_id,
+                job_id=run_to_job[operation.run_id],
+                dataset_id=dataset.id,
+                num_bytes=None,
+                num_rows=None,
+                num_files=None,
+            ),
+        )
+        outputs.append(
+            output_factory(
+                created_at=operation.created_at,
+                operation_id=operation.id,
+                run_id=operation.run_id,
+                job_id=run_to_job[operation.run_id],
+                dataset_id=dataset.id,
+                type=OutputType.APPEND,
+                num_bytes=None,
+                num_rows=None,
+                num_files=None,
+            ),
+        )
+
+    async with async_session_maker() as async_session:
+        for item in inputs + outputs:
+            async_session.add(item)
+        await async_session.commit()
+
+        # remove current object from async_session. this is required to compare object against new state fetched
+        # from database, and also to remove it from cache
+        for item in inputs + outputs:
+            await async_session.refresh(item)
+
+        async_session.expunge_all()
+
+    yield actual_jobs, actual_runs, operations, datasets, inputs, outputs
+
+    delete_input = delete(Input).where(
+        Input.id.in_([input.id for input in inputs]),
+    )
+    delete_output = delete(Output).where(
+        Output.id.in_([output.id for output in outputs]),
+    )
+    async with async_session_maker() as async_session:
+        await async_session.execute(delete_input)
+        await async_session.execute(delete_output)
+        await async_session.commit()

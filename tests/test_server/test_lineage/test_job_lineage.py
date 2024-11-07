@@ -1115,3 +1115,77 @@ async def test_get_job_lineage_with_symlinks(
             for dataset in sorted(datasets, key=lambda x: x.id)
         ],
     }
+
+
+async def test_get_job_lineage_with_empty_relation_stats(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_with_empty_relation_stats: LINEAGE_FIXTURE_ANNOTATION,
+):
+    all_jobs, all_runs, _, all_datasets, _, all_outputs = lineage_with_empty_relation_stats
+
+    job = all_jobs[0]
+    outputs = [output for output in all_outputs if output.job_id == job.id]
+    dataset_ids = {output.dataset_id for output in outputs}
+    datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
+
+    [job] = await enrich_jobs([job], async_session)
+    datasets = await enrich_datasets(datasets, async_session)
+
+    since = min(run.created_at for run in all_runs if run.job_id == job.id)
+    response = await test_client.get(
+        "v1/jobs/lineage",
+        params={
+            "since": since.isoformat(),
+            "start_node_id": job.id,
+            "direction": "DOWNSTREAM",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": [
+            {
+                "kind": "OUTPUT",
+                "from": {"kind": "JOB", "id": job.id},
+                "to": {"kind": "DATASET", "id": output.dataset_id},
+                "type": "APPEND",
+                "num_bytes": None,
+                "num_rows": None,
+                "num_files": None,
+                "last_interaction_at": max([output.created_at for output in outputs]).strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            }
+            for output in outputs
+        ],
+        "nodes": [
+            {
+                "kind": "JOB",
+                "id": job.id,
+                "name": job.name,
+                "type": job.type,
+                "location": {
+                    "id": job.location.id,
+                    "name": job.location.name,
+                    "type": job.location.type,
+                    "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
+                },
+            },
+        ]
+        + [
+            {
+                "kind": "DATASET",
+                "id": dataset.id,
+                "format": dataset.format,
+                "name": dataset.name,
+                "location": {
+                    "id": dataset.location.id,
+                    "name": dataset.location.name,
+                    "type": dataset.location.type,
+                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                    "external_id": dataset.location.external_id,
+                },
+            }
+            for dataset in sorted(datasets, key=lambda x: x.id)
+        ],
+    }
