@@ -32,16 +32,6 @@ class LineageDirectionV1(str, Enum):
         return self.value
 
 
-class LineageRelationKindV1(str, Enum):
-    PARENT = "PARENT"
-    INPUT = "INPUT"
-    OUTPUT = "OUTPUT"
-    SYMLINK = "SYMLINK"
-
-    def __str__(self) -> str:
-        return self.value
-
-
 class LineageEntityV1(BaseModel):
     kind: LineageEntityKindV1 = Field(description="Type of Lineage entity")
     id: int | UUID = Field(description="Id of Lineage entity")
@@ -116,12 +106,39 @@ class RunLineageQueryV1(BaseLineageQueryV1):
 
 
 class LineageRelationV1(BaseModel):
-    kind: LineageRelationKindV1 = Field(description="Kind of relation", examples=["PARENT", "INPUT"])
+    kind: Literal["PARENT", "INPUT", "OUTPUT", "SYMLINK"] = Field(description="Kind of relation")
     from_: LineageEntityV1 = Field(description="Start point of relation", serialization_alias="from")
     to: LineageEntityV1 = Field(description="End point of relation")
-    type: str | None = Field(description="Type of relation", examples=["CREATE", "APPEND"], default=None)
+
+
+class LineageParrentRelationV1(LineageRelationV1):
+    kind: Literal["PARENT"] = "PARENT"
+
+
+class LineageInputRelationV1(LineageRelationV1):
+    kind: Literal["INPUT"] = "INPUT"
+    last_interaction_at: datetime = Field(description="Last interaction at", examples=["2008-09-15T15:53:00+05:00"])
+    num_bytes: int | None = Field(description="Number of bytes", examples=[42], default=None)
+    num_rows: int | None = Field(description="Number of rows", examples=[42], default=None)
+    num_files: int | None = Field(description="Number of files", examples=[42], default=None)
+
+
+class LineageOutputRelationV1(LineageRelationV1):
+    kind: Literal["OUTPUT"] = "OUTPUT"
+    type: str = Field(description="Type of relation", examples=["CREATE", "APPEND"])
+    last_interaction_at: datetime = Field(description="Last interaction at", examples=["2008-09-15T15:53:00+05:00"])
+    num_bytes: int | None = Field(description="Number of bytes", examples=[42], default=None)
+    num_rows: int | None = Field(description="Number of rows", examples=[42], default=None)
+    num_files: int | None = Field(description="Number of files", examples=[42], default=None)
+
+
+class LineageSymlinkRelationV1(LineageRelationV1):
+    kind: Literal["SYMLINK"] = "SYMLINK"
+    type: str = Field(description="Type of relation between datasets", examples=["METASTORE", "WAREHOUSE"])
 
 
 class LineageResponseV1(BaseModel):
-    relations: list[LineageRelationV1] = []
+    relations: list[
+        LineageParrentRelationV1 | LineageInputRelationV1 | LineageOutputRelationV1 | LineageSymlinkRelationV1
+    ] = []
     nodes: list[RunResponseV1 | OperationResponseV1 | JobResponseV1 | DatasetResponseV1] = []
