@@ -1,7 +1,10 @@
 .. _readme:
 
-Data.Rentgen
-============
+|Logo|
+
+.. |Logo| image:: docs/_static/logo_wide.svg
+    :alt: Data.Rentgen logo
+    :target: https://github.com/MobileTeleSystems/data-rentgen
 
 |Repo Status| |PyPI| |PyPI License| |PyPI Python Version| |Docker image| |Documentation|
 |Build Status| |Coverage| |pre-commit.ci|

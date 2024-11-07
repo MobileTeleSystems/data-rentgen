@@ -39,6 +39,7 @@ venv-install: ##@Env Install requirements to venv
 	${POETRY} self add poetry-bumpversion
 	${POETRY} install --no-root --all-extras --with dev,test,docs $(ARGS)
 	${PIP} install -U flake8-commas
+	${PIP} install --no-deps sphinx-plantuml
 
 
 db: db-start db-upgrade db-partitions ##@DB Prepare database (in docker)

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="var(--color-foreground-primary, #f0f6fc)" viewBox="0 0 738.371 157.536">
+  <defs>
+    <linearGradient id="b">
+      <stop offset="0" stop-color="#00f9f9" stop-opacity=".686"/>
+      <stop offset=".787" stop-color="#14ffff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="c">
+      <stop offset="0" stop-color="#54ffff" stop-opacity=".68"/>
+      <stop offset="1" stop-color="#0aa" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#00b6b6" stop-opacity=".367"/>
+      <stop offset="1" stop-color="teal" stop-opacity=".964"/>
+    </linearGradient>
+    <linearGradient xlink:href="#a" id="d" x1="113.173" x2="41.473" y1="54.253" y2="175.097" gradientTransform="translate(1176.507 138.785) scale(.48565)" gradientUnits="userSpaceOnUse"/>
+    <radialGradient xlink:href="#b" id="e" cx="68.222" cy="6.54" r="25.748" fx="68.222" fy="6.54" gradientUnits="userSpaceOnUse" spreadMethod="reflect"/>
+    <radialGradient xlink:href="#c" id="g" cx="73.64" cy="116.186" r="1.058" fx="73.64" fy="116.186" gradientTransform="matrix(.48565 0 0 35.65495 1176.595 -4002.167)" gradientUnits="userSpaceOnUse"/>
+    <path id="h" d="M145.083 2.902H661.58v264.052H145.083z"/>
+    <path id="i" d="M145.083 2.902h1431.972v290.167H145.083z"/>
+    <filter id="f" width="1.06" height="1.041" x="-.03" y="-.02" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation=".411"/>
+    </filter>
+  </defs>
+  <path fill="url(#d)" d="m1210.952 151.89-26.281 61.158 26.157 25.908-.125-17.19-11.335-11.832 11.335-26.282zm2.695.066.25 31.762 11.333 26.28-11.334 11.834-.124 17.19 26.157-25.91z" transform="translate(-940.77 -102.7)"/>
+  <path fill="#0ee" fill-opacity=".357" stroke="url(#e)" stroke-width="2.8" d="M92.715-1.282 71.05 6.554l21.585 8.054-22.133-6.394L83.23 27.417 69.082 9.234l-.99 23.018-.758-23.026-14.33 18.04L65.925 8.19 43.73 14.363l21.665-7.837L43.81-1.528l22.133 6.394-12.728-19.203L67.36 3.846l.99-23.018.758 23.027 14.33-18.04L70.52 4.889Z" filter="url(#f)" paint-order="fill markers stroke" style="mix-blend-mode:overlay" transform="translate(238.562 46.36) scale(.48565)"/>
+  <path fill="#009f9f" fill-opacity=".498" d="m271.566 90.96-6.29 14.392 6.417 6.783 6.163-6.535z"/>
+  <path fill="url(#g)" d="M1211.845 102.701h1.028v75.443h-1.028z" paint-order="fill markers stroke" style="mix-blend-mode:overlay" transform="translate(-940.77 -102.7)"/>
+  <text xml:space="preserve" font-family="Droid Sans" font-size="229.333" font-weight="400" style="line-height:1.25;-inkscape-font-specification:'Droid Sans';text-align:center;white-space:pre;shape-inside:url(#h)" transform="translate(-83.444 28.104) scale(.48565)"><tspan x="149.575" y="211.567"><tspan font-family="Noto Sans" style="-inkscape-font-specification:'Noto Sans'">Data</tspan></tspan></text>
+  <text xml:space="preserve" font-family="sans-serif" font-size="229.333" style="line-height:1.25;text-align:center;white-space:pre;shape-inside:url(#i)" transform="translate(108.58 28.058) scale(.48565)"><tspan x="406.761" y="211.567"><tspan font-family="Noto Sans" style="-inkscape-font-specification:'Noto Sans'">Rentgen</tspan></tspan></text>
+</svg>
