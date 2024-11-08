@@ -14,8 +14,7 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   fill="var(--color-foreground-primary, #f0f6fc)">
+   xmlns:svg="http://www.w3.org/2000/svg">
   <defs
      id="defs1">
     <rect
@@ -188,7 +187,7 @@
        xml:space="preserve"
        transform="matrix(1.3401622,0,0,1.3530399,139.99933,516.31535)"
        id="text4"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:60.4002px;line-height:1.25;font-family:'Droid Sans';-inkscape-font-specification:'Droid Sans';text-align:center;white-space:pre;shape-inside:url(#rect4);display:inline"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:60.4002px;line-height:1.25;text-align:center;white-space:pre;shape-inside:url(#rect4);display:inline"><tspan
          x="728.56141"
          y="57.858987"
          id="tspan2"><tspan

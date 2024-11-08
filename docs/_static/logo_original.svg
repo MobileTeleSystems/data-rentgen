@@ -14,8 +14,7 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   fill="var(--color-foreground-primary, #f0f6fc)">
+   xmlns:svg="http://www.w3.org/2000/svg">
   <defs
      id="defs1">
     <rect

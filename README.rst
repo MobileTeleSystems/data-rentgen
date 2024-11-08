@@ -2,7 +2,7 @@
 
 |Logo|
 
-.. |Logo| image:: docs/_static/logo_wide.svg
+.. |Logo| image:: docs/_static/logo_wide_white_text.svg
     :alt: Data.Rentgen logo
     :target: https://github.com/MobileTeleSystems/data-rentgen
 

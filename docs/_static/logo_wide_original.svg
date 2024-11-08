@@ -14,8 +14,7 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   fill="var(--color-foreground-primary, #f0f6fc)">
+   xmlns:svg="http://www.w3.org/2000/svg">
   <defs
      id="defs1">
     <rect
@@ -127,9 +126,9 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="1.9495193"
-     inkscape:cx="132.85326"
-     inkscape:cy="79.250306"
+     inkscape:zoom="0.97475965"
+     inkscape:cx="306.74228"
+     inkscape:cy="114.38717"
      inkscape:window-width="1920"
      inkscape:window-height="1020"
      inkscape:window-x="0"
@@ -183,21 +182,17 @@
        xml:space="preserve"
        transform="matrix(0.48564966,0,0,0.48564966,857.3249,130.80481)"
        id="text4"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:229.333px;line-height:1.25;font-family:'Droid Sans';-inkscape-font-specification:'Droid Sans';text-align:center;white-space:pre;shape-inside:url(#rect4);display:inline"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:229.3329893px;line-height:1.25;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans, Normal';text-align:center;white-space:pre;shape-inside:url(#rect4);display:inline;fill:#000000;fill-opacity:1;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
          x="149.57493"
          y="211.56674"
-         id="tspan3"><tspan
-           style="font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans'"
-           id="tspan2">Data</tspan></tspan></text>
+         id="tspan1">Data</tspan></text>
     <text
        xml:space="preserve"
        transform="matrix(0.48564966,0,0,0.48564966,1049.3487,130.75925)"
        id="text4-3"
-       style="font-size:229.333px;line-height:1.25;font-family:sans-serif;text-align:center;white-space:pre;shape-inside:url(#rect4-7);display:inline"><tspan
+       style="font-size:229.3329893px;line-height:1.25;font-family:'Noto Sans';text-align:center;white-space:pre;shape-inside:url(#rect4-7);display:inline;fill:#000000;fill-opacity:1;-inkscape-font-specification:'Noto Sans, Normal';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"><tspan
          x="406.76091"
          y="211.56674"
-         id="tspan5"><tspan
-           style="font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans'"
-           id="tspan4">Rentgen</tspan></tspan></text>
+         id="tspan2">Rentgen</tspan></text>
   </g>
 </svg>
