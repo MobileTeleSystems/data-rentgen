@@ -238,7 +238,7 @@ async def test_get_job_lineage(
             }
             for dataset in sorted(datasets, key=lambda x: x.id)
         ],
-    }, output_stats
+    }
 
 
 async def test_get_job_lineage_with_run_granularity(
