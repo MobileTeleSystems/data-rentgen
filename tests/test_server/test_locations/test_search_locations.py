@@ -16,6 +16,7 @@ async def test_search_locations_by_address_url(
     locations_search: tuple[dict[str, Location], dict[str, Location]],
 ) -> None:
     _, locations_by_address = locations_search
+
     locations = await enrich_locations([locations_by_address["hdfs://my-cluster-namenode:8020"]], async_session)
 
     response = await test_client.get(

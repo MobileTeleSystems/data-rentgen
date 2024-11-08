@@ -1,5 +1,7 @@
 from random import choice, randint
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from data_rentgen.db.models import Output, OutputType
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
 
@@ -22,3 +24,12 @@ def output_factory(**kwargs) -> Output:
     }
     data.update(kwargs)
     return Output(**data)
+
+
+async def create_output(async_session: AsyncSession, output_kwargs: dict | None = None) -> Output:
+    output_kwargs = output_kwargs or {}
+    output = output_factory(**output_kwargs)
+    async_session.add(output)
+    await async_session.commit()
+    await async_session.refresh(output)
+    return output

@@ -10,7 +10,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from data_rentgen.db.models import Address, Job, JobType
 from tests.test_server.fixtures.factories.address import address_factory
 from tests.test_server.fixtures.factories.base import random_string
-from tests.test_server.fixtures.factories.location import location_factory
+from tests.test_server.fixtures.factories.location import (
+    create_location,
+    location_factory,
+)
 
 
 def job_factory(**kwargs):
@@ -22,6 +25,24 @@ def job_factory(**kwargs):
     }
     data.update(kwargs)
     return Job(**data)
+
+
+async def create_job(
+    async_session: AsyncSession,
+    job_kwargs: dict | None = None,
+    location_kwargs: dict | None = None,
+) -> Job:
+    location = await create_location(async_session, location_kwargs)
+    if job_kwargs:
+        job_kwargs.update({"location_id": location.id})
+    else:
+        job_kwargs = {"location_id": location.id}
+    job = job_factory(**job_kwargs)
+    del job.id
+    async_session.add(job)
+    await async_session.commit()
+    await async_session.refresh(job)
+    return job
 
 
 @pytest_asyncio.fixture(params=[{}])

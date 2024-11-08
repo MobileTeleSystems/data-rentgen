@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Address, Dataset
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
-from tests.test_server.fixtures.factories.address import address_factory
+from tests.test_server.fixtures.factories.address import address_factory, create_address
 from tests.test_server.fixtures.factories.base import random_string
 from tests.test_server.fixtures.factories.location import location_factory
 
@@ -23,6 +23,45 @@ def dataset_factory(**kwargs):
 
     data.update(kwargs)
     return Dataset(**data)
+
+
+async def create_dataset(
+    async_session: AsyncSession,
+    dataset_kwargs: dict | None = None,
+    address_kwargs: dict | None = None,
+    location_kwargs: dict | None = None,
+) -> Dataset:
+    address = await create_address(
+        async_session,
+        address_kwargs,
+        location_kwargs,
+    )
+    if dataset_kwargs:
+        dataset_kwargs.update({"location_id": address.location_id})
+    else:
+        dataset_kwargs = {"location_id": address.location_id}
+    dataset = dataset_factory(**dataset_kwargs)
+    async_session.add(dataset)
+    await async_session.commit()
+    await async_session.refresh(dataset)
+    return dataset
+
+
+async def make_symlink(
+    async_session: AsyncSession,
+    from_dataset: Dataset,
+    to_dataset: Dataset,
+    type: DatasetSymlinkType,
+) -> DatasetSymlink:
+    symlink = DatasetSymlink(
+        from_dataset_id=from_dataset.id,
+        to_dataset_id=to_dataset.id,
+        type=type,
+    )
+    async_session.add(symlink)
+    await async_session.commit()
+    await async_session.refresh(symlink)
+    return symlink
 
 
 @pytest_asyncio.fixture(params=[{}])

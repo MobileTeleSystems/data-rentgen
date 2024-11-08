@@ -12,6 +12,7 @@ from data_rentgen.db.models import Address, Job, Run, RunStartReason, RunStatus,
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
 from tests.test_server.fixtures.factories.base import random_datetime, random_string
 from tests.test_server.fixtures.factories.job import job_factory
+from tests.test_server.utils.delete import clean_db
 
 
 def run_factory(**kwargs):
@@ -37,6 +38,19 @@ def run_factory(**kwargs):
     return Run(**data)
 
 
+async def create_run(
+    async_session: AsyncSession,
+    run_kwargs: dict | None = None,
+) -> Run:
+    run_kwargs = run_kwargs or {}
+    run = run_factory(**run_kwargs)
+    async_session.add(run)
+    await async_session.commit()
+    await async_session.refresh(run)
+
+    return run
+
+
 @pytest_asyncio.fixture(params=[{}])
 async def new_run(
     request: pytest.FixtureRequest,
@@ -51,28 +65,19 @@ async def new_run(
 async def run(
     request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
-    user: User,
     job: Job,
+    user: User,
 ) -> AsyncGenerator[Run, None]:
     params = request.param
-    item = run_factory(job_id=job.id, started_by_user_id=user.id, **params)
-
-    # TODO: Refactor this part to separate function.
+    params.update({"started_by_user_id": user.id})
+    params.update({"job_id": job.id})
     async with async_session_maker() as async_session:
-        async_session.add(item)
+        run = await create_run(async_session, run_kwargs=params)
 
-        await async_session.commit()
-        await async_session.refresh(item)
+    yield run
 
-        async_session.expunge_all()
-
-    yield item
-
-    delete_query = delete(Run).where(Run.id == item.id)
-    # Add teardown cause fixture async_session doesn't used
     async with async_session_maker() as async_session:
-        await async_session.execute(delete_query)
-        await async_session.commit()
+        await clean_db(async_session)
 
 
 @pytest_asyncio.fixture(params=[(10, {})])
@@ -84,33 +89,27 @@ async def runs(
 ) -> AsyncGenerator[list[Run], None]:
     size, params = request.param
     started_at = datetime.now()
-    items = [
-        run_factory(
-            job_id=jobs[i // 2].id,
-            created_at=started_at + timedelta(seconds=0.1 * i),
-            started_by_user_id=user.id,
-            **params,
-        )
-        for i in range(size)
-    ]
 
-    # TODO: Refactor this part to separate function.
     async with async_session_maker() as async_session:
-        async_session.add_all(items)
-
-        await async_session.commit()
-        for item in items:
-            await async_session.refresh(item)
+        items = [
+            await create_run(
+                async_session,
+                run_kwargs={
+                    "job_id": jobs[i // 2].id,
+                    "created_at": started_at + timedelta(seconds=0.1 * i),
+                    "started_by_user_id": user.id,
+                    **params,
+                },
+            )
+            for i in range(size)
+        ]
 
         async_session.expunge_all()
 
     yield items
 
-    delete_query = delete(Run).where(Run.id.in_([item.id for item in items]))
-    # Add teardown cause fixture async_session doesn't used
     async with async_session_maker() as async_session:
-        await async_session.execute(delete_query)
-        await async_session.commit()
+        await clean_db(async_session)
 
 
 @pytest_asyncio.fixture(params=[(5, {})])
@@ -122,32 +121,27 @@ async def runs_with_same_job(
 ) -> AsyncGenerator[list[Run], None]:
     size, params = request.param
     started_at = datetime.now()
-    items = [
-        run_factory(
-            job_id=job.id,
-            created_at=started_at + timedelta(seconds=s),  # To be sure runs has different timestamps
-            started_by_user_id=user.id,
-            **params,
-        )
-        for s in range(size)
-    ]
 
     async with async_session_maker() as async_session:
-        async_session.add_all(items)
-
-        await async_session.commit()
-        for item in items:
-            await async_session.refresh(item)
+        items = [
+            await create_run(
+                async_session,
+                run_kwargs={
+                    "job_id": job.id,
+                    "created_at": started_at + timedelta(seconds=s),  # To be sure runs has different timestamps
+                    "started_by_user_id": user.id,
+                    **params,
+                },
+            )
+            for s in range(size)
+        ]
 
         async_session.expunge_all()
 
     yield items
 
-    delete_query = delete(Run).where(Run.id.in_([item.id for item in items]))
-    # Add teardown cause fixture async_session doesn't used
     async with async_session_maker() as async_session:
-        await async_session.execute(delete_query)
-        await async_session.commit()
+        await clean_db(async_session)
 
 
 @pytest_asyncio.fixture(params=[(5, {})])
@@ -155,37 +149,31 @@ async def runs_with_same_parent(
     request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
     user: User,
-    jobs: list[Job],
 ) -> AsyncGenerator[list[Run], None]:
     size, params = request.param
     started_at = datetime.now()
     parent_run_id = generate_new_uuid()
-    items = [
-        run_factory(
-            parent_run_id=parent_run_id,
-            created_at=started_at + timedelta(seconds=s),  # To be sure runs has different timestamps
-            started_by_user_id=user.id,
-            **params,
-        )
-        for s in range(size)
-    ]
 
     async with async_session_maker() as async_session:
-        async_session.add_all(items)
-
-        await async_session.commit()
-        for item in items:
-            await async_session.refresh(item)
+        items = [
+            await create_run(
+                async_session,
+                run_kwargs={
+                    "parent_run_id": parent_run_id,
+                    "created_at": started_at + timedelta(seconds=s),  # To be sure runs has different timestamps
+                    "started_by_user_id": user.id,
+                    **params,
+                },
+            )
+            for s in range(size)
+        ]
 
         async_session.expunge_all()
 
     yield items
 
-    delete_query = delete(Run).where(Run.id.in_([item.id for item in items]))
-    # Add teardown cause fixture async_session doesn't used
     async with async_session_maker() as async_session:
-        await async_session.execute(delete_query)
-        await async_session.commit()
+        await clean_db(async_session)
 
 
 @pytest_asyncio.fixture(params=[{}])

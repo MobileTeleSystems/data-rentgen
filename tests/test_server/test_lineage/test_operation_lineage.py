@@ -65,6 +65,9 @@ async def test_get_operation_lineage_no_inputs_outputs(
     [job] = await enrich_jobs([job], async_session)
     [run] = await enrich_runs([run], async_session)
 
+    assert run
+    assert job
+
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "relations": [

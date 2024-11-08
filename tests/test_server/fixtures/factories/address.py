@@ -21,6 +21,22 @@ def address_factory(**kwargs):
     return Address(**data)
 
 
+async def create_address(
+    async_session: AsyncSession,
+    location_id: int,
+    address_kwargs: dict | None = None,
+) -> Address:
+    if address_kwargs:
+        address_kwargs.update({"location_id": location_id})
+    else:
+        address_kwargs = {"location_id": location_id}
+    address = address_factory(**address_kwargs)
+    async_session.add(address)
+    await async_session.commit()
+    await async_session.refresh(address)
+    return address
+
+
 @pytest_asyncio.fixture(params=[{}])
 async def address(
     request: pytest.FixtureRequest,

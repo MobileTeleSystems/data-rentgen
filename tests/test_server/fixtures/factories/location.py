@@ -4,12 +4,12 @@ from typing import AsyncContextManager, Callable
 
 import pytest
 import pytest_asyncio
-from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.db.models import Address, Location
-from tests.test_server.fixtures.factories.address import address_factory
+from data_rentgen.db.models import Location
+from tests.test_server.fixtures.factories.address import create_address
 from tests.test_server.fixtures.factories.base import random_string
+from tests.test_server.utils.delete import clean_db
 
 
 def location_factory(**kwargs):
@@ -21,6 +21,21 @@ def location_factory(**kwargs):
     }
     data.update(kwargs)
     return Location(**data)
+
+
+async def create_location(
+    async_session: AsyncSession,
+    location_kwargs: dict | None = None,
+    address_kwargs: dict | None = None,
+) -> Location:
+    location_kwargs = location_kwargs or {}
+    location = location_factory(**location_kwargs)
+    del location.id
+    async_session.add(location)
+    await async_session.commit()
+    await create_address(async_session, location.id, address_kwargs)
+    await async_session.refresh(location)
+    return location
 
 
 @pytest_asyncio.fixture(params=[{}])
@@ -39,24 +54,15 @@ async def location(
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[Location, None]:
     params = request.param
-    item = location_factory(**params)
-    del item.id
 
     async with async_session_maker() as async_session:
-        async_session.add(item)
-
-        await async_session.commit()
-        await async_session.refresh(item)
-
+        item = await create_location(async_session, location_kwargs=params)
         async_session.expunge_all()
 
     yield item
 
-    delete_query = delete(Location).where(Location.id == item.id)
-    # Add teardown cause fixture async_session doesn't used
     async with async_session_maker() as async_session:
-        await async_session.execute(delete_query)
-        await async_session.commit()
+        await clean_db(async_session)
 
 
 @pytest_asyncio.fixture(params=[(5, {})])
@@ -65,105 +71,62 @@ async def locations(
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[list[Location], None]:
     size, params = request.param
-    items = [location_factory(**params) for _ in range(size)]
-
     async with async_session_maker() as async_session:
-        for item in items:
-            del item.id
-            async_session.add(item)
-
-        await async_session.commit()
-        for item in items:
-            await async_session.refresh(item)
-
+        items = [await create_location(async_session, location_kwargs=params) for _ in range(size)]
         async_session.expunge_all()
 
     yield items
 
-    delete_query = delete(Location).where(Location.id.in_([item.id for item in items]))
-    # Add teardown cause fixture async_session doesn't used
     async with async_session_maker() as async_session:
-        await async_session.execute(delete_query)
-        await async_session.commit()
+        await clean_db(async_session)
 
 
-@pytest_asyncio.fixture(params=[{}])
-async def location_with_address(
-    request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
-) -> AsyncGenerator[Location, None]:
-    params = request.param
-    item = location_factory(**params)
-    del item.id
-
-    async with async_session_maker() as async_session:
-        async_session.add(item)
-
-        await async_session.commit()
-        await async_session.refresh(item)
-
-        address = address_factory(location_id=item.id)
-
-        async_session.add(address)
-        await async_session.commit()
-        await async_session.refresh(address)
-
-        async_session.expunge_all()
-
-    yield item
-
-    location_delete_query = delete(Location).where(Location.id == item.id)
-    address_delete_query = delete(Address).where(Address.id == item.id)
-    # Add teardown cause fixture async_session doesn't used
-    async with async_session_maker() as async_session:
-        await async_session.execute(address_delete_query)
-        await async_session.execute(location_delete_query)
-        await async_session.commit()
-
-
-@pytest_asyncio.fixture(params=[{}])
+@pytest_asyncio.fixture
 async def locations_search(
-    request: pytest.FixtureRequest,
-    async_session: AsyncSession,
+    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
 ):
     """
     Fixture with explicit location name and address urls for search tests.
     """
-
-    request.param
-    location_names_types = [
-        ("postgres.public.users", "postgres"),
-        ("my-cluster", "hive"),
-        ("warehouse", "hdfs"),
+    options = [
+        {
+            "location_kwargs": {
+                "name": "postgres.public.users",
+                "type": "postges",
+            },
+            "address_kwargs": {"url": "http://my-postgres-host:8012"},
+        },
+        {
+            "location_kwargs": {
+                "name": "my-cluster",
+                "type": "hive",
+            },
+            "address_kwargs": {"url": "hdfs://my-cluster-namenode:8020"},
+        },
+        {
+            "location_kwargs": {
+                "name": "warehouse",
+                "type": "hdfs",
+            },
+            "address_kwargs": {"url": "hdfs://warehouse-cluster-namenode:2080"},
+        },
     ]
-    locations = [location_factory(name=name, type=location_type) for name, location_type in location_names_types]
-
-    for item in locations:
-        del item.id
-        async_session.add(item)
-
-    await async_session.flush()
-
-    addresses_url = [
-        "http://my-postgres-host:8012",
-        "hdfs://my-cluster-namenode:8020",
-        "hdfs://warehouse-cluster-namenode:2080",
-    ]
-
-    addresses = [address_factory(location_id=location.id, url=url) for location, url in zip(locations, addresses_url)]
-
-    for item in addresses:
-        del item.id
-        async_session.add(item)
-    await async_session.flush()
-
-    await async_session.commit()
-
-    for item in locations + addresses:
-        await async_session.refresh(item)
-        async_session.expunge(item)
+    address_urls = [option["address_kwargs"]["url"] for option in options]
+    async with async_session_maker() as async_session:
+        locations = [
+            await create_location(
+                async_session=async_session,
+                location_kwargs=option["location_kwargs"],
+                address_kwargs=option["address_kwargs"],
+            )
+            for option in options
+        ]
+        async_session.expunge_all()
 
     location_by_name = {location.name: location for location in locations}
-    location_by_address = {name: location for name, location in zip(addresses_url, locations)}
+    location_by_address = dict(zip(address_urls, locations))
 
     yield location_by_name, location_by_address
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)
