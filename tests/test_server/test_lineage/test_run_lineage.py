@@ -15,6 +15,7 @@ from data_rentgen.db.models import (
     Run,
 )
 from tests.test_server.utils.enrich import enrich_datasets, enrich_jobs, enrich_runs
+from tests.test_server.utils.stats import relation_stats
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
 
@@ -71,7 +72,6 @@ async def test_get_run_lineage_no_operations(
                 "kind": "PARENT",
                 "from": {"kind": "JOB", "id": run.job_id},
                 "to": {"kind": "RUN", "id": str(run.id)},
-                "type": None,
             },
         ],
         "nodes": [
@@ -138,7 +138,6 @@ async def test_get_run_lineage_no_inputs_outputs(
                 "kind": "PARENT",
                 "from": {"kind": "JOB", "id": run.job_id},
                 "to": {"kind": "RUN", "id": str(run.id)},
-                "type": None,
             },
         ],
         "nodes": [
@@ -181,11 +180,13 @@ async def test_get_run_lineage(
     async_session: AsyncSession,
     lineage_with_same_run: LINEAGE_FIXTURE_ANNOTATION,
 ):
-    jobs, runs, _, datasets, *_ = lineage_with_same_run
+    jobs, runs, _, datasets, _, outputs = lineage_with_same_run
 
     jobs = await enrich_jobs(jobs, async_session)
     [run] = await enrich_runs(runs, async_session)
     datasets = await enrich_datasets(datasets, async_session)
+    outputs = [output for output in outputs if output.run_id == run.id]
+    output_stats = relation_stats(outputs)
 
     response = await test_client.get(
         "v1/runs/lineage",
@@ -203,7 +204,6 @@ async def test_get_run_lineage(
                 "kind": "PARENT",
                 "from": {"kind": "JOB", "id": run.job_id},
                 "to": {"kind": "RUN", "id": str(run.id)},
-                "type": None,
             },
         ]
         + [
@@ -212,6 +212,10 @@ async def test_get_run_lineage(
                 "from": {"kind": "RUN", "id": str(run.id)},
                 "to": {"kind": "DATASET", "id": dataset.id},
                 "type": "APPEND",
+                "num_bytes": output_stats[dataset.id]["num_bytes"],
+                "num_rows": output_stats[dataset.id]["num_rows"],
+                "num_files": output_stats[dataset.id]["num_files"],
+                "last_interaction_at": output_stats[dataset.id]["created_at"].strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for dataset in sorted(datasets, key=lambda x: x.id)
         ],
@@ -274,11 +278,14 @@ async def test_get_run_lineage_with_operation_granularity(
     async_session: AsyncSession,
     lineage_with_same_run: LINEAGE_FIXTURE_ANNOTATION,
 ):
-    jobs, runs, operations, datasets, *_ = lineage_with_same_run
+    jobs, runs, operations, datasets, _, outputs = lineage_with_same_run
 
     jobs = await enrich_jobs(jobs, async_session)
     [run] = await enrich_runs(runs, async_session)
     datasets = await enrich_datasets(datasets, async_session)
+    operations_ids = {operation.id for operation in operations}
+    outputs = [output for output in outputs if output.operation_id in operations_ids]
+    output_stats = relation_stats(outputs)
 
     response = await test_client.get(
         "v1/runs/lineage",
@@ -297,7 +304,6 @@ async def test_get_run_lineage_with_operation_granularity(
                 "kind": "PARENT",
                 "from": {"kind": "JOB", "id": run.job_id},
                 "to": {"kind": "RUN", "id": str(run.id)},
-                "type": None,
             },
         ]
         + [
@@ -305,7 +311,6 @@ async def test_get_run_lineage_with_operation_granularity(
                 "kind": "PARENT",
                 "from": {"kind": "RUN", "id": str(operation.run_id)},
                 "to": {"kind": "OPERATION", "id": str(operation.id)},
-                "type": None,
             }
             for operation in sorted(operations, key=lambda x: x.id)
         ]
@@ -315,6 +320,10 @@ async def test_get_run_lineage_with_operation_granularity(
                 "from": {"kind": "OPERATION", "id": str(operation.id)},
                 "to": {"kind": "DATASET", "id": dataset.id},
                 "type": "APPEND",
+                "num_bytes": output_stats[dataset.id]["num_bytes"],
+                "num_rows": output_stats[dataset.id]["num_rows"],
+                "num_files": output_stats[dataset.id]["num_files"],
+                "last_interaction_at": output_stats[dataset.id]["created_at"].strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for dataset, operation in zip(datasets, operations)
         ],
@@ -400,8 +409,10 @@ async def test_get_run_lineage_with_direction_both(
     job = next(job for job in all_jobs if job.id == some_run.job_id)
 
     inputs = [input for input in all_inputs if input.run_id == some_run.id]
+    input_stats = relation_stats(inputs)
     input_dataset_ids = {input.dataset_id for input in inputs}
     outputs = [output for output in all_outputs if output.run_id == some_run.id]
+    output_stats = relation_stats(outputs)
     output_dataset_ids = {output.dataset_id for output in outputs}
     datasets = [dataset for dataset in all_datasets if dataset.id in input_dataset_ids | output_dataset_ids]
 
@@ -426,7 +437,6 @@ async def test_get_run_lineage_with_direction_both(
                 "kind": "PARENT",
                 "from": {"kind": "JOB", "id": run.job_id},
                 "to": {"kind": "RUN", "id": str(run.id)},
-                "type": None,
             },
         ]
         + [
@@ -434,7 +444,10 @@ async def test_get_run_lineage_with_direction_both(
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": input.dataset_id},
                 "to": {"kind": "RUN", "id": str(input.run_id)},
-                "type": None,
+                "num_bytes": input_stats[input.dataset_id]["num_bytes"],
+                "num_rows": input_stats[input.dataset_id]["num_rows"],
+                "num_files": input_stats[input.dataset_id]["num_files"],
+                "last_interaction_at": input_stats[input.dataset_id]["created_at"].strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for input in inputs
         ]
@@ -444,6 +457,10 @@ async def test_get_run_lineage_with_direction_both(
                 "from": {"kind": "RUN", "id": str(output.run_id)},
                 "to": {"kind": "DATASET", "id": output.dataset_id},
                 "type": "APPEND",
+                "num_bytes": output_stats[output.dataset_id]["num_bytes"],
+                "num_rows": output_stats[output.dataset_id]["num_rows"],
+                "num_files": output_stats[output.dataset_id]["num_files"],
+                "last_interaction_at": output_stats[output.dataset_id]["created_at"].strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for output in outputs
         ],
@@ -529,6 +546,7 @@ async def test_get_run_lineage_with_direction_and_until(
         input for input in all_inputs if input.operation_id in operation_ids and since <= input.created_at <= until
     ]
     assert inputs
+    input_stats = relation_stats(inputs)
 
     # Only operations with some inputs are returned
     operation_ids = {input.operation_id for input in inputs}
@@ -559,7 +577,6 @@ async def test_get_run_lineage_with_direction_and_until(
                 "kind": "PARENT",
                 "from": {"kind": "JOB", "id": run.job_id},
                 "to": {"kind": "RUN", "id": str(run.id)},
-                "type": None,
             },
         ]
         + [
@@ -567,7 +584,10 @@ async def test_get_run_lineage_with_direction_and_until(
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": input.dataset_id},
                 "to": {"kind": "RUN", "id": str(input.run_id)},
-                "type": None,
+                "num_bytes": input_stats[input.dataset_id]["num_bytes"],
+                "num_rows": input_stats[input.dataset_id]["num_rows"],
+                "num_files": input_stats[input.dataset_id]["num_files"],
+                "last_interaction_at": input_stats[input.dataset_id]["created_at"].strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for input in inputs
         ],
@@ -653,6 +673,7 @@ async def test_get_run_lineage_with_direction_and_until_and_operation_granularit
         input for input in all_inputs if input.operation_id in operation_ids and since <= input.created_at <= until
     ]
     assert inputs
+    input_stats = relation_stats(inputs)
 
     # Only operations with some inputs are returned
     operation_ids = {input.operation_id for input in inputs}
@@ -684,7 +705,6 @@ async def test_get_run_lineage_with_direction_and_until_and_operation_granularit
                 "kind": "PARENT",
                 "from": {"kind": "JOB", "id": run.job_id},
                 "to": {"kind": "RUN", "id": str(run.id)},
-                "type": None,
             },
         ]
         + [
@@ -692,7 +712,6 @@ async def test_get_run_lineage_with_direction_and_until_and_operation_granularit
                 "kind": "PARENT",
                 "from": {"kind": "RUN", "id": str(operation.run_id)},
                 "to": {"kind": "OPERATION", "id": str(operation.id)},
-                "type": None,
             }
             for operation in sorted(operations, key=lambda x: x.id)
         ]
@@ -701,7 +720,10 @@ async def test_get_run_lineage_with_direction_and_until_and_operation_granularit
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": input.dataset_id},
                 "to": {"kind": "OPERATION", "id": str(input.operation_id)},
-                "type": None,
+                "num_bytes": input_stats[input.dataset_id]["num_bytes"],
+                "num_rows": input_stats[input.dataset_id]["num_rows"],
+                "num_files": input_stats[input.dataset_id]["num_files"],
+                "last_interaction_at": input_stats[input.dataset_id]["created_at"].strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for input in inputs
         ],
@@ -812,7 +834,9 @@ async def test_get_run_lineage_with_depth(
     assert third_level_datasets
 
     inputs = second_level_inputs
+    input_stats = relation_stats(inputs)
     outputs = first_level_outputs + third_level_outputs
+    output_stats = relation_stats(outputs)
 
     dataset_ids = first_level_dataset_ids | third_level_dataset_ids
     datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
@@ -843,7 +867,6 @@ async def test_get_run_lineage_with_depth(
                 "kind": "PARENT",
                 "from": {"kind": "JOB", "id": run.job_id},
                 "to": {"kind": "RUN", "id": str(run.id)},
-                "type": None,
             }
             for run in sorted(runs, key=lambda x: x.id)
         ]
@@ -852,7 +875,10 @@ async def test_get_run_lineage_with_depth(
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": input.dataset_id},
                 "to": {"kind": "RUN", "id": str(input.run_id)},
-                "type": None,
+                "num_bytes": input_stats[input.dataset_id]["num_bytes"],
+                "num_rows": input_stats[input.dataset_id]["num_rows"],
+                "num_files": input_stats[input.dataset_id]["num_files"],
+                "last_interaction_at": input_stats[input.dataset_id]["created_at"].strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for input in sorted(inputs, key=lambda x: (x.dataset_id, x.run_id))
         ]
@@ -862,6 +888,10 @@ async def test_get_run_lineage_with_depth(
                 "from": {"kind": "RUN", "id": str(output.run_id)},
                 "to": {"kind": "DATASET", "id": output.dataset_id},
                 "type": "APPEND",
+                "num_bytes": output_stats[output.dataset_id]["num_bytes"],
+                "num_rows": output_stats[output.dataset_id]["num_rows"],
+                "num_files": output_stats[output.dataset_id]["num_files"],
+                "last_interaction_at": output_stats[output.dataset_id]["created_at"].strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for output in sorted(outputs, key=lambda x: (x.run_id, x.dataset_id))
         ],
@@ -955,7 +985,9 @@ async def test_get_run_lineage_with_depth_and_operation_granularity(
     assert third_level_datasets
 
     inputs = second_level_inputs
+    input_stats = relation_stats(inputs)
     outputs = first_level_outputs + third_level_outputs
+    output_stats = relation_stats(outputs)
 
     dataset_ids = first_level_dataset_ids | third_level_dataset_ids
     datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
@@ -991,7 +1023,6 @@ async def test_get_run_lineage_with_depth_and_operation_granularity(
                 "kind": "PARENT",
                 "from": {"kind": "JOB", "id": run.job_id},
                 "to": {"kind": "RUN", "id": str(run.id)},
-                "type": None,
             }
             for run in sorted(runs, key=lambda x: x.id)
         ]
@@ -1000,7 +1031,6 @@ async def test_get_run_lineage_with_depth_and_operation_granularity(
                 "kind": "PARENT",
                 "from": {"kind": "RUN", "id": str(operation.run_id)},
                 "to": {"kind": "OPERATION", "id": str(operation.id)},
-                "type": None,
             }
             for operation in sorted(operations, key=lambda x: x.id)
         ]
@@ -1009,7 +1039,10 @@ async def test_get_run_lineage_with_depth_and_operation_granularity(
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": input.dataset_id},
                 "to": {"kind": "OPERATION", "id": str(input.operation_id)},
-                "type": None,
+                "num_bytes": input_stats[input.dataset_id]["num_bytes"],
+                "num_rows": input_stats[input.dataset_id]["num_rows"],
+                "num_files": input_stats[input.dataset_id]["num_files"],
+                "last_interaction_at": input_stats[input.dataset_id]["created_at"].strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
         ]
@@ -1019,6 +1052,10 @@ async def test_get_run_lineage_with_depth_and_operation_granularity(
                 "from": {"kind": "OPERATION", "id": str(output.operation_id)},
                 "to": {"kind": "DATASET", "id": output.dataset_id},
                 "type": "APPEND",
+                "num_bytes": output_stats[output.dataset_id]["num_bytes"],
+                "num_rows": output_stats[output.dataset_id]["num_rows"],
+                "num_files": output_stats[output.dataset_id]["num_files"],
+                "last_interaction_at": output_stats[output.dataset_id]["created_at"].strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))
         ],
@@ -1102,6 +1139,7 @@ async def test_get_run_lineage_with_depth_ignore_cycles(
     [job], [run], operations, all_datasets, all_inputs, all_outputs = lineage_with_same_run
 
     first_level_outputs = all_outputs
+    output_stats = relation_stats(first_level_outputs)
     first_level_dataset_ids = {output.dataset_id for output in first_level_outputs}
     first_level_datasets = [dataset for dataset in all_datasets if dataset.id in first_level_dataset_ids]
     first_level_operation_ids = {output.operation_id for output in first_level_outputs}
@@ -1110,6 +1148,7 @@ async def test_get_run_lineage_with_depth_ignore_cycles(
     # The there is a cycle dataset -> operation, so there is only one level of lineage.
     # All relations should be in the response, without duplicates.
     second_level_inputs = [input for input in all_inputs if input.dataset_id in first_level_dataset_ids]
+    input_stats = relation_stats(second_level_inputs)
     second_level_operation_ids = {input.operation_id for input in second_level_inputs} - first_level_operation_ids
     assert not second_level_operation_ids
 
@@ -1134,7 +1173,6 @@ async def test_get_run_lineage_with_depth_ignore_cycles(
                 "kind": "PARENT",
                 "from": {"kind": "JOB", "id": run.job_id},
                 "to": {"kind": "RUN", "id": str(run.id)},
-                "type": None,
             },
         ]
         + [
@@ -1142,7 +1180,10 @@ async def test_get_run_lineage_with_depth_ignore_cycles(
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": input.dataset_id},
                 "to": {"kind": "RUN", "id": str(input.run_id)},
-                "type": None,
+                "num_bytes": input_stats[input.dataset_id]["num_bytes"],
+                "num_rows": input_stats[input.dataset_id]["num_rows"],
+                "num_files": input_stats[input.dataset_id]["num_files"],
+                "last_interaction_at": input_stats[input.dataset_id]["created_at"].strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for input in sorted(second_level_inputs, key=lambda x: (x.dataset_id, x.run_id))
         ]
@@ -1152,6 +1193,10 @@ async def test_get_run_lineage_with_depth_ignore_cycles(
                 "from": {"kind": "RUN", "id": str(output.run_id)},
                 "to": {"kind": "DATASET", "id": output.dataset_id},
                 "type": "APPEND",
+                "num_bytes": output_stats[output.dataset_id]["num_bytes"],
+                "num_rows": output_stats[output.dataset_id]["num_rows"],
+                "num_files": output_stats[output.dataset_id]["num_files"],
+                "last_interaction_at": output_stats[output.dataset_id]["created_at"].strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for output in sorted(first_level_outputs, key=lambda x: (x.run_id, x.dataset_id))
         ],
@@ -1216,6 +1261,7 @@ async def test_get_run_lineage_with_depth_ignore_cycles_with_operation_granulari
     [job], [run], operations, all_datasets, all_inputs, all_outputs = lineage_with_same_run
 
     first_level_outputs = all_outputs
+    output_stats = relation_stats(first_level_outputs)
     first_level_dataset_ids = {output.dataset_id for output in first_level_outputs}
     first_level_datasets = [dataset for dataset in all_datasets if dataset.id in first_level_dataset_ids]
     first_level_operation_ids = {output.operation_id for output in first_level_outputs}
@@ -1224,6 +1270,7 @@ async def test_get_run_lineage_with_depth_ignore_cycles_with_operation_granulari
     # The there is a cycle dataset -> operation, so there is only one level of lineage.
     # All relations should be in the response, without duplicates.
     second_level_inputs = [input for input in all_inputs if input.dataset_id in first_level_dataset_ids]
+    input_stats = relation_stats(second_level_inputs)
     second_level_operation_ids = {input.operation_id for input in second_level_inputs} - first_level_operation_ids
     assert not second_level_operation_ids
 
@@ -1249,7 +1296,6 @@ async def test_get_run_lineage_with_depth_ignore_cycles_with_operation_granulari
                 "kind": "PARENT",
                 "from": {"kind": "JOB", "id": run.job_id},
                 "to": {"kind": "RUN", "id": str(run.id)},
-                "type": None,
             },
         ]
         + [
@@ -1257,7 +1303,6 @@ async def test_get_run_lineage_with_depth_ignore_cycles_with_operation_granulari
                 "kind": "PARENT",
                 "from": {"kind": "RUN", "id": str(operation.run_id)},
                 "to": {"kind": "OPERATION", "id": str(operation.id)},
-                "type": None,
             }
             for operation in sorted(operations, key=lambda x: x.id)
         ]
@@ -1266,7 +1311,10 @@ async def test_get_run_lineage_with_depth_ignore_cycles_with_operation_granulari
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": input.dataset_id},
                 "to": {"kind": "OPERATION", "id": str(input.operation_id)},
-                "type": None,
+                "num_bytes": input_stats[input.dataset_id]["num_bytes"],
+                "num_rows": input_stats[input.dataset_id]["num_rows"],
+                "num_files": input_stats[input.dataset_id]["num_files"],
+                "last_interaction_at": input_stats[input.dataset_id]["created_at"].strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for input in sorted(second_level_inputs, key=lambda x: (x.dataset_id, x.operation_id))
         ]
@@ -1276,6 +1324,10 @@ async def test_get_run_lineage_with_depth_ignore_cycles_with_operation_granulari
                 "from": {"kind": "OPERATION", "id": str(output.operation_id)},
                 "to": {"kind": "DATASET", "id": output.dataset_id},
                 "type": "APPEND",
+                "num_bytes": output_stats[output.dataset_id]["num_bytes"],
+                "num_rows": output_stats[output.dataset_id]["num_rows"],
+                "num_files": output_stats[output.dataset_id]["num_files"],
+                "last_interaction_at": output_stats[output.dataset_id]["created_at"].strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for output in sorted(first_level_outputs, key=lambda x: (x.operation_id, x.dataset_id))
         ],
@@ -1376,6 +1428,7 @@ async def test_get_run_lineage_with_symlinks(
     assert operations
 
     outputs = [output for output in all_outputs if output.operation_id in operation_ids]
+    output_stats = relation_stats(outputs)
     dataset_ids = {output.dataset_id for output in outputs}
 
     # Dataset from symlinks appear only as SYMLINK location, but not as INPUT, because of depth=1
@@ -1410,7 +1463,6 @@ async def test_get_run_lineage_with_symlinks(
                 "kind": "PARENT",
                 "from": {"kind": "JOB", "id": run.job_id},
                 "to": {"kind": "RUN", "id": str(run.id)},
-                "type": None,
             },
         ]
         + [
@@ -1428,6 +1480,10 @@ async def test_get_run_lineage_with_symlinks(
                 "from": {"kind": "RUN", "id": str(output.run_id)},
                 "to": {"kind": "DATASET", "id": output.dataset_id},
                 "type": "APPEND",
+                "num_bytes": output_stats[output.dataset_id]["num_bytes"],
+                "num_rows": output_stats[output.dataset_id]["num_rows"],
+                "num_files": output_stats[output.dataset_id]["num_files"],
+                "last_interaction_at": output_stats[output.dataset_id]["created_at"].strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for output in sorted(outputs, key=lambda x: (x.run_id, x.dataset_id))
         ],
@@ -1511,6 +1567,7 @@ async def test_get_run_lineage_with_symlinks_and_operation_granularity(
     assert operations
 
     outputs = [output for output in all_outputs if output.operation_id in operation_ids]
+    output_stats = relation_stats(outputs)
     dataset_ids = {output.dataset_id for output in outputs}
 
     # Dataset from symlinks appear only as SYMLINK location, but not as INPUT, because of depth=1
@@ -1546,7 +1603,6 @@ async def test_get_run_lineage_with_symlinks_and_operation_granularity(
                 "kind": "PARENT",
                 "from": {"kind": "JOB", "id": run.job_id},
                 "to": {"kind": "RUN", "id": str(run.id)},
-                "type": None,
             },
         ]
         + [
@@ -1554,7 +1610,6 @@ async def test_get_run_lineage_with_symlinks_and_operation_granularity(
                 "kind": "PARENT",
                 "from": {"kind": "RUN", "id": str(operation.run_id)},
                 "to": {"kind": "OPERATION", "id": str(operation.id)},
-                "type": None,
             }
             for operation in sorted(operations, key=lambda x: x.id)
         ]
@@ -1573,6 +1628,10 @@ async def test_get_run_lineage_with_symlinks_and_operation_granularity(
                 "from": {"kind": "OPERATION", "id": str(output.operation_id)},
                 "to": {"kind": "DATASET", "id": output.dataset_id},
                 "type": "APPEND",
+                "num_bytes": output_stats[output.dataset_id]["num_bytes"],
+                "num_rows": output_stats[output.dataset_id]["num_rows"],
+                "num_files": output_stats[output.dataset_id]["num_files"],
+                "last_interaction_at": output_stats[output.dataset_id]["created_at"].strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for output in outputs
         ],
