@@ -1,7 +1,7 @@
 from data_rentgen.db.models import Input, Output
 
 
-async def relation_stats(relations: list[Input] | list[Output]):
+def relation_stats(relations: list[Input] | list[Output]):
     stats = {}
     for relation in relations:
         if relation.dataset_id not in stats:
@@ -18,10 +18,10 @@ async def relation_stats(relations: list[Input] | list[Output]):
     return stats
 
 
-async def relation_stats_by_operations(relations: list[Input] | list[Output]):
+def relation_stats_by_operations(relations: list[Input] | list[Output]):
     stats = {}
     for relation in relations:
-        key = (str(relation.operation_id), relation.dataset_id)
+        key = (relation.operation_id, relation.dataset_id)
         if key not in stats:
             stats[key] = {"num_bytes": 0, "num_rows": 0, "num_files": 0, "created_at": None}
 
@@ -33,10 +33,10 @@ async def relation_stats_by_operations(relations: list[Input] | list[Output]):
     return stats
 
 
-async def relation_stats_by_runs(relations: list[Input] | list[Output]):
+def relation_stats_by_runs(relations: list[Input] | list[Output]):
     stats = {}
     for relation in relations:
-        key = (str(relation.run_id), relation.dataset_id)
+        key = (relation.run_id, relation.dataset_id)
         if key not in stats:
             stats[key] = {"num_bytes": 0, "num_rows": 0, "num_files": 0, "created_at": None}
 
@@ -48,10 +48,10 @@ async def relation_stats_by_runs(relations: list[Input] | list[Output]):
     return stats
 
 
-async def relation_stats_by_jobs(relations: list[Input] | list[Output]):
+def relation_stats_by_jobs(relations: list[Input] | list[Output]):
     stats = {}
     for relation in relations:
-        key = (str(relation.job_id), relation.dataset_id)
+        key = (relation.job_id, relation.dataset_id)
         if key not in stats:
             stats[key] = {"num_bytes": 0, "num_rows": 0, "num_files": 0, "created_at": None}
 

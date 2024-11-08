@@ -105,26 +105,26 @@ class RunLineageQueryV1(BaseLineageQueryV1):
     )
 
 
-class LineageRelationV1(BaseModel):
-    kind: Literal["PARENT", "INPUT", "OUTPUT", "SYMLINK"] = Field(description="Kind of relation")
+class LineageParentRelationV1(BaseModel):
+    kind: Literal["PARENT"] = "PARENT"
     from_: LineageEntityV1 = Field(description="Start point of relation", serialization_alias="from")
     to: LineageEntityV1 = Field(description="End point of relation")
 
 
-class LineageParrentRelationV1(LineageRelationV1):
-    kind: Literal["PARENT"] = "PARENT"
-
-
-class LineageInputRelationV1(LineageRelationV1):
+class LineageInputRelationV1(BaseModel):
     kind: Literal["INPUT"] = "INPUT"
+    from_: LineageEntityV1 = Field(description="Start point of relation", serialization_alias="from")
+    to: LineageEntityV1 = Field(description="End point of relation")
     last_interaction_at: datetime = Field(description="Last interaction at", examples=["2008-09-15T15:53:00+05:00"])
     num_bytes: int | None = Field(description="Number of bytes", examples=[42], default=None)
     num_rows: int | None = Field(description="Number of rows", examples=[42], default=None)
     num_files: int | None = Field(description="Number of files", examples=[42], default=None)
 
 
-class LineageOutputRelationV1(LineageRelationV1):
+class LineageOutputRelationV1(BaseModel):
     kind: Literal["OUTPUT"] = "OUTPUT"
+    from_: LineageEntityV1 = Field(description="Start point of relation", serialization_alias="from")
+    to: LineageEntityV1 = Field(description="End point of relation")
     type: str = Field(description="Type of relation", examples=["CREATE", "APPEND"])
     last_interaction_at: datetime = Field(description="Last interaction at", examples=["2008-09-15T15:53:00+05:00"])
     num_bytes: int | None = Field(description="Number of bytes", examples=[42], default=None)
@@ -132,13 +132,18 @@ class LineageOutputRelationV1(LineageRelationV1):
     num_files: int | None = Field(description="Number of files", examples=[42], default=None)
 
 
-class LineageSymlinkRelationV1(LineageRelationV1):
+class LineageSymlinkRelationV1(BaseModel):
     kind: Literal["SYMLINK"] = "SYMLINK"
+    from_: LineageEntityV1 = Field(description="Start point of relation", serialization_alias="from")
+    to: LineageEntityV1 = Field(description="End point of relation")
     type: str = Field(description="Type of relation between datasets", examples=["METASTORE", "WAREHOUSE"])
 
 
 class LineageResponseV1(BaseModel):
     relations: list[
-        LineageParrentRelationV1 | LineageInputRelationV1 | LineageOutputRelationV1 | LineageSymlinkRelationV1
-    ] = []
-    nodes: list[RunResponseV1 | OperationResponseV1 | JobResponseV1 | DatasetResponseV1] = []
+        LineageParentRelationV1 | LineageInputRelationV1 | LineageOutputRelationV1 | LineageSymlinkRelationV1
+    ] = Field(description="List of relations", default_factory=list)
+    nodes: list[RunResponseV1 | OperationResponseV1 | JobResponseV1 | DatasetResponseV1] = Field(
+        description="List of nodes",
+        default_factory=list,
+    )

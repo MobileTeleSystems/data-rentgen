@@ -91,7 +91,7 @@ async def test_get_dataset_lineage_with_granularity_run(
     runs = await enrich_runs(runs, async_session)
     [dataset] = await enrich_datasets(datasets, async_session)
     inputs = [input for input in inputs if input.dataset_id == dataset.id]
-    input_stats = await relation_stats_by_runs(inputs)
+    input_stats = relation_stats_by_runs(inputs)
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
@@ -118,10 +118,10 @@ async def test_get_dataset_lineage_with_granularity_run(
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": dataset.id},
                 "to": {"kind": "RUN", "id": str(run.id)},
-                "num_bytes": input_stats[(str(run.id), dataset.id)]["num_bytes"],
-                "num_rows": input_stats[(str(run.id), dataset.id)]["num_rows"],
-                "num_files": input_stats[(str(run.id), dataset.id)]["num_files"],
-                "last_interaction_at": input_stats[(str(run.id), dataset.id)]["created_at"].strftime(
+                "num_bytes": input_stats[(run.id, dataset.id)]["num_bytes"],
+                "num_rows": input_stats[(run.id, dataset.id)]["num_rows"],
+                "num_files": input_stats[(run.id, dataset.id)]["num_files"],
+                "last_interaction_at": input_stats[(run.id, dataset.id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
             }
@@ -191,7 +191,7 @@ async def test_get_dataset_lineage_with_granularity_job(
     jobs = await enrich_jobs(jobs, async_session)
     [dataset] = await enrich_datasets(datasets, async_session)
     inputs = [input for input in inputs if input.dataset_id == dataset.id]
-    input_stats = await relation_stats_by_jobs(inputs)
+    input_stats = relation_stats_by_jobs(inputs)
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
@@ -211,10 +211,10 @@ async def test_get_dataset_lineage_with_granularity_job(
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": dataset.id},
                 "to": {"kind": "JOB", "id": job.id},
-                "num_bytes": input_stats[(str(job.id), dataset.id)]["num_bytes"],
-                "num_rows": input_stats[(str(job.id), dataset.id)]["num_rows"],
-                "num_files": input_stats[(str(job.id), dataset.id)]["num_files"],
-                "last_interaction_at": input_stats[(str(job.id), dataset.id)]["created_at"].strftime(
+                "num_bytes": input_stats[(job.id, dataset.id)]["num_bytes"],
+                "num_rows": input_stats[(job.id, dataset.id)]["num_rows"],
+                "num_files": input_stats[(job.id, dataset.id)]["num_files"],
+                "last_interaction_at": input_stats[(job.id, dataset.id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
             }
@@ -265,7 +265,7 @@ async def test_get_dataset_lineage_with_granularity_operation(
     runs = await enrich_runs(runs, async_session)
     [dataset] = await enrich_datasets(datasets, async_session)
     inputs = [input for input in inputs if input.dataset_id == dataset.id]
-    input_stats = await relation_stats_by_operations(inputs)
+    input_stats = relation_stats_by_operations(inputs)
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
@@ -301,10 +301,10 @@ async def test_get_dataset_lineage_with_granularity_operation(
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": dataset.id},
                 "to": {"kind": "OPERATION", "id": str(operation.id)},
-                "num_bytes": input_stats[(str(operation.id), dataset.id)]["num_bytes"],
-                "num_rows": input_stats[(str(operation.id), dataset.id)]["num_rows"],
-                "num_files": input_stats[(str(operation.id), dataset.id)]["num_files"],
-                "last_interaction_at": input_stats[(str(operation.id), dataset.id)]["created_at"].strftime(
+                "num_bytes": input_stats[(operation.id, dataset.id)]["num_bytes"],
+                "num_rows": input_stats[(operation.id, dataset.id)]["num_rows"],
+                "num_files": input_stats[(operation.id, dataset.id)]["num_files"],
+                "last_interaction_at": input_stats[(operation.id, dataset.id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
             }
@@ -391,9 +391,9 @@ async def test_get_dataset_lineage_with_direction_both(
     runs = await enrich_runs(runs, async_session)
     [dataset] = await enrich_datasets(datasets, async_session)
     inputs = [input for input in inputs if input.dataset_id == dataset.id]
-    input_stats = await relation_stats_by_runs(inputs)
+    input_stats = relation_stats_by_runs(inputs)
     outputs = [output for output in outputs if output.dataset_id == dataset.id]
-    output_stats = await relation_stats_by_runs(outputs)
+    output_stats = relation_stats_by_runs(outputs)
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
@@ -420,10 +420,10 @@ async def test_get_dataset_lineage_with_direction_both(
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": dataset.id},
                 "to": {"kind": "RUN", "id": str(run.id)},
-                "num_bytes": input_stats[(str(run.id), dataset.id)]["num_bytes"],
-                "num_rows": input_stats[(str(run.id), dataset.id)]["num_rows"],
-                "num_files": input_stats[(str(run.id), dataset.id)]["num_files"],
-                "last_interaction_at": input_stats[(str(run.id), dataset.id)]["created_at"].strftime(
+                "num_bytes": input_stats[(run.id, dataset.id)]["num_bytes"],
+                "num_rows": input_stats[(run.id, dataset.id)]["num_rows"],
+                "num_files": input_stats[(run.id, dataset.id)]["num_files"],
+                "last_interaction_at": input_stats[(run.id, dataset.id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
             }
@@ -435,10 +435,10 @@ async def test_get_dataset_lineage_with_direction_both(
                 "from": {"kind": "RUN", "id": str(run.id)},
                 "to": {"kind": "DATASET", "id": dataset.id},
                 "type": "APPEND",
-                "num_bytes": output_stats[(str(run.id), dataset.id)]["num_bytes"],
-                "num_rows": output_stats[(str(run.id), dataset.id)]["num_rows"],
-                "num_files": output_stats[(str(run.id), dataset.id)]["num_files"],
-                "last_interaction_at": output_stats[(str(run.id), dataset.id)]["created_at"].strftime(
+                "num_bytes": output_stats[(run.id, dataset.id)]["num_bytes"],
+                "num_rows": output_stats[(run.id, dataset.id)]["num_rows"],
+                "num_files": output_stats[(run.id, dataset.id)]["num_files"],
+                "last_interaction_at": output_stats[(run.id, dataset.id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
             }
@@ -508,7 +508,7 @@ async def test_get_dataset_lineage_with_direction_and_until_and_granularity_oper
     runs = await enrich_runs(runs, async_session)
     [dataset] = await enrich_datasets(datasets, async_session)
     outputs = [output for output in outputs if output.dataset_id == dataset.id]
-    output_stats = await relation_stats_by_operations(outputs)
+    output_stats = relation_stats_by_operations(outputs)
 
     since = min(run.created_at for run in runs)
     # took only first two operations
@@ -551,10 +551,10 @@ async def test_get_dataset_lineage_with_direction_and_until_and_granularity_oper
                 "from": {"kind": "OPERATION", "id": str(operation.id)},
                 "to": {"kind": "DATASET", "id": dataset.id},
                 "type": "APPEND",
-                "num_bytes": output_stats[(str(operation.id), dataset.id)]["num_bytes"],
-                "num_rows": output_stats[(str(operation.id), dataset.id)]["num_rows"],
-                "num_files": output_stats[(str(operation.id), dataset.id)]["num_files"],
-                "last_interaction_at": output_stats[(str(operation.id), dataset.id)]["created_at"].strftime(
+                "num_bytes": output_stats[(operation.id, dataset.id)]["num_bytes"],
+                "num_rows": output_stats[(operation.id, dataset.id)]["num_rows"],
+                "num_files": output_stats[(operation.id, dataset.id)]["num_files"],
+                "last_interaction_at": output_stats[(operation.id, dataset.id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
             }
@@ -667,9 +667,9 @@ async def test_get_dataset_lineage_with_depth_and_granularity_run(
     assert third_level_runs
 
     inputs = first_level_inputs + third_level_inputs
-    input_stats = await relation_stats_by_runs(inputs)
+    input_stats = relation_stats_by_runs(inputs)
     outputs = second_level_outputs
-    output_stats = await relation_stats_by_runs(outputs)
+    output_stats = relation_stats_by_runs(outputs)
 
     dataset_ids = {first_level_dataset.id} | second_level_dataset_ids | third_level_dataset_ids
     datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
@@ -710,10 +710,10 @@ async def test_get_dataset_lineage_with_depth_and_granularity_run(
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": input.dataset_id},
                 "to": {"kind": "RUN", "id": str(input.run_id)},
-                "num_bytes": input_stats[(str(input.run_id), input.dataset_id)]["num_bytes"],
-                "num_rows": input_stats[(str(input.run_id), input.dataset_id)]["num_rows"],
-                "num_files": input_stats[(str(input.run_id), input.dataset_id)]["num_files"],
-                "last_interaction_at": input_stats[(str(input.run_id), input.dataset_id)]["created_at"].strftime(
+                "num_bytes": input_stats[(input.run_id, input.dataset_id)]["num_bytes"],
+                "num_rows": input_stats[(input.run_id, input.dataset_id)]["num_rows"],
+                "num_files": input_stats[(input.run_id, input.dataset_id)]["num_files"],
+                "last_interaction_at": input_stats[(input.run_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
             }
@@ -725,10 +725,10 @@ async def test_get_dataset_lineage_with_depth_and_granularity_run(
                 "from": {"kind": "RUN", "id": str(output.run_id)},
                 "to": {"kind": "DATASET", "id": output.dataset_id},
                 "type": "APPEND",
-                "num_bytes": output_stats[(str(output.run_id), output.dataset_id)]["num_bytes"],
-                "num_rows": output_stats[(str(output.run_id), output.dataset_id)]["num_rows"],
-                "num_files": output_stats[(str(output.run_id), output.dataset_id)]["num_files"],
-                "last_interaction_at": output_stats[(str(output.run_id), output.dataset_id)]["created_at"].strftime(
+                "num_bytes": output_stats[(output.run_id, output.dataset_id)]["num_bytes"],
+                "num_rows": output_stats[(output.run_id, output.dataset_id)]["num_rows"],
+                "num_files": output_stats[(output.run_id, output.dataset_id)]["num_files"],
+                "last_interaction_at": output_stats[(output.run_id, output.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
             }
@@ -818,9 +818,9 @@ async def test_get_dataset_lineage_with_depth_and_granularity_job(
     assert third_level_jobs
 
     outputs = second_level_outputs
-    output_stats = await relation_stats_by_jobs(outputs)
+    output_stats = relation_stats_by_jobs(outputs)
     inputs = first_level_inputs + third_level_inputs
-    input_stats = await relation_stats_by_jobs(inputs)
+    input_stats = relation_stats_by_jobs(inputs)
     datasets = first_level_datasets + second_level_datasets
 
     jobs = first_level_jobs + third_level_jobs
@@ -847,10 +847,10 @@ async def test_get_dataset_lineage_with_depth_and_granularity_job(
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": input.dataset_id},
                 "to": {"kind": "JOB", "id": input.job_id},
-                "num_bytes": input_stats[(str(input.job_id), input.dataset_id)]["num_bytes"],
-                "num_rows": input_stats[(str(input.job_id), input.dataset_id)]["num_rows"],
-                "num_files": input_stats[(str(input.job_id), input.dataset_id)]["num_files"],
-                "last_interaction_at": input_stats[(str(input.job_id), input.dataset_id)]["created_at"].strftime(
+                "num_bytes": input_stats[(input.job_id, input.dataset_id)]["num_bytes"],
+                "num_rows": input_stats[(input.job_id, input.dataset_id)]["num_rows"],
+                "num_files": input_stats[(input.job_id, input.dataset_id)]["num_files"],
+                "last_interaction_at": input_stats[(input.job_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
             }
@@ -862,10 +862,10 @@ async def test_get_dataset_lineage_with_depth_and_granularity_job(
                 "from": {"kind": "JOB", "id": output.job_id},
                 "to": {"kind": "DATASET", "id": output.dataset_id},
                 "type": "APPEND",
-                "num_bytes": output_stats[(str(output.job_id), output.dataset_id)]["num_bytes"],
-                "num_rows": output_stats[(str(output.job_id), output.dataset_id)]["num_rows"],
-                "num_files": output_stats[(str(output.job_id), output.dataset_id)]["num_files"],
-                "last_interaction_at": output_stats[(str(output.job_id), output.dataset_id)]["created_at"].strftime(
+                "num_bytes": output_stats[(output.job_id, output.dataset_id)]["num_bytes"],
+                "num_rows": output_stats[(output.job_id, output.dataset_id)]["num_rows"],
+                "num_files": output_stats[(output.job_id, output.dataset_id)]["num_files"],
+                "last_interaction_at": output_stats[(output.job_id, output.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
             }
@@ -944,9 +944,9 @@ async def test_get_dataset_lineage_with_depth_and_granularity_operation(
     assert third_level_runs
 
     outputs = second_level_outputs
-    output_stats = await relation_stats_by_operations(outputs)
+    output_stats = relation_stats_by_operations(outputs)
     inputs = first_level_inputs + third_level_inputs
-    input_stats = await relation_stats_by_operations(inputs)
+    input_stats = relation_stats_by_operations(inputs)
 
     datasets = first_level_datasets + second_level_datasets
     operations = first_level_operations + third_level_operations
@@ -992,10 +992,10 @@ async def test_get_dataset_lineage_with_depth_and_granularity_operation(
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": input.dataset_id},
                 "to": {"kind": "OPERATION", "id": str(input.operation_id)},
-                "num_bytes": input_stats[(str(input.operation_id), input.dataset_id)]["num_bytes"],
-                "num_rows": input_stats[(str(input.operation_id), input.dataset_id)]["num_rows"],
-                "num_files": input_stats[(str(input.operation_id), input.dataset_id)]["num_files"],
-                "last_interaction_at": input_stats[(str(input.operation_id), input.dataset_id)]["created_at"].strftime(
+                "num_bytes": input_stats[(input.operation_id, input.dataset_id)]["num_bytes"],
+                "num_rows": input_stats[(input.operation_id, input.dataset_id)]["num_rows"],
+                "num_files": input_stats[(input.operation_id, input.dataset_id)]["num_files"],
+                "last_interaction_at": input_stats[(input.operation_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
             }
@@ -1007,12 +1007,12 @@ async def test_get_dataset_lineage_with_depth_and_granularity_operation(
                 "from": {"kind": "OPERATION", "id": str(output.operation_id)},
                 "to": {"kind": "DATASET", "id": output.dataset_id},
                 "type": "APPEND",
-                "num_bytes": output_stats[(str(output.operation_id), output.dataset_id)]["num_bytes"],
-                "num_rows": output_stats[(str(output.operation_id), output.dataset_id)]["num_rows"],
-                "num_files": output_stats[(str(output.operation_id), output.dataset_id)]["num_files"],
-                "last_interaction_at": output_stats[(str(output.operation_id), output.dataset_id)][
-                    "created_at"
-                ].strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "num_bytes": output_stats[(output.operation_id, output.dataset_id)]["num_bytes"],
+                "num_rows": output_stats[(output.operation_id, output.dataset_id)]["num_rows"],
+                "num_files": output_stats[(output.operation_id, output.dataset_id)]["num_files"],
+                "last_interaction_at": output_stats[(output.operation_id, output.dataset_id)]["created_at"].strftime(
+                    "%Y-%m-%dT%H:%M:%S.%fZ",
+                ),
             }
             for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))
         ],
@@ -1101,9 +1101,9 @@ async def test_get_dataset_lineage_with_depth_and_granularity_run_ignore_cycles(
     runs = await enrich_runs(runs, async_session)
     [dataset] = await enrich_datasets([dataset], async_session)
     inputs = [input for input in inputs if input.dataset_id == dataset.id]
-    input_stats = await relation_stats_by_runs(inputs)
+    input_stats = relation_stats_by_runs(inputs)
     outputs = [output for output in outputs if output.dataset_id == dataset.id]
-    output_stats = await relation_stats_by_runs(outputs)
+    output_stats = relation_stats_by_runs(outputs)
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
@@ -1131,10 +1131,10 @@ async def test_get_dataset_lineage_with_depth_and_granularity_run_ignore_cycles(
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": dataset.id},
                 "to": {"kind": "RUN", "id": str(run.id)},
-                "num_bytes": input_stats[(str(run.id), dataset.id)]["num_bytes"],
-                "num_rows": input_stats[(str(run.id), dataset.id)]["num_rows"],
-                "num_files": input_stats[(str(run.id), dataset.id)]["num_files"],
-                "last_interaction_at": input_stats[(str(run.id), dataset.id)]["created_at"].strftime(
+                "num_bytes": input_stats[(run.id, dataset.id)]["num_bytes"],
+                "num_rows": input_stats[(run.id, dataset.id)]["num_rows"],
+                "num_files": input_stats[(run.id, dataset.id)]["num_files"],
+                "last_interaction_at": input_stats[(run.id, dataset.id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
             }
@@ -1146,10 +1146,10 @@ async def test_get_dataset_lineage_with_depth_and_granularity_run_ignore_cycles(
                 "from": {"kind": "RUN", "id": str(run.id)},
                 "to": {"kind": "DATASET", "id": dataset.id},
                 "type": "APPEND",
-                "num_bytes": output_stats[(str(run.id), dataset.id)]["num_bytes"],
-                "num_rows": output_stats[(str(run.id), dataset.id)]["num_rows"],
-                "num_files": output_stats[(str(run.id), dataset.id)]["num_files"],
-                "last_interaction_at": output_stats[(str(run.id), dataset.id)]["created_at"].strftime(
+                "num_bytes": output_stats[(run.id, dataset.id)]["num_bytes"],
+                "num_rows": output_stats[(run.id, dataset.id)]["num_rows"],
+                "num_files": output_stats[(run.id, dataset.id)]["num_files"],
+                "last_interaction_at": output_stats[(run.id, dataset.id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
             }
@@ -1222,9 +1222,9 @@ async def test_get_dataset_lineage_with_depth_and_granularity_operation_ignore_c
     runs = await enrich_runs(runs, async_session)
     [dataset] = await enrich_datasets([dataset], async_session)
     inputs = [input for input in inputs if input.dataset_id == dataset.id]
-    input_stats = await relation_stats_by_operations(inputs)
+    input_stats = relation_stats_by_operations(inputs)
     outputs = [output for output in outputs if output.dataset_id == dataset.id]
-    output_stats = await relation_stats_by_operations(outputs)
+    output_stats = relation_stats_by_operations(outputs)
 
     since = min(run.created_at for run in runs)
     response = await test_client.get(
@@ -1261,10 +1261,10 @@ async def test_get_dataset_lineage_with_depth_and_granularity_operation_ignore_c
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": dataset.id},
                 "to": {"kind": "OPERATION", "id": str(operation.id)},
-                "num_bytes": input_stats[(str(operation.id), dataset.id)]["num_bytes"],
-                "num_rows": input_stats[(str(operation.id), dataset.id)]["num_rows"],
-                "num_files": input_stats[(str(operation.id), dataset.id)]["num_files"],
-                "last_interaction_at": input_stats[(str(operation.id), dataset.id)]["created_at"].strftime(
+                "num_bytes": input_stats[(operation.id, dataset.id)]["num_bytes"],
+                "num_rows": input_stats[(operation.id, dataset.id)]["num_rows"],
+                "num_files": input_stats[(operation.id, dataset.id)]["num_files"],
+                "last_interaction_at": input_stats[(operation.id, dataset.id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
             }
@@ -1276,10 +1276,10 @@ async def test_get_dataset_lineage_with_depth_and_granularity_operation_ignore_c
                 "from": {"kind": "OPERATION", "id": str(operation.id)},
                 "to": {"kind": "DATASET", "id": dataset.id},
                 "type": "APPEND",
-                "num_bytes": output_stats[(str(operation.id), dataset.id)]["num_bytes"],
-                "num_rows": output_stats[(str(operation.id), dataset.id)]["num_rows"],
-                "num_files": output_stats[(str(operation.id), dataset.id)]["num_files"],
-                "last_interaction_at": output_stats[(str(operation.id), dataset.id)]["created_at"].strftime(
+                "num_bytes": output_stats[(operation.id, dataset.id)]["num_bytes"],
+                "num_rows": output_stats[(operation.id, dataset.id)]["num_rows"],
+                "num_files": output_stats[(operation.id, dataset.id)]["num_files"],
+                "last_interaction_at": output_stats[(operation.id, dataset.id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
             }
@@ -1386,7 +1386,7 @@ async def test_get_dataset_lineage_with_symlink_and_granularity_run(
     # Threat all datasets from symlinks like they were passed as `start_node_id`
     inputs = [input for input in all_inputs if input.dataset_id in dataset_ids]
     assert inputs
-    input_stats = await relation_stats_by_runs(inputs)
+    input_stats = relation_stats_by_runs(inputs)
 
     operation_ids = {input.operation_id for input in inputs}
     operations = [operation for operation in all_operations if operation.id in operation_ids]
@@ -1438,10 +1438,10 @@ async def test_get_dataset_lineage_with_symlink_and_granularity_run(
                 "kind": "INPUT",
                 "from": {"kind": "DATASET", "id": input.dataset_id},
                 "to": {"kind": "RUN", "id": str(input.run_id)},
-                "num_bytes": input_stats[(str(input.run_id), input.dataset_id)]["num_bytes"],
-                "num_rows": input_stats[(str(input.run_id), input.dataset_id)]["num_rows"],
-                "num_files": input_stats[(str(input.run_id), input.dataset_id)]["num_files"],
-                "last_interaction_at": input_stats[(str(input.run_id), input.dataset_id)]["created_at"].strftime(
+                "num_bytes": input_stats[(input.run_id, input.dataset_id)]["num_bytes"],
+                "num_rows": input_stats[(input.run_id, input.dataset_id)]["num_rows"],
+                "num_files": input_stats[(input.run_id, input.dataset_id)]["num_files"],
+                "last_interaction_at": input_stats[(input.run_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
             }

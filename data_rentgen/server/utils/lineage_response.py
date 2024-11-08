@@ -8,7 +8,7 @@ from data_rentgen.server.schemas.v1 import (
     LineageEntityV1,
     LineageInputRelationV1,
     LineageOutputRelationV1,
-    LineageParrentRelationV1,
+    LineageParentRelationV1,
     LineageResponseV1,
     LineageSymlinkRelationV1,
     OperationResponseV1,
@@ -30,7 +30,7 @@ async def build_lineage_response(lineage: LineageServiceResult) -> LineageRespon
     for run_id in sorted(lineage.runs):
         run = lineage.runs[run_id]
         response.relations.append(
-            LineageParrentRelationV1(
+            LineageParentRelationV1(
                 from_=LineageEntityV1(kind=LineageEntityKindV1.JOB, id=run.job_id),
                 to=LineageEntityV1(kind=LineageEntityKindV1.RUN, id=run.id),
             ),
@@ -40,7 +40,7 @@ async def build_lineage_response(lineage: LineageServiceResult) -> LineageRespon
     for operation_id in sorted(lineage.operations):
         operation = lineage.operations[operation_id]
         response.relations.append(
-            LineageParrentRelationV1(
+            LineageParentRelationV1(
                 from_=LineageEntityV1(kind=LineageEntityKindV1.RUN, id=operation.run_id),
                 to=LineageEntityV1(kind=LineageEntityKindV1.OPERATION, id=operation.id),
             ),

@@ -186,7 +186,7 @@ async def test_get_run_lineage(
     [run] = await enrich_runs(runs, async_session)
     datasets = await enrich_datasets(datasets, async_session)
     outputs = [output for output in outputs if output.run_id == run.id]
-    output_stats = await relation_stats(outputs)
+    output_stats = relation_stats(outputs)
 
     response = await test_client.get(
         "v1/runs/lineage",
@@ -285,7 +285,7 @@ async def test_get_run_lineage_with_operation_granularity(
     datasets = await enrich_datasets(datasets, async_session)
     operations_ids = {operation.id for operation in operations}
     outputs = [output for output in outputs if output.operation_id in operations_ids]
-    output_stats = await relation_stats(outputs)
+    output_stats = relation_stats(outputs)
 
     response = await test_client.get(
         "v1/runs/lineage",
@@ -409,10 +409,10 @@ async def test_get_run_lineage_with_direction_both(
     job = next(job for job in all_jobs if job.id == some_run.job_id)
 
     inputs = [input for input in all_inputs if input.run_id == some_run.id]
-    input_stats = await relation_stats(inputs)
+    input_stats = relation_stats(inputs)
     input_dataset_ids = {input.dataset_id for input in inputs}
     outputs = [output for output in all_outputs if output.run_id == some_run.id]
-    output_stats = await relation_stats(outputs)
+    output_stats = relation_stats(outputs)
     output_dataset_ids = {output.dataset_id for output in outputs}
     datasets = [dataset for dataset in all_datasets if dataset.id in input_dataset_ids | output_dataset_ids]
 
@@ -546,7 +546,7 @@ async def test_get_run_lineage_with_direction_and_until(
         input for input in all_inputs if input.operation_id in operation_ids and since <= input.created_at <= until
     ]
     assert inputs
-    input_stats = await relation_stats(inputs)
+    input_stats = relation_stats(inputs)
 
     # Only operations with some inputs are returned
     operation_ids = {input.operation_id for input in inputs}
@@ -673,7 +673,7 @@ async def test_get_run_lineage_with_direction_and_until_and_operation_granularit
         input for input in all_inputs if input.operation_id in operation_ids and since <= input.created_at <= until
     ]
     assert inputs
-    input_stats = await relation_stats(inputs)
+    input_stats = relation_stats(inputs)
 
     # Only operations with some inputs are returned
     operation_ids = {input.operation_id for input in inputs}
@@ -834,9 +834,9 @@ async def test_get_run_lineage_with_depth(
     assert third_level_datasets
 
     inputs = second_level_inputs
-    input_stats = await relation_stats(inputs)
+    input_stats = relation_stats(inputs)
     outputs = first_level_outputs + third_level_outputs
-    output_stats = await relation_stats(outputs)
+    output_stats = relation_stats(outputs)
 
     dataset_ids = first_level_dataset_ids | third_level_dataset_ids
     datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
@@ -985,9 +985,9 @@ async def test_get_run_lineage_with_depth_and_operation_granularity(
     assert third_level_datasets
 
     inputs = second_level_inputs
-    input_stats = await relation_stats(inputs)
+    input_stats = relation_stats(inputs)
     outputs = first_level_outputs + third_level_outputs
-    output_stats = await relation_stats(outputs)
+    output_stats = relation_stats(outputs)
 
     dataset_ids = first_level_dataset_ids | third_level_dataset_ids
     datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
@@ -1139,7 +1139,7 @@ async def test_get_run_lineage_with_depth_ignore_cycles(
     [job], [run], operations, all_datasets, all_inputs, all_outputs = lineage_with_same_run
 
     first_level_outputs = all_outputs
-    output_stats = await relation_stats(first_level_outputs)
+    output_stats = relation_stats(first_level_outputs)
     first_level_dataset_ids = {output.dataset_id for output in first_level_outputs}
     first_level_datasets = [dataset for dataset in all_datasets if dataset.id in first_level_dataset_ids]
     first_level_operation_ids = {output.operation_id for output in first_level_outputs}
@@ -1148,7 +1148,7 @@ async def test_get_run_lineage_with_depth_ignore_cycles(
     # The there is a cycle dataset -> operation, so there is only one level of lineage.
     # All relations should be in the response, without duplicates.
     second_level_inputs = [input for input in all_inputs if input.dataset_id in first_level_dataset_ids]
-    input_stats = await relation_stats(second_level_inputs)
+    input_stats = relation_stats(second_level_inputs)
     second_level_operation_ids = {input.operation_id for input in second_level_inputs} - first_level_operation_ids
     assert not second_level_operation_ids
 
@@ -1261,7 +1261,7 @@ async def test_get_run_lineage_with_depth_ignore_cycles_with_operation_granulari
     [job], [run], operations, all_datasets, all_inputs, all_outputs = lineage_with_same_run
 
     first_level_outputs = all_outputs
-    output_stats = await relation_stats(first_level_outputs)
+    output_stats = relation_stats(first_level_outputs)
     first_level_dataset_ids = {output.dataset_id for output in first_level_outputs}
     first_level_datasets = [dataset for dataset in all_datasets if dataset.id in first_level_dataset_ids]
     first_level_operation_ids = {output.operation_id for output in first_level_outputs}
@@ -1270,7 +1270,7 @@ async def test_get_run_lineage_with_depth_ignore_cycles_with_operation_granulari
     # The there is a cycle dataset -> operation, so there is only one level of lineage.
     # All relations should be in the response, without duplicates.
     second_level_inputs = [input for input in all_inputs if input.dataset_id in first_level_dataset_ids]
-    input_stats = await relation_stats(second_level_inputs)
+    input_stats = relation_stats(second_level_inputs)
     second_level_operation_ids = {input.operation_id for input in second_level_inputs} - first_level_operation_ids
     assert not second_level_operation_ids
 
@@ -1428,7 +1428,7 @@ async def test_get_run_lineage_with_symlinks(
     assert operations
 
     outputs = [output for output in all_outputs if output.operation_id in operation_ids]
-    output_stats = await relation_stats(outputs)
+    output_stats = relation_stats(outputs)
     dataset_ids = {output.dataset_id for output in outputs}
 
     # Dataset from symlinks appear only as SYMLINK location, but not as INPUT, because of depth=1
@@ -1567,7 +1567,7 @@ async def test_get_run_lineage_with_symlinks_and_operation_granularity(
     assert operations
 
     outputs = [output for output in all_outputs if output.operation_id in operation_ids]
-    output_stats = await relation_stats(outputs)
+    output_stats = relation_stats(outputs)
     dataset_ids = {output.dataset_id for output in outputs}
 
     # Dataset from symlinks appear only as SYMLINK location, but not as INPUT, because of depth=1

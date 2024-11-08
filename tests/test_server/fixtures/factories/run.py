@@ -159,10 +159,10 @@ async def runs_with_same_parent(
 ) -> AsyncGenerator[list[Run], None]:
     size, params = request.param
     started_at = datetime.now()
-    parrent_run_id = generate_new_uuid()
+    parent_run_id = generate_new_uuid()
     items = [
         run_factory(
-            parent_run_id=parrent_run_id,
+            parent_run_id=parent_run_id,
             created_at=started_at + timedelta(seconds=s),  # To be sure runs has different timestamps
             started_by_user_id=user.id,
             **params,

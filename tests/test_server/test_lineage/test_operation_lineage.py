@@ -139,7 +139,7 @@ async def test_get_operation_lineage(
     runs = await enrich_runs(runs, async_session)
     datasets = await enrich_datasets(datasets, async_session)
     outputs = [output for output in outputs if output.operation_id == operation.id]
-    output_stats = await relation_stats(outputs)
+    output_stats = relation_stats(outputs)
 
     response = await test_client.get(
         "v1/operations/lineage",
@@ -263,10 +263,10 @@ async def test_get_operation_lineage_with_direction_both(
     job = next(job for job in all_jobs if job.id == run.job_id)
 
     inputs = [input for input in all_inputs if input.operation_id == operation.id]
-    input_stats = await relation_stats(inputs)
+    input_stats = relation_stats(inputs)
     input_dataset_ids = {input.dataset_id for input in inputs}
     outputs = [output for output in all_outputs if output.operation_id == operation.id]
-    output_stats = await relation_stats(outputs)
+    output_stats = relation_stats(outputs)
     output_dataset_ids = {output.dataset_id for output in outputs}
 
     datasets = [dataset for dataset in all_datasets if dataset.id in input_dataset_ids | output_dataset_ids]
@@ -412,7 +412,7 @@ async def test_get_operation_lineage_with_direction_and_until(
         input for input in all_inputs if input.operation_id == operation.id and since <= input.created_at <= until
     ]
     assert inputs
-    input_stats = await relation_stats(inputs)
+    input_stats = relation_stats(inputs)
     dataset_ids = {input.dataset_id for input in inputs}
     datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
 
@@ -557,9 +557,9 @@ async def test_get_operation_lineage_with_depth(
     assert third_level_datasets
 
     inputs = second_level_inputs
-    input_stats = await relation_stats(inputs)
+    input_stats = relation_stats(inputs)
     outputs = first_level_outputs + third_level_outputs
-    output_stats = await relation_stats(outputs)
+    output_stats = relation_stats(outputs)
 
     dataset_ids = first_level_dataset_ids | third_level_dataset_ids
     datasets = [dataset for dataset in all_datasets if dataset.id in dataset_ids]
@@ -717,9 +717,9 @@ async def test_get_operation_lineage_with_depth_ignore_cycles(
     [run] = await enrich_runs([run], async_session)
     datasets = await enrich_datasets(datasets, async_session)
     inputs = [input for input in inputs if input.operation_id == operation.id]
-    input_stats = await relation_stats(inputs)
+    input_stats = relation_stats(inputs)
     outptus = [output for output in outputs if output.operation_id == operation.id]
-    output_stats = await relation_stats(outputs)
+    output_stats = relation_stats(outputs)
 
     response = await test_client.get(
         "v1/operations/lineage",
@@ -857,7 +857,7 @@ async def test_get_operation_lineage_with_symlinks(
     # Dataset from symlinks appear only as SYMLINK location, but not as INPUT, because of depth=1
     outputs = [output for output in all_outputs if output.dataset_id == dataset.id]
     assert outputs
-    output_stats = await relation_stats(outputs)
+    output_stats = relation_stats(outputs)
 
     operation_ids = {output.operation_id for output in outputs}
     operation = next(operation for operation in all_operations if operation.id in operation_ids)
