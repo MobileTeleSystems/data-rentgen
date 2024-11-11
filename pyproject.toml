@@ -67,7 +67,7 @@ asgi-correlation-id = {version = "^4.3.4", optional = true}
 faststream = {extras = ["kafka", "cli"], version = "^0.5.28", optional = true}
 # used by aiokafka for LZ4, Snappy, ZSTD compression algorithms
 cramjam = {version = "^2.8.3", optional = true}
-packaging = {version = "^24.1", optional = true}
+packaging = {version = "^24.2", optional = true}
 
 [tool.poetry.extras]
 server = [
@@ -116,7 +116,7 @@ pytest-deadfixtures = "^2.2.1"
 pytest-rerunfailures = "^14.0"
 coverage = "^7.6.4"
 psycopg2-binary = "^2.9.9"
-gevent = "^24.10.3"
+gevent = "^24.11.1"
 deepdiff = "^8.0.1"
 
 [tool.poetry.group.dev.dependencies]
