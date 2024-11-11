@@ -184,6 +184,10 @@ class RunRepository(Repository[Run]):
     ) -> Run:
         # for parent_run most of fields are None, so we can avoid UPDATE statements if row is unchanged
         optional_fields = {
+            # in some cases start event may be send from "unknown" job,
+            # but sequential RUNNING and STOPPED events are send with proper job name. Rebound run to latest job.
+            "job_id": new.job.id or existing.job_id,
+            # Merge new information with existing one
             "status": max(RunStatus(new.status), existing.status),
             "parent_run_id": new.parent_run.id if new.parent_run else None,
             "started_at": new.started_at,
