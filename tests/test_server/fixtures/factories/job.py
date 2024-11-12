@@ -168,9 +168,7 @@ async def jobs_search(
             await create_job(
                 async_session,
                 location_id=random_location[i].id,
-                job_kwargs={
-                    **kwargs,
-                },
+                job_kwargs=kwargs,
             )
             for i, kwargs in enumerate(jobs_kwargs)
         ]
