@@ -5,7 +5,6 @@ from typing import AsyncContextManager, Callable
 
 import pytest
 import pytest_asyncio
-from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Address, Job, Run, RunStartReason, RunStatus, User
