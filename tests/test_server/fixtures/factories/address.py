@@ -1,13 +1,8 @@
-from collections.abc import AsyncGenerator
 from random import randint
-from typing import AsyncContextManager, Callable
 
-import pytest
-import pytest_asyncio
-from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.db.models import Address, Location
+from data_rentgen.db.models import Address
 from tests.test_server.fixtures.factories.base import random_string
 
 
@@ -21,58 +16,17 @@ def address_factory(**kwargs):
     return Address(**data)
 
 
-@pytest_asyncio.fixture(params=[{}])
-async def address(
-    request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
-    location: Location,
-) -> AsyncGenerator[Address, None]:
-    params = request.param
-    item = address_factory(location_id=location.id, **params)
-
-    del item.id
-
-    async with async_session_maker() as async_session:
-        async_session.add(item)
-
-        await async_session.commit()
-        await async_session.refresh(item)
-
-        async_session.expunge_all()
-
-    yield item
-
-    delete_query = delete(Address).where(Address.id == item.id)
-    # Add teardown cause fixture async_session doesn't used
-    async with async_session_maker() as async_session:
-        await async_session.execute(delete_query)
-        await async_session.commit()
-
-
-@pytest_asyncio.fixture(params=[(2, {})])
-async def addresses(
-    request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
-    locations: list[Location],
-) -> AsyncGenerator[list[Address], None]:
-    size, params = request.param
-    items = [address_factory(location_id=location.id, **params) for _ in range(size) for location in locations]
-
-    async with async_session_maker() as async_session:
-        for item in items:
-            del item.id
-            async_session.add(item)
-
-        await async_session.commit()
-        for item in items:
-            await async_session.refresh(item)
-
-        async_session.expunge_all()
-
-    yield items
-
-    delete_query = delete(Address).where(Address.id.in_([item.id for item in items]))
-    # Add teardown cause fixture async_session doesn't used
-    async with async_session_maker() as async_session:
-        await async_session.execute(delete_query)
-        await async_session.commit()
+async def create_address(
+    async_session: AsyncSession,
+    location_id: int,
+    address_kwargs: dict | None = None,
+) -> Address:
+    if address_kwargs:
+        address_kwargs.update({"location_id": location_id})
+    else:
+        address_kwargs = {"location_id": location_id}
+    address = address_factory(**address_kwargs)
+    async_session.add(address)
+    await async_session.commit()
+    await async_session.refresh(address)
+    return address

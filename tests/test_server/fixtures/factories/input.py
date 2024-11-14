@@ -1,5 +1,7 @@
 from random import randint
 
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from data_rentgen.db.models import Input
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
 
@@ -21,3 +23,12 @@ def input_factory(**kwargs) -> Input:
     }
     data.update(kwargs)
     return Input(**data)
+
+
+async def create_input(async_session: AsyncSession, input_kwargs: dict | None = None) -> Input:
+    input_kwargs = input_kwargs or {}
+    input = input_factory(**input_kwargs)
+    async_session.add(input)
+    await async_session.commit()
+    await async_session.refresh(input)
+    return input

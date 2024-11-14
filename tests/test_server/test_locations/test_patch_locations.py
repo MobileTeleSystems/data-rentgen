@@ -24,7 +24,6 @@ async def test_add_location_external_id(
 ):
     [location] = await enrich_locations([location], async_session)
     assert location.external_id is None
-
     response = await test_client.patch(
         f"v1/locations/{location.id}",
         json={"external_id": "external_id"},
@@ -87,6 +86,7 @@ async def test_update_location_not_found(
 
 async def test_update_location_writing_null_to_external_id(
     test_client: AsyncClient,
+    async_session: AsyncSession,
     location: Location,
 ):
     response = await test_client.patch(
@@ -94,6 +94,7 @@ async def test_update_location_writing_null_to_external_id(
         json={"external_id": None},
     )
 
+    [location] = await enrich_locations([location], async_session=async_session)
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "id": location.id,

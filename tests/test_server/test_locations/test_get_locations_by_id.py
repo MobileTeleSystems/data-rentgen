@@ -37,11 +37,10 @@ async def test_get_locations_by_unknown_id(
 
 async def test_get_locations_by_one_id(
     test_client: AsyncClient,
-    location_with_address: Location,
+    location: Location,
     async_session: AsyncSession,
 ):
-    locations = await enrich_locations([location_with_address], async_session)
-    location = locations[0]
+    [location] = await enrich_locations([location], async_session)
 
     response = await test_client.get(
         "v1/locations",

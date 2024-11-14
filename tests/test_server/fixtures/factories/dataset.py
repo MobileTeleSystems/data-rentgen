@@ -1,17 +1,16 @@
 from collections.abc import AsyncGenerator
-from random import choice, randint
+from random import randint
 from typing import AsyncContextManager, Callable
 
 import pytest
 import pytest_asyncio
-from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.db.models import Address, Dataset
+from data_rentgen.db.models import Dataset
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
-from tests.test_server.fixtures.factories.address import address_factory
 from tests.test_server.fixtures.factories.base import random_string
-from tests.test_server.fixtures.factories.location import location_factory
+from tests.test_server.fixtures.factories.location import create_location
+from tests.test_server.utils.delete import clean_db
 
 
 def dataset_factory(**kwargs):
@@ -23,6 +22,40 @@ def dataset_factory(**kwargs):
 
     data.update(kwargs)
     return Dataset(**data)
+
+
+async def create_dataset(
+    async_session: AsyncSession,
+    location_id: int,
+    dataset_kwargs: dict | None = None,
+) -> Dataset:
+    if dataset_kwargs:
+        dataset_kwargs.update({"location_id": location_id})
+    else:
+        dataset_kwargs = {"location_id": location_id}
+    dataset = dataset_factory(**dataset_kwargs)
+    del dataset.id
+    async_session.add(dataset)
+    await async_session.commit()
+    await async_session.refresh(dataset)
+    return dataset
+
+
+async def make_symlink(
+    async_session: AsyncSession,
+    from_dataset: Dataset,
+    to_dataset: Dataset,
+    type: DatasetSymlinkType,
+) -> DatasetSymlink:
+    symlink = DatasetSymlink(
+        from_dataset_id=from_dataset.id,
+        to_dataset_id=to_dataset.id,
+        type=type,
+    )
+    async_session.add(symlink)
+    await async_session.commit()
+    await async_session.refresh(symlink)
+    return symlink
 
 
 @pytest_asyncio.fixture(params=[{}])
@@ -39,121 +72,88 @@ async def new_dataset(
 async def dataset(
     request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
-    address: Address,
 ) -> AsyncGenerator[Dataset, None]:
     params = request.param
-    item = dataset_factory(location_id=address.location_id, **params)
-    del item.id
 
     async with async_session_maker() as async_session:
-        async_session.add(item)
-
-        await async_session.commit()
-        await async_session.refresh(item)
+        location = await create_location(async_session)
+        item = await create_dataset(async_session, location_id=location.id, dataset_kwargs=params)
 
         async_session.expunge_all()
 
     yield item
 
-    delete_query = delete(Dataset).where(Dataset.id == item.id)
-    # Add teardown cause fixture async_session doesn't used
     async with async_session_maker() as async_session:
-        await async_session.execute(delete_query)
-        await async_session.commit()
+        await clean_db(async_session)
 
 
 @pytest_asyncio.fixture(params=[(10, {})])
 async def datasets(
     request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
-    addresses: list[Address],
 ) -> AsyncGenerator[list[Dataset], None]:
     size, params = request.param
-    items = [dataset_factory(location_id=choice(addresses).location_id, **params) for _ in range(size)]
 
+    items = []
     async with async_session_maker() as async_session:
-        for item in items:
-            del item.id
-            async_session.add(item)
-
-        await async_session.commit()
-        for item in items:
-            await async_session.refresh(item)
-
-        async_session.expunge_all()
+        for _ in range(size):
+            location = await create_location(async_session)
+            items.append(
+                await create_dataset(async_session, location_id=location.id, dataset_kwargs=params),
+            )
+            async_session.expunge_all()
 
     yield items
 
-    delete_query = delete(Dataset).where(Dataset.id.in_([item.id for item in items]))
-    # Add teardown cause fixture async_session doesn't used
     async with async_session_maker() as async_session:
-        await async_session.execute(delete_query)
-        await async_session.commit()
+        await clean_db(async_session)
 
 
 @pytest_asyncio.fixture(params=[(10, {})])
 async def datasets_with_symlinks(
     request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
-    addresses: list[Address],
 ) -> AsyncGenerator[tuple[list[Dataset], list[DatasetSymlink]], None]:
     size, params = request.param
-    datasets = [dataset_factory(location_id=choice(addresses).location_id, **params) for _ in range(size)]
 
     async with async_session_maker() as async_session:
-        for dataset in datasets:
-            del dataset.id
-            async_session.add(dataset)
+        datasets = []
+        for _ in range(size):
+            location = await create_location(async_session)
+            datasets.append(await create_dataset(async_session, location_id=location.id, dataset_kwargs=params))
 
-        await async_session.commit()
-
-        for dataset in datasets:
-            await async_session.refresh(dataset)
-
-        async_session.expunge_all()
-
-    dataset_symlinks = []
-    # Connect datasets like this
-    # Dataset0 - METASTORE - Dataset1
-    # Dataset1 - WAREHOUSE - Dataset0
-    # ...
-    for dataset1, dataset2 in zip(datasets, datasets[1:] + datasets[:1]):
-        symlink1 = DatasetSymlink(
-            from_dataset_id=dataset1.id,
-            to_dataset_id=dataset2.id,
-            type=DatasetSymlinkType.METASTORE,
-        )
-        symlink2 = DatasetSymlink(
-            from_dataset_id=dataset2.id,
-            to_dataset_id=dataset1.id,
-            type=DatasetSymlinkType.WAREHOUSE,
-        )
-        dataset_symlinks.extend([symlink1, symlink2])
-
-    async with async_session_maker() as async_session:
-        for dataset_symlink in dataset_symlinks:
-            async_session.add(dataset_symlink)
-
-        await async_session.commit()
-
-        for dataset_symlink in dataset_symlinks:
-            await async_session.refresh(dataset_symlink)
+        dataset_symlinks = []
+        for dataset1, dataset2 in zip(datasets, datasets[1:] + datasets[:1]):
+            # Connect datasets like this
+            # Dataset0 - METASTORE - Dataset1
+            # Dataset1 - WAREHOUSE - Dataset0
+            # ...
+            symlink1 = await make_symlink(
+                async_session=async_session,
+                from_dataset=dataset1,
+                to_dataset=dataset2,
+                type=DatasetSymlinkType.METASTORE,
+            )
+            symlink2 = await make_symlink(
+                async_session=async_session,
+                from_dataset=dataset2,
+                to_dataset=dataset1,
+                type=DatasetSymlinkType.WAREHOUSE,
+            )
+            dataset_symlinks.extend([symlink1, symlink2])
 
         async_session.expunge_all()
 
     yield datasets, dataset_symlinks
 
-    delete_query = delete(Dataset).where(Dataset.id.in_([dataset.id for dataset in datasets]))
-    # Add teardown cause fixture async_session doesn't used
     async with async_session_maker() as async_session:
-        await async_session.execute(delete_query)
-        await async_session.commit()
+        await clean_db(async_session)
 
 
 @pytest_asyncio.fixture(params=[{}])
 async def datasets_search(
     request: pytest.FixtureRequest,
-    async_session: AsyncSession,
+    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[tuple[dict[str, Dataset], dict[str, Dataset], dict[str, Dataset]], None]:
     """
     Fixture with explicit dataset, locations names and addresses urls for search tests.
@@ -183,72 +183,78 @@ async def datasets_search(
     tip: you can imagine it like identity matrix with not-random names on diagonal.
     """
     request.param
-    location_names_types = [
-        ("postgres.location", "postgres"),
-        ("postgres.history_location", "postgres"),
-        ("my-cluster", "hdfs"),
+    location_kwargs = [
+        {"name": "postgres.location", "type": "postgres"},
+        {"name": "postgres.history_location", "type": "postgres"},
+        {"name": "my-cluster", "type": "hdfs"},
     ]
-    locations_with_names = [
-        location_factory(name=name, type=location_type) for name, location_type in location_names_types
+    address_kwargs = [
+        {"urls": ["http://my-postgres-host:8012", "http://my-postgres-host:2108"]},
+        {"urls": ["http://your-postgres-host:8012", "http://your-postgres-host:2108"]},
+        {"urls": ["hdfs://my-cluster-namenode:8020", "hdfs://my-cluster-namenode:2080"]},
     ]
-    locations_with_random_name = [location_factory(type="random") for _ in range(6)]
-    locations = locations_with_names + locations_with_random_name
+    dataset_kwargs = [
+        {"name": "postgres.public.history"},
+        {"name": "postgres.public.location_history"},
+        {"name": "/user/hive/warehouse/transfers"},
+    ]
+    addresses_url = [url for address in address_kwargs for url in address["urls"]]
+    async with async_session_maker() as async_session:
+        locations_with_name = [
+            await create_location(
+                async_session,
+                location_kwargs=kwargs,
+                address_kwargs={"urls": [random_string(32), random_string(32)]},  # Each location has 2 addresses
+            )
+            for kwargs in location_kwargs
+        ]
+        locations_with_address_urls = [
+            await create_location(
+                async_session,
+                address_kwargs=kwargs,
+            )
+            for kwargs in address_kwargs
+        ]
+        random_location = [
+            await create_location(
+                async_session,
+                location_kwargs={"type": "random"},
+                address_kwargs={"urls": [random_string(32), random_string(32)]},
+            )
+            for _ in range(3)
+        ]
+        datasets_with_name = [
+            await create_dataset(
+                async_session,
+                location_id=random_location[i].id,
+                dataset_kwargs=kwargs,
+            )
+            for i, kwargs in enumerate(dataset_kwargs)
+        ]
+        datasets_with_location_name = [
+            await create_dataset(
+                async_session,
+                location_id=location.id,
+            )
+            for location in locations_with_name
+        ]
+        datasets_with_address_urls = [
+            await create_dataset(
+                async_session,
+                location_id=location.id,
+            )
+            for location in locations_with_address_urls
+        ]
 
-    for item in locations:
-        del item.id
-        async_session.add(item)
+        async_session.expunge_all()
 
-    await async_session.flush()
-
-    addresses_url = (
-        ["http://my-postgres-host:8012", "http://my-postgres-host:2108"]
-        + ["http://your-postgres-host:8012", "http://your-postgres-host:2108"]
-        + ["hdfs://my-cluster-namenode:8020", "hdfs://my-cluster-namenode:2080"]
+    datasets_by_name = {dataset.name: dataset for dataset in datasets_with_name}
+    datasets_by_location = dict(zip([location.name for location in locations_with_name], datasets_with_location_name))
+    datasets_by_address = dict(
+        zip(addresses_url, [dataset for dataset in datasets_with_address_urls for _ in range(2)]),
     )
-    # Each location has 2 addresses
-    addresses_with_name = [
-        address_factory(url=url, location_id=location.id)
-        for url, location in zip(
-            addresses_url,
-            [location for location in locations_with_random_name[:3] for _ in range(2)],
-        )
-    ]
-    addresses_with_random_name = [
-        address_factory(location_id=location.id) for location in (locations[:3] + locations[6:]) * 2
-    ]
-    addresses = addresses_with_name + addresses_with_random_name
-    for item in addresses:
-        del item.id
-        async_session.add(item)
-    await async_session.flush()
-
-    datasets_names = ["postgres.public.history", "postgres.public.location_history", "/user/hive/warehouse/transfers"]
-    datasets_with_name = [
-        dataset_factory(name=name, location_id=location.id)
-        for name, location in zip(datasets_names, locations_with_random_name[3:])
-    ]
-    datasets_with_random_name = [dataset_factory(location_id=location.id) for location in locations[:6]]
-    datasets = datasets_with_name + datasets_with_random_name
-    for item in datasets:
-        del item.id
-        async_session.add(item)
-
-    await async_session.commit()
-
-    for item in locations + addresses + datasets:
-        await async_session.refresh(item)
-        async_session.expunge(item)
-
-    datasets_by_name = {name: dataset for name, dataset in zip(datasets_names, datasets[:3])}
-    datasets_by_location = {
-        name: dataset
-        for name, dataset in zip(
-            [name for name, _ in location_names_types],
-            datasets[3:6],
-        )
-    }
-    datasets_by_address = {
-        name: dataset for name, dataset in zip(addresses_url, [dataset for dataset in datasets[6:] for _ in range(2)])
-    }
 
     yield datasets_by_name, datasets_by_location, datasets_by_address
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)

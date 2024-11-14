@@ -5,12 +5,12 @@ from typing import AsyncContextManager, Callable
 
 import pytest
 import pytest_asyncio
-from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Operation, OperationStatus, OperationType, Run
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
 from tests.test_server.fixtures.factories.base import random_datetime, random_string
+from tests.test_server.utils.delete import clean_db
 
 
 def operation_factory(**kwargs):
@@ -33,6 +33,19 @@ def operation_factory(**kwargs):
     return Operation(**data)
 
 
+async def create_operation(
+    async_session: AsyncSession,
+    operation_kwargs: dict | None = None,
+) -> Operation:
+    operation_kwargs = operation_kwargs or {}
+    operation = operation_factory(**operation_kwargs)
+    async_session.add(operation)
+    await async_session.commit()
+    await async_session.refresh(operation)
+
+    return operation
+
+
 @pytest_asyncio.fixture(params=[{}])
 async def new_operation(
     request: pytest.FixtureRequest,
@@ -50,22 +63,17 @@ async def operation(
     run: Run,
 ) -> AsyncGenerator[Operation, None]:
     params = request.param
-    item = operation_factory(run_id=run.id, created_at=run.created_at + timedelta(seconds=1), **params)
 
     async with async_session_maker() as async_session:
-        async_session.add(item)
+        operation = await create_operation(
+            async_session=async_session,
+            operation_kwargs={"run_id": run.id, "created_at": run.created_at + timedelta(seconds=1), **params},
+        )
 
-        await async_session.commit()
-        await async_session.refresh(item)
+    yield operation
 
-        async_session.expunge_all()
-
-    yield item
-
-    delete_query = delete(Operation).where(Operation.id == item.id)
     async with async_session_maker() as async_session:
-        await async_session.execute(delete_query)
-        await async_session.commit()
+        await clean_db(async_session)
 
 
 @pytest_asyncio.fixture(params=[(10, {})])
@@ -76,31 +84,26 @@ async def operations(
 ) -> AsyncGenerator[list[Operation], None]:
     size, params = request.param
     items = []
-    for index in range(size):
-        run = runs[index]
-        items.append(
-            operation_factory(
-                run_id=run.id,
-                created_at=run.created_at + timedelta(seconds=index),
-                **params,
-            ),
-        )
 
     async with async_session_maker() as async_session:
-        async_session.add_all(items)
-
-        await async_session.commit()
-        for item in items:
-            await async_session.refresh(item)
+        for index in range(size):
+            items.append(
+                await create_operation(
+                    async_session=async_session,
+                    operation_kwargs={
+                        "run_id": runs[index].id,
+                        "created_at": runs[index].created_at + timedelta(seconds=index),
+                        **params,
+                    },
+                ),
+            )
 
         async_session.expunge_all()
 
     yield items
 
-    delete_query = delete(Operation).where(Operation.id.in_([item.id for item in items]))
     async with async_session_maker() as async_session:
-        await async_session.execute(delete_query)
-        await async_session.commit()
+        await clean_db(async_session)
 
 
 @pytest_asyncio.fixture(params=[(10, {})])
@@ -110,27 +113,23 @@ async def operations_with_same_run(
     run: Run,
 ) -> AsyncGenerator[list[Operation], None]:
     size, params = request.param
-    items = [
-        operation_factory(
-            run_id=run.id,
-            created_at=run.created_at + timedelta(seconds=index),
-            **params,
-        )
-        for index in range(size)
-    ]
 
     async with async_session_maker() as async_session:
-        async_session.add_all(items)
-
-        await async_session.commit()
-        for item in items:
-            await async_session.refresh(item)
+        items = [
+            await create_operation(
+                async_session=async_session,
+                operation_kwargs={
+                    "run_id": run.id,
+                    "created_at": run.created_at + timedelta(seconds=index),
+                    **params,
+                },
+            )
+            for index in range(size)
+        ]
 
         async_session.expunge_all()
 
     yield items
 
-    delete_query = delete(Operation).where(Operation.id.in_([item.id for item in items]))
     async with async_session_maker() as async_session:
-        await async_session.execute(delete_query)
-        await async_session.commit()
+        await clean_db(async_session)

@@ -93,7 +93,7 @@ class LocationRepository(Repository[Location]):
         )
 
     async def update_external_id(self, location_id: int, external_id: str | None) -> Location:
-        query = select(Location).where(Location.id == location_id)
+        query = select(Location).where(Location.id == location_id).options(selectinload(Location.addresses))
         location = await self._session.scalar(query)
         if not location:
             raise EntityNotFoundError("Location", "id", location_id)

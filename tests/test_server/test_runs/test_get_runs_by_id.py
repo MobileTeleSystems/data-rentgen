@@ -40,8 +40,7 @@ async def test_get_runs_by_one_id(
     run: Run,
     async_session: AsyncSession,
 ):
-    runs = await enrich_runs([run], async_session)
-    run = runs[0]
+    [run] = await enrich_runs([run], async_session)
 
     response = await test_client.get(
         "v1/runs",

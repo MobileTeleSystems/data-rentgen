@@ -4,13 +4,12 @@ from typing import AsyncContextManager, Callable
 
 import pytest
 import pytest_asyncio
-from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.db.models import Address, Job, JobType
-from tests.test_server.fixtures.factories.address import address_factory
+from data_rentgen.db.models import Job, JobType
 from tests.test_server.fixtures.factories.base import random_string
-from tests.test_server.fixtures.factories.location import location_factory
+from tests.test_server.fixtures.factories.location import create_location
+from tests.test_server.utils.delete import clean_db
 
 
 def job_factory(**kwargs):
@@ -22,6 +21,23 @@ def job_factory(**kwargs):
     }
     data.update(kwargs)
     return Job(**data)
+
+
+async def create_job(
+    async_session: AsyncSession,
+    location_id: int,
+    job_kwargs: dict | None = None,
+) -> Job:
+    if job_kwargs:
+        job_kwargs.update({"location_id": location_id})
+    else:
+        job_kwargs = {"location_id": location_id}
+    job = job_factory(**job_kwargs)
+    del job.id
+    async_session.add(job)
+    await async_session.commit()
+    await async_session.refresh(job)
+    return job
 
 
 @pytest_asyncio.fixture(params=[{}])
@@ -38,62 +54,47 @@ async def new_job(
 async def job(
     request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
-    address: Address,
 ) -> AsyncGenerator[Job, None]:
     params = request.param
-    item = job_factory(location_id=address.location_id, **params)
-    del item.id
 
     async with async_session_maker() as async_session:
-        async_session.add(item)
-
-        await async_session.commit()
-        await async_session.refresh(item)
+        location = await create_location(async_session)
+        item = await create_job(async_session, location_id=location.id, job_kwargs=params)
 
         async_session.expunge_all()
 
     yield item
 
-    delete_query = delete(Job).where(Job.id == item.id)
-    # Add teardown cause fixture async_session doesn't used
     async with async_session_maker() as async_session:
-        await async_session.execute(delete_query)
-        await async_session.commit()
+        await clean_db(async_session)
 
 
 @pytest_asyncio.fixture(params=[(5, {})])
 async def jobs(
     request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
-    addresses: list[Address],
 ) -> AsyncGenerator[list[Job], None]:
     size, params = request.param
-    items = [job_factory(location_id=choice(addresses).location_id, **params) for _ in range(size)]
 
     async with async_session_maker() as async_session:
-        for item in items:
-            del item.id
-            async_session.add(item)
-
-        await async_session.commit()
-        for item in items:
-            await async_session.refresh(item)
+        items = []
+        for _ in range(size):
+            location = await create_location(async_session)
+            item = await create_job(async_session, location_id=location.id, **params)
+            items.append(item)
 
         async_session.expunge_all()
 
     yield items
 
-    delete_query = delete(Job).where(Job.id.in_([item.id for item in items]))
-    # Add teardown cause fixture async_session doesn't used
     async with async_session_maker() as async_session:
-        await async_session.execute(delete_query)
-        await async_session.commit()
+        await clean_db(async_session)
 
 
 @pytest_asyncio.fixture(params=[{}])
 async def jobs_search(
     request: pytest.FixtureRequest,
-    async_session: AsyncSession,
+    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[tuple[dict[str, Job], dict[str, Job], dict[str, Job]], None]:
     """
     Fixture with explicit jobs, locations names and addresses urls for search tests.
@@ -122,64 +123,79 @@ async def jobs_search(
     tip: you can imagine it like identity matrix with not-random names on diagonal.
     """
     request.param
-    location_names_types = [("dwh", "yarn"), ("my-cluster", "yarn"), ("data-product-host", "http")]
-    locations_with_names = [
-        location_factory(name=name, type=location_type) for name, location_type in location_names_types
+    location_kwargs = [
+        {"name": "dwh", "type": "yarn"},
+        {"name": "my-cluster", "type": "yarn"},
+        {"name": "data-product-host", "type": "http"},
     ]
-    locations_with_random_name = [location_factory(type="random") for _ in range(6)]
-    locations = locations_with_names + locations_with_random_name
-
-    for item in locations:
-        del item.id
-        async_session.add(item)
-    await async_session.flush()
-
-    addresses_url = (
-        ["yarn://my_cluster_1", "yarn://my_cluster_2"]
-        + ["http://some.host.name:8020", "http://some.host.name:2080"]
-        + ["http://airflow-host:8020", "http://airflow-host:2080"]
-    )
-    # Each location has 2 addresses
-    addresses_with_name = [
-        address_factory(url=url, location_id=location.id)
-        for url, location in zip(
-            addresses_url,
-            [location for location in locations_with_random_name[:3] for _ in range(2)],
-        )
+    address_kwargs = [
+        {"urls": ["yarn://my_cluster_1", "yarn://my_cluster_2"]},
+        {"urls": ["http://some.host.name:8020", "http://some.host.name:2080"]},
+        {"urls": ["http://airflow-host:8020", "http://airflow-host:2080"]},
     ]
-    addresses_with_random_name = [
-        address_factory(location_id=location.id) for location in (locations[:3] + locations[6:]) * 2
+    jobs_kwargs = [
+        {"name": "airflow-task"},
+        {"name": "spark_application"},
+        {"name": "airflow-dag"},
     ]
-    addresses = addresses_with_name + addresses_with_random_name
-    for item in addresses:
-        del item.id
-        async_session.add(item)
-    await async_session.flush()
+    addresses_url = [url for address in address_kwargs for url in address["urls"]]
+    async with async_session_maker() as async_session:
+        locations_with_names = [
+            await create_location(
+                async_session,
+                location_kwargs=kwargs,
+                address_kwargs={"urls": [random_string(32), random_string(32)]},  # Each location has 2 addresses
+            )
+            for kwargs in location_kwargs
+        ]
+        locations_with_address_urls = [
+            await create_location(
+                async_session,
+                address_kwargs=kwargs,
+            )
+            for kwargs in address_kwargs
+        ]
+        random_location = [
+            await create_location(
+                async_session,
+                location_kwargs={"type": "random"},
+                address_kwargs={"urls": [random_string(32), random_string(32)]},
+            )
+            for _ in range(3)
+        ]
 
-    jobs_names = ["airflow-task", "spark_application", "airflow-dag"]
-    jobs_with_name = [
-        job_factory(name=name, location_id=location.id)
-        for name, location in zip(jobs_names, locations_with_random_name[3:])
-    ]
-    jobs_with_random_name = [job_factory(location_id=location.id) for location in locations[:6]]
-    jobs = jobs_with_name + jobs_with_random_name
-    for item in jobs:
-        del item.id
-        async_session.add(item)
-    await async_session.commit()
+        jobs_with_names = [
+            await create_job(
+                async_session,
+                location_id=random_location[i].id,
+                job_kwargs=kwargs,
+            )
+            for i, kwargs in enumerate(jobs_kwargs)
+        ]
+        jobs_with_location_names = [
+            await create_job(
+                async_session,
+                location_id=locations.id,
+            )
+            for locations in locations_with_names
+        ]
+        jobs_with_address_urls = [
+            await create_job(
+                async_session,
+                location_id=locations.id,
+            )
+            for locations in locations_with_address_urls
+        ]
 
-    for item in locations + addresses + jobs:
-        await async_session.refresh(item)
-        async_session.expunge(item)
+        async_session.expunge_all()
 
-    jobs_by_name = {name: job for name, job in zip(jobs_names, jobs[:3])}
-    jobs_by_location = {
-        name: job
-        for name, job in zip(
-            [name for name, _ in location_names_types],
-            jobs[3:6],
-        )
+    jobs_by_name = {job.name: job for job in jobs_with_names}
+    jobs_by_location = dict(zip([location.name for location in locations_with_names], jobs_with_location_names))
+    jobs_by_address = {
+        name: job for name, job in zip(addresses_url, [job for job in jobs_with_address_urls for _ in range(2)])
     }
-    jobs_by_address = {name: job for name, job in zip(addresses_url, [job for job in jobs[6:] for _ in range(2)])}
 
     yield jobs_by_name, jobs_by_location, jobs_by_address
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)
