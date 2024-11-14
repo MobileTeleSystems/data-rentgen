@@ -793,20 +793,14 @@ async def test_get_run_lineage_with_depth(
     run = next(run for run in lineage.runs if run.id == output.run_id)
 
     # Go operations[first level] -> datasets[second level]
-    first_level_operations = [operation for operation in lineage.operations if operation.run_id == run.id]
-    first_level_operation_ids = {operation.id for operation in first_level_operations}
-    first_level_outputs = [output for output in lineage.outputs if output.operation_id in first_level_operation_ids]
+    first_level_outputs = [output for output in lineage.outputs if output.run_id == run.id]
     first_level_dataset_ids = {output.dataset_id for output in first_level_outputs}
     first_level_datasets = [dataset for dataset in lineage.datasets if dataset.id in first_level_dataset_ids]
     assert first_level_datasets
 
     # Go datasets[second level] -> operations[second level] -> runs[second level]
     second_level_inputs = [input for input in lineage.inputs if input.dataset_id in first_level_dataset_ids]
-    second_level_operation_ids = {input.operation_id for input in second_level_inputs} - first_level_operation_ids
-    second_level_operations = [
-        operation for operation in lineage.operations if operation.id in second_level_operation_ids
-    ]
-    second_level_run_ids = {operation.run_id for operation in second_level_operations} - {run.id}
+    second_level_run_ids = {input.run_id for input in second_level_inputs} - {run.id}
     second_level_runs = [run for run in lineage.runs if run.id in second_level_run_ids]
     assert second_level_runs
 
