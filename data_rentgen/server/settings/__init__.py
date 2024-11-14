@@ -37,7 +37,7 @@ class ServerApplicationSettings(BaseSettings):
         DATA_RENTGEN__SERVER__DEBUG=True
     """
 
-    database: DatabaseSettings = Field(description=":ref:`Database settings <configuration-server-database>`")
+    database: DatabaseSettings = Field(description=":ref:`Database settings <configuration-database>`")
     logging: LoggingSettings = Field(
         default_factory=LoggingSettings,
         description=":ref:`Logging settings <configuration-server-logging>`",

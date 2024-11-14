@@ -148,6 +148,7 @@ sphinx-favicon = "^1.0.1"
 sphinx-last-updated-by-git = "^0.3.8"
 # uncomment after https://github.com/zqmillet/sphinx-plantuml/pull/4
 # sphinx-plantuml = "^1.0.0"
+sphinx-argparse = "^0.5.2"
 
 [tool.poetry.plugins."tricoder_package_spy.register"]
 "data-rentgen" = "data_rentgen"

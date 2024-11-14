@@ -37,7 +37,7 @@ class ConsumerApplicationSettings(BaseSettings):
         DATA_RENTGEN__LOGGING__PRESET=json
     """
 
-    database: DatabaseSettings = Field(description=":ref:`Database settings <configuration-consumer-database>`")
+    database: DatabaseSettings = Field(description=":ref:`Database settings <configuration-database>`")
     kafka: KafkaSettings = Field(
         description=":ref:`Kafka settings <configuration-consumer-kafka>`",
     )

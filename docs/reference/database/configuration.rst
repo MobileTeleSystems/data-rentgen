@@ -1,4 +1,4 @@
-.. _configuration-consumer-database:
+.. _configuration-database:
 
 Database settings
 =================

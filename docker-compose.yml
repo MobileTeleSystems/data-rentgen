@@ -40,7 +40,7 @@ services:
       db-migration:
         condition: service_completed_successfully
 
-  kafka:
+  broker:
     image: bitnami/kafka:3.7
     restart: unless-stopped
     env_file: .env.docker
@@ -60,7 +60,7 @@ services:
     restart: unless-stopped
     env_file: .env.docker
     depends_on:
-      kafka:
+      broker:
         condition: service_healthy
       db-migration:
         condition: service_completed_successfully
@@ -72,6 +72,22 @@ services:
     env_file: .env.docker
     depends_on:
       db:
+        condition: service_healthy
+
+  frontend:
+    image: mtsrus/data-rentgen-ui:develop
+    restart: unless-stopped
+    env_file: .env.docker
+    ports:
+      - 3000:3000
+    healthcheck:
+      test: [CMD-SHELL, curl, -f, http://localhost:3000/]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    depends_on:
+      server:
         condition: service_healthy
 
 volumes:

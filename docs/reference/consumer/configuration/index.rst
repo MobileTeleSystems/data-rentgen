@@ -8,7 +8,6 @@ Kafka consumer configuration
     :caption: Configuration
     :hidden:
 
-    database
     kafka
     logging
 
