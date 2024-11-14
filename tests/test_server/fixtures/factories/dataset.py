@@ -4,10 +4,9 @@ from typing import AsyncContextManager, Callable
 
 import pytest
 import pytest_asyncio
-from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.db.models import Address, Dataset
+from data_rentgen.db.models import Dataset
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
 from tests.test_server.fixtures.factories.base import random_string
 from tests.test_server.fixtures.factories.location import create_location
@@ -251,10 +250,9 @@ async def datasets_search(
 
     datasets_by_name = {dataset.name: dataset for dataset in datasets_with_name}
     datasets_by_location = dict(zip([location.name for location in locations_with_name], datasets_with_location_name))
-    datasets_by_address = {
-        name: dataset
-        for name, dataset in zip(addresses_url, [dataset for dataset in datasets_with_address_urls for _ in range(2)])
-    }
+    datasets_by_address = dict(
+        zip(addresses_url, [dataset for dataset in datasets_with_address_urls for _ in range(2)]),
+    )
 
     yield datasets_by_name, datasets_by_location, datasets_by_address
 

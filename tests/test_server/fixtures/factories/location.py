@@ -33,13 +33,13 @@ async def create_location(
     del location.id
     async_session.add(location)
     await async_session.commit()
-    if address_kwargs:
-        if urls := address_kwargs.pop("urls", None):
-            for url in urls:
-                address_kwargs["url"] = url
-                await create_address(async_session, location.id, address_kwargs)
-        else:
+    address_kwargs = address_kwargs or {}
+    if urls := address_kwargs.pop("urls", None):
+        for url in urls:
+            address_kwargs["url"] = url
             await create_address(async_session, location.id, address_kwargs)
+    else:
+        await create_address(async_session, location.id, address_kwargs)
     await async_session.refresh(location)
     return location
 

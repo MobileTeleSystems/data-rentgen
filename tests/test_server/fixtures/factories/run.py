@@ -7,10 +7,11 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.db.models import Address, Job, Run, RunStartReason, RunStatus, User
+from data_rentgen.db.models import Job, Run, RunStartReason, RunStatus, User
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
 from tests.test_server.fixtures.factories.base import random_datetime, random_string
-from tests.test_server.fixtures.factories.job import job_factory
+from tests.test_server.fixtures.factories.job import create_job
+from tests.test_server.fixtures.factories.location import create_location
 from tests.test_server.utils.delete import clean_db
 
 
@@ -178,49 +179,48 @@ async def runs_with_same_parent(
 @pytest_asyncio.fixture(params=[{}])
 async def runs_search(
     request: pytest.FixtureRequest,
-    async_session: AsyncSession,
-    addresses: list[Address],
+    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
     user: User,
 ) -> AsyncGenerator[dict[str | None, Run], None]:
     request.param
-    job_names_type = [("spark_application_name", "SPARK_APPLICATION"), ("airflow_dag_name", "AIRFLOW_DAG")]
-    jobs = [
-        job_factory(
-            name=name,
-            type=job_type,
-            location_id=choice(addresses).location_id,
-        )
-        for name, job_type in job_names_type
+    job_kwargs = [
+        {"name": "spark_application_name", "type": "SPARK_APPLICATION"},
+        {"name": "airflow_dag_name", "type": "AIRFLOW_DAG"},
     ]
-    for item in jobs:
-        del item.id
-        async_session.add(item)
-    await async_session.flush()
-
-    runs_external_ids = [
-        "application_1638922609021_0001",
-        "application_1638922609021_0002",
-        "extract_task_0001",
-        "extract_task_0002",
+    runs_kwargs = [
+        {"external_id": "application_1638922609021_0001"},
+        {"external_id": "application_1638922609021_0002"},
+        {"external_id": "extract_task_0001"},
+        {"external_id": "extract_task_0002"},
     ]
-
     started_at = datetime.now()
-    runs = [
-        run_factory(
-            created_at=started_at + timedelta(seconds=0.1 * i),
-            external_id=external_id,
-            job_id=job.id,
-            started_by_user_id=user.id,
-        )
-        # Each job has 2 runs
-        for i, (external_id, job) in enumerate(zip(runs_external_ids, [job for job in jobs for _ in range(2)]))
-    ]
-    for item in runs:
-        async_session.add(item)
-    await async_session.commit()
+    async with async_session_maker() as async_session:
+        jobs = []
+        for kwargs in job_kwargs:
+            location = await create_location(async_session)
+            jobs.append(
+                await create_job(
+                    async_session,
+                    location_id=location.id,
+                    job_kwargs=kwargs,
+                ),
+            )
+        runs = [
+            await create_run(
+                async_session,
+                run_kwargs={
+                    "created_at": started_at + timedelta(seconds=0.1 * i),
+                    "job_id": job.id,
+                    "started_by_user_id": user.id,
+                    **kwargs,
+                },
+            )
+            for i, (job, kwargs) in enumerate(zip([job for job in jobs for _ in range(2)], runs_kwargs))
+        ]
 
-    for item in jobs + runs:
-        await async_session.refresh(item)
-        async_session.expunge(item)
+        async_session.expunge_all()
 
     yield {run.external_id: run for run in runs}
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)
