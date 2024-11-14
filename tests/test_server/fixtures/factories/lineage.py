@@ -319,6 +319,8 @@ async def lineage_with_depth_and_cycle(
         ]
         lineage.outputs.extend(outputs)
 
+        lineage.runs.sort(key=lambda x: x.id)
+        lineage.jobs.sort(key=lambda x: x.id)
         yield lineage
 
         async with async_session_maker() as async_session:

@@ -790,8 +790,7 @@ async def test_get_run_lineage_with_depth(
     # There is no guarantee that first run will have any outputs
     # so we need to search for any run
     output = lineage.outputs[0]
-    operation = next(operation for operation in lineage.operations if operation.id == output.operation_id)
-    run = next(run for run in lineage.runs if run.id == operation.run_id)
+    run = next(run for run in lineage.runs if run.id == output.run_id)
 
     # Go operations[first level] -> datasets[second level]
     first_level_operations = [operation for operation in lineage.operations if operation.run_id == run.id]
@@ -1126,9 +1125,7 @@ async def test_get_run_lineage_with_depth_ignore_cycles(
     lineage = lineage_with_depth_and_cycle
     run = lineage.runs[0]
     runs = await enrich_runs(lineage.runs, async_session)
-    runs.sort(key=lambda x: x.id)
     jobs = await enrich_jobs(lineage.jobs, async_session)
-    runs.sort(key=lambda x: x.id)
     [dataset] = await enrich_datasets(lineage.datasets, async_session)
     input_stats = relation_stats_by_runs(lineage.inputs)
     output_stats = relation_stats_by_runs(lineage.outputs)
@@ -1247,9 +1244,7 @@ async def test_get_run_lineage_with_depth_ignore_cycles_with_operation_granulari
 
     [dataset] = await enrich_datasets(lineage.datasets, async_session)
     jobs = await enrich_jobs(lineage.jobs, async_session)
-    jobs.sort(key=lambda x: x.id)
     runs = await enrich_runs(lineage.runs, async_session)
-    runs.sort(key=lambda x: x.id)
     input_stats = relation_stats_by_operations(lineage.inputs)
     output_stats = relation_stats_by_operations(lineage.outputs)
 

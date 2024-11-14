@@ -5,15 +5,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.db.models import (
-    Dataset,
-    DatasetSymlink,
-    Input,
-    Job,
-    Operation,
-    Output,
-    Run,
-)
+from data_rentgen.db.models import Job, Operation, Run
 from tests.test_server.utils.enrich import enrich_datasets, enrich_jobs, enrich_runs
 from tests.test_server.utils.lineage_result import LineageResult
 from tests.test_server.utils.stats import relation_stats, relation_stats_by_operations
@@ -63,9 +55,6 @@ async def test_get_operation_lineage_no_inputs_outputs(
 
     [job] = await enrich_jobs([job], async_session)
     [run] = await enrich_runs([run], async_session)
-
-    assert run
-    assert job
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
