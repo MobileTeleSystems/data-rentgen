@@ -57,6 +57,7 @@ extensions = [
     "sphinxcontrib.plantuml",
     "sphinx_favicon",
     "sphinx_last_updated_by_git",
+    "sphinxarg.ext",
 ]
 
 swagger = [

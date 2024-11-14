@@ -43,7 +43,7 @@ You can change this by setting:
 Print debug logs on backend
 ---------------------------
 
-See :ref:`configuration-logging`, but replace log level ``INFO`` with ``DEBUG``.
+See :ref:`configuration-server-logging`, but replace log level ``INFO`` with ``DEBUG``.
 
 Fill up ``X-Request-ID`` header on backend
 ------------------------------------------

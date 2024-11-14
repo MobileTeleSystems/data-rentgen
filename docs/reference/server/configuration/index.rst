@@ -8,7 +8,6 @@ REST API server configuration
     :caption: Configuration
     :hidden:
 
-    database
     logging
     monitoring
     cors

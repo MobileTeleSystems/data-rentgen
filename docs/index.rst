@@ -18,12 +18,23 @@
 
 .. toctree::
     :maxdepth: 2
-    :caption: Backend
+    :caption: Overview
     :hidden:
 
-    backend/architecture
-    backend/consumer/index
-    backend/server/index
+    quickstart/index
+    entities
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Reference
+    :hidden:
+
+    reference/architecture
+    reference/database/index
+    reference/broker/index
+    reference/consumer/index
+    reference/server/index
+    reference/frontend/index
 
 .. toctree::
     :maxdepth: 2

@@ -25,7 +25,7 @@ class KafkaSettings(BaseModel):
     )
     security: KafkaSecuritySettings = Field(
         default_factory=KafkaSecuritySettings,
-        description=":ref:`Kafka security settings <configuration-consumer-kafka-security>`",
+        description="Kafka security settings",
     )
     compression: KafkaCompression | None = Field(
         default=None,
