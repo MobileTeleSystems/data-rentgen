@@ -29,9 +29,10 @@ async def simple_lineage(
 
     lineage = LineageResult()
     lineage.jobs.append(job)
+    num_runs = 2
     async with async_session_maker() as async_session:
         created_at = datetime.now()
-        for n in range(2):
+        for n in range(num_runs):
             run = await create_run(
                 async_session,
                 run_kwargs={
@@ -106,7 +107,7 @@ async def three_days_lineage(
 ) -> AsyncGenerator[LineageResult, None]:
     # This fixture creates a lineage similar to real data, representing one job with runs spanning three days.
     # Each run includes two operations interacting with three datasets in the sequence:
-    # Dataset --> Operation --> Dataset --> Operation --> Dataset.
+    # Dataset0 --> Operation0 --> Dataset1 --> Operation1 --> Dataset2.
     lineage = LineageResult()
     lineage.jobs.append(job)
     created_at = datetime.now()
