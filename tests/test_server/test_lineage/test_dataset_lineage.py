@@ -688,44 +688,38 @@ async def test_get_dataset_lineage_with_depth_and_granularity_run(
     lineage_with_depth: LineageResult,
 ):
     lineage = lineage_with_depth
+    # Select only relations marked with *
+    # J1 -*> R1, D1 -*> R1 -*> D2
+    # J2 -*> R2, D2 -*> R2 --> D3
+    # J3 --> R3, D3 --> R3 --> D4
 
     # Go dataset -> runs[first level]
     first_level_dataset = lineage.datasets[0]
     first_level_inputs = [input for input in lineage.inputs if input.dataset_id == first_level_dataset.id]
-    first_level_run_ids = {output.run_id for output in first_level_inputs}
-    first_level_runs = [run for run in lineage.runs if run.id in first_level_run_ids]
-    assert first_level_runs
+    first_level_run_ids = {input.run_id for input in first_level_inputs}
+    assert first_level_run_ids
 
     # Go runs[first level] -> datasets[second level]
     second_level_outputs = [output for output in lineage.outputs if output.run_id in first_level_run_ids]
-    second_level_dataset_ids = {output.dataset_id for output in second_level_outputs}
-    second_level_datasets = [dataset for dataset in lineage.datasets if dataset.id in second_level_dataset_ids]
-    assert second_level_datasets
-
-    second_level_run_ids = {output.run_id for output in second_level_outputs}
-    second_level_runs = [run for run in lineage.runs if run.id in second_level_run_ids]
-    assert second_level_runs
+    second_level_dataset_ids = {output.dataset_id for output in second_level_outputs} - {first_level_dataset.id}
+    assert second_level_dataset_ids
 
     # Go datasets[second level] -> runs[third level]
     # There are more levels in this graph, but we stop here
-    third_level_dataset_ids = second_level_dataset_ids - {first_level_dataset.id}
-    third_level_inputs = [input for input in lineage.inputs if input.dataset_id in third_level_dataset_ids]
-    third_level_datasets = [dataset for dataset in lineage.datasets if dataset.id in third_level_dataset_ids]
-    assert third_level_datasets
-
-    third_level_run_ids = {input.run_id for input in third_level_inputs} - second_level_run_ids - first_level_run_ids
-    third_level_runs = [run for run in lineage.runs if run.id in third_level_run_ids]
-    assert third_level_runs
+    third_level_inputs = [input for input in lineage.inputs if input.dataset_id in second_level_dataset_ids]
+    assert third_level_inputs
+    third_level_run_ids = {output.run_id for output in third_level_inputs} - first_level_run_ids
+    assert third_level_run_ids
 
     inputs = first_level_inputs + third_level_inputs
     input_stats = relation_stats_by_runs(inputs)
     outputs = second_level_outputs
     output_stats = relation_stats_by_runs(outputs)
 
-    dataset_ids = {first_level_dataset.id} | second_level_dataset_ids | third_level_dataset_ids
+    dataset_ids = {first_level_dataset.id} | second_level_dataset_ids
     datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
 
-    run_ids = first_level_run_ids | second_level_run_ids | third_level_run_ids
+    run_ids = first_level_run_ids | third_level_run_ids
     runs = [run for run in lineage.runs if run.id in run_ids]
 
     job_ids = {run.job_id for run in runs}
@@ -846,35 +840,40 @@ async def test_get_dataset_lineage_with_depth_and_granularity_job(
     lineage_with_depth: LineageResult,
 ):
     lineage = lineage_with_depth
+    # Select only relations marked with *
+    # D1 -*> J1 -*> D2
+    # D2 -*> J2 --> D3
+    # D3 --> J3 --> D4
 
-    some_input = lineage.inputs[0]
-    first_level_inputs = [input for input in lineage.inputs if input.dataset_id == some_input.dataset_id]
-    first_level_dataset_ids = {input.dataset_id for input in first_level_inputs}
-    first_level_datasets = [dataset for dataset in lineage.datasets if dataset.id in first_level_dataset_ids]
+    # Go dataset[first level] -> jobs[first level]
+    first_level_dataset = lineage.datasets[0]
+    first_level_inputs = [input for input in lineage.inputs if input.dataset_id == first_level_dataset.id]
     assert first_level_inputs
-    # Go inputs[first level] -> jobs[first level]
     first_level_job_ids = {input.job_id for input in first_level_inputs}
-    first_level_jobs = [job for job in lineage.jobs if job.id in first_level_job_ids]
+    assert first_level_job_ids
 
-    # Go job[first level] -> outputs[second level]
+    # Go job[first level] -> datasets[second level]
     second_level_outputs = [output for output in lineage.outputs if output.job_id in first_level_job_ids]
-    second_level_dataset_ids = {output.dataset_id for output in second_level_outputs}
-    second_level_datasets = [dataset for dataset in lineage.datasets if dataset.id in second_level_dataset_ids]
     assert second_level_outputs
+    second_level_dataset_ids = {output.dataset_id for output in second_level_outputs}
+    assert second_level_dataset_ids
 
-    # Go outputs[second level] -> jobs[third level]
+    # Go datasets[second level] -> jobs[third level]
     third_level_inputs = [input for input in lineage.inputs if input.dataset_id in second_level_dataset_ids]
+    assert third_level_inputs
     third_level_job_ids = {input.job_id for input in third_level_inputs} - first_level_job_ids
-    third_level_jobs = [job for job in lineage.jobs if job.id in third_level_job_ids]
-    assert third_level_jobs
+    assert third_level_job_ids
 
     outputs = second_level_outputs
     output_stats = relation_stats_by_jobs(outputs)
     inputs = first_level_inputs + third_level_inputs
     input_stats = relation_stats_by_jobs(inputs)
-    datasets = first_level_datasets + second_level_datasets
 
-    jobs = first_level_jobs + third_level_jobs
+    dataset_ids = {first_level_dataset.id} | second_level_dataset_ids
+    datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
+
+    job_ids = first_level_job_ids | third_level_job_ids
+    jobs = [job for job in lineage.jobs if job.id in job_ids]
 
     jobs = await enrich_jobs(jobs, async_session)
     datasets = await enrich_datasets(datasets, async_session)
@@ -884,7 +883,7 @@ async def test_get_dataset_lineage_with_depth_and_granularity_job(
         "v1/datasets/lineage",
         params={
             "since": since.isoformat(),
-            "start_node_id": some_input.dataset_id,
+            "start_node_id": first_level_dataset.id,
             "direction": "DOWNSTREAM",
             "depth": 3,
             "granularity": "JOB",
@@ -963,50 +962,46 @@ async def test_get_dataset_lineage_with_depth_and_granularity_operation(
     lineage_with_depth: LineageResult,
 ):
     lineage = lineage_with_depth
+    # Select only relations marked with *
+    # J1 -*> R1 -*> O1, D1 *-> O1 -*> D2
+    # J2 -*> R2 -*> O2, D2 -*> O2 --> D3
+    # J3 --> R3 --> O3, D3 --> O3 --> D4
 
-    some_input = lineage.inputs[0]
-    first_level_inputs = [input for input in lineage.inputs if input.dataset_id == some_input.dataset_id]
-    first_level_dataset_ids = {input.dataset_id for input in first_level_inputs}
-    first_level_datasets = [dataset for dataset in lineage.datasets if dataset.id in first_level_dataset_ids]
-
-    # Go inputs[first level] -> operations[first level] + runs[first level] + jobs[first level]
+    # Go datasets[first level] -> operations[first level] + runs[first level] + jobs[first level]
+    first_level_dataset = lineage.datasets[0]
+    first_level_inputs = [input for input in lineage.inputs if input.dataset_id == first_level_dataset.id]
+    assert first_level_inputs
     first_level_operation_ids = {input.operation_id for input in first_level_inputs}
-    first_level_operations = [
-        operation for operation in lineage.operations if operation.id in first_level_operation_ids
-    ]
-    first_level_run_ids = {operation.run_id for operation in first_level_operations}
-    first_level_runs = [run for run in lineage.runs if run.id in first_level_run_ids]
-    first_level_job_ids = {run.job_id for run in first_level_runs}
-    first_level_jobs = [job for job in lineage.jobs if job.id in first_level_job_ids]
-    assert first_level_runs
+    assert first_level_operation_ids
 
-    # Go operations[first level] -> outputs[second level]
+    # Go operations[first level] -> datasets[second level]
     second_level_outputs = [output for output in lineage.outputs if output.operation_id in first_level_operation_ids]
-    second_level_dataset_ids = {output.dataset_id for output in second_level_outputs}
-    second_level_datasets = [dataset for dataset in lineage.datasets if dataset.id in second_level_dataset_ids]
     assert second_level_outputs
+    second_level_dataset_ids = {output.dataset_id for output in second_level_outputs}
+    assert second_level_dataset_ids
 
-    # Go outputs[second level] -> operations[third level] + runs[third level] + jobs[third level]
+    # Go datasets[second level] -> operations[third level] + runs[third level] + jobs[third level]
     third_level_inputs = [input for input in lineage.inputs if input.dataset_id in second_level_dataset_ids]
+    assert third_level_inputs
     third_level_operation_ids = {input.operation_id for input in third_level_inputs} - first_level_operation_ids
-    third_level_operations = [
-        operation for operation in lineage.operations if operation.id in third_level_operation_ids
-    ]
-    third_level_run_ids = {operation.run_id for operation in third_level_operations} - first_level_run_ids
-    third_level_runs = [run for run in lineage.runs if run.id in third_level_run_ids]
-    third_level_job_ids = {run.job_id for run in third_level_runs} - first_level_job_ids
-    third_level_jobs = [job for job in lineage.jobs if job.id in third_level_job_ids]
-    assert third_level_runs
+    assert third_level_operation_ids
 
     outputs = second_level_outputs
     output_stats = relation_stats_by_operations(outputs)
     inputs = first_level_inputs + third_level_inputs
     input_stats = relation_stats_by_operations(inputs)
 
-    datasets = first_level_datasets + second_level_datasets
-    operations = first_level_operations + third_level_operations
-    runs = first_level_runs + third_level_runs
-    jobs = first_level_jobs + third_level_jobs
+    dataset_ids = {first_level_dataset.id} | second_level_dataset_ids
+    datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
+
+    operation_ids = first_level_operation_ids | third_level_operation_ids
+    operations = [operation for operation in lineage.operations if operation.id in operation_ids]
+
+    run_ids = {input.run_id for input in inputs}
+    runs = [run for run in lineage.runs if run.id in run_ids]
+
+    job_ids = {input.job_id for input in inputs}
+    jobs = [job for job in lineage.jobs if job.id in job_ids]
 
     datasets = await enrich_datasets(datasets, async_session)
     runs = await enrich_runs(runs, async_session)
@@ -1017,7 +1012,7 @@ async def test_get_dataset_lineage_with_depth_and_granularity_operation(
         "v1/datasets/lineage",
         params={
             "since": since.isoformat(),
-            "start_node_id": some_input.dataset_id,
+            "start_node_id": first_level_dataset.id,
             "direction": "DOWNSTREAM",
             "depth": 3,
             "granularity": "OPERATION",

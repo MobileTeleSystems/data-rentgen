@@ -391,11 +391,8 @@ async def test_get_operation_lineage_with_direction_and_until(
 ):
     # TODO: This test should be change cause `until` for operation has sense only for `depth` > 1
     lineage = simple_lineage
-    # There is no guarantee that first operation will have any inputs.
-    # so we need to search for any operation
-    some_input = lineage.inputs[0]
-    operation = next(operation for operation in lineage.operations if operation.id == some_input.operation_id)
 
+    operation = lineage.operations[0]
     run = next(run for run in lineage.runs if run.id == operation.run_id)
     job = next(job for job in lineage.jobs if job.id == run.job_id)
 
@@ -524,34 +521,30 @@ async def test_get_operation_lineage_with_depth(
     lineage_with_depth: LineageResult,
 ):
     lineage = lineage_with_depth
+    # Select only relations marked with *
+    # J1 -*> R1 -*> O1, D1 --> O1 -*> D2
+    # J2 -*> R2 -*> O2, D2 -*> O2 -*> D3
+    # J3 --> R3 --> O3, D3 --> O3 --> D4
 
-    # There is no guarantee that first operation will have any output.
-    # so we need to search for any operation
-    some_output = lineage.outputs[0]
-    some_operation = next(operation for operation in lineage.operations if operation.id == some_output.operation_id)
+    first_level_operation = lineage.operations[0]
 
     # Go operations[first level] -> datasets[second level]
-    first_level_outputs = [output for output in lineage.outputs if output.operation_id == some_operation.id]
+    first_level_outputs = [output for output in lineage.outputs if output.operation_id == first_level_operation.id]
     first_level_dataset_ids = {output.dataset_id for output in first_level_outputs}
-    first_level_datasets = [dataset for dataset in lineage.datasets if dataset.id in first_level_dataset_ids]
-    assert first_level_datasets
+    assert first_level_dataset_ids
 
     # Go datasets[second level] -> operations[second level]
     second_level_inputs = [input for input in lineage.inputs if input.dataset_id in first_level_dataset_ids]
     second_level_operation_ids = {input.operation_id for input in second_level_inputs} - {
-        some_operation.id,
+        first_level_operation.id,
     }
-    second_level_operations = [
-        operation for operation in lineage.operations if operation.id in second_level_operation_ids
-    ]
-    assert second_level_operations
+    assert second_level_operation_ids
 
     # Go operations[second level] -> datasets[third level]
     # There are more levels in this graph, but we stop here
     third_level_outputs = [output for output in lineage.outputs if output.operation_id in second_level_operation_ids]
     third_level_dataset_ids = {output.dataset_id for output in third_level_outputs} - first_level_dataset_ids
-    third_level_datasets = [dataset for dataset in lineage.datasets if dataset.id in third_level_dataset_ids]
-    assert third_level_datasets
+    assert third_level_dataset_ids
 
     inputs = second_level_inputs
     input_stats = relation_stats(inputs)
@@ -561,7 +554,7 @@ async def test_get_operation_lineage_with_depth(
     dataset_ids = first_level_dataset_ids | third_level_dataset_ids
     datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
 
-    operation_ids = {some_operation.id} | second_level_operation_ids
+    operation_ids = {first_level_operation.id} | second_level_operation_ids
     operations = [operation for operation in lineage.operations if operation.id in operation_ids]
 
     run_ids = {operation.run_id for operation in operations}
@@ -579,7 +572,7 @@ async def test_get_operation_lineage_with_depth(
         "v1/operations/lineage",
         params={
             "since": since.isoformat(),
-            "start_node_id": str(some_operation.id),
+            "start_node_id": str(first_level_operation.id),
             "direction": "DOWNSTREAM",
             "depth": 3,
         },
