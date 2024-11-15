@@ -786,30 +786,29 @@ async def test_get_run_lineage_with_depth(
     lineage_with_depth: LineageResult,
 ):
     lineage = lineage_with_depth
+    # Select only relations marked with *
+    # J1 -*> R1, D1 --> R1 -*> D2
+    # J2 -*> R2, D2 -*> R2 -*> D3
+    # J3 --> R3, D3 --> R3 --> D4
 
-    # There is no guarantee that first run will have any outputs
-    # so we need to search for any run
-    output = lineage.outputs[0]
-    run = next(run for run in lineage.runs if run.id == output.run_id)
+    first_level_run = lineage.runs[0]
 
-    # Go operations[first level] -> datasets[second level]
-    first_level_outputs = [output for output in lineage.outputs if output.run_id == run.id]
+    # Go runs[first level] -> datasets[second level]
+    first_level_outputs = [output for output in lineage.outputs if output.run_id == first_level_run.id]
     first_level_dataset_ids = {output.dataset_id for output in first_level_outputs}
     first_level_datasets = [dataset for dataset in lineage.datasets if dataset.id in first_level_dataset_ids]
     assert first_level_datasets
 
-    # Go datasets[second level] -> operations[second level] -> runs[second level]
+    # Go datasets[second level] -> runs[second level]
     second_level_inputs = [input for input in lineage.inputs if input.dataset_id in first_level_dataset_ids]
-    second_level_run_ids = {input.run_id for input in second_level_inputs} - {run.id}
-    second_level_runs = [run for run in lineage.runs if run.id in second_level_run_ids]
-    assert second_level_runs
+    second_level_run_ids = {input.run_id for input in second_level_inputs} - {first_level_run.id}
+    assert second_level_run_ids
 
     # Go runs[second level] -> datasets[third level]
     # There are more levels in this graph, but we stop here
     third_level_outputs = [output for output in lineage.outputs if output.run_id in second_level_run_ids]
     third_level_dataset_ids = {output.dataset_id for output in third_level_outputs} - first_level_dataset_ids
-    third_level_datasets = [dataset for dataset in lineage.datasets if dataset.id in third_level_dataset_ids]
-    assert third_level_datasets
+    assert third_level_dataset_ids
 
     inputs = second_level_inputs
     input_stats = relation_stats(inputs)
@@ -819,7 +818,8 @@ async def test_get_run_lineage_with_depth(
     dataset_ids = first_level_dataset_ids | third_level_dataset_ids
     datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
 
-    runs = [run] + second_level_runs
+    run_ids = {first_level_run.id} | second_level_run_ids
+    runs = [run for run in lineage.runs if run.id in run_ids]
 
     job_ids = {run.job_id for run in runs}
     jobs = [job for job in lineage.jobs if job.id in job_ids]
@@ -831,8 +831,8 @@ async def test_get_run_lineage_with_depth(
     response = await test_client.get(
         "v1/runs/lineage",
         params={
-            "since": run.created_at.isoformat(),
-            "start_node_id": str(run.id),
+            "since": first_level_run.created_at.isoformat(),
+            "start_node_id": str(first_level_run.id),
             "direction": "DOWNSTREAM",
             "depth": 3,
         },
@@ -934,23 +934,25 @@ async def test_get_run_lineage_with_depth_and_operation_granularity(
     lineage_with_depth: LineageResult,
 ):
     lineage = lineage_with_depth
+    # Select only relations marked with *
+    # J1 -*> R1 -*> O1, D1 --> O1 -*> D2
+    # J2 -*> R2 -*> O2, D2 -*> O2 -*> D3
+    # J3 --> R3 --> O3, D3 --> O3 --> D4
 
-    # There is no guarantee that first run will have any outputs
-    # so we need to search for any run
-    output = lineage.outputs[0]
-    operation = next(operation for operation in lineage.operations if operation.id == output.operation_id)
-    run = next(run for run in lineage.runs if run.id == operation.run_id)
+    first_level_run = lineage.runs[0]
 
     # Go operations[first level] -> datasets[second level]
-    first_level_operations = [operation for operation in lineage.operations if operation.run_id == run.id]
+    first_level_operations = [operation for operation in lineage.operations if operation.run_id == first_level_run.id]
+    assert first_level_operations
     first_level_operation_ids = {operation.id for operation in first_level_operations}
     first_level_outputs = [output for output in lineage.outputs if output.operation_id in first_level_operation_ids]
+    assert first_level_outputs
     first_level_dataset_ids = {output.dataset_id for output in first_level_outputs}
-    first_level_datasets = [dataset for dataset in lineage.datasets if dataset.id in first_level_dataset_ids]
-    assert first_level_datasets
+    assert first_level_dataset_ids
 
     # Go datasets[second level] -> operations[second level]
     second_level_inputs = [input for input in lineage.inputs if input.dataset_id in first_level_dataset_ids]
+    assert second_level_inputs
     second_level_operation_ids = {input.operation_id for input in second_level_inputs} - first_level_operation_ids
     second_level_operations = [
         operation for operation in lineage.operations if operation.id in second_level_operation_ids
@@ -961,8 +963,7 @@ async def test_get_run_lineage_with_depth_and_operation_granularity(
     # There are more levels in this graph, but we stop here
     third_level_outputs = [output for output in lineage.outputs if output.operation_id in second_level_operation_ids]
     third_level_dataset_ids = {output.dataset_id for output in third_level_outputs} - first_level_dataset_ids
-    third_level_datasets = [dataset for dataset in lineage.datasets if dataset.id in third_level_dataset_ids]
-    assert third_level_datasets
+    assert third_level_dataset_ids
 
     inputs = second_level_inputs
     input_stats = relation_stats(inputs)
@@ -988,8 +989,8 @@ async def test_get_run_lineage_with_depth_and_operation_granularity(
     response = await test_client.get(
         "v1/runs/lineage",
         params={
-            "since": run.created_at.isoformat(),
-            "start_node_id": str(run.id),
+            "since": first_level_run.created_at.isoformat(),
+            "start_node_id": str(first_level_run.id),
             "direction": "DOWNSTREAM",
             "granularity": "OPERATION",
             "depth": 3,
