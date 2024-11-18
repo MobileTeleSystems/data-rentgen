@@ -111,12 +111,12 @@ jobs:
           coverage xml -o combined_coverage.xml
 
       - name: Check Coverage
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./combined_coverage.xml
+          files: ./combined_coverage.xml
           fail_ci_if_error: true
-          plugin: noop
+          plugins: noop
 
       - name: All done
         run: echo 1
