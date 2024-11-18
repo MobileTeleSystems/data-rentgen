@@ -64,7 +64,7 @@ starlette-exporter = {version = "^0.23.0", optional = true}
 uvicorn = {version = "^0.32.0", optional = true}
 asyncpg = {version = "^0.30.0", optional = true}
 asgi-correlation-id = {version = "^4.3.4", optional = true}
-faststream = {extras = ["kafka", "cli"], version = "^0.5.28", optional = true}
+faststream = {extras = ["kafka", "cli"], version = "^0.5.30", optional = true}
 # used by aiokafka for LZ4, Snappy, ZSTD compression algorithms
 cramjam = {version = "^2.8.3", optional = true}
 packaging = {version = "^24.2", optional = true}
@@ -114,7 +114,7 @@ pytest-asyncio = "^0.21.1"
 pytest-randomly = "^3.16.0"
 pytest-deadfixtures = "^2.2.1"
 pytest-rerunfailures = "^14.0"
-coverage = "^7.6.4"
+coverage = "^7.6.7"
 psycopg2-binary = "^2.9.9"
 gevent = "^24.11.1"
 deepdiff = "^8.0.1"
