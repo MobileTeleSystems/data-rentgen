@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import Iterable
+
 from data_rentgen.server.schemas.v1 import (
     DatasetResponseV1,
     JobResponseV1,
@@ -56,17 +58,17 @@ async def build_lineage_response(lineage: LineageServiceResult) -> LineageRespon
         )
         response.relations.append(relation)
 
-    input_relations = await _add_input_relations(lineage.inputs)
+    input_relations = await _add_input_relations(lineage.inputs.values())
     response.relations.extend(input_relations)
 
-    output_relations = await _add_output_relations(lineage.outputs)
+    output_relations = await _add_output_relations(lineage.outputs.values())
     response.relations.extend(output_relations)
 
     return response
 
 
 async def _add_input_relations(
-    inputs: list,
+    inputs: Iterable,
 ) -> list[LineageInputRelationV1]:
     relations = []
     for input in inputs:
@@ -89,7 +91,7 @@ async def _add_input_relations(
 
 
 async def _add_output_relations(
-    outputs: list,
+    outputs: Iterable,
 ) -> list[LineageOutputRelationV1]:
     relations = []
     for output in outputs:

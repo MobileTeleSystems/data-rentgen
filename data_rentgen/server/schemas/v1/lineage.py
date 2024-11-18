@@ -50,6 +50,7 @@ class BaseLineageQueryV1(BaseModel):
         examples=["2008-09-15T15:53:00+05:00"],
     )
     direction: LineageDirectionV1 = Field(
+        default=LineageDirectionV1.BOTH,
         description="Direction of the lineage",
         examples=["DOWNSTREAM", "UPSTREAM", "BOTH"],
     )
@@ -75,8 +76,8 @@ class BaseLineageQueryV1(BaseModel):
 class DatasetLineageQueryV1(BaseLineageQueryV1):
     start_node_id: int = Field(description="Dataset id", examples=[42])
     granularity: Literal["OPERATION", "RUN", "JOB"] = Field(
-        description="Granularity of the dataset lineage",
         default="RUN",
+        description="Granularity of the dataset lineage",
         examples=["OPERATION", "RUN", "JOB"],
     )
 
@@ -86,8 +87,8 @@ class DatasetLineageQueryV1(BaseLineageQueryV1):
 class JobLineageQueryV1(BaseLineageQueryV1):
     start_node_id: int = Field(description="Job id", examples=[42])
     granularity: Literal["JOB", "RUN"] = Field(
-        description="Granularity of the job lineage",
         default="JOB",
+        description="Granularity of the job lineage",
         examples=["JOB", "RUN"],
     )
 
@@ -99,8 +100,8 @@ class OperationLineageQueryV1(BaseLineageQueryV1):
 class RunLineageQueryV1(BaseLineageQueryV1):
     start_node_id: UUID = Field(description="Run id", examples=["00000000-0000-0000-0000-000000000000"])
     granularity: Literal["OPERATION", "RUN"] = Field(
-        description="Granularity of the run lineage",
         default="RUN",
+        description="Granularity of the run lineage",
         examples=["OPERATION", "RUN"],
     )
 

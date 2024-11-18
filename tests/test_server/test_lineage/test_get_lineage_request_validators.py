@@ -10,7 +10,7 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
 
 
 @pytest.mark.parametrize(
-    "entity_kind,granularity",
+    ["entity_kind", "granularity"],
     [
         ("operations", None),
         ("datasets", "RUN"),
@@ -26,21 +26,14 @@ async def test_get_lineage_no_filter(test_client: AsyncClient, entity_kind: str,
                 {
                     "code": "missing",
                     "context": {},
-                    "input": {"depth": 1},
+                    "input": {"depth": 1, "direction": "BOTH"},
                     "location": ["query", "since"],
                     "message": "Field required",
                 },
                 {
                     "code": "missing",
                     "context": {},
-                    "input": {"depth": 1},
-                    "location": ["query", "direction"],
-                    "message": "Field required",
-                },
-                {
-                    "code": "missing",
-                    "context": {},
-                    "input": {"depth": 1},
+                    "input": {"depth": 1, "direction": "BOTH"},
                     "location": ["query", "start_node_id"],
                     "message": "Field required",
                 },
@@ -79,7 +72,6 @@ async def test_get_lineage_missing_id(
         params={
             "since": since.isoformat(),
             "start_node_id": start_node_id,
-            "direction": "DOWNSTREAM",
         },
     )
 
@@ -106,7 +98,6 @@ async def test_get_lineage_start_node_id_int_type_validation(
         params={
             "since": since.isoformat(),
             "start_node_id": start_node_id,
-            "direction": "DOWNSTREAM",
         },
     )
 
@@ -123,7 +114,7 @@ async def test_get_lineage_start_node_id_int_type_validation(
                         "query",
                         "start_node_id",
                     ],
-                    "message": f"Input should be a valid integer, unable to parse string as an integer",
+                    "message": "Input should be a valid integer, unable to parse string as an integer",
                 },
             ],
             "message": "Invalid request",
@@ -147,7 +138,6 @@ async def test_get_lineage_start_node_id_uuid_type_validation(
         params={
             "since": since.isoformat(),
             "start_node_id": start_node_id,
-            "direction": "DOWNSTREAM",
         },
     )
 
@@ -182,7 +172,6 @@ async def test_get_lineage_until_less_than_since(test_client: AsyncClient):
             "since": since.isoformat(),
             "until": until.isoformat(),
             "start_node_id": str(generate_new_uuid()),
-            "direction": "DOWNSTREAM",
         },
     )
 
@@ -225,7 +214,6 @@ async def test_get_lineage_depth_out_of_bounds(
         params={
             "since": since.isoformat(),
             "start_node_id": str(generate_new_uuid()),
-            "direction": "DOWNSTREAM",
             "depth": depth,
         },
     )
