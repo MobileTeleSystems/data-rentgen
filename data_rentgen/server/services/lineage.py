@@ -31,8 +31,8 @@ class LineageServiceResult:
     operations: dict[UUID, Operation] = field(default_factory=dict)
     datasets: dict[int, Dataset] = field(default_factory=dict)
     dataset_symlinks: dict[tuple[int, int], DatasetSymlink] = field(default_factory=dict)
-    inputs: list[Input] = field(default_factory=list)
-    outputs: list[Output] = field(default_factory=list)
+    inputs: dict[tuple[int, int, UUID | None, UUID | None], Input] = field(default_factory=dict)
+    outputs: dict[tuple[int, int, UUID | None, UUID | None, str | None], Output] = field(default_factory=dict)
 
     def merge(self, other: "LineageServiceResult") -> "LineageServiceResult":
         self.jobs.update(other.jobs)
@@ -40,8 +40,8 @@ class LineageServiceResult:
         self.operations.update(other.operations)
         self.datasets.update(other.datasets)
         self.dataset_symlinks.update(other.dataset_symlinks)
-        self.inputs.extend(other.inputs)
-        self.outputs.extend(other.outputs)
+        self.inputs.update(other.inputs)
+        self.outputs.update(other.outputs)
         return self
 
 
@@ -134,8 +134,11 @@ class LineageService:
             jobs=jobs_by_id,
             runs=runs_by_id,
             operations=operations_by_id,
-            inputs=inputs,
-            outputs=outputs,
+            inputs={(input.dataset_id, input.job_id, input.run_id, input.operation_id): input for input in inputs},
+            outputs={
+                (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.type): output
+                for output in outputs
+            },
         )
 
         dataset_ids = sorted(
@@ -238,8 +241,11 @@ class LineageService:
             jobs=jobs_by_id,
             runs=runs_by_id,
             operations=operations_by_id,
-            inputs=inputs,
-            outputs=outputs,
+            inputs={(input.dataset_id, input.job_id, input.run_id, input.operation_id): input for input in inputs},
+            outputs={
+                (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.type): output
+                for output in outputs
+            },
         )
 
         dataset_ids = sorted(
@@ -330,8 +336,11 @@ class LineageService:
             jobs=jobs_by_id,
             runs=runs_by_id,
             operations=operations_by_id,
-            inputs=inputs,
-            outputs=outputs,
+            inputs={(input.dataset_id, input.job_id, input.run_id, input.operation_id): input for input in inputs},
+            outputs={
+                (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.type): output
+                for output in outputs
+            },
         )
 
         dataset_ids = {input.dataset_id for input in inputs} | {output.dataset_id for output in outputs}
@@ -515,8 +524,11 @@ class LineageService:
         result = LineageServiceResult(
             datasets=datasets_by_id,
             dataset_symlinks=dataset_symlinks_by_id,
-            inputs=inputs,
-            outputs=outputs,
+            inputs={(input.dataset_id, input.job_id, input.run_id, input.operation_id): input for input in inputs},
+            outputs={
+                (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.type): output
+                for output in outputs
+            },
         )
         operation_ids = {input.operation_id for input in inputs} | {output.operation_id for output in outputs}
         operation_ids_to_fetch = sorted(operation_ids - ids_to_skip.operations)
@@ -577,8 +589,11 @@ class LineageService:
         result = LineageServiceResult(
             datasets=datasets_by_id,
             dataset_symlinks=dataset_symlinks_by_id,
-            inputs=inputs,
-            outputs=outputs,
+            inputs={(input.dataset_id, input.job_id, input.run_id, input.operation_id): input for input in inputs},
+            outputs={
+                (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.type): output
+                for output in outputs
+            },
         )
 
         run_ids = {input.run_id for input in inputs} | {output.run_id for output in outputs}
@@ -637,8 +652,11 @@ class LineageService:
         result = LineageServiceResult(
             datasets=datasets_by_id,
             dataset_symlinks=dataset_symlinks_by_id,
-            inputs=inputs,
-            outputs=outputs,
+            inputs={(input.dataset_id, input.job_id, input.run_id, input.operation_id): input for input in inputs},
+            outputs={
+                (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.type): output
+                for output in outputs
+            },
         )
         ids_to_skip = ids_to_skip or IdsToSkip()
         job_ids = {input.job_id for input in inputs} | {output.job_id for output in outputs}

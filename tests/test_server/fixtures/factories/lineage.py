@@ -260,80 +260,71 @@ async def lineage_with_depth_and_cycle(
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
     user: User,
 ):
-    # Two trees of J -> R -> O, connected via one dataset, forming cycles:
-    # J1 -> R1 -> O1, D -> O1 -> D
-    # J2 -> R2 -> O2, D -> O2 -> D
+    # Two trees of J -> R -> O, forming a cycle:
+    # J1 -> R1 -> O1, D1 -> O1 -> D2
+    # J2 -> R2 -> O2, D2 -> O2 -> D1
 
-    created_at = datetime.now()
+    num_datasets = 2
     num_jobs = 2
+    created_at = datetime.now()
+
     lineage = LineageResult()
     async with async_session_maker() as async_session:
-        dataset_location = await create_location(async_session)
-        dataset = await create_dataset(async_session, location_id=dataset_location.id)
-        lineage.datasets.append(dataset)
+        dataset_locations = [await create_location(async_session) for _ in range(num_datasets)]
+        datasets = [await create_dataset(async_session, location_id=location.id) for location in dataset_locations]
+        lineage.datasets.extend(datasets)
 
-        jobs_location = [await create_location(async_session) for _ in range(num_jobs)]
-        jobs = [await create_job(async_session, location_id=location.id) for location in jobs_location]
-        lineage.jobs.extend(jobs)
+        # Create a job, run and operation with IO datasets.
+        for i in range(num_jobs):
+            from_dataset, to_dataset = (datasets[0], datasets[1]) if i == 0 else (datasets[1], datasets[0])
 
-        runs = [
-            await create_run(
+            job_location = await create_location(async_session)
+            job = await create_job(async_session, location_id=job_location.id)
+            lineage.jobs.append(job)
+
+            run = await create_run(
                 async_session,
                 run_kwargs={
                     "job_id": job.id,
                     "started_by_user_id": user.id,
-                    "created_at": created_at + timedelta(seconds=0.1),
+                    "created_at": created_at + timedelta(seconds=i),
                 },
             )
-            for job in jobs
-        ]
-        lineage.runs.extend(runs)
+            lineage.runs.append(run)
 
-        operations = [
-            await create_operation(
+            operation = await create_operation(
                 async_session,
                 operation_kwargs={
                     "run_id": run.id,
                     "created_at": run.created_at + timedelta(seconds=0.2),
                 },
             )
-            for run in runs
-        ]
-        lineage.operations.extend(operations)
+            lineage.operations.append(operation)
 
-        inputs = [
-            await create_input(
+            input = await create_input(
                 async_session,
                 input_kwargs={
                     "created_at": operation.created_at,
                     "operation_id": operation.id,
-                    "run_id": operation.run_id,
+                    "run_id": run.id,
                     "job_id": job.id,
-                    "dataset_id": dataset.id,
+                    "dataset_id": from_dataset.id,
                 },
             )
-            for job, operation in zip(jobs, operations)
-        ]
-        lineage.inputs.extend(inputs)
+            lineage.inputs.append(input)
 
-        outputs = [
-            await create_output(
+            output = await create_output(
                 async_session,
                 output_kwargs={
                     "created_at": operation.created_at,
                     "operation_id": operation.id,
-                    "run_id": operation.run_id,
+                    "run_id": run.id,
                     "job_id": job.id,
-                    "dataset_id": dataset.id,
+                    "dataset_id": to_dataset.id,
                     "type": OutputType.APPEND,
                 },
             )
-            for job, operation in zip(jobs, operations)
-        ]
-        lineage.outputs.extend(outputs)
-
-        lineage.runs.sort(key=lambda x: x.id)
-        lineage.jobs.sort(key=lambda x: x.id)
+            lineage.outputs.append(output)
 
     yield lineage
 
