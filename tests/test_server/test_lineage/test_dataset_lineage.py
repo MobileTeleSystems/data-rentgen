@@ -1373,12 +1373,12 @@ async def test_get_dataset_lineage_with_depth_and_granularity_operation(
     }
 
 
-async def test_get_dataset_lineage_with_depth_ignore_run_cycles(
+async def test_get_dataset_lineage_with_depth_ignore_cycles(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    lineage_with_depth_and_cycle: LineageResult,
+    cyclic_lineage: LineageResult,
 ):
-    lineage = lineage_with_depth_and_cycle
+    lineage = cyclic_lineage
     # Select all relations:
     # J1 -*> R1 -*> O1, D1 -*> O1 -*> D2
     # J2 -*> R2 -*> O2, D2 -*> O2 -*> D1
@@ -1443,6 +1443,161 @@ async def test_get_dataset_lineage_with_depth_ignore_run_cycles(
                 ),
             }
             for output in sorted(lineage.outputs, key=lambda x: (x.run_id, x.dataset_id))
+        ],
+        "nodes": [
+            {
+                "kind": "JOB",
+                "id": job.id,
+                "name": job.name,
+                "type": job.type,
+                "location": {
+                    "id": job.location.id,
+                    "name": job.location.name,
+                    "type": job.location.type,
+                    "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
+                },
+            }
+            for job in sorted(jobs, key=lambda x: x.id)
+        ]
+        + [
+            {
+                "kind": "DATASET",
+                "id": dataset.id,
+                "format": dataset.format,
+                "name": dataset.name,
+                "location": {
+                    "id": dataset.location.id,
+                    "name": dataset.location.name,
+                    "type": dataset.location.type,
+                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                    "external_id": dataset.location.external_id,
+                },
+            }
+            for dataset in sorted(datasets, key=lambda x: x.id)
+        ]
+        + [
+            {
+                "kind": "RUN",
+                "id": str(run.id),
+                "job_id": run.job_id,
+                "created_at": run.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "parent_run_id": str(run.parent_run_id),
+                "status": run.status.name,
+                "external_id": run.external_id,
+                "attempt": run.attempt,
+                "persistent_log_url": run.persistent_log_url,
+                "running_log_url": run.running_log_url,
+                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "started_by_user": {"name": run.started_by_user.name},
+                "start_reason": run.start_reason.value,
+                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "end_reason": run.end_reason,
+            }
+            for run in sorted(runs, key=lambda x: x.id)
+        ],
+    }
+
+
+async def test_get_dataset_lineage_with_depth_ignore_unrelated_datasets(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    branchy_lineage: LineageResult,
+):
+    lineage = branchy_lineage
+    # Start from D3, build lineage with direction=BOTH
+    initial_dataset = lineage.datasets[3]
+
+    # Select only relations marked with *
+    #     D0   D1
+    #      *\ /*
+    # J0 -*> R0 -> D2
+    #        *\
+    #         D3  D4
+    #          *\ /
+    #     J1 -*> R1 -*> D5
+    #            *\
+    #             D6  D7
+    #              *\ /
+    #         J2 -*> R2 -> D8
+    #                 \
+    #                  D9
+
+    datasets = [
+        lineage.datasets[0],
+        lineage.datasets[1],
+        # D2 is not a part of (D3,R1,D0,D1) input chain
+        lineage.datasets[3],
+        # D4 is not a part of (D3,R1,D0,D1) input chain
+        lineage.datasets[5],
+        lineage.datasets[6],
+        # D7 is not a part of (D3,R1,D6) input chain
+        # D8, D9 exceed depth=3
+    ]
+    dataset_ids = {dataset.id for dataset in datasets}
+
+    inputs = [input for input in lineage.inputs if input.dataset_id in dataset_ids]
+    input_stats = relation_stats_by_runs(inputs)
+    assert inputs
+
+    outputs = [output for output in lineage.outputs if output.dataset_id in dataset_ids]
+    output_stats = relation_stats_by_runs(outputs)
+    assert outputs
+
+    jobs = await enrich_jobs(lineage.jobs, async_session)
+    runs = await enrich_runs(lineage.runs, async_session)
+    datasets = await enrich_datasets(datasets, async_session)
+    since = min(run.created_at for run in runs)
+
+    response = await test_client.get(
+        "v1/datasets/lineage",
+        params={
+            "since": since.isoformat(),
+            "start_node_id": initial_dataset.id,
+            "depth": 3,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": [
+            {
+                "kind": "PARENT",
+                "from": {"kind": "JOB", "id": run.job_id},
+                "to": {"kind": "RUN", "id": str(run.id)},
+            }
+            for run in sorted(runs, key=lambda x: x.id)
+        ]
+        + [
+            {
+                "kind": "INPUT",
+                "from": {"kind": "DATASET", "id": input.dataset_id},
+                "to": {"kind": "RUN", "id": str(input.run_id)},
+                "num_bytes": input_stats[(input.run_id, input.dataset_id)]["num_bytes"],
+                "num_rows": input_stats[(input.run_id, input.dataset_id)]["num_rows"],
+                "num_files": input_stats[(input.run_id, input.dataset_id)]["num_files"],
+                "schema": None,
+                "last_interaction_at": input_stats[(input.run_id, input.dataset_id)]["created_at"].strftime(
+                    "%Y-%m-%dT%H:%M:%S.%fZ",
+                ),
+            }
+            for input in sorted(inputs, key=lambda x: (x.dataset_id, x.run_id))
+        ]
+        + [
+            {
+                "kind": "OUTPUT",
+                "from": {"kind": "RUN", "id": str(output.run_id)},
+                "to": {"kind": "DATASET", "id": output.dataset_id},
+                "type": output.type,
+                "num_bytes": output_stats[(output.run_id, output.dataset_id)]["num_bytes"],
+                "num_rows": output_stats[(output.run_id, output.dataset_id)]["num_rows"],
+                "num_files": output_stats[(output.run_id, output.dataset_id)]["num_files"],
+                "schema": None,
+                "last_interaction_at": output_stats[(output.run_id, output.dataset_id)]["created_at"].strftime(
+                    "%Y-%m-%dT%H:%M:%S.%fZ",
+                ),
+            }
+            for output in sorted(outputs, key=lambda x: (x.run_id, x.dataset_id))
         ],
         "nodes": [
             {
