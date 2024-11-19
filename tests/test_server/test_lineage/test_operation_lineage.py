@@ -959,9 +959,9 @@ async def test_get_operation_lineage_with_depth(
 async def test_get_operation_lineage_with_depth_ignore_cycles(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    lineage_with_depth_and_cycle: LineageResult,
+    cyclic_lineage: LineageResult,
 ):
-    lineage = lineage_with_depth_and_cycle
+    lineage = cyclic_lineage
     # Select all relations:
     # J1 -*> R1 -*> O1, D1 -*> O1 -*> D2
     # J2 -*> R2 -*> O2, D2 -*> O2 -*> D1
@@ -1051,6 +1051,205 @@ async def test_get_operation_lineage_with_depth_ignore_cycles(
                 "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for output in sorted(lineage.outputs, key=lambda x: (x.operation_id, x.dataset_id))
+        ],
+        "nodes": [
+            {
+                "kind": "JOB",
+                "id": job.id,
+                "name": job.name,
+                "type": job.type,
+                "location": {
+                    "id": job.location.id,
+                    "name": job.location.name,
+                    "type": job.location.type,
+                    "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
+                },
+            }
+            for job in jobs
+        ]
+        + [
+            {
+                "kind": "DATASET",
+                "id": dataset.id,
+                "format": dataset.format,
+                "name": dataset.name,
+                "location": {
+                    "id": dataset.location.id,
+                    "name": dataset.location.name,
+                    "type": dataset.location.type,
+                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                    "external_id": dataset.location.external_id,
+                },
+            }
+            for dataset in datasets
+        ]
+        + [
+            {
+                "kind": "RUN",
+                "id": str(run.id),
+                "job_id": run.job_id,
+                "created_at": run.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "parent_run_id": str(run.parent_run_id),
+                "status": run.status.name,
+                "external_id": run.external_id,
+                "attempt": run.attempt,
+                "persistent_log_url": run.persistent_log_url,
+                "running_log_url": run.running_log_url,
+                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "started_by_user": {"name": run.started_by_user.name},
+                "start_reason": run.start_reason.value,
+                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "end_reason": run.end_reason,
+            }
+            for run in sorted(runs, key=lambda x: x.id)
+        ]
+        + [
+            {
+                "kind": "OPERATION",
+                "id": str(operation.id),
+                "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                "run_id": str(operation.run_id),
+                "name": operation.name,
+                "status": operation.status.name,
+                "type": operation.type.value,
+                "position": operation.position,
+                "group": operation.group,
+                "description": operation.description,
+                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+            }
+            for operation in sorted(lineage.operations, key=lambda x: x.id)
+        ],
+    }
+
+
+async def test_get_operation_lineage_with_depth_ignore_unrelated_datasets(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    branchy_lineage: LineageResult,
+):
+    lineage = branchy_lineage
+    # Start from O1, build lineage with direction=BOTH
+    operation = lineage.operations[1]
+
+    # Select only relations marked with *
+    #            D0   D1
+    #             *\ /*
+    # J0 -*> R0 -*> O0 -> D2
+    #               *\
+    #                D3  D4
+    #                 *\ /*
+    #     J1 -*> R1 -*> O1 -*> D5
+    #                   *\
+    #                    D6  D7
+    #                     *\ /
+    #         J2 -*> R2 -*> O1 -*> D8
+    #                       *\
+    #                         D9
+
+    datasets = [
+        lineage.datasets[0],
+        lineage.datasets[1],
+        # D2 is not a part of (O1,D3,O0,D0,D1) input chain
+        lineage.datasets[3],
+        lineage.datasets[4],
+        lineage.datasets[5],
+        lineage.datasets[6],
+        # D7 is not a part of (O1,D6,O2,D8,D9) output chain
+        lineage.datasets[8],
+        lineage.datasets[9],
+    ]
+    dataset_ids = {dataset.id for dataset in datasets}
+
+    inputs = [input for input in lineage.inputs if input.dataset_id in dataset_ids]
+    assert inputs
+
+    outputs = [output for output in lineage.outputs if output.dataset_id in dataset_ids]
+    assert outputs
+
+    jobs = await enrich_jobs(lineage.jobs, async_session)
+    runs = await enrich_runs(lineage.runs, async_session)
+    datasets = await enrich_datasets(datasets, async_session)
+    since = min(run.created_at for run in runs)
+
+    response = await test_client.get(
+        "v1/operations/lineage",
+        params={
+            "since": since.isoformat(),
+            "start_node_id": str(operation.id),
+            "depth": 3,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": [
+            {
+                "kind": "PARENT",
+                "from": {"kind": "JOB", "id": run.job_id},
+                "to": {"kind": "RUN", "id": str(run.id)},
+            }
+            for run in sorted(runs, key=lambda x: x.id)
+        ]
+        + [
+            {
+                "kind": "PARENT",
+                "from": {"kind": "RUN", "id": str(operation.run_id)},
+                "to": {"kind": "OPERATION", "id": str(operation.id)},
+            }
+            for operation in sorted(lineage.operations, key=lambda x: x.id)
+        ]
+        + [
+            {
+                "kind": "INPUT",
+                "from": {"kind": "DATASET", "id": input.dataset_id},
+                "to": {"kind": "OPERATION", "id": str(input.operation_id)},
+                "num_bytes": input.num_bytes,
+                "num_rows": input.num_rows,
+                "num_files": input.num_files,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in input.schema.fields
+                    ],
+                },
+                "last_interaction_at": input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            }
+            for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
+        ]
+        + [
+            {
+                "kind": "OUTPUT",
+                "from": {"kind": "OPERATION", "id": str(output.operation_id)},
+                "to": {"kind": "DATASET", "id": output.dataset_id},
+                "type": output.type,
+                "num_bytes": output.num_bytes,
+                "num_rows": output.num_rows,
+                "num_files": output.num_files,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in output.schema.fields
+                    ],
+                },
+                "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            }
+            for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))
         ],
         "nodes": [
             {

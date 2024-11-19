@@ -83,6 +83,9 @@ class LineageService:
         depth: int,
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
+        if not start_node_ids:
+            return LineageServiceResult()
+
         if logger.isEnabledFor(logging.INFO):
             logger.info(
                 "Get lineage by jobs %r, with direction %s, since %s, until %s, depth %s",
@@ -97,6 +100,7 @@ class LineageService:
             logger.info("No jobs found")
             return LineageServiceResult()
 
+        # Always include all requested jobs.
         jobs_by_id = {job.id: job for job in jobs}
 
         inputs = []
@@ -117,13 +121,9 @@ class LineageService:
             )
 
         ids_to_skip = ids_to_skip or IdsToSkip()
-        # Return only operations which have at least one input or output
-        input_operation_ids = {input.operation_id for input in inputs if input.operation_id is not None}
-        output_operation_ids = {output.operation_id for output in outputs if output.operation_id is not None}
-        operation_ids = input_operation_ids | output_operation_ids - ids_to_skip.operations
-        operations = await self._uow.operation.list_by_ids(sorted(operation_ids))
-        operations_by_id = {operation.id: operation for operation in operations}
 
+        # Include only runs which have at least one input or output.
+        # In case granularity == "JOB", all run_id are None.
         input_run_ids = {input.run_id for input in inputs if input.run_id is not None}
         output_run_ids = {output.run_id for output in outputs if output.run_id is not None}
         run_ids = input_run_ids | output_run_ids - ids_to_skip.runs
@@ -133,7 +133,6 @@ class LineageService:
         result = LineageServiceResult(
             jobs=jobs_by_id,
             runs=runs_by_id,
-            operations=operations_by_id,
             inputs={(input.dataset_id, input.job_id, input.run_id, input.operation_id): input for input in inputs},
             outputs={
                 (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.type): output
@@ -141,26 +140,42 @@ class LineageService:
             },
         )
 
-        dataset_ids = sorted(
-            {input.dataset_id for input in inputs} | {output.dataset_id for output in outputs} - ids_to_skip.datasets,
-        )
+        upstream_dataset_ids = {input.dataset_id for input in inputs} - ids_to_skip.datasets
+        downstream_dataset_ids = {output.dataset_id for output in outputs} - ids_to_skip.datasets
+        ids_to_skip = ids_to_skip.merge(IdsToSkip.from_result(result))
+
         if depth > 1:
+            # If we passed direction=BOTH, return only relations like `dataset1 -> current_job -> dataset2``,
+            # but do not include relations like `another_job -> dataset2`.
+            # Also datasets and symlinks will be populated by nested calls.
             result.merge(
                 await self.get_lineage_by_datasets(
-                    start_node_ids=dataset_ids,
-                    direction=direction,
+                    start_node_ids=sorted(upstream_dataset_ids),
+                    direction=LineageDirectionV1.UPSTREAM,
                     granularity=granularity,
                     since=since,
                     until=until,
                     depth=depth - 1,
-                    ids_to_skip=ids_to_skip.merge(IdsToSkip.from_result(result)),
+                    ids_to_skip=ids_to_skip,
+                ),
+            )
+            result.merge(
+                await self.get_lineage_by_datasets(
+                    start_node_ids=sorted(downstream_dataset_ids),
+                    direction=LineageDirectionV1.DOWNSTREAM,
+                    granularity=granularity,
+                    since=since,
+                    until=until,
+                    depth=depth - 1,
+                    ids_to_skip=ids_to_skip,
                 ),
             )
         else:
             # datasets and symlinks will be populated by nested call
+            dataset_ids = sorted(upstream_dataset_ids | downstream_dataset_ids)
             datasets = await self._uow.dataset.list_by_ids(dataset_ids)
 
-            extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(dataset_ids)
+            extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(dataset_ids, ids_to_skip)
             datasets.extend(extra_datasets)
 
             result.datasets = {dataset.id: dataset for dataset in datasets}
@@ -192,6 +207,9 @@ class LineageService:
         depth: int,
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
+        if not start_node_ids:
+            return LineageServiceResult()
+
         if logger.isEnabledFor(logging.INFO):
             logger.info(
                 "Get lineage by runs %r, with direction %s, since %s, until %s, depth %s",
@@ -206,6 +224,7 @@ class LineageService:
             logger.info("No runs found")
             return LineageServiceResult()
 
+        # Always include all requested runs.
         runs_by_id = {run.id: run for run in runs}
 
         inputs = []
@@ -225,8 +244,8 @@ class LineageService:
                 granularity=granularity,
             )
 
-        # Return only operations which have at least one input or output
-        # In case granularity == "RUN" operations will be empty
+        # Include only operations which have at least one input or output.
+        # In case granularity == "RUN", all operation_id are None.
         ids_to_skip = ids_to_skip or IdsToSkip()
         input_operation_ids = {input.operation_id for input in inputs if input.operation_id is not None}
         output_operation_ids = {output.operation_id for output in outputs if output.operation_id is not None}
@@ -248,26 +267,41 @@ class LineageService:
             },
         )
 
-        dataset_ids = sorted(
-            {input.dataset_id for input in inputs} | {output.dataset_id for output in outputs} - ids_to_skip.datasets,
-        )
+        upstream_dataset_ids = {input.dataset_id for input in inputs} - ids_to_skip.datasets
+        downstream_dataset_ids = {output.dataset_id for output in outputs} - ids_to_skip.datasets
+        ids_to_skip = ids_to_skip.merge(IdsToSkip.from_result(result))
+
         if depth > 1:
-            # datasets and symlinks will be populated by nested call
+            # If we passed direction=BOTH, return only relations like `dataset1 -> current_run -> dataset2``,
+            # but do not include relations like `another_run -> dataset2`.
+            # Also datasets and symlinks will be populated by nested calls.
             result.merge(
                 await self.get_lineage_by_datasets(
-                    start_node_ids=dataset_ids,
-                    direction=direction,
+                    start_node_ids=sorted(upstream_dataset_ids),
+                    direction=LineageDirectionV1.UPSTREAM,
                     granularity=granularity,
                     since=since,
                     until=until,
                     depth=depth - 1,
-                    ids_to_skip=ids_to_skip.merge(IdsToSkip.from_result(result)),
+                    ids_to_skip=ids_to_skip,
+                ),
+            )
+            result.merge(
+                await self.get_lineage_by_datasets(
+                    start_node_ids=sorted(downstream_dataset_ids),
+                    direction=LineageDirectionV1.DOWNSTREAM,
+                    granularity=granularity,
+                    since=since,
+                    until=until,
+                    depth=depth - 1,
+                    ids_to_skip=ids_to_skip,
                 ),
             )
         else:
+            dataset_ids = sorted(upstream_dataset_ids | downstream_dataset_ids)
             datasets = await self._uow.dataset.list_by_ids(dataset_ids)
 
-            extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(dataset_ids)
+            extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(dataset_ids, ids_to_skip)
             datasets.extend(extra_datasets)
 
             result.datasets = {dataset.id: dataset for dataset in datasets}
@@ -289,7 +323,7 @@ class LineageService:
             )
         return result
 
-    async def get_lineage_by_operations(
+    async def get_lineage_by_operations(  # noqa: WPS217
         self,
         start_node_ids: list[UUID],
         direction: LineageDirectionV1,
@@ -298,6 +332,9 @@ class LineageService:
         depth: int,
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
+        if not start_node_ids:
+            return LineageServiceResult()
+
         if logger.isEnabledFor(logging.INFO):
             logger.info(
                 "Get lineage by operations %r, with direction %s, since %s, until %s, depth %s",
@@ -313,16 +350,11 @@ class LineageService:
             logger.info("No operations found")
             return LineageServiceResult()
 
+        # Always include all requested operations.
         operations_by_id = {operation.id: operation for operation in operations}
         operation_ids = sorted(operations_by_id.keys())
 
-        inputs = []
-        outputs = []
-        if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
-            outputs = await self._uow.output.list_by_operation_ids(operation_ids)
-        if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
-            inputs = await self._uow.input.list_by_operation_ids(operation_ids)
-
+        # Also include all parent runs & jobs.
         ids_to_skip = ids_to_skip or IdsToSkip()
         run_ids = {operation.run_id for operation in operations}
         runs = await self._uow.run.list_by_ids(sorted(run_ids - ids_to_skip.runs))
@@ -331,6 +363,13 @@ class LineageService:
         job_ids = {run.job_id for run in runs}
         jobs = await self._uow.job.list_by_ids(sorted(job_ids - ids_to_skip.jobs))
         jobs_by_id = {job.id: job for job in jobs}
+
+        inputs = []
+        outputs = []
+        if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
+            outputs = await self._uow.output.list_by_operation_ids(operation_ids)
+        if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
+            inputs = await self._uow.input.list_by_operation_ids(operation_ids)
 
         result = LineageServiceResult(
             jobs=jobs_by_id,
@@ -343,26 +382,42 @@ class LineageService:
             },
         )
 
-        dataset_ids = {input.dataset_id for input in inputs} | {output.dataset_id for output in outputs}
-        dataset_ids_to_fetch = sorted(dataset_ids - ids_to_skip.datasets)
+        upstream_dataset_ids = {input.dataset_id for input in inputs} - ids_to_skip.datasets
+        downstream_dataset_ids = {output.dataset_id for output in outputs} - ids_to_skip.datasets
+        ids_to_skip = ids_to_skip.merge(IdsToSkip.from_result(result))
+
         if depth > 1:
-            # datasets and symlinks will be populated by nested call
+            # If we passed direction=BOTH, return only relations like `dataset1 -> current_operation -> dataset2``,
+            # but do not include relations like `another_operation -> dataset2`.
+            # Also datasets and symlinks will be populated by nested calls.
             result.merge(
                 await self.get_lineage_by_datasets(
-                    start_node_ids=dataset_ids_to_fetch,
-                    direction=direction,
+                    start_node_ids=sorted(upstream_dataset_ids),
+                    direction=LineageDirectionV1.UPSTREAM,
                     granularity="OPERATION",
                     since=since,
                     until=until,
                     depth=depth - 1,
-                    ids_to_skip=ids_to_skip.merge(IdsToSkip.from_result(result)),
+                    ids_to_skip=ids_to_skip,
+                ),
+            )
+            result.merge(
+                await self.get_lineage_by_datasets(
+                    start_node_ids=sorted(downstream_dataset_ids),
+                    direction=LineageDirectionV1.DOWNSTREAM,
+                    granularity="OPERATION",
+                    since=since,
+                    until=until,
+                    depth=depth - 1,
+                    ids_to_skip=ids_to_skip,
                 ),
             )
         else:
-            datasets = await self._uow.dataset.list_by_ids(dataset_ids_to_fetch)
+            dataset_ids = sorted(upstream_dataset_ids | downstream_dataset_ids)
+            datasets = await self._uow.dataset.list_by_ids(dataset_ids)
 
             extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(
-                sorted(dataset_ids),
+                dataset_ids,
                 ids_to_skip,
             )
             datasets.extend(extra_datasets)
@@ -396,6 +451,9 @@ class LineageService:
         depth: int,
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
+        if not start_node_ids:
+            return LineageServiceResult()
+
         if logger.isEnabledFor(logging.INFO):
             logger.info(
                 "Get lineage by datasets %r, with direction %s, since %s, until %s, depth %s",
@@ -503,19 +561,18 @@ class LineageService:
         depth: int,
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
-        ids_to_skip = ids_to_skip or IdsToSkip()
         inputs = []
         outputs = []
         if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             inputs = await self._uow.input.list_by_dataset_ids(
-                sorted(datasets_by_id.keys() - ids_to_skip.datasets),
+                sorted(datasets_by_id.keys()),
                 since=since,
                 until=until,
                 granularity="OPERATION",
             )
         if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
             outputs = await self._uow.output.list_by_dataset_ids(
-                sorted(datasets_by_id.keys() - ids_to_skip.datasets),
+                sorted(datasets_by_id.keys()),
                 since=since,
                 until=until,
                 granularity="OPERATION",
@@ -530,23 +587,39 @@ class LineageService:
                 for output in outputs
             },
         )
-        operation_ids = {input.operation_id for input in inputs} | {output.operation_id for output in outputs}
-        operation_ids_to_fetch = sorted(operation_ids - ids_to_skip.operations)
+
+        ids_to_skip = ids_to_skip or IdsToSkip()
+        downstream_operation_ids = {input.operation_id for input in inputs} - ids_to_skip.operations
+        upstream_operation_ids = {output.operation_id for output in outputs} - ids_to_skip.operations
+        ids_to_skip = ids_to_skip.merge(IdsToSkip.from_result(result))
 
         if depth > 1:
-            # operations, runs and jobs will be populated by nested call
+            # If we passed direction=BOTH, return only relations like `operation1 -> current_dataset -> operation2``,
+            # but do not include relations like `another_dataset -> operation2`.
+            # Also operations, runs and jobs will be populated by nested call.
             result.merge(
                 await self.get_lineage_by_operations(
-                    start_node_ids=operation_ids_to_fetch,
-                    direction=direction,
+                    start_node_ids=sorted(downstream_operation_ids),
+                    direction=LineageDirectionV1.DOWNSTREAM,
                     since=since,
                     until=until,
                     depth=depth - 1,
-                    ids_to_skip=ids_to_skip.merge(IdsToSkip.from_result(result)),
+                    ids_to_skip=ids_to_skip,
+                ),
+            )
+            result.merge(
+                await self.get_lineage_by_operations(
+                    start_node_ids=sorted(upstream_operation_ids),
+                    direction=LineageDirectionV1.UPSTREAM,
+                    since=since,
+                    until=until,
+                    depth=depth - 1,
+                    ids_to_skip=ids_to_skip,
                 ),
             )
         else:
-            operations = await self._uow.operation.list_by_ids(operation_ids_to_fetch)
+            operation_ids = sorted(downstream_operation_ids | upstream_operation_ids)
+            operations = await self._uow.operation.list_by_ids(operation_ids)
             result.operations = {operation.id: operation for operation in operations}
 
             run_ids = {operation.run_id for operation in operations}
@@ -569,23 +642,23 @@ class LineageService:
         depth: int,
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
-        ids_to_skip = ids_to_skip or IdsToSkip()
         inputs = []
         outputs = []
         if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             inputs = await self._uow.input.list_by_dataset_ids(
-                sorted(datasets_by_id.keys() - ids_to_skip.datasets),
+                sorted(datasets_by_id.keys()),
                 since=since,
                 until=until,
                 granularity="RUN",
             )
         if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
             outputs = await self._uow.output.list_by_dataset_ids(
-                sorted(datasets_by_id.keys() - ids_to_skip.datasets),
+                sorted(datasets_by_id.keys()),
                 since=since,
                 until=until,
                 granularity="RUN",
             )
+
         result = LineageServiceResult(
             datasets=datasets_by_id,
             dataset_symlinks=dataset_symlinks_by_id,
@@ -596,24 +669,40 @@ class LineageService:
             },
         )
 
-        run_ids = {input.run_id for input in inputs} | {output.run_id for output in outputs}
-        run_ids_to_fetch = sorted(run_ids - ids_to_skip.runs)
+        ids_to_skip = ids_to_skip or IdsToSkip()
+        downstream_run_ids = {input.run_id for input in inputs} - ids_to_skip.runs
+        upstream_run_ids = {output.run_id for output in outputs} - ids_to_skip.runs
+        ids_to_skip = ids_to_skip.merge(IdsToSkip.from_result(result))
 
         if depth > 1:
-            # operations, runs and jobs will be populated by nested call
+            # If we passed direction=BOTH, return only relations like `run1 -> current_dataset -> run2``,
+            # but do not include relations like `another_dataset -> run2`.
+            # Also runs and jobs will be populated by nested call.
             result.merge(
                 await self.get_lineage_by_runs(
-                    start_node_ids=run_ids_to_fetch,
-                    direction=direction,
+                    start_node_ids=sorted(downstream_run_ids),
+                    direction=LineageDirectionV1.DOWNSTREAM,
                     granularity="RUN",
                     since=since,
                     until=until,
                     depth=depth - 1,
-                    ids_to_skip=ids_to_skip.merge(IdsToSkip.from_result(result)),
+                    ids_to_skip=ids_to_skip,
+                ),
+            )
+            result.merge(
+                await self.get_lineage_by_runs(
+                    start_node_ids=sorted(upstream_run_ids),
+                    direction=LineageDirectionV1.UPSTREAM,
+                    granularity="RUN",
+                    since=since,
+                    until=until,
+                    depth=depth - 1,
+                    ids_to_skip=ids_to_skip,
                 ),
             )
         else:
-            runs = await self._uow.run.list_by_ids(sorted(run_ids_to_fetch))
+            run_ids = sorted(downstream_run_ids | upstream_run_ids)
+            runs = await self._uow.run.list_by_ids(run_ids)
             result.runs = {run.id: run for run in runs}
 
             job_ids = {run.job_id for run in runs}
@@ -658,25 +747,41 @@ class LineageService:
                 for output in outputs
             },
         )
+
         ids_to_skip = ids_to_skip or IdsToSkip()
-        job_ids = {input.job_id for input in inputs} | {output.job_id for output in outputs}
-        job_ids_to_fetch = sorted(job_ids - ids_to_skip.jobs)
+        downstream_job_ids = {input.job_id for input in inputs} - ids_to_skip.jobs
+        upstream_job_ids = {output.job_id for output in outputs} - ids_to_skip.jobs
+        ids_to_skip = ids_to_skip.merge(IdsToSkip.from_result(result))
 
         if depth > 1:
-            # operations, runs and jobs will be populated by nested call
+            # If we passed direction=BOTH, return only relations like `job1 -> current_dataset -> job2``,
+            # but do not include relations like `another_dataset -> job2`.
+            # Also jobs will be populated by nested call.
             result.merge(
                 await self.get_lineage_by_jobs(
-                    start_node_ids=job_ids_to_fetch,
-                    direction=direction,
+                    start_node_ids=sorted(downstream_job_ids),
+                    direction=LineageDirectionV1.DOWNSTREAM,
                     granularity="JOB",
                     since=since,
                     until=until,
                     depth=depth - 1,
-                    ids_to_skip=ids_to_skip.merge(IdsToSkip.from_result(result)),
+                    ids_to_skip=ids_to_skip,
+                ),
+            )
+            result.merge(
+                await self.get_lineage_by_jobs(
+                    start_node_ids=sorted(upstream_job_ids),
+                    direction=LineageDirectionV1.UPSTREAM,
+                    granularity="JOB",
+                    since=since,
+                    until=until,
+                    depth=depth - 1,
+                    ids_to_skip=ids_to_skip,
                 ),
             )
         else:
-            jobs = await self._uow.job.list_by_ids(sorted(job_ids_to_fetch))
+            job_ids = sorted(downstream_job_ids | upstream_job_ids)
+            jobs = await self._uow.job.list_by_ids(job_ids)
             result.jobs = {job.id: job for job in jobs}
 
         return result

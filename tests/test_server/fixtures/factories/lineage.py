@@ -256,7 +256,7 @@ async def lineage_with_depth(
 
 
 @pytest_asyncio.fixture()
-async def lineage_with_depth_and_cycle(
+async def cyclic_lineage(
     async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
     user: User,
 ):
@@ -325,6 +325,135 @@ async def lineage_with_depth_and_cycle(
                 },
             )
             lineage.outputs.append(output)
+
+    yield lineage
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)
+
+
+@pytest_asyncio.fixture()
+async def branchy_lineage(
+    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    user: User,
+):
+    # Three trees of J -> R -> O, connected via D3 and D6, but having other inputs & outputs:
+    #          D0   D1
+    #            \ /
+    # J0 -> R0 -> O0 -> D2
+    #              \
+    #               D3  D4
+    #                \ /
+    #     J1 -> R1 -> O1 -> D5
+    #                  \
+    #                   D6  D7
+    #                    \ /
+    #         J2 -> R2 -> O2 -> D8
+    #                      \
+    #                       D9
+
+    num_datasets = 10
+    num_jobs = 3
+    created_at = datetime.now()
+
+    lineage = LineageResult()
+    async with async_session_maker() as async_session:
+        dataset_locations = [await create_location(async_session) for _ in range(num_datasets)]
+        datasets = [
+            await create_dataset(async_session, location_id=location.id, dataset_kwargs={"name": f"dataset_{i}"})
+            for i, location in enumerate(dataset_locations)
+        ]
+        lineage.datasets.extend(datasets)
+
+        job_locations = [await create_location(async_session) for _ in range(num_jobs)]
+        jobs = [
+            await create_job(async_session, location_id=job_location.id, job_kwargs={"name": f"job_{i}"})
+            for i, job_location in enumerate(job_locations)
+        ]
+        lineage.jobs.extend(jobs)
+
+        runs = [
+            await create_run(
+                async_session,
+                run_kwargs={
+                    "job_id": job.id,
+                    "started_by_user_id": user.id,
+                    "created_at": created_at + timedelta(seconds=i),
+                    "external_id": f"run_{i}",
+                },
+            )
+            for i, job in enumerate(jobs)
+        ]
+        lineage.runs.extend(runs)
+
+        operations = [
+            await create_operation(
+                async_session,
+                operation_kwargs={
+                    "run_id": run.id,
+                    "created_at": run.created_at + timedelta(seconds=0.2),
+                    "name": f"operation_{i}",
+                },
+            )
+            for i, run in enumerate(runs)
+        ]
+        lineage.operations.extend(operations)
+
+        inputs = [
+            await create_input(
+                async_session,
+                input_kwargs={
+                    "created_at": operation.created_at,
+                    "operation_id": operation.id,
+                    "run_id": run.id,
+                    "job_id": job.id,
+                    "dataset_id": datasets[3 * i].id,
+                },
+            )
+            for i, (operation, run, job) in enumerate(zip(operations, runs, jobs))
+        ] + [
+            await create_input(
+                async_session,
+                input_kwargs={
+                    "created_at": operation.created_at,
+                    "operation_id": operation.id,
+                    "run_id": run.id,
+                    "job_id": job.id,
+                    "dataset_id": datasets[3 * i + 1].id,
+                },
+            )
+            for i, (operation, run, job) in enumerate(zip(operations, runs, jobs))
+        ]
+        lineage.inputs.extend(inputs)
+
+        outputs = [
+            await create_output(
+                async_session,
+                output_kwargs={
+                    "created_at": operation.created_at,
+                    "operation_id": operation.id,
+                    "run_id": run.id,
+                    "job_id": job.id,
+                    "dataset_id": datasets[3 * i + 2].id,
+                    "type": OutputType.APPEND,
+                },
+            )
+            for i, (operation, run, job) in enumerate(zip(operations, runs, jobs))
+        ] + [
+            await create_output(
+                async_session,
+                output_kwargs={
+                    "created_at": operation.created_at,
+                    "operation_id": operation.id,
+                    "run_id": run.id,
+                    "job_id": job.id,
+                    "dataset_id": datasets[3 * i + 3].id,
+                    "type": OutputType.APPEND,
+                },
+            )
+            for i, (operation, run, job) in enumerate(zip(operations, runs, jobs))
+        ]
+        lineage.outputs.extend(outputs)
 
     yield lineage
 
