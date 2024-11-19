@@ -125,6 +125,7 @@ async def test_get_dataset_lineage_with_granularity_run(
                 "num_bytes": input_stats[(input.run_id, input.dataset_id)]["num_bytes"],
                 "num_rows": input_stats[(input.run_id, input.dataset_id)]["num_rows"],
                 "num_files": input_stats[(input.run_id, input.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": input_stats[(input.run_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -140,6 +141,7 @@ async def test_get_dataset_lineage_with_granularity_run(
                 "num_bytes": output_stats[(output.run_id, output.dataset_id)]["num_bytes"],
                 "num_rows": output_stats[(output.run_id, output.dataset_id)]["num_rows"],
                 "num_files": output_stats[(output.run_id, output.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": output_stats[(output.run_id, output.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -244,6 +246,7 @@ async def test_get_dataset_lineage_with_granularity_job(
                 "num_bytes": input_stats[(input.job_id, input.dataset_id)]["num_bytes"],
                 "num_rows": input_stats[(input.job_id, input.dataset_id)]["num_rows"],
                 "num_files": input_stats[(input.job_id, input.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": input_stats[(input.job_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -259,6 +262,7 @@ async def test_get_dataset_lineage_with_granularity_job(
                 "num_bytes": output_stats[(output.job_id, output.dataset_id)]["num_bytes"],
                 "num_rows": output_stats[(output.job_id, output.dataset_id)]["num_rows"],
                 "num_files": output_stats[(output.job_id, output.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": output_stats[(output.job_id, output.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -366,6 +370,19 @@ async def test_get_dataset_lineage_with_granularity_operation(
                 "num_bytes": input.num_bytes,
                 "num_rows": input.num_rows,
                 "num_files": input.num_files,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in input.schema.fields
+                    ],
+                },
                 "last_interaction_at": input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
@@ -379,6 +396,19 @@ async def test_get_dataset_lineage_with_granularity_operation(
                 "num_bytes": output.num_bytes,
                 "num_rows": output.num_rows,
                 "num_files": output.num_files,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in output.schema.fields
+                    ],
+                },
                 "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))
@@ -507,6 +537,7 @@ async def test_get_dataset_lineage_with_direction_downstream(
                 "num_bytes": input_stats[(input.run_id, input.dataset_id)]["num_bytes"],
                 "num_rows": input_stats[(input.run_id, input.dataset_id)]["num_rows"],
                 "num_files": input_stats[(input.run_id, input.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": input_stats[(input.run_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -621,6 +652,7 @@ async def test_get_dataset_lineage_with_direction_upstream(
                 "num_bytes": output_stats[(output.run_id, output.dataset_id)]["num_bytes"],
                 "num_rows": output_stats[(output.run_id, output.dataset_id)]["num_rows"],
                 "num_files": output_stats[(output.run_id, output.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": output_stats[(output.run_id, output.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -743,6 +775,7 @@ async def test_get_dataset_lineage_with_until(
                 "num_bytes": input_stats[(input.run_id, input.dataset_id)]["num_bytes"],
                 "num_rows": input_stats[(input.run_id, input.dataset_id)]["num_rows"],
                 "num_files": input_stats[(input.run_id, input.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": input_stats[(input.run_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -758,6 +791,7 @@ async def test_get_dataset_lineage_with_until(
                 "num_bytes": output_stats[(output.run_id, output.dataset_id)]["num_bytes"],
                 "num_rows": output_stats[(output.run_id, output.dataset_id)]["num_rows"],
                 "num_files": output_stats[(output.run_id, output.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": output_stats[(output.run_id, output.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -909,6 +943,7 @@ async def test_get_dataset_lineage_with_depth(
                 "num_bytes": input_stats[(input.run_id, input.dataset_id)]["num_bytes"],
                 "num_rows": input_stats[(input.run_id, input.dataset_id)]["num_rows"],
                 "num_files": input_stats[(input.run_id, input.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": input_stats[(input.run_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -924,6 +959,7 @@ async def test_get_dataset_lineage_with_depth(
                 "num_bytes": output_stats[(output.run_id, output.dataset_id)]["num_bytes"],
                 "num_rows": output_stats[(output.run_id, output.dataset_id)]["num_rows"],
                 "num_files": output_stats[(output.run_id, output.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": output_stats[(output.run_id, output.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -1061,6 +1097,7 @@ async def test_get_dataset_lineage_with_depth_and_granularity_job(
                 "num_bytes": input_stats[(input.job_id, input.dataset_id)]["num_bytes"],
                 "num_rows": input_stats[(input.job_id, input.dataset_id)]["num_rows"],
                 "num_files": input_stats[(input.job_id, input.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": input_stats[(input.job_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -1076,6 +1113,7 @@ async def test_get_dataset_lineage_with_depth_and_granularity_job(
                 "num_bytes": output_stats[(output.job_id, output.dataset_id)]["num_bytes"],
                 "num_rows": output_stats[(output.job_id, output.dataset_id)]["num_rows"],
                 "num_files": output_stats[(output.job_id, output.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": output_stats[(output.job_id, output.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -1220,6 +1258,19 @@ async def test_get_dataset_lineage_with_depth_and_granularity_operation(
                 "num_bytes": input.num_bytes,
                 "num_rows": input.num_rows,
                 "num_files": input.num_files,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in input.schema.fields
+                    ],
+                },
                 "last_interaction_at": input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
@@ -1233,6 +1284,19 @@ async def test_get_dataset_lineage_with_depth_and_granularity_operation(
                 "num_bytes": output.num_bytes,
                 "num_rows": output.num_rows,
                 "num_files": output.num_files,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in output.schema.fields
+                    ],
+                },
                 "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))
@@ -1357,6 +1421,7 @@ async def test_get_dataset_lineage_with_depth_ignore_run_cycles(
                 "num_bytes": input_stats[(input.run_id, input.dataset_id)]["num_bytes"],
                 "num_rows": input_stats[(input.run_id, input.dataset_id)]["num_rows"],
                 "num_files": input_stats[(input.run_id, input.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": input_stats[(input.run_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -1372,6 +1437,7 @@ async def test_get_dataset_lineage_with_depth_ignore_run_cycles(
                 "num_bytes": output_stats[(output.run_id, output.dataset_id)]["num_bytes"],
                 "num_rows": output_stats[(output.run_id, output.dataset_id)]["num_rows"],
                 "num_files": output_stats[(output.run_id, output.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": output_stats[(output.run_id, output.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -1514,6 +1580,7 @@ async def test_get_dataset_lineage_with_symlink(
                 "num_bytes": input_stats[(input.run_id, input.dataset_id)]["num_bytes"],
                 "num_rows": input_stats[(input.run_id, input.dataset_id)]["num_rows"],
                 "num_files": input_stats[(input.run_id, input.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": input_stats[(input.run_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -1529,6 +1596,7 @@ async def test_get_dataset_lineage_with_symlink(
                 "num_bytes": output_stats[(output.run_id, output.dataset_id)]["num_bytes"],
                 "num_rows": output_stats[(output.run_id, output.dataset_id)]["num_rows"],
                 "num_files": output_stats[(output.run_id, output.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": output_stats[(output.run_id, output.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),

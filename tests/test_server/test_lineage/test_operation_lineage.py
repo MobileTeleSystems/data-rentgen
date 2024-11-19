@@ -167,6 +167,19 @@ async def test_get_operation_lineage_simple(
                 "num_bytes": input.num_bytes,
                 "num_rows": input.num_rows,
                 "num_files": input.num_files,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in input.schema.fields
+                    ],
+                },
                 "last_interaction_at": input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
@@ -180,6 +193,19 @@ async def test_get_operation_lineage_simple(
                 "num_bytes": output.num_bytes,
                 "num_rows": output.num_rows,
                 "num_files": output.num_files,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in output.schema.fields
+                    ],
+                },
                 "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))
@@ -308,6 +334,19 @@ async def test_get_operation_lineage_with_direction_downstream(
                 "num_bytes": output.num_bytes,
                 "num_rows": output.num_rows,
                 "num_files": output.num_files,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in output.schema.fields
+                    ],
+                },
                 "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))
@@ -435,6 +474,19 @@ async def test_get_operation_lineage_with_direction_upstream(
                 "num_bytes": input.num_bytes,
                 "num_rows": input.num_rows,
                 "num_files": input.num_files,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in input.schema.fields
+                    ],
+                },
                 "last_interaction_at": input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
@@ -575,6 +627,19 @@ async def test_get_operation_lineage_with_until(
                 "num_bytes": input.num_bytes,
                 "num_rows": input.num_rows,
                 "num_files": input.num_files,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in input.schema.fields
+                    ],
+                },
                 "last_interaction_at": input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
@@ -588,6 +653,19 @@ async def test_get_operation_lineage_with_until(
                 "num_bytes": output.num_bytes,
                 "num_rows": output.num_rows,
                 "num_files": output.num_files,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in output.schema.fields
+                    ],
+                },
                 "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))
@@ -763,6 +841,19 @@ async def test_get_operation_lineage_with_depth(
                 "num_bytes": input.num_bytes,
                 "num_rows": input.num_rows,
                 "num_files": input.num_files,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in input.schema.fields
+                    ],
+                },
                 "last_interaction_at": input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
@@ -776,6 +867,19 @@ async def test_get_operation_lineage_with_depth(
                 "num_bytes": output.num_bytes,
                 "num_rows": output.num_rows,
                 "num_files": output.num_files,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in output.schema.fields
+                    ],
+                },
                 "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))
@@ -905,6 +1009,19 @@ async def test_get_operation_lineage_with_depth_ignore_cycles(
                 "num_bytes": input.num_bytes,
                 "num_rows": input.num_rows,
                 "num_files": input.num_files,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in input.schema.fields
+                    ],
+                },
                 "last_interaction_at": input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for input in sorted(lineage.inputs, key=lambda x: (x.dataset_id, x.operation_id))
@@ -918,6 +1035,19 @@ async def test_get_operation_lineage_with_depth_ignore_cycles(
                 "num_bytes": output.num_bytes,
                 "num_rows": output.num_rows,
                 "num_files": output.num_files,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in output.schema.fields
+                    ],
+                },
                 "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for output in sorted(lineage.outputs, key=lambda x: (x.operation_id, x.dataset_id))
@@ -1067,6 +1197,19 @@ async def test_get_operation_lineage_with_symlinks(
                 "num_bytes": input.num_bytes,
                 "num_rows": input.num_rows,
                 "num_files": input.num_files,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in input.schema.fields
+                    ],
+                },
                 "last_interaction_at": input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
@@ -1080,6 +1223,19 @@ async def test_get_operation_lineage_with_symlinks(
                 "num_bytes": output.num_bytes,
                 "num_rows": output.num_rows,
                 "num_files": output.num_files,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in output.schema.fields
+                    ],
+                },
                 "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))
@@ -1208,6 +1364,19 @@ async def test_get_operation_lineage_with_empty_relation_stats(
                 "num_bytes": None,
                 "num_rows": None,
                 "num_files": None,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in input.schema.fields
+                    ],
+                },
                 "last_interaction_at": input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
@@ -1221,6 +1390,19 @@ async def test_get_operation_lineage_with_empty_relation_stats(
                 "num_bytes": None,
                 "num_rows": None,
                 "num_files": None,
+                "schema": {
+                    "description": None,
+                    "name": None,
+                    "type": None,
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in output.schema.fields
+                    ],
+                },
                 "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))

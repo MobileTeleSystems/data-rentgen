@@ -7,6 +7,7 @@ from uuid import UUID
 
 from sqlalchemy import Select, any_, func, literal_column, select
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Output, OutputType
 from data_rentgen.db.repositories.base import Repository
@@ -109,7 +110,12 @@ class OutputRepository(Repository[Output]):
 
         results = await self._session.execute(query)
         # convert tuple of fields to Output object
-        return [Output(**row._asdict()) for row in results.all()]  # noqa: WPS437
+        outputs = [Output(**row._asdict()) for row in results.all()]  # noqa: WPS437
+        if granularity == "OPERATION":
+            # Add schema to inputs
+            return await self._add_schemas(outputs)
+
+        return outputs
 
     async def list_by_job_ids(
         self,
@@ -130,7 +136,12 @@ class OutputRepository(Repository[Output]):
 
         results = await self._session.execute(query)
         # convert tuple of fields to Output object
-        return [Output(**row._asdict()) for row in results.all()]  # noqa: WPS437
+        outputs = [Output(**row._asdict()) for row in results.all()]  # noqa: WPS437
+        if granularity == "OPERATION":
+            # Add schema to inputs
+            return await self._add_schemas(outputs)
+
+        return outputs
 
     async def list_by_dataset_ids(
         self,
@@ -151,7 +162,23 @@ class OutputRepository(Repository[Output]):
 
         results = await self._session.execute(query)
         # convert tuple of fields to Output object
-        return [Output(**row._asdict()) for row in results.all()]  # noqa: WPS437
+        outputs = [Output(**row._asdict()) for row in results.all()]  # noqa: WPS437
+        if granularity == "OPERATION":
+            # Add schema to inputs
+            return await self._add_schemas(outputs)
+
+        return outputs
+
+    async def _add_schemas(
+        self,
+        outputs: list[Output],
+    ) -> list[Output]:
+        # Add schema to inputs
+        query = (
+            select(Output).where(Output.id.in_([output.id for output in outputs])).options(selectinload(Output.schema))
+        )
+        result = await self._session.scalars(query)
+        return list(result.all())
 
     def _get_select(
         self,
@@ -169,6 +196,7 @@ class OutputRepository(Repository[Output]):
                 Output.num_bytes,
                 Output.num_rows,
                 Output.num_files,
+                Output.schema_id,
             )
 
         if granularity == "RUN":
@@ -183,6 +211,7 @@ class OutputRepository(Repository[Output]):
                 func.sum(Output.num_bytes).label("num_bytes"),
                 func.sum(Output.num_rows).label("num_rows"),
                 func.sum(Output.num_files).label("num_files"),
+                literal_column("NULL").label("schema"),
             ).group_by(
                 Output.run_id,
                 Output.job_id,
@@ -201,6 +230,7 @@ class OutputRepository(Repository[Output]):
             func.sum(Output.num_bytes).label("num_bytes"),
             func.sum(Output.num_rows).label("num_rows"),
             func.sum(Output.num_files).label("num_files"),
+            literal_column("NULL").label("schema"),
         ).group_by(
             Output.job_id,
             Output.dataset_id,

@@ -20,11 +20,11 @@ def schema_factory(**kwargs) -> Schema:
     return Schema(**data)
 
 
-async def create_schema(session: AsyncSession, schema_kwargs: dict | None = None) -> Schema:
+async def create_schema(async_session: AsyncSession, schema_kwargs: dict | None = None) -> Schema:
     schema_kwargs = schema_kwargs or {}
     schema = schema_factory(**schema_kwargs)
     del schema.id
-    session.add(schema)
-    await session.commit()
-    await session.refresh(schema)
+    async_session.add(schema)
+    await async_session.commit()
+    await async_session.refresh(schema)
     return schema
