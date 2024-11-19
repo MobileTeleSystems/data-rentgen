@@ -94,7 +94,7 @@ class Input(Base):
     schema: Mapped[Schema | None] = relationship(
         Schema,
         primaryjoin="Input.schema_id == Schema.id",
-        lazy="noload",
+        lazy="selectin",
         foreign_keys=[schema_id],
     )
 

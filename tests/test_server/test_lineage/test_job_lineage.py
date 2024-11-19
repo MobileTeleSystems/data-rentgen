@@ -191,6 +191,7 @@ async def test_get_job_lineage_simple(
                 "num_bytes": input_stats[(input.job_id, input.dataset_id)]["num_bytes"],
                 "num_rows": input_stats[(input.job_id, input.dataset_id)]["num_rows"],
                 "num_files": input_stats[(input.job_id, input.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": input_stats[(input.job_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -206,6 +207,7 @@ async def test_get_job_lineage_simple(
                 "num_bytes": output_stats[(output.job_id, output.dataset_id)]["num_bytes"],
                 "num_rows": output_stats[(output.job_id, output.dataset_id)]["num_rows"],
                 "num_files": output_stats[(output.job_id, output.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": output_stats[(output.job_id, output.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -286,6 +288,7 @@ async def test_get_job_lineage_with_direction_downstream(
                 "num_bytes": output_stats[(output.job_id, output.dataset_id)]["num_bytes"],
                 "num_rows": output_stats[(output.job_id, output.dataset_id)]["num_rows"],
                 "num_files": output_stats[(output.job_id, output.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": output_stats[(output.job_id, output.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -365,6 +368,7 @@ async def test_get_job_lineage_with_direction_upstream(
                 "num_bytes": input_stats[(input.job_id, input.dataset_id)]["num_bytes"],
                 "num_rows": input_stats[(input.job_id, input.dataset_id)]["num_rows"],
                 "num_files": input_stats[(input.job_id, input.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": input_stats[(input.job_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -449,6 +453,7 @@ async def test_get_job_lineage_with_until(
                 "num_bytes": input_stats[(input.job_id, input.dataset_id)]["num_bytes"],
                 "num_rows": input_stats[(input.job_id, input.dataset_id)]["num_rows"],
                 "num_files": input_stats[(input.job_id, input.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": input_stats[(input.job_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -464,6 +469,7 @@ async def test_get_job_lineage_with_until(
                 "num_bytes": output_stats[(output.job_id, output.dataset_id)]["num_bytes"],
                 "num_rows": output_stats[(output.job_id, output.dataset_id)]["num_rows"],
                 "num_files": output_stats[(output.job_id, output.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": output_stats[(output.job_id, output.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -558,6 +564,7 @@ async def test_get_job_lineage_with_granularity_run(
                 "num_bytes": input_stats[(input.run_id, input.dataset_id)]["num_bytes"],
                 "num_rows": input_stats[(input.run_id, input.dataset_id)]["num_rows"],
                 "num_files": input_stats[(input.run_id, input.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": input_stats[(input.run_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -573,6 +580,7 @@ async def test_get_job_lineage_with_granularity_run(
                 "num_bytes": output_stats[(output.run_id, output.dataset_id)]["num_bytes"],
                 "num_rows": output_stats[(output.run_id, output.dataset_id)]["num_rows"],
                 "num_files": output_stats[(output.run_id, output.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": output_stats[(output.run_id, output.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -705,6 +713,7 @@ async def test_get_job_lineage_with_depth(
                 "num_bytes": input_stats[(input.job_id, input.dataset_id)]["num_bytes"],
                 "num_rows": input_stats[(input.job_id, input.dataset_id)]["num_rows"],
                 "num_files": input_stats[(input.job_id, input.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": input_stats[(input.job_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -720,6 +729,7 @@ async def test_get_job_lineage_with_depth(
                 "num_bytes": output_stats[(output.job_id, output.dataset_id)]["num_bytes"],
                 "num_rows": output_stats[(output.job_id, output.dataset_id)]["num_rows"],
                 "num_files": output_stats[(output.job_id, output.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": output_stats[(output.job_id, output.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -848,6 +858,7 @@ async def test_get_job_lineage_with_depth_and_granularity_run(
                 "num_bytes": input_stats[(input.run_id, input.dataset_id)]["num_bytes"],
                 "num_rows": input_stats[(input.run_id, input.dataset_id)]["num_rows"],
                 "num_files": input_stats[(input.run_id, input.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": input_stats[(input.run_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -863,6 +874,7 @@ async def test_get_job_lineage_with_depth_and_granularity_run(
                 "num_bytes": output_stats[(output.run_id, output.dataset_id)]["num_bytes"],
                 "num_rows": output_stats[(output.run_id, output.dataset_id)]["num_rows"],
                 "num_files": output_stats[(output.run_id, output.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": output_stats[(output.run_id, output.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -963,6 +975,7 @@ async def test_get_job_lineage_with_depth_ignore_cycles(
                 "num_bytes": input_stats[(input.job_id, input.dataset_id)]["num_bytes"],
                 "num_rows": input_stats[(input.job_id, input.dataset_id)]["num_rows"],
                 "num_files": input_stats[(input.job_id, input.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": input_stats[(input.job_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -978,6 +991,7 @@ async def test_get_job_lineage_with_depth_ignore_cycles(
                 "num_bytes": output_stats[(output.job_id, output.dataset_id)]["num_bytes"],
                 "num_rows": output_stats[(output.job_id, output.dataset_id)]["num_rows"],
                 "num_files": output_stats[(output.job_id, output.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": output_stats[(output.job_id, output.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -1081,6 +1095,7 @@ async def test_get_job_lineage_with_symlinks(
                 "num_bytes": input_stats[(input.job_id, input.dataset_id)]["num_bytes"],
                 "num_rows": input_stats[(input.job_id, input.dataset_id)]["num_rows"],
                 "num_files": input_stats[(input.job_id, input.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": input_stats[(input.job_id, input.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),
@@ -1096,6 +1111,7 @@ async def test_get_job_lineage_with_symlinks(
                 "num_bytes": output_stats[(output.job_id, output.dataset_id)]["num_bytes"],
                 "num_rows": output_stats[(output.job_id, output.dataset_id)]["num_rows"],
                 "num_files": output_stats[(output.job_id, output.dataset_id)]["num_files"],
+                "schema": None,
                 "last_interaction_at": output_stats[(output.job_id, output.dataset_id)]["created_at"].strftime(
                     "%Y-%m-%dT%H:%M:%S.%fZ",
                 ),

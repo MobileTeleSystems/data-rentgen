@@ -7,6 +7,7 @@ from uuid import UUID
 
 from sqlalchemy import Select, any_, func, literal_column, select
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Input
 from data_rentgen.db.repositories.base import Repository
@@ -108,7 +109,12 @@ class InputRepository(Repository[Input]):
 
         results = await self._session.execute(query)
         # convert tuple of fields to Input object
-        return [Input(**row._asdict()) for row in results.all()]  # noqa: WPS437
+        inputs = [Input(**row._asdict()) for row in results.all()]  # noqa: WPS437
+        if granularity == "OPERATION":
+            # Add schema to inputs
+            return await self._add_schemas(inputs)
+
+        return inputs
 
     async def list_by_job_ids(
         self,
@@ -129,7 +135,12 @@ class InputRepository(Repository[Input]):
 
         results = await self._session.execute(query)
         # convert tuple of fields to Input object
-        return [Input(**row._asdict()) for row in results.all()]  # noqa: WPS437
+        inputs = [Input(**row._asdict()) for row in results.all()]  # noqa: WPS437
+        if granularity == "OPERATION":
+            # Add schema to inputs
+            return await self._add_schemas(inputs)
+
+        return inputs
 
     async def list_by_dataset_ids(
         self,
@@ -150,7 +161,26 @@ class InputRepository(Repository[Input]):
 
         results = await self._session.execute(query)
         # convert tuple of fields to Input object
-        return [Input(**row._asdict()) for row in results.all()]  # noqa: WPS437
+        inputs = [Input(**row._asdict()) for row in results.all()]  # noqa: WPS437
+
+        if granularity == "OPERATION":
+            # Add schema to inputs
+            return await self._add_schemas(inputs)
+
+        return inputs
+
+    async def _add_schemas(
+        self,
+        inputs: list[Input],
+    ) -> list[Input]:
+        # Add schema to inputs
+        query = (
+            select(Input)
+            .where(Input.id == any_([input.id for input in inputs]))  # type: ignore[arg-type]
+            .options(selectinload(Input.schema))
+        )
+        result = await self._session.scalars(query)
+        return list(result.all())
 
     def _get_select(
         self,
@@ -167,6 +197,7 @@ class InputRepository(Repository[Input]):
                 Input.num_bytes,
                 Input.num_rows,
                 Input.num_files,
+                Input.schema_id,
             )
 
         if granularity == "RUN":
@@ -180,6 +211,7 @@ class InputRepository(Repository[Input]):
                 func.sum(Input.num_bytes).label("num_bytes"),
                 func.sum(Input.num_rows).label("num_rows"),
                 func.sum(Input.num_files).label("num_files"),
+                literal_column("NULL").label("schema_id"),
             ).group_by(
                 Input.run_id,
                 Input.job_id,
@@ -196,6 +228,7 @@ class InputRepository(Repository[Input]):
             func.sum(Input.num_bytes).label("num_bytes"),
             func.sum(Input.num_rows).label("num_rows"),
             func.sum(Input.num_files).label("num_files"),
+            literal_column("NULL").label("schema_id"),
         ).group_by(
             Input.job_id,
             Input.dataset_id,

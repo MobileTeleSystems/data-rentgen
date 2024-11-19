@@ -112,6 +112,15 @@ class LineageParentRelationV1(BaseModel):
     to: LineageEntityV1 = Field(description="End point of relation")
 
 
+class LineageOutputRelationSchemaV1(BaseModel):
+    name: str | None = Field(default=None)
+    type: str | None = Field(default=None)
+    description: str | None = Field(default=None)
+    fields: list["LineageOutputRelationSchemaV1"] = Field(description="Schema fields", default_factory=list)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class LineageInputRelationV1(BaseModel):
     kind: Literal["INPUT"] = "INPUT"
     from_: LineageEntityV1 = Field(description="Start point of relation", serialization_alias="from")
@@ -120,6 +129,11 @@ class LineageInputRelationV1(BaseModel):
     num_bytes: int | None = Field(description="Number of bytes", examples=[42], default=None)
     num_rows: int | None = Field(description="Number of rows", examples=[42], default=None)
     num_files: int | None = Field(description="Number of files", examples=[42], default=None)
+    i_schema: LineageOutputRelationSchemaV1 | None = Field(
+        description="Schema",
+        default=None,
+        serialization_alias="schema",
+    )
 
 
 class LineageOutputRelationV1(BaseModel):
@@ -131,6 +145,11 @@ class LineageOutputRelationV1(BaseModel):
     num_bytes: int | None = Field(description="Number of bytes", examples=[42], default=None)
     num_rows: int | None = Field(description="Number of rows", examples=[42], default=None)
     num_files: int | None = Field(description="Number of files", examples=[42], default=None)
+    o_schema: LineageOutputRelationSchemaV1 | None = Field(
+        description="Schema",
+        default=None,
+        serialization_alias="schema",
+    )
 
 
 class LineageSymlinkRelationV1(BaseModel):

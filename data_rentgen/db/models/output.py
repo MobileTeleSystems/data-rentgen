@@ -119,7 +119,7 @@ class Output(Base):
     schema: Mapped[Schema | None] = relationship(
         Schema,
         primaryjoin="Output.schema_id == Schema.id",
-        lazy="noload",
+        lazy="selectin",
         foreign_keys=[schema_id],
     )
 

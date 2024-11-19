@@ -232,6 +232,7 @@ docstring_style = "sphinx"
 
 [tool.codespell]
 exclude-file = "poetry.lock"
+ignore-words-list = "selectin"
 
 [tool.flake8]
 jobs = 4

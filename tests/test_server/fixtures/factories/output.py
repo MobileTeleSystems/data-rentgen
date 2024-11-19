@@ -4,6 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Output, OutputType
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
+from tests.test_server.fixtures.factories.schema import create_schema
 
 
 def output_factory(**kwargs) -> Output:
@@ -26,8 +27,14 @@ def output_factory(**kwargs) -> Output:
     return Output(**data)
 
 
-async def create_output(async_session: AsyncSession, output_kwargs: dict | None = None) -> Output:
+async def create_output(
+    async_session: AsyncSession,
+    output_kwargs: dict | None = None,
+    schema_kwargs: dict | None = None,
+) -> Output:
     output_kwargs = output_kwargs or {}
+    schema = await create_schema(async_session, schema_kwargs)
+    output_kwargs.update({"schema_id": schema.id})
     output = output_factory(**output_kwargs)
     async_session.add(output)
     await async_session.commit()

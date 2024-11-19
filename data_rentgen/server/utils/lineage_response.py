@@ -85,6 +85,7 @@ async def _add_input_relations(
             num_bytes=input.num_bytes,
             num_rows=input.num_rows,
             num_files=input.num_files,
+            i_schema=input.schema,
         )
         relations.append(relation)
     return sorted(relations, key=lambda x: (x.from_.id, x.to.id))
@@ -109,6 +110,7 @@ async def _add_output_relations(
             num_bytes=output.num_bytes,
             num_rows=output.num_rows,
             num_files=output.num_files,
+            o_schema=output.schema,
         )
         relations.append(relation)
     return sorted(relations, key=lambda x: (x.from_.id, x.to.id, x.type))
