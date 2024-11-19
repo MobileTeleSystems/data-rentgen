@@ -175,7 +175,9 @@ class OutputRepository(Repository[Output]):
     ) -> list[Output]:
         # Add schema to inputs
         query = (
-            select(Output).where(Output.id.in_([output.id for output in outputs])).options(selectinload(Output.schema))
+            select(Output)
+            .where(Output.id == any_([output.id for output in outputs]))  # type: ignore[arg-type]
+            .options(selectinload(Output.schema))
         )
         result = await self._session.scalars(query)
         return list(result.all())
@@ -211,7 +213,7 @@ class OutputRepository(Repository[Output]):
                 func.sum(Output.num_bytes).label("num_bytes"),
                 func.sum(Output.num_rows).label("num_rows"),
                 func.sum(Output.num_files).label("num_files"),
-                literal_column("NULL").label("schema"),
+                literal_column("NULL").label("schema_id"),
             ).group_by(
                 Output.run_id,
                 Output.job_id,
@@ -230,7 +232,7 @@ class OutputRepository(Repository[Output]):
             func.sum(Output.num_bytes).label("num_bytes"),
             func.sum(Output.num_rows).label("num_rows"),
             func.sum(Output.num_files).label("num_files"),
-            literal_column("NULL").label("schema"),
+            literal_column("NULL").label("schema_id"),
         ).group_by(
             Output.job_id,
             Output.dataset_id,
