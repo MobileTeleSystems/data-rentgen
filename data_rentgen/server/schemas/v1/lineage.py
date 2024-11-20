@@ -138,6 +138,7 @@ class LineageInputRelationV1(BaseModel):
     i_schema: LineageOutputRelationSchemaV1 | None = Field(
         description="Schema",
         default=None,
+        # pydantic models have reserved "schema" attribute, using alias
         serialization_alias="schema",
     )
 
@@ -146,7 +147,7 @@ class LineageOutputRelationV1(BaseModel):
     kind: Literal["OUTPUT"] = "OUTPUT"
     from_: LineageEntityV1 = Field(description="Start point of relation", serialization_alias="from")
     to: LineageEntityV1 = Field(description="End point of relation")
-    type: str = Field(description="Type of relation", examples=["CREATE", "APPEND"])
+    type: str | None = Field(description="Type of relation", examples=["CREATE", "APPEND"], default=None)
     last_interaction_at: datetime = Field(description="Last interaction at", examples=["2008-09-15T15:53:00+05:00"])
     num_bytes: int | None = Field(description="Number of bytes", examples=[42], default=None)
     num_rows: int | None = Field(description="Number of rows", examples=[42], default=None)
@@ -154,6 +155,7 @@ class LineageOutputRelationV1(BaseModel):
     o_schema: LineageOutputRelationSchemaV1 | None = Field(
         description="Schema",
         default=None,
+        # pydantic models have reserved "schema" attribute, using alias
         serialization_alias="schema",
     )
 
