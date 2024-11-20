@@ -1464,13 +1464,31 @@ async def test_get_operation_lineage_with_symlinks(
     }
 
 
-async def test_get_operation_lineage_with_empty_relation_stats(
+async def test_get_operation_lineage_with_empty_io_stats_and_schema(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    lineage_with_empty_relation_stats: LineageResult,
+    simple_lineage: LineageResult,
 ):
-    # TODO: REFACTOR. This test has its own fixture, so the code for obtaining entities can be simplified.
-    lineage = lineage_with_empty_relation_stats
+    lineage = simple_lineage
+
+    # clear input/output stats and schema.
+    for input in lineage.inputs:
+        input.num_bytes = None
+        input.num_rows = None
+        input.num_files = None
+        input.schema_id = None
+        input.schema = None
+        await async_session.merge(input)
+
+    for output in lineage.outputs:
+        output.num_bytes = None
+        output.num_rows = None
+        output.num_files = None
+        output.schema_id = None
+        output.schema = None
+        await async_session.merge(output)
+
+    await async_session.commit()
 
     operation = lineage.operations[0]
 
@@ -1521,16 +1539,7 @@ async def test_get_operation_lineage_with_empty_relation_stats(
                 "num_bytes": None,
                 "num_rows": None,
                 "num_files": None,
-                "schema": {
-                    "fields": [
-                        {
-                            "description": None,
-                            "fields": [],
-                            **field,
-                        }
-                        for field in input.schema.fields
-                    ],
-                },
+                "schema": None,
                 "last_interaction_at": input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
@@ -1544,16 +1553,7 @@ async def test_get_operation_lineage_with_empty_relation_stats(
                 "num_bytes": None,
                 "num_rows": None,
                 "num_files": None,
-                "schema": {
-                    "fields": [
-                        {
-                            "description": None,
-                            "fields": [],
-                            **field,
-                        }
-                        for field in output.schema.fields
-                    ],
-                },
+                "schema": None,
                 "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))

@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Literal, Sequence
 from uuid import UUID
 
-from sqlalchemy import Select, any_, func, literal_column, select
+from sqlalchemy import ColumnElement, Select, any_, func, literal_column, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import selectinload
 
@@ -74,18 +74,18 @@ class InputRepository(Repository[Input]):
         if not operation_ids:
             return []
 
-        # Input created_at is always the same as operation's created_at.
+        # Input created_at is always the same as operation's created_at
         # do not use `tuple_(Input.created_at, Input.operation_id).in_(...),
         # as this is too complex filter for Postgres to make an optimal query plan
         min_created_at = extract_timestamp_from_uuid(min(operation_ids))
         max_created_at = extract_timestamp_from_uuid(max(operation_ids))
-        query = select(Input).where(
+        where = [
             Input.created_at >= min_created_at,
             Input.created_at <= max_created_at,
             Input.operation_id == any_(operation_ids),  # type: ignore[arg-type]
-        )
-        result = await self._session.scalars(query)
-        return list(result.all())
+        ]
+
+        return await self._get_inputs(where, "OPERATION")
 
     async def list_by_run_ids(
         self,
@@ -100,21 +100,14 @@ class InputRepository(Repository[Input]):
         min_run_created_at = extract_timestamp_from_uuid(min(run_ids))
         min_created_at = max(min_run_created_at, since.astimezone(timezone.utc))
 
-        query = self._get_select(granularity).where(
+        where = [
             Input.created_at >= min_created_at,
             Input.run_id == any_(run_ids),  # type: ignore[arg-type]
-        )
+        ]
         if until:
-            query = query.where(Input.created_at <= until)
+            where.append(Input.created_at <= until)
 
-        results = await self._session.execute(query)
-        # convert tuple of fields to Input object
-        inputs = [Input(**row._asdict()) for row in results.all()]  # noqa: WPS437
-        if granularity == "OPERATION":
-            # Add schema to inputs
-            return await self._add_schemas(inputs)
-
-        return inputs
+        return await self._get_inputs(where, granularity)
 
     async def list_by_job_ids(
         self,
@@ -126,21 +119,14 @@ class InputRepository(Repository[Input]):
         if not job_ids:
             return []
 
-        query = self._get_select(granularity).where(
+        where = [
             Input.created_at >= since,
             Input.job_id == any_(job_ids),  # type: ignore[arg-type]
-        )
+        ]
         if until:
-            query = query.where(Input.created_at <= until)
+            where.append(Input.created_at <= until)
 
-        results = await self._session.execute(query)
-        # convert tuple of fields to Input object
-        inputs = [Input(**row._asdict()) for row in results.all()]  # noqa: WPS437
-        if granularity == "OPERATION":
-            # Add schema to inputs
-            return await self._add_schemas(inputs)
-
-        return inputs
+        return await self._get_inputs(where, granularity)
 
     async def list_by_dataset_ids(
         self,
@@ -152,84 +138,71 @@ class InputRepository(Repository[Input]):
         if not dataset_ids:
             return []
 
-        query = self._get_select(granularity).where(
+        where = [
             Input.created_at >= since,
             Input.dataset_id == any_(dataset_ids),  # type: ignore[arg-type]
-        )
+        ]
         if until:
-            query = query.where(Input.created_at <= until)
+            where.append(Input.created_at <= until)
 
-        results = await self._session.execute(query)
-        # convert tuple of fields to Input object
-        inputs = [Input(**row._asdict()) for row in results.all()]  # noqa: WPS437
+        return await self._get_inputs(where, granularity)
 
-        if granularity == "OPERATION":
-            # Add schema to inputs
-            return await self._add_schemas(inputs)
-
-        return inputs
-
-    async def _add_schemas(
+    async def _get_inputs(
         self,
-        inputs: list[Input],
-    ) -> list[Input]:
-        # Add schema to inputs
-        query = (
-            select(Input)
-            .where(Input.id == any_([input.id for input in inputs]))  # type: ignore[arg-type]
-            .options(selectinload(Input.schema))
-        )
-        result = await self._session.scalars(query)
-        return list(result.all())
-
-    def _get_select(
-        self,
+        where: list[ColumnElement],
         granularity: Literal["JOB", "RUN", "OPERATION"],
-    ) -> Select:
+    ) -> list[Input]:
         if granularity == "OPERATION":
-            return select(
-                Input.created_at,
-                Input.id,
-                Input.operation_id,
-                Input.run_id,
-                Input.job_id,
-                Input.dataset_id,
-                Input.num_bytes,
-                Input.num_rows,
-                Input.num_files,
-                Input.schema_id,
-            )
+            # return Input as-is
+            simple_query = select(Input).where(*where).options(selectinload(Input.schema))
+            result = await self._session.scalars(simple_query)
+            return list(result.all())
 
+        # return an aggregated Input
+        query: Select[tuple]
         if granularity == "RUN":
-            return select(
+            query = select(
                 func.max(Input.created_at).label("created_at"),
                 literal_column("NULL").label("id"),
                 literal_column("NULL").label("operation_id"),
                 Input.run_id,
                 Input.job_id,
                 Input.dataset_id,
-                func.sum(Input.num_bytes).label("num_bytes"),
-                func.sum(Input.num_rows).label("num_rows"),
-                func.sum(Input.num_files).label("num_files"),
-                literal_column("NULL").label("schema_id"),
+                func.sum(Input.num_bytes).label("sum_num_bytes"),
+                func.sum(Input.num_rows).label("sum_num_rows"),
+                func.sum(Input.num_files).label("sum_num_files"),
             ).group_by(
                 Input.run_id,
                 Input.job_id,
                 Input.dataset_id,
             )
+        else:
+            query = select(
+                func.max(Input.created_at).label("created_at"),
+                literal_column("NULL").label("id"),
+                literal_column("NULL").label("operation_id"),
+                literal_column("NULL").label("run_id"),
+                Input.job_id,
+                Input.dataset_id,
+                func.sum(Input.num_bytes).label("sum_num_bytes"),
+                func.sum(Input.num_rows).label("sum_num_rows"),
+                func.sum(Input.num_files).label("sum_num_files"),
+            ).group_by(
+                Input.job_id,
+                Input.dataset_id,
+            )
 
-        return select(
-            func.max(Input.created_at).label("created_at"),
-            literal_column("NULL").label("id"),
-            literal_column("NULL").label("operation_id"),
-            literal_column("NULL").label("run_id"),
-            Input.job_id,
-            Input.dataset_id,
-            func.sum(Input.num_bytes).label("num_bytes"),
-            func.sum(Input.num_rows).label("num_rows"),
-            func.sum(Input.num_files).label("num_files"),
-            literal_column("NULL").label("schema_id"),
-        ).group_by(
-            Input.job_id,
-            Input.dataset_id,
-        )
+        query = query.where(*where)
+        query_result = await self._session.execute(query)
+        return [
+            Input(
+                created_at=row.created_at,
+                run_id=row.run_id,
+                job_id=row.job_id,
+                dataset_id=row.dataset_id,
+                num_bytes=row.sum_num_bytes,
+                num_rows=row.sum_num_rows,
+                num_files=row.sum_num_files,
+            )
+            for row in query_result.all()
+        ]

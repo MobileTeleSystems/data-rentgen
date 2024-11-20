@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from data_rentgen.db.models import Job, Run
 from tests.test_server.utils.enrich import enrich_datasets, enrich_jobs, enrich_runs
 from tests.test_server.utils.lineage_result import LineageResult
-from tests.test_server.utils.stats import relation_stats_by_runs
+from tests.test_server.utils.merge import merge_io_by_runs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
 
@@ -165,15 +165,15 @@ async def test_get_run_lineage_simple(
     run = lineage.runs[0]
     job = next(job for job in lineage.jobs if job.id == run.job_id)
 
-    inputs = [input for input in lineage.inputs if input.run_id == run.id]
-    input_stats = relation_stats_by_runs(inputs)
-    assert inputs
+    raw_inputs = [input for input in lineage.inputs if input.run_id == run.id]
+    merged_inputs = merge_io_by_runs(raw_inputs)
+    assert merged_inputs
 
-    outputs = [output for output in lineage.outputs if output.run_id == run.id]
-    output_stats = relation_stats_by_runs(outputs)
-    assert outputs
+    raw_outputs = [output for output in lineage.outputs if output.run_id == run.id]
+    merged_outputs = merge_io_by_runs(raw_outputs)
+    assert merged_outputs
 
-    dataset_ids = {input.dataset_id for input in inputs} | {output.dataset_id for output in outputs}
+    dataset_ids = {input.dataset_id for input in raw_inputs} | {output.dataset_id for output in raw_outputs}
     datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
     assert datasets
 
@@ -201,33 +201,29 @@ async def test_get_run_lineage_simple(
         + [
             {
                 "kind": "INPUT",
-                "from": {"kind": "DATASET", "id": input.dataset_id},
-                "to": {"kind": "RUN", "id": str(input.run_id)},
-                "num_bytes": input_stats[(input.run_id, input.dataset_id)]["num_bytes"],
-                "num_rows": input_stats[(input.run_id, input.dataset_id)]["num_rows"],
-                "num_files": input_stats[(input.run_id, input.dataset_id)]["num_files"],
+                "from": {"kind": "DATASET", "id": merged_input.dataset_id},
+                "to": {"kind": "RUN", "id": str(merged_input.run_id)},
+                "num_bytes": merged_input.num_bytes,
+                "num_rows": merged_input.num_rows,
+                "num_files": merged_input.num_files,
                 "schema": None,
-                "last_interaction_at": input_stats[(input.run_id, input.dataset_id)]["created_at"].strftime(
-                    "%Y-%m-%dT%H:%M:%S.%fZ",
-                ),
+                "last_interaction_at": merged_input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
-            for input in sorted(inputs, key=lambda x: (x.dataset_id, x.run_id))
+            for merged_input in sorted(merged_inputs, key=lambda x: (x.dataset_id, x.run_id))
         ]
         + [
             {
                 "kind": "OUTPUT",
-                "from": {"kind": "RUN", "id": str(output.run_id)},
-                "to": {"kind": "DATASET", "id": output.dataset_id},
-                "type": output.type,
-                "num_bytes": output_stats[(output.run_id, output.dataset_id)]["num_bytes"],
-                "num_rows": output_stats[(output.run_id, output.dataset_id)]["num_rows"],
-                "num_files": output_stats[(output.run_id, output.dataset_id)]["num_files"],
+                "from": {"kind": "RUN", "id": str(merged_output.run_id)},
+                "to": {"kind": "DATASET", "id": merged_output.dataset_id},
+                "type": merged_output.type,
+                "num_bytes": merged_output.num_bytes,
+                "num_rows": merged_output.num_rows,
+                "num_files": merged_output.num_files,
                 "schema": None,
-                "last_interaction_at": output_stats[(output.run_id, output.dataset_id)]["created_at"].strftime(
-                    "%Y-%m-%dT%H:%M:%S.%fZ",
-                ),
+                "last_interaction_at": merged_output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
-            for output in sorted(outputs, key=lambda x: (x.run_id, x.dataset_id))
+            for merged_output in sorted(merged_outputs, key=lambda x: (x.run_id, x.dataset_id))
         ],
         "nodes": [
             {
@@ -459,11 +455,11 @@ async def test_get_run_lineage_with_direction_downstream(
     run = lineage.runs[0]
     job = next(job for job in lineage.jobs if job.id == run.job_id)
 
-    outputs = [output for output in lineage.outputs if output.run_id == run.id]
-    output_stats = relation_stats_by_runs(outputs)
-    assert outputs
+    raw_outputs = [output for output in lineage.outputs if output.run_id == run.id]
+    merged_outputs = merge_io_by_runs(raw_outputs)
+    assert raw_outputs
 
-    dataset_ids = {output.dataset_id for output in outputs}
+    dataset_ids = {output.dataset_id for output in raw_outputs}
     datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
     assert datasets
 
@@ -492,18 +488,16 @@ async def test_get_run_lineage_with_direction_downstream(
         + [
             {
                 "kind": "OUTPUT",
-                "from": {"kind": "RUN", "id": str(output.run_id)},
-                "to": {"kind": "DATASET", "id": output.dataset_id},
-                "type": output.type,
-                "num_bytes": output_stats[(output.run_id, output.dataset_id)]["num_bytes"],
-                "num_rows": output_stats[(output.run_id, output.dataset_id)]["num_rows"],
-                "num_files": output_stats[(output.run_id, output.dataset_id)]["num_files"],
+                "from": {"kind": "RUN", "id": str(merged_output.run_id)},
+                "to": {"kind": "DATASET", "id": merged_output.dataset_id},
+                "type": merged_output.type,
+                "num_bytes": merged_output.num_bytes,
+                "num_rows": merged_output.num_rows,
+                "num_files": merged_output.num_files,
                 "schema": None,
-                "last_interaction_at": output_stats[(output.run_id, output.dataset_id)]["created_at"].strftime(
-                    "%Y-%m-%dT%H:%M:%S.%fZ",
-                ),
+                "last_interaction_at": merged_output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
-            for output in sorted(outputs, key=lambda x: (x.run_id, x.dataset_id))
+            for merged_output in sorted(merged_outputs, key=lambda x: (x.run_id, x.dataset_id))
         ],
         "nodes": [
             {
@@ -567,11 +561,11 @@ async def test_get_run_lineage_with_direction_upstream(
     run = lineage.runs[0]
     job = next(job for job in lineage.jobs if job.id == run.job_id)
 
-    inputs = [input for input in lineage.inputs if input.run_id == run.id]
-    input_stats = relation_stats_by_runs(inputs)
-    assert inputs
+    raw_inputs = [input for input in lineage.inputs if input.run_id == run.id]
+    merged_inputs = merge_io_by_runs(raw_inputs)
+    assert merged_inputs
 
-    dataset_ids = {input.dataset_id for input in inputs}
+    dataset_ids = {input.dataset_id for input in raw_inputs}
     datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
     assert datasets
 
@@ -600,17 +594,15 @@ async def test_get_run_lineage_with_direction_upstream(
         + [
             {
                 "kind": "INPUT",
-                "from": {"kind": "DATASET", "id": input.dataset_id},
-                "to": {"kind": "RUN", "id": str(input.run_id)},
-                "num_bytes": input_stats[(input.run_id, input.dataset_id)]["num_bytes"],
-                "num_rows": input_stats[(input.run_id, input.dataset_id)]["num_rows"],
-                "num_files": input_stats[(input.run_id, input.dataset_id)]["num_files"],
+                "from": {"kind": "DATASET", "id": merged_input.dataset_id},
+                "to": {"kind": "RUN", "id": str(merged_input.run_id)},
+                "num_bytes": merged_input.num_bytes,
+                "num_rows": merged_input.num_rows,
+                "num_files": merged_input.num_files,
                 "schema": None,
-                "last_interaction_at": input_stats[(input.run_id, input.dataset_id)]["created_at"].strftime(
-                    "%Y-%m-%dT%H:%M:%S.%fZ",
-                ),
+                "last_interaction_at": merged_input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
-            for input in sorted(inputs, key=lambda x: (x.dataset_id, x.run_id))
+            for merged_input in sorted(merged_inputs, key=lambda x: (x.dataset_id, x.run_id))
         ],
         "nodes": [
             {
@@ -679,15 +671,17 @@ async def test_get_run_lineage_with_until(
     since = run.created_at
     until = since + timedelta(seconds=0.1)
 
-    inputs = [input for input in lineage.inputs if input.run_id == run.id and since <= input.created_at <= until]
-    input_stats = relation_stats_by_runs(inputs)
-    assert inputs
+    raw_inputs = [input for input in lineage.inputs if input.run_id == run.id and since <= input.created_at <= until]
+    merged_inputs = merge_io_by_runs(raw_inputs)
+    assert merged_inputs
 
-    outputs = [output for output in lineage.outputs if output.run_id == run.id and since <= output.created_at <= until]
-    output_stats = relation_stats_by_runs(outputs)
-    assert outputs
+    raw_outputs = [
+        output for output in lineage.outputs if output.run_id == run.id and since <= output.created_at <= until
+    ]
+    merged_outputs = merge_io_by_runs(raw_outputs)
+    assert merged_outputs
 
-    dataset_ids = {input.dataset_id for input in inputs} | {output.dataset_id for output in outputs}
+    dataset_ids = {input.dataset_id for input in raw_inputs} | {output.dataset_id for output in raw_outputs}
     datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
     assert datasets
 
@@ -716,33 +710,29 @@ async def test_get_run_lineage_with_until(
         + [
             {
                 "kind": "INPUT",
-                "from": {"kind": "DATASET", "id": input.dataset_id},
-                "to": {"kind": "RUN", "id": str(input.run_id)},
-                "num_bytes": input_stats[(input.run_id, input.dataset_id)]["num_bytes"],
-                "num_rows": input_stats[(input.run_id, input.dataset_id)]["num_rows"],
-                "num_files": input_stats[(input.run_id, input.dataset_id)]["num_files"],
+                "from": {"kind": "DATASET", "id": merged_input.dataset_id},
+                "to": {"kind": "RUN", "id": str(merged_input.run_id)},
+                "num_bytes": merged_input.num_bytes,
+                "num_rows": merged_input.num_rows,
+                "num_files": merged_input.num_files,
                 "schema": None,
-                "last_interaction_at": input_stats[(input.run_id, input.dataset_id)]["created_at"].strftime(
-                    "%Y-%m-%dT%H:%M:%S.%fZ",
-                ),
+                "last_interaction_at": merged_input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
-            for input in sorted(inputs, key=lambda x: (x.dataset_id, x.run_id))
+            for merged_input in sorted(merged_inputs, key=lambda x: (x.dataset_id, x.run_id))
         ]
         + [
             {
                 "kind": "OUTPUT",
-                "from": {"kind": "RUN", "id": str(output.run_id)},
-                "to": {"kind": "DATASET", "id": output.dataset_id},
-                "type": output.type,
-                "num_bytes": output_stats[(output.run_id, output.dataset_id)]["num_bytes"],
-                "num_rows": output_stats[(output.run_id, output.dataset_id)]["num_rows"],
-                "num_files": output_stats[(output.run_id, output.dataset_id)]["num_files"],
+                "from": {"kind": "RUN", "id": str(merged_output.run_id)},
+                "to": {"kind": "DATASET", "id": merged_output.dataset_id},
+                "type": merged_output.type,
+                "num_bytes": merged_output.num_bytes,
+                "num_rows": merged_output.num_rows,
+                "num_files": merged_output.num_files,
                 "schema": None,
-                "last_interaction_at": output_stats[(output.run_id, output.dataset_id)]["created_at"].strftime(
-                    "%Y-%m-%dT%H:%M:%S.%fZ",
-                ),
+                "last_interaction_at": merged_output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
-            for output in sorted(outputs, key=lambda x: (x.run_id, x.dataset_id))
+            for merged_output in sorted(merged_outputs, key=lambda x: (x.run_id, x.dataset_id))
         ],
         "nodes": [
             {
@@ -836,13 +826,11 @@ async def test_get_run_lineage_with_depth(
     third_level_dataset_ids = third_level_input_dataset_ids | third_level_output_dataset_ids - first_level_dataset_ids
     assert third_level_dataset_ids
 
-    inputs = first_level_inputs + second_level_inputs + third_level_inputs
-    input_stats = relation_stats_by_runs(inputs)
-    assert inputs
+    raw_inputs = first_level_inputs + second_level_inputs + third_level_inputs
+    merged_inputs = merge_io_by_runs(raw_inputs)
 
-    outputs = first_level_outputs + second_level_outputs + third_level_outputs
-    output_stats = relation_stats_by_runs(outputs)
-    assert outputs
+    raw_outputs = first_level_outputs + second_level_outputs + third_level_outputs
+    merged_outputs = merge_io_by_runs(raw_outputs)
 
     dataset_ids = first_level_dataset_ids | third_level_dataset_ids
     datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
@@ -882,33 +870,29 @@ async def test_get_run_lineage_with_depth(
         + [
             {
                 "kind": "INPUT",
-                "from": {"kind": "DATASET", "id": input.dataset_id},
-                "to": {"kind": "RUN", "id": str(input.run_id)},
-                "num_bytes": input_stats[(input.run_id, input.dataset_id)]["num_bytes"],
-                "num_rows": input_stats[(input.run_id, input.dataset_id)]["num_rows"],
-                "num_files": input_stats[(input.run_id, input.dataset_id)]["num_files"],
+                "from": {"kind": "DATASET", "id": merged_input.dataset_id},
+                "to": {"kind": "RUN", "id": str(merged_input.run_id)},
+                "num_bytes": merged_input.num_bytes,
+                "num_rows": merged_input.num_rows,
+                "num_files": merged_input.num_files,
                 "schema": None,
-                "last_interaction_at": input_stats[(input.run_id, input.dataset_id)]["created_at"].strftime(
-                    "%Y-%m-%dT%H:%M:%S.%fZ",
-                ),
+                "last_interaction_at": merged_input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
-            for input in sorted(inputs, key=lambda x: (x.dataset_id, x.run_id))
+            for merged_input in sorted(merged_inputs, key=lambda x: (x.dataset_id, x.run_id))
         ]
         + [
             {
                 "kind": "OUTPUT",
-                "from": {"kind": "RUN", "id": str(output.run_id)},
-                "to": {"kind": "DATASET", "id": output.dataset_id},
-                "type": output.type,
-                "num_bytes": output_stats[(output.run_id, output.dataset_id)]["num_bytes"],
-                "num_rows": output_stats[(output.run_id, output.dataset_id)]["num_rows"],
-                "num_files": output_stats[(output.run_id, output.dataset_id)]["num_files"],
+                "from": {"kind": "RUN", "id": str(merged_output.run_id)},
+                "to": {"kind": "DATASET", "id": merged_output.dataset_id},
+                "type": merged_output.type,
+                "num_bytes": merged_output.num_bytes,
+                "num_rows": merged_output.num_rows,
+                "num_files": merged_output.num_files,
                 "schema": None,
-                "last_interaction_at": output_stats[(output.run_id, output.dataset_id)]["created_at"].strftime(
-                    "%Y-%m-%dT%H:%M:%S.%fZ",
-                ),
+                "last_interaction_at": merged_output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
-            for output in sorted(outputs, key=lambda x: (x.run_id, x.dataset_id))
+            for merged_output in sorted(merged_outputs, key=lambda x: (x.run_id, x.dataset_id))
         ],
         "nodes": [
             {
@@ -1196,8 +1180,8 @@ async def test_get_run_lineage_with_depth_ignore_cycles(
     # We can start at any run
     run = lineage.runs[0]
 
-    input_stats = relation_stats_by_runs(lineage.inputs)
-    output_stats = relation_stats_by_runs(lineage.outputs)
+    merged_inputs = merge_io_by_runs(lineage.inputs)
+    merged_outputs = merge_io_by_runs(lineage.outputs)
 
     runs = await enrich_runs(lineage.runs, async_session)
     jobs = await enrich_jobs(lineage.jobs, async_session)
@@ -1225,33 +1209,29 @@ async def test_get_run_lineage_with_depth_ignore_cycles(
         + [
             {
                 "kind": "INPUT",
-                "from": {"kind": "DATASET", "id": input.dataset_id},
-                "to": {"kind": "RUN", "id": str(input.run_id)},
-                "num_bytes": input_stats[(input.run_id, input.dataset_id)]["num_bytes"],
-                "num_rows": input_stats[(input.run_id, input.dataset_id)]["num_rows"],
-                "num_files": input_stats[(input.run_id, input.dataset_id)]["num_files"],
+                "from": {"kind": "DATASET", "id": merged_input.dataset_id},
+                "to": {"kind": "RUN", "id": str(merged_input.run_id)},
+                "num_bytes": merged_input.num_bytes,
+                "num_rows": merged_input.num_rows,
+                "num_files": merged_input.num_files,
                 "schema": None,
-                "last_interaction_at": input_stats[(input.run_id, input.dataset_id)]["created_at"].strftime(
-                    "%Y-%m-%dT%H:%M:%S.%fZ",
-                ),
+                "last_interaction_at": merged_input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
-            for input in sorted(lineage.inputs, key=lambda x: (x.dataset_id, x.run_id))
+            for merged_input in sorted(merged_inputs, key=lambda x: (x.dataset_id, x.run_id))
         ]
         + [
             {
                 "kind": "OUTPUT",
-                "from": {"kind": "RUN", "id": str(output.run_id)},
-                "to": {"kind": "DATASET", "id": output.dataset_id},
-                "type": output.type,
-                "num_bytes": output_stats[(output.run_id, output.dataset_id)]["num_bytes"],
-                "num_rows": output_stats[(output.run_id, output.dataset_id)]["num_rows"],
-                "num_files": output_stats[(output.run_id, output.dataset_id)]["num_files"],
+                "from": {"kind": "RUN", "id": str(merged_output.run_id)},
+                "to": {"kind": "DATASET", "id": merged_output.dataset_id},
+                "type": merged_output.type,
+                "num_bytes": merged_output.num_bytes,
+                "num_rows": merged_output.num_rows,
+                "num_files": merged_output.num_files,
                 "schema": None,
-                "last_interaction_at": output_stats[(output.run_id, output.dataset_id)]["created_at"].strftime(
-                    "%Y-%m-%dT%H:%M:%S.%fZ",
-                ),
+                "last_interaction_at": merged_output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
-            for output in sorted(lineage.outputs, key=lambda x: (x.run_id, x.dataset_id))
+            for merged_output in sorted(merged_outputs, key=lambda x: (x.run_id, x.dataset_id))
         ],
         "nodes": [
             {
@@ -1346,13 +1326,13 @@ async def test_get_run_lineage_with_depth_ignore_unrelated_datasets(
     ]
     dataset_ids = {dataset.id for dataset in datasets}
 
-    inputs = [input for input in lineage.inputs if input.dataset_id in dataset_ids]
-    input_stats = relation_stats_by_runs(inputs)
-    assert inputs
+    raw_inputs = [input for input in lineage.inputs if input.dataset_id in dataset_ids]
+    merged_inputs = merge_io_by_runs(raw_inputs)
+    assert merged_inputs
 
-    outputs = [output for output in lineage.outputs if output.dataset_id in dataset_ids]
-    output_stats = relation_stats_by_runs(outputs)
-    assert outputs
+    raw_outputs = [output for output in lineage.outputs if output.dataset_id in dataset_ids]
+    merged_outputs = merge_io_by_runs(raw_outputs)
+    assert merged_outputs
 
     jobs = await enrich_jobs(lineage.jobs, async_session)
     runs = await enrich_runs(lineage.runs, async_session)
@@ -1381,33 +1361,29 @@ async def test_get_run_lineage_with_depth_ignore_unrelated_datasets(
         + [
             {
                 "kind": "INPUT",
-                "from": {"kind": "DATASET", "id": input.dataset_id},
-                "to": {"kind": "RUN", "id": str(input.run_id)},
-                "num_bytes": input_stats[(input.run_id, input.dataset_id)]["num_bytes"],
-                "num_rows": input_stats[(input.run_id, input.dataset_id)]["num_rows"],
-                "num_files": input_stats[(input.run_id, input.dataset_id)]["num_files"],
+                "from": {"kind": "DATASET", "id": merged_input.dataset_id},
+                "to": {"kind": "RUN", "id": str(merged_input.run_id)},
+                "num_bytes": merged_input.num_bytes,
+                "num_rows": merged_input.num_rows,
+                "num_files": merged_input.num_files,
                 "schema": None,
-                "last_interaction_at": input_stats[(input.run_id, input.dataset_id)]["created_at"].strftime(
-                    "%Y-%m-%dT%H:%M:%S.%fZ",
-                ),
+                "last_interaction_at": merged_input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
-            for input in sorted(inputs, key=lambda x: (x.dataset_id, x.run_id))
+            for merged_input in sorted(merged_inputs, key=lambda x: (x.dataset_id, x.run_id))
         ]
         + [
             {
                 "kind": "OUTPUT",
-                "from": {"kind": "RUN", "id": str(output.run_id)},
-                "to": {"kind": "DATASET", "id": output.dataset_id},
-                "type": output.type,
-                "num_bytes": output_stats[(output.run_id, output.dataset_id)]["num_bytes"],
-                "num_rows": output_stats[(output.run_id, output.dataset_id)]["num_rows"],
-                "num_files": output_stats[(output.run_id, output.dataset_id)]["num_files"],
+                "from": {"kind": "RUN", "id": str(merged_output.run_id)},
+                "to": {"kind": "DATASET", "id": merged_output.dataset_id},
+                "type": merged_output.type,
+                "num_bytes": merged_output.num_bytes,
+                "num_rows": merged_output.num_rows,
+                "num_files": merged_output.num_files,
                 "schema": None,
-                "last_interaction_at": output_stats[(output.run_id, output.dataset_id)]["created_at"].strftime(
-                    "%Y-%m-%dT%H:%M:%S.%fZ",
-                ),
+                "last_interaction_at": merged_output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
-            for output in sorted(outputs, key=lambda x: (x.run_id, x.dataset_id))
+            for merged_output in sorted(merged_outputs, key=lambda x: (x.run_id, x.dataset_id))
         ],
         "nodes": [
             {
@@ -1473,15 +1449,15 @@ async def test_get_run_lineage_with_symlinks(
     run = lineage.runs[1]
     job = next(job for job in lineage.jobs if job.id == run.job_id)
 
-    inputs = [input for input in lineage.inputs if input.run_id == run.id]
-    input_stats = relation_stats_by_runs(inputs)
-    assert inputs
+    raw_inputs = [input for input in lineage.inputs if input.run_id == run.id]
+    merged_inputs = merge_io_by_runs(raw_inputs)
+    assert merged_inputs
 
-    outputs = [output for output in lineage.outputs if output.run_id == run.id]
-    output_stats = relation_stats_by_runs(outputs)
-    assert outputs
+    raw_outputs = [output for output in lineage.outputs if output.run_id == run.id]
+    merged_outputs = merge_io_by_runs(raw_outputs)
+    assert merged_outputs
 
-    dataset_ids = {input.dataset_id for input in inputs} | {output.dataset_id for output in outputs}
+    dataset_ids = {input.dataset_id for input in raw_inputs} | {output.dataset_id for output in raw_outputs}
 
     # Dataset from symlinks appear only as SYMLINK location, but not as INPUT, because of depth=1
     dataset_symlinks = [
@@ -1528,33 +1504,29 @@ async def test_get_run_lineage_with_symlinks(
         + [
             {
                 "kind": "INPUT",
-                "from": {"kind": "DATASET", "id": input.dataset_id},
-                "to": {"kind": "RUN", "id": str(input.run_id)},
-                "num_bytes": input_stats[(input.run_id, input.dataset_id)]["num_bytes"],
-                "num_rows": input_stats[(input.run_id, input.dataset_id)]["num_rows"],
-                "num_files": input_stats[(input.run_id, input.dataset_id)]["num_files"],
+                "from": {"kind": "DATASET", "id": merged_input.dataset_id},
+                "to": {"kind": "RUN", "id": str(merged_input.run_id)},
+                "num_bytes": merged_input.num_bytes,
+                "num_rows": merged_input.num_rows,
+                "num_files": merged_input.num_files,
                 "schema": None,
-                "last_interaction_at": input_stats[(input.run_id, input.dataset_id)]["created_at"].strftime(
-                    "%Y-%m-%dT%H:%M:%S.%fZ",
-                ),
+                "last_interaction_at": merged_input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
-            for input in sorted(inputs, key=lambda x: (x.dataset_id, x.run_id))
+            for merged_input in sorted(merged_inputs, key=lambda x: (x.dataset_id, x.run_id))
         ]
         + [
             {
                 "kind": "OUTPUT",
-                "from": {"kind": "RUN", "id": str(output.run_id)},
-                "to": {"kind": "DATASET", "id": output.dataset_id},
-                "type": output.type,
-                "num_bytes": output_stats[(output.run_id, output.dataset_id)]["num_bytes"],
-                "num_rows": output_stats[(output.run_id, output.dataset_id)]["num_rows"],
-                "num_files": output_stats[(output.run_id, output.dataset_id)]["num_files"],
+                "from": {"kind": "RUN", "id": str(merged_output.run_id)},
+                "to": {"kind": "DATASET", "id": merged_output.dataset_id},
+                "type": merged_output.type,
+                "num_bytes": merged_output.num_bytes,
+                "num_rows": merged_output.num_rows,
+                "num_files": merged_output.num_files,
                 "schema": None,
-                "last_interaction_at": output_stats[(output.run_id, output.dataset_id)]["created_at"].strftime(
-                    "%Y-%m-%dT%H:%M:%S.%fZ",
-                ),
+                "last_interaction_at": merged_output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
-            for output in sorted(outputs, key=lambda x: (x.run_id, x.dataset_id))
+            for merged_output in sorted(merged_outputs, key=lambda x: (x.run_id, x.dataset_id))
         ],
         "nodes": [
             {
