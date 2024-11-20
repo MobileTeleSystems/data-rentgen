@@ -371,9 +371,6 @@ async def test_get_dataset_lineage_with_granularity_operation(
                 "num_rows": input.num_rows,
                 "num_files": input.num_files,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,
@@ -397,9 +394,6 @@ async def test_get_dataset_lineage_with_granularity_operation(
                 "num_rows": output.num_rows,
                 "num_files": output.num_files,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,
@@ -1259,9 +1253,6 @@ async def test_get_dataset_lineage_with_depth_and_granularity_operation(
                 "num_rows": input.num_rows,
                 "num_files": input.num_files,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,
@@ -1285,9 +1276,6 @@ async def test_get_dataset_lineage_with_depth_and_granularity_operation(
                 "num_rows": output.num_rows,
                 "num_files": output.num_files,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,

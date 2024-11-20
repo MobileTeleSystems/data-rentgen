@@ -112,11 +112,17 @@ class LineageParentRelationV1(BaseModel):
     to: LineageEntityV1 = Field(description="End point of relation")
 
 
-class LineageOutputRelationSchemaV1(BaseModel):
-    name: str | None = Field(default=None)
+class LineageOutputRelationSchemaFieldV1(BaseModel):
+    name: str
     type: str | None = Field(default=None)
     description: str | None = Field(default=None)
-    fields: list["LineageOutputRelationSchemaV1"] = Field(description="Schema fields", default_factory=list)
+    fields: list["LineageOutputRelationSchemaFieldV1"] = Field(description="Nested fields", default_factory=list)
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LineageOutputRelationSchemaV1(BaseModel):
+    fields: list[LineageOutputRelationSchemaFieldV1] = Field(description="Schema fields")
 
     model_config = ConfigDict(from_attributes=True)
 

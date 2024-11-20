@@ -168,9 +168,6 @@ async def test_get_operation_lineage_simple(
                 "num_rows": input.num_rows,
                 "num_files": input.num_files,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,
@@ -194,9 +191,6 @@ async def test_get_operation_lineage_simple(
                 "num_rows": output.num_rows,
                 "num_files": output.num_files,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,
@@ -335,9 +329,6 @@ async def test_get_operation_lineage_with_direction_downstream(
                 "num_rows": output.num_rows,
                 "num_files": output.num_files,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,
@@ -475,9 +466,6 @@ async def test_get_operation_lineage_with_direction_upstream(
                 "num_rows": input.num_rows,
                 "num_files": input.num_files,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,
@@ -628,9 +616,6 @@ async def test_get_operation_lineage_with_until(
                 "num_rows": input.num_rows,
                 "num_files": input.num_files,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,
@@ -654,9 +639,6 @@ async def test_get_operation_lineage_with_until(
                 "num_rows": output.num_rows,
                 "num_files": output.num_files,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,
@@ -842,9 +824,6 @@ async def test_get_operation_lineage_with_depth(
                 "num_rows": input.num_rows,
                 "num_files": input.num_files,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,
@@ -868,9 +847,6 @@ async def test_get_operation_lineage_with_depth(
                 "num_rows": output.num_rows,
                 "num_files": output.num_files,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,
@@ -1010,9 +986,6 @@ async def test_get_operation_lineage_with_depth_ignore_cycles(
                 "num_rows": input.num_rows,
                 "num_files": input.num_files,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,
@@ -1036,9 +1009,6 @@ async def test_get_operation_lineage_with_depth_ignore_cycles(
                 "num_rows": output.num_rows,
                 "num_files": output.num_files,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,
@@ -1209,9 +1179,6 @@ async def test_get_operation_lineage_with_depth_ignore_unrelated_datasets(
                 "num_rows": input.num_rows,
                 "num_files": input.num_files,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,
@@ -1235,9 +1202,6 @@ async def test_get_operation_lineage_with_depth_ignore_unrelated_datasets(
                 "num_rows": output.num_rows,
                 "num_files": output.num_files,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,
@@ -1397,9 +1361,6 @@ async def test_get_operation_lineage_with_symlinks(
                 "num_rows": input.num_rows,
                 "num_files": input.num_files,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,
@@ -1423,9 +1384,6 @@ async def test_get_operation_lineage_with_symlinks(
                 "num_rows": output.num_rows,
                 "num_files": output.num_files,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,
@@ -1564,9 +1522,6 @@ async def test_get_operation_lineage_with_empty_relation_stats(
                 "num_rows": None,
                 "num_files": None,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,
@@ -1590,9 +1545,6 @@ async def test_get_operation_lineage_with_empty_relation_stats(
                 "num_rows": None,
                 "num_files": None,
                 "schema": {
-                    "description": None,
-                    "name": None,
-                    "type": None,
                     "fields": [
                         {
                             "description": None,
