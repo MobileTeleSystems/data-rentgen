@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Literal, Sequence
 from uuid import UUID
 
-from sqlalchemy import Select, any_, func, literal_column, select
+from sqlalchemy import ColumnElement, Select, any_, func, literal_column, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import selectinload
 
@@ -72,21 +72,21 @@ class OutputRepository(Repository[Output]):
         self,
         operation_ids: Sequence[UUID],
     ) -> list[Output]:
-        # Output created_at is always the same as operation's created_at
-        # do not use `tuple_(Output.created_at, Output.operation_id).in_(...),
-        # as this is too complex filter for Postgres to make an optimal query plan
         if not operation_ids:
             return []
 
+        # Output created_at is always the same as operation's created_at
+        # do not use `tuple_(Output.created_at, Output.operation_id).in_(...),
+        # as this is too complex filter for Postgres to make an optimal query plan
         min_created_at = extract_timestamp_from_uuid(min(operation_ids))
         max_created_at = extract_timestamp_from_uuid(max(operation_ids))
-        query = select(Output).where(
+        where = [
             Output.created_at >= min_created_at,
             Output.created_at <= max_created_at,
             Output.operation_id == any_(operation_ids),  # type: ignore[arg-type]
-        )
-        result = await self._session.scalars(query)
-        return list(result.all())
+        ]
+
+        return await self._get_outputs(where, "OPERATION")
 
     async def list_by_run_ids(
         self,
@@ -101,21 +101,14 @@ class OutputRepository(Repository[Output]):
         min_run_created_at = extract_timestamp_from_uuid(min(run_ids))
         min_created_at = max(min_run_created_at, since.astimezone(timezone.utc))
 
-        query = self._get_select(granularity).where(
+        where = [
             Output.created_at >= min_created_at,
             Output.run_id == any_(run_ids),  # type: ignore[arg-type]
-        )
+        ]
         if until:
-            query = query.where(Output.created_at <= until)
+            where.append(Output.created_at <= until)
 
-        results = await self._session.execute(query)
-        # convert tuple of fields to Output object
-        outputs = [Output(**row._asdict()) for row in results.all()]  # noqa: WPS437
-        if granularity == "OPERATION":
-            # Add schema to inputs
-            return await self._add_schemas(outputs)
-
-        return outputs
+        return await self._get_outputs(where, granularity)
 
     async def list_by_job_ids(
         self,
@@ -127,21 +120,14 @@ class OutputRepository(Repository[Output]):
         if not job_ids:
             return []
 
-        query = self._get_select(granularity).where(
+        where = [
             Output.created_at >= since,
             Output.job_id == any_(job_ids),  # type: ignore[arg-type]
-        )
+        ]
         if until:
-            query = query.where(Output.created_at <= until)
+            where.append(Output.created_at <= until)
 
-        results = await self._session.execute(query)
-        # convert tuple of fields to Output object
-        outputs = [Output(**row._asdict()) for row in results.all()]  # noqa: WPS437
-        if granularity == "OPERATION":
-            # Add schema to inputs
-            return await self._add_schemas(outputs)
-
-        return outputs
+        return await self._get_outputs(where, granularity)
 
     async def list_by_dataset_ids(
         self,
@@ -153,56 +139,30 @@ class OutputRepository(Repository[Output]):
         if not dataset_ids:
             return []
 
-        query = self._get_select(granularity).where(
+        where = [
             Output.created_at >= since,
             Output.dataset_id == any_(dataset_ids),  # type: ignore[arg-type]
-        )
+        ]
         if until:
-            query = query.where(Output.created_at <= until)
+            where.append(Output.created_at <= until)
 
-        results = await self._session.execute(query)
-        # convert tuple of fields to Output object
-        outputs = [Output(**row._asdict()) for row in results.all()]  # noqa: WPS437
-        if granularity == "OPERATION":
-            # Add schema to inputs
-            return await self._add_schemas(outputs)
+        return await self._get_outputs(where, granularity)
 
-        return outputs
-
-    async def _add_schemas(
+    async def _get_outputs(
         self,
-        outputs: list[Output],
-    ) -> list[Output]:
-        # Add schema to inputs
-        query = (
-            select(Output)
-            .where(Output.id == any_([output.id for output in outputs]))  # type: ignore[arg-type]
-            .options(selectinload(Output.schema))
-        )
-        result = await self._session.scalars(query)
-        return list(result.all())
-
-    def _get_select(
-        self,
+        where: list[ColumnElement],
         granularity: Literal["JOB", "RUN", "OPERATION"],
-    ) -> Select:
+    ) -> list[Output]:
         if granularity == "OPERATION":
-            return select(
-                Output.created_at,
-                Output.id,
-                Output.operation_id,
-                Output.run_id,
-                Output.job_id,
-                Output.dataset_id,
-                Output.type,
-                Output.num_bytes,
-                Output.num_rows,
-                Output.num_files,
-                Output.schema_id,
-            )
+            # return Output as-is
+            simple_query = select(Output).where(*where).options(selectinload(Output.schema))
+            result = await self._session.scalars(simple_query)
+            return list(result.all())
 
+        # return an aggregated Output
+        query: Select[tuple]
         if granularity == "RUN":
-            return select(
+            query = select(
                 func.max(Output.created_at).label("created_at"),
                 literal_column("NULL").label("id"),
                 literal_column("NULL").label("operation_id"),
@@ -210,31 +170,45 @@ class OutputRepository(Repository[Output]):
                 Output.job_id,
                 Output.dataset_id,
                 Output.type,
-                func.sum(Output.num_bytes).label("num_bytes"),
-                func.sum(Output.num_rows).label("num_rows"),
-                func.sum(Output.num_files).label("num_files"),
-                literal_column("NULL").label("schema_id"),
+                func.sum(Output.num_bytes).label("sum_num_bytes"),
+                func.sum(Output.num_rows).label("sum_num_rows"),
+                func.sum(Output.num_files).label("sum_num_files"),
             ).group_by(
                 Output.run_id,
                 Output.job_id,
                 Output.dataset_id,
                 Output.type,
             )
+        else:
+            query = select(
+                func.max(Output.created_at).label("created_at"),
+                literal_column("NULL").label("id"),
+                literal_column("NULL").label("operation_id"),
+                literal_column("NULL").label("run_id"),
+                Output.job_id,
+                Output.dataset_id,
+                Output.type,
+                func.sum(Output.num_bytes).label("sum_num_bytes"),
+                func.sum(Output.num_rows).label("sum_num_rows"),
+                func.sum(Output.num_files).label("sum_num_files"),
+            ).group_by(
+                Output.job_id,
+                Output.dataset_id,
+                Output.type,
+            )
 
-        return select(
-            func.max(Output.created_at).label("created_at"),
-            literal_column("NULL").label("id"),
-            literal_column("NULL").label("operation_id"),
-            literal_column("NULL").label("run_id"),
-            Output.job_id,
-            Output.dataset_id,
-            Output.type,
-            func.sum(Output.num_bytes).label("num_bytes"),
-            func.sum(Output.num_rows).label("num_rows"),
-            func.sum(Output.num_files).label("num_files"),
-            literal_column("NULL").label("schema_id"),
-        ).group_by(
-            Output.job_id,
-            Output.dataset_id,
-            Output.type,
-        )
+        query = query.where(*where)
+        results = await self._session.execute(query)
+        return [
+            Output(
+                created_at=row.created_at,
+                run_id=row.run_id,
+                job_id=row.job_id,
+                dataset_id=row.dataset_id,
+                type=row.type,
+                num_bytes=row.sum_num_bytes,
+                num_rows=row.sum_num_rows,
+                num_files=row.sum_num_files,
+            )
+            for row in results.all()
+        ]
