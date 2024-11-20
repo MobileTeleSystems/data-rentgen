@@ -1471,7 +1471,7 @@ async def test_get_operation_lineage_with_empty_io_stats_and_schema(
 ):
     lineage = simple_lineage
 
-    # clear input/output stats and schema.
+    # clear input/output stats
     for input in lineage.inputs:
         input.num_bytes = None
         input.num_rows = None

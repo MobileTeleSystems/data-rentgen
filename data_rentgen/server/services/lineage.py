@@ -73,7 +73,7 @@ class LineageService:
     def __init__(self, uow: Annotated[UnitOfWork, Depends()]):
         self._uow = uow
 
-    async def get_lineage_by_jobs(
+    async def get_lineage_by_jobs(  # noqa: WPS217, WPS210
         self,
         start_node_ids: list[int],
         direction: LineageDirectionV1,
@@ -119,6 +119,18 @@ class LineageService:
                 until=until,
                 granularity=granularity,
             )
+
+        input_schema_ids = {input.schema_id for input in inputs if input.schema_id is not None}
+        output_schema_ids = {output.schema_id for output in outputs if output.schema_id is not None}
+        schemas = await self._uow.schema.list_by_ids(sorted(input_schema_ids | output_schema_ids))
+        schemas_by_id = {schema.id: schema for schema in schemas}
+
+        for input in inputs:
+            if input.schema_id is not None:
+                input.schema = schemas_by_id.get(input.schema_id)
+        for output in outputs:
+            if output.schema_id is not None:
+                output.schema = schemas_by_id.get(output.schema_id)
 
         ids_to_skip = ids_to_skip or IdsToSkip()
 
@@ -197,7 +209,7 @@ class LineageService:
             )
         return result
 
-    async def get_lineage_by_runs(  # noqa: WPS217
+    async def get_lineage_by_runs(  # noqa: WPS217, WPS210
         self,
         start_node_ids: list[UUID],
         direction: LineageDirectionV1,
@@ -243,6 +255,18 @@ class LineageService:
                 until=until,
                 granularity=granularity,
             )
+
+        input_schema_ids = {input.schema_id for input in inputs if input.schema_id is not None}
+        output_schema_ids = {output.schema_id for output in outputs if output.schema_id is not None}
+        schemas = await self._uow.schema.list_by_ids(sorted(input_schema_ids | output_schema_ids))
+        schemas_by_id = {schema.id: schema for schema in schemas}
+
+        for input in inputs:
+            if input.schema_id is not None:
+                input.schema = schemas_by_id.get(input.schema_id)
+        for output in outputs:
+            if output.schema_id is not None:
+                output.schema = schemas_by_id.get(output.schema_id)
 
         # Include only operations which have at least one input or output.
         # In case granularity == "RUN", all operation_id are None.
@@ -323,7 +347,7 @@ class LineageService:
             )
         return result
 
-    async def get_lineage_by_operations(  # noqa: WPS217
+    async def get_lineage_by_operations(  # noqa: WPS217, WPS210
         self,
         start_node_ids: list[UUID],
         direction: LineageDirectionV1,
@@ -370,6 +394,18 @@ class LineageService:
             outputs = await self._uow.output.list_by_operation_ids(operation_ids)
         if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
             inputs = await self._uow.input.list_by_operation_ids(operation_ids)
+
+        input_schema_ids = {input.schema_id for input in inputs if input.schema_id is not None}
+        output_schema_ids = {output.schema_id for output in outputs if output.schema_id is not None}
+        schemas = await self._uow.schema.list_by_ids(sorted(input_schema_ids | output_schema_ids))
+        schemas_by_id = {schema.id: schema for schema in schemas}
+
+        for input in inputs:
+            if input.schema_id is not None:
+                input.schema = schemas_by_id.get(input.schema_id)
+        for output in outputs:
+            if output.schema_id is not None:
+                output.schema = schemas_by_id.get(output.schema_id)
 
         result = LineageServiceResult(
             jobs=jobs_by_id,
@@ -578,6 +614,18 @@ class LineageService:
                 granularity="OPERATION",
             )
 
+        input_schema_ids = {input.schema_id for input in inputs if input.schema_id is not None}
+        output_schema_ids = {output.schema_id for output in outputs if output.schema_id is not None}
+        schemas = await self._uow.schema.list_by_ids(sorted(input_schema_ids | output_schema_ids))
+        schemas_by_id = {schema.id: schema for schema in schemas}
+
+        for input in inputs:
+            if input.schema_id is not None:
+                input.schema = schemas_by_id.get(input.schema_id)
+        for output in outputs:
+            if output.schema_id is not None:
+                output.schema = schemas_by_id.get(output.schema_id)
+
         result = LineageServiceResult(
             datasets=datasets_by_id,
             dataset_symlinks=dataset_symlinks_by_id,
@@ -659,6 +707,18 @@ class LineageService:
                 granularity="RUN",
             )
 
+        input_schema_ids = {input.schema_id for input in inputs if input.schema_id is not None}
+        output_schema_ids = {output.schema_id for output in outputs if output.schema_id is not None}
+        schemas = await self._uow.schema.list_by_ids(sorted(input_schema_ids | output_schema_ids))
+        schemas_by_id = {schema.id: schema for schema in schemas}
+
+        for input in inputs:
+            if input.schema_id is not None:
+                input.schema = schemas_by_id.get(input.schema_id)
+        for output in outputs:
+            if output.schema_id is not None:
+                output.schema = schemas_by_id.get(output.schema_id)
+
         result = LineageServiceResult(
             datasets=datasets_by_id,
             dataset_symlinks=dataset_symlinks_by_id,
@@ -737,6 +797,18 @@ class LineageService:
                 until=until,
                 granularity="JOB",
             )
+
+        input_schema_ids = {input.schema_id for input in inputs if input.schema_id is not None}
+        output_schema_ids = {output.schema_id for output in outputs if output.schema_id is not None}
+        schemas = await self._uow.schema.list_by_ids(sorted(input_schema_ids | output_schema_ids))
+        schemas_by_id = {schema.id: schema for schema in schemas}
+
+        for input in inputs:
+            if input.schema_id is not None:
+                input.schema = schemas_by_id.get(input.schema_id)
+        for output in outputs:
+            if output.schema_id is not None:
+                output.schema = schemas_by_id.get(output.schema_id)
 
         result = LineageServiceResult(
             datasets=datasets_by_id,

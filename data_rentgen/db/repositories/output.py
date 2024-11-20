@@ -7,7 +7,6 @@ from uuid import UUID
 
 from sqlalchemy import ColumnElement, Select, any_, func, literal_column, select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Output, OutputType
 from data_rentgen.db.repositories.base import Repository
@@ -155,7 +154,7 @@ class OutputRepository(Repository[Output]):
     ) -> list[Output]:
         if granularity == "OPERATION":
             # return Output as-is
-            simple_query = select(Output).where(*where).options(selectinload(Output.schema))
+            simple_query = select(Output).where(*where)
             result = await self._session.scalars(simple_query)
             return list(result.all())
 
@@ -169,15 +168,17 @@ class OutputRepository(Repository[Output]):
                 Output.run_id,
                 Output.job_id,
                 Output.dataset_id,
-                Output.type,
                 func.sum(Output.num_bytes).label("sum_num_bytes"),
                 func.sum(Output.num_rows).label("sum_num_rows"),
                 func.sum(Output.num_files).label("sum_num_files"),
+                func.min(Output.type).label("min_type"),
+                func.max(Output.type).label("max_type"),
+                func.min(Output.schema_id).label("min_schema_id"),
+                func.max(Output.schema_id).label("max_schema_id"),
             ).group_by(
                 Output.run_id,
                 Output.job_id,
                 Output.dataset_id,
-                Output.type,
             )
         else:
             query = select(
@@ -187,14 +188,16 @@ class OutputRepository(Repository[Output]):
                 literal_column("NULL").label("run_id"),
                 Output.job_id,
                 Output.dataset_id,
-                Output.type,
                 func.sum(Output.num_bytes).label("sum_num_bytes"),
                 func.sum(Output.num_rows).label("sum_num_rows"),
                 func.sum(Output.num_files).label("sum_num_files"),
+                func.min(Output.type).label("min_type"),
+                func.max(Output.type).label("max_type"),
+                func.min(Output.schema_id).label("min_schema_id"),
+                func.max(Output.schema_id).label("max_schema_id"),
             ).group_by(
                 Output.job_id,
                 Output.dataset_id,
-                Output.type,
             )
 
         query = query.where(*where)
@@ -205,10 +208,14 @@ class OutputRepository(Repository[Output]):
                 run_id=row.run_id,
                 job_id=row.job_id,
                 dataset_id=row.dataset_id,
-                type=row.type,
                 num_bytes=row.sum_num_bytes,
                 num_rows=row.sum_num_rows,
                 num_files=row.sum_num_files,
+                # If all outputs within Dataset -> Run|Job have the same type, save it.
+                # If not, it's impossible to merge.
+                type=row.max_type if row.min_type == row.max_type else None,
+                # Same for schema
+                schema_id=row.max_schema_id if row.min_schema_id == row.max_schema_id else None,
             )
             for row in results.all()
         ]

@@ -41,6 +41,20 @@ def merge_io(inputs_outputs: Sequence[IO], get_key: Callable[[IO], tuple]) -> Se
             merged_io.num_files = sum(filter(_not_none, [merged_io.num_files, raw_io.num_files]))
             merged_io.num_rows = sum(filter(_not_none, [merged_io.num_rows, raw_io.num_rows]))
 
+            merged_io.schema_id = merged_io.schema_id or raw_io.schema_id
+            if (
+                merged_io.schema_id is not None
+                and raw_io.schema_id is not None
+                and merged_io.schema_id != raw_io.schema_id
+            ):
+                # cannot merge different schemas
+                merged_io.schema_id = None
+                merged_io.schema = None
+
+            if isinstance(merged_io, Output) and merged_io.type != raw_io.type:
+                # cannot merge different types
+                merged_io.type = None
+
     return list(merged_inputs_outputs.values())
 
 
@@ -49,4 +63,4 @@ def merge_io_by_runs(inputs_outputs: Sequence[IO]) -> Sequence[IO]:
 
 
 def merge_io_by_jobs(inputs_outputs: Sequence[IO]) -> Sequence[IO]:
-    return merge_io(inputs_outputs, get_key=lambda x: (x.job_id, x.dataset_id, getattr(x, "type", None)))
+    return merge_io(inputs_outputs, get_key=lambda x: (x.job_id, x.dataset_id))

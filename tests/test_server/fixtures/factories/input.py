@@ -1,10 +1,11 @@
 from random import randint
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Input
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
-from tests.test_server.fixtures.factories.schema import create_schema
 
 
 def input_factory(**kwargs) -> Input:
@@ -29,13 +30,11 @@ def input_factory(**kwargs) -> Input:
 async def create_input(
     async_session: AsyncSession,
     input_kwargs: dict | None = None,
-    schema_kwargs: dict | None = None,
 ) -> Input:
     input_kwargs = input_kwargs or {}
-    schema = await create_schema(async_session, schema_kwargs)
-    input_kwargs.update({"schema_id": schema.id})
     input = input_factory(**input_kwargs)
     async_session.add(input)
     await async_session.commit()
-    await async_session.refresh(input)
-    return input
+
+    query = select(Input).where(Input.id == input.id).options(selectinload(Input.schema))
+    return await async_session.scalar(query)

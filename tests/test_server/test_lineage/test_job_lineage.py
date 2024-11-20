@@ -5,7 +5,8 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.db.models import Job, Run
+from data_rentgen.db.models import Job, OutputType, Run
+from tests.test_server.fixtures.factories.schema import create_schema
 from tests.test_server.utils.enrich import enrich_datasets, enrich_jobs, enrich_runs
 from tests.test_server.utils.lineage_result import LineageResult
 from tests.test_server.utils.merge import merge_io_by_jobs, merge_io_by_runs
@@ -191,7 +192,16 @@ async def test_get_job_lineage_simple(
                 "num_bytes": merged_input.num_bytes,
                 "num_rows": merged_input.num_rows,
                 "num_files": merged_input.num_files,
-                "schema": None,
+                "schema": {
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in merged_input.schema.fields
+                    ],
+                },
                 "last_interaction_at": merged_input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for merged_input in sorted(merged_inputs, key=lambda x: (x.dataset_id, x.job_id))
@@ -205,7 +215,16 @@ async def test_get_job_lineage_simple(
                 "num_bytes": merged_output.num_bytes,
                 "num_rows": merged_output.num_rows,
                 "num_files": merged_output.num_files,
-                "schema": None,
+                "schema": {
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in merged_output.schema.fields
+                    ],
+                },
                 "last_interaction_at": merged_output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for merged_output in sorted(merged_outputs, key=lambda x: (x.job_id, x.dataset_id))
@@ -284,7 +303,16 @@ async def test_get_job_lineage_with_direction_downstream(
                 "num_bytes": merged_output.num_bytes,
                 "num_rows": merged_output.num_rows,
                 "num_files": merged_output.num_files,
-                "schema": None,
+                "schema": {
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in merged_output.schema.fields
+                    ],
+                },
                 "last_interaction_at": merged_output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for merged_output in sorted(merged_outputs, key=lambda x: (x.job_id, x.dataset_id))
@@ -362,7 +390,16 @@ async def test_get_job_lineage_with_direction_upstream(
                 "num_bytes": merged_input.num_bytes,
                 "num_rows": merged_input.num_rows,
                 "num_files": merged_input.num_files,
-                "schema": None,
+                "schema": {
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in merged_input.schema.fields
+                    ],
+                },
                 "last_interaction_at": merged_input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for merged_input in sorted(merged_inputs, key=lambda x: (x.dataset_id, x.job_id))
@@ -447,7 +484,16 @@ async def test_get_job_lineage_with_until(
                 "num_bytes": merged_input.num_bytes,
                 "num_rows": merged_input.num_rows,
                 "num_files": merged_input.num_files,
-                "schema": None,
+                "schema": {
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in merged_input.schema.fields
+                    ],
+                },
                 "last_interaction_at": merged_input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for merged_input in sorted(merged_inputs, key=lambda x: (x.dataset_id, x.job_id))
@@ -461,7 +507,16 @@ async def test_get_job_lineage_with_until(
                 "num_bytes": merged_output.num_bytes,
                 "num_rows": merged_output.num_rows,
                 "num_files": merged_output.num_files,
-                "schema": None,
+                "schema": {
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in merged_output.schema.fields
+                    ],
+                },
                 "last_interaction_at": merged_output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for merged_output in sorted(merged_outputs, key=lambda x: (x.job_id, x.dataset_id))
@@ -556,7 +611,16 @@ async def test_get_job_lineage_with_granularity_run(
                 "num_bytes": merged_input.num_bytes,
                 "num_rows": merged_input.num_rows,
                 "num_files": merged_input.num_files,
-                "schema": None,
+                "schema": {
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in merged_input.schema.fields
+                    ],
+                },
                 "last_interaction_at": merged_input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for merged_input in sorted(merged_inputs, key=lambda x: (x.dataset_id, x.run_id))
@@ -570,7 +634,16 @@ async def test_get_job_lineage_with_granularity_run(
                 "num_bytes": merged_output.num_bytes,
                 "num_rows": merged_output.num_rows,
                 "num_files": merged_output.num_files,
-                "schema": None,
+                "schema": {
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in merged_output.schema.fields
+                    ],
+                },
                 "last_interaction_at": merged_output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for merged_output in sorted(merged_outputs, key=lambda x: (x.run_id, x.dataset_id))
@@ -702,7 +775,16 @@ async def test_get_job_lineage_with_depth(
                 "num_bytes": merged_input.num_bytes,
                 "num_rows": merged_input.num_rows,
                 "num_files": merged_input.num_files,
-                "schema": None,
+                "schema": {
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in merged_input.schema.fields
+                    ],
+                },
                 "last_interaction_at": merged_input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for merged_input in sorted(merged_inputs, key=lambda x: (x.dataset_id, x.run_id))
@@ -716,7 +798,16 @@ async def test_get_job_lineage_with_depth(
                 "num_bytes": merged_output.num_bytes,
                 "num_rows": merged_output.num_rows,
                 "num_files": merged_output.num_files,
-                "schema": None,
+                "schema": {
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in merged_output.schema.fields
+                    ],
+                },
                 "last_interaction_at": merged_output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for merged_output in sorted(merged_outputs, key=lambda x: (x.run_id, x.dataset_id))
@@ -844,7 +935,16 @@ async def test_get_job_lineage_with_depth_and_granularity_run(
                 "num_bytes": merged_input.num_bytes,
                 "num_rows": merged_input.num_rows,
                 "num_files": merged_input.num_files,
-                "schema": None,
+                "schema": {
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in merged_input.schema.fields
+                    ],
+                },
                 "last_interaction_at": merged_input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for merged_input in sorted(merged_inputs, key=lambda x: (x.dataset_id, x.job_id))
@@ -858,7 +958,16 @@ async def test_get_job_lineage_with_depth_and_granularity_run(
                 "num_bytes": merged_output.num_bytes,
                 "num_rows": merged_output.num_rows,
                 "num_files": merged_output.num_files,
-                "schema": None,
+                "schema": {
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in merged_output.schema.fields
+                    ],
+                },
                 "last_interaction_at": merged_output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for merged_output in sorted(merged_outputs, key=lambda x: (x.job_id, x.dataset_id))
@@ -957,7 +1066,16 @@ async def test_get_job_lineage_with_depth_ignore_cycles(
                 "num_bytes": merged_input.num_bytes,
                 "num_rows": merged_input.num_rows,
                 "num_files": merged_input.num_files,
-                "schema": None,
+                "schema": {
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in merged_input.schema.fields
+                    ],
+                },
                 "last_interaction_at": merged_input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for merged_input in sorted(merged_inputs, key=lambda x: (x.dataset_id, x.job_id))
@@ -971,7 +1089,16 @@ async def test_get_job_lineage_with_depth_ignore_cycles(
                 "num_bytes": merged_output.num_bytes,
                 "num_rows": merged_output.num_rows,
                 "num_files": merged_output.num_files,
-                "schema": None,
+                "schema": {
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in merged_output.schema.fields
+                    ],
+                },
                 "last_interaction_at": merged_output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for merged_output in sorted(merged_outputs, key=lambda x: (x.job_id, x.dataset_id))
@@ -1081,7 +1208,16 @@ async def test_get_job_lineage_with_depth_ignore_unrelated_datasets(
                 "num_bytes": merged_input.num_bytes,
                 "num_rows": merged_input.num_rows,
                 "num_files": merged_input.num_files,
-                "schema": None,
+                "schema": {
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in merged_input.schema.fields
+                    ],
+                },
                 "last_interaction_at": merged_input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for merged_input in sorted(merged_inputs, key=lambda x: (x.dataset_id, x.job_id))
@@ -1095,7 +1231,16 @@ async def test_get_job_lineage_with_depth_ignore_unrelated_datasets(
                 "num_bytes": merged_output.num_bytes,
                 "num_rows": merged_output.num_rows,
                 "num_files": merged_output.num_files,
-                "schema": None,
+                "schema": {
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in merged_output.schema.fields
+                    ],
+                },
                 "last_interaction_at": merged_output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for merged_output in sorted(merged_outputs, key=lambda x: (x.job_id, x.dataset_id))
@@ -1197,7 +1342,16 @@ async def test_get_job_lineage_with_symlinks(
                 "num_bytes": merged_input.num_bytes,
                 "num_rows": merged_input.num_rows,
                 "num_files": merged_input.num_files,
-                "schema": None,
+                "schema": {
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in merged_input.schema.fields
+                    ],
+                },
                 "last_interaction_at": merged_input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
             }
             for merged_input in sorted(merged_inputs, key=lambda x: (x.dataset_id, x.job_id))
@@ -1208,6 +1362,131 @@ async def test_get_job_lineage_with_symlinks(
                 "from": {"kind": "JOB", "id": merged_output.job_id},
                 "to": {"kind": "DATASET", "id": merged_output.dataset_id},
                 "type": merged_output.type,
+                "num_bytes": merged_output.num_bytes,
+                "num_rows": merged_output.num_rows,
+                "num_files": merged_output.num_files,
+                "schema": {
+                    "fields": [
+                        {
+                            "description": None,
+                            "fields": [],
+                            **field,
+                        }
+                        for field in merged_output.schema.fields
+                    ],
+                },
+                "last_interaction_at": merged_output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            }
+            for merged_output in sorted(merged_outputs, key=lambda x: (x.job_id, x.dataset_id))
+        ],
+        "nodes": [
+            {
+                "kind": "JOB",
+                "id": job.id,
+                "name": job.name,
+                "type": job.type,
+                "location": {
+                    "id": job.location.id,
+                    "name": job.location.name,
+                    "type": job.location.type,
+                    "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
+                },
+            },
+        ]
+        + [
+            {
+                "kind": "DATASET",
+                "id": dataset.id,
+                "format": dataset.format,
+                "name": dataset.name,
+                "location": {
+                    "id": dataset.location.id,
+                    "name": dataset.location.name,
+                    "type": dataset.location.type,
+                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                    "external_id": dataset.location.external_id,
+                },
+            }
+            for dataset in sorted(datasets, key=lambda x: x.id)
+        ],
+    }
+
+
+async def test_get_job_lineage_unmergeable_inputs_and_outputs(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    duplicated_lineage: LineageResult,
+):
+    lineage = duplicated_lineage
+
+    # make every input and output a different schema -> grouping by Job returns None.
+    # make every output a different type -> grouping by Job returns None.
+    for raw_input in lineage.inputs:
+        schema = await create_schema(async_session)
+        raw_input.schema_id = schema.id
+        raw_input.schema = schema
+        await async_session.merge(raw_input)
+
+    output_types = list(OutputType)
+    for i, raw_output in enumerate(lineage.outputs):
+        schema = await create_schema(async_session)
+        raw_output.schema_id = schema.id
+        raw_output.schema = schema
+        raw_output.type = output_types[i % len(output_types)]
+        await async_session.merge(raw_output)
+
+    await async_session.commit()
+
+    job = lineage.jobs[0]
+    runs = [run for run in lineage.runs if run.job_id == job.id]
+
+    raw_inputs = [input for input in lineage.inputs if input.job_id == job.id]
+    merged_inputs = merge_io_by_jobs(raw_inputs)
+    assert merged_inputs
+
+    raw_outputs = [output for output in lineage.outputs if output.job_id == job.id]
+    merged_outputs = merge_io_by_jobs(raw_outputs)
+    assert merged_outputs
+
+    dataset_ids = {input.dataset_id for input in raw_inputs} | {output.dataset_id for output in raw_outputs}
+    datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
+    assert datasets
+
+    [job] = await enrich_jobs([job], async_session)
+    runs = await enrich_runs(runs, async_session)
+    datasets = await enrich_datasets(datasets, async_session)
+    since = min(run.created_at for run in runs)
+
+    response = await test_client.get(
+        "v1/jobs/lineage",
+        params={
+            "since": since.isoformat(),
+            "start_node_id": job.id,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": [
+            {
+                "kind": "INPUT",
+                "from": {"kind": "DATASET", "id": merged_input.dataset_id},
+                "to": {"kind": "JOB", "id": merged_input.job_id},
+                "num_bytes": merged_input.num_bytes,
+                "num_rows": merged_input.num_rows,
+                "num_files": merged_input.num_files,
+                "schema": None,
+                "last_interaction_at": merged_input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            }
+            for merged_input in sorted(merged_inputs, key=lambda x: (x.dataset_id, x.job_id))
+        ]
+        + [
+            {
+                "kind": "OUTPUT",
+                "from": {"kind": "JOB", "id": merged_output.job_id},
+                "to": {"kind": "DATASET", "id": merged_output.dataset_id},
+                "type": None,
                 "num_bytes": merged_output.num_bytes,
                 "num_rows": merged_output.num_rows,
                 "num_files": merged_output.num_files,
@@ -1224,8 +1503,125 @@ async def test_get_job_lineage_with_symlinks(
                 "type": job.type,
                 "location": {
                     "id": job.location.id,
-                    "name": job.location.name,
                     "type": job.location.type,
+                    "name": job.location.name,
+                    "addresses": [{"url": address.url} for address in job.location.addresses],
+                    "external_id": job.location.external_id,
+                },
+            },
+        ]
+        + [
+            {
+                "kind": "DATASET",
+                "id": dataset.id,
+                "format": dataset.format,
+                "name": dataset.name,
+                "location": {
+                    "id": dataset.location.id,
+                    "name": dataset.location.name,
+                    "type": dataset.location.type,
+                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                    "external_id": dataset.location.external_id,
+                },
+            }
+            for dataset in sorted(datasets, key=lambda x: x.id)
+        ],
+    }
+
+
+async def test_get_dataset_lineage_empty_io_stats_and_schema(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    duplicated_lineage: LineageResult,
+):
+    lineage = duplicated_lineage
+
+    # clear input/output stats and schema.
+    for raw_input in lineage.inputs:
+        raw_input.schema_id = None
+        raw_input.schema = None
+        raw_input.num_bytes = None
+        raw_input.num_rows = None
+        raw_input.num_files = None
+        await async_session.merge(raw_input)
+
+    for raw_output in lineage.outputs:
+        raw_output.schema_id = None
+        raw_output.schema = None
+        raw_output.num_bytes = None
+        raw_output.num_rows = None
+        raw_output.num_files = None
+        await async_session.merge(raw_output)
+
+    await async_session.commit()
+
+    job = lineage.jobs[0]
+    runs = [run for run in lineage.runs if run.job_id == job.id]
+
+    raw_inputs = [input for input in lineage.inputs if input.job_id == job.id]
+    merged_inputs = merge_io_by_jobs(raw_inputs)
+    assert merged_inputs
+
+    raw_outputs = [output for output in lineage.outputs if output.job_id == job.id]
+    merged_outputs = merge_io_by_jobs(raw_outputs)
+    assert merged_outputs
+
+    dataset_ids = {input.dataset_id for input in raw_inputs} | {output.dataset_id for output in raw_outputs}
+    datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
+    assert datasets
+
+    [job] = await enrich_jobs([job], async_session)
+    runs = await enrich_runs(runs, async_session)
+    datasets = await enrich_datasets(datasets, async_session)
+    since = min(run.created_at for run in runs)
+
+    response = await test_client.get(
+        "v1/jobs/lineage",
+        params={
+            "since": since.isoformat(),
+            "start_node_id": job.id,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": [
+            {
+                "kind": "INPUT",
+                "from": {"kind": "DATASET", "id": merged_input.dataset_id},
+                "to": {"kind": "JOB", "id": merged_input.job_id},
+                "num_bytes": None,
+                "num_rows": None,
+                "num_files": None,
+                "schema": None,
+                "last_interaction_at": merged_input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            }
+            for merged_input in sorted(merged_inputs, key=lambda x: (x.dataset_id, x.job_id))
+        ]
+        + [
+            {
+                "kind": "OUTPUT",
+                "from": {"kind": "JOB", "id": merged_output.job_id},
+                "to": {"kind": "DATASET", "id": merged_output.dataset_id},
+                "type": merged_output.type,
+                "num_bytes": None,
+                "num_rows": None,
+                "num_files": None,
+                "schema": None,
+                "last_interaction_at": merged_output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+            }
+            for merged_output in sorted(merged_outputs, key=lambda x: (x.job_id, x.dataset_id))
+        ],
+        "nodes": [
+            {
+                "kind": "JOB",
+                "id": job.id,
+                "name": job.name,
+                "type": job.type,
+                "location": {
+                    "id": job.location.id,
+                    "type": job.location.type,
+                    "name": job.location.name,
                     "addresses": [{"url": address.url} for address in job.location.addresses],
                     "external_id": job.location.external_id,
                 },

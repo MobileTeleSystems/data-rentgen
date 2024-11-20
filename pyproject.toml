@@ -429,6 +429,8 @@ per-file-ignores = [
   "data_rentgen/db/*.py:WPS102,WPS432",
 # WPS237 Found a too complex `f` string
   "data_rentgen/server/exceptions/*.py:WPS237",
+# WPS441 Found control variable used after block: input
+  "data_rentgen/server/services/lineage.py:WPS441",
 # N815 variable 'openlineageAdapterVersion' in class scope should not be mixedCase
   "data_rentgen/consumer/openlineage/*.py:N815",
 # TAE001 too few type annotations

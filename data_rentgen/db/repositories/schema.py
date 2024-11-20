@@ -1,9 +1,10 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import Sequence
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import any_, select
 
 from data_rentgen.db.models import Schema
 from data_rentgen.db.repositories.base import Repository
@@ -23,9 +24,17 @@ class SchemaRepository(Repository[Schema]):
             result = await self._get(digest) or await self._create(digest, schema)
         return result
 
+    async def list_by_ids(self, schema_ids: Sequence[int]) -> list[Schema]:
+        if not schema_ids:
+            return []
+
+        query = select(Schema).where(Schema.id == any_(schema_ids))  # type: ignore[arg-type]
+        result = await self._session.scalars(query)
+        return list(result.all())
+
     async def _get(self, digest: UUID) -> Schema | None:
-        statement = select(Schema).where(Schema.digest == digest)
-        return await self._session.scalar(statement)
+        result = select(Schema).where(Schema.digest == digest)
+        return await self._session.scalar(result)
 
     async def _create(self, digest: UUID, schema: SchemaDTO) -> Schema:
         result = Schema(digest=digest, fields=schema.fields)

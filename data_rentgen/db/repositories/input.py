@@ -7,7 +7,6 @@ from uuid import UUID
 
 from sqlalchemy import ColumnElement, Select, any_, func, literal_column, select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Input
 from data_rentgen.db.repositories.base import Repository
@@ -154,7 +153,7 @@ class InputRepository(Repository[Input]):
     ) -> list[Input]:
         if granularity == "OPERATION":
             # return Input as-is
-            simple_query = select(Input).where(*where).options(selectinload(Input.schema))
+            simple_query = select(Input).where(*where)
             result = await self._session.scalars(simple_query)
             return list(result.all())
 
@@ -171,6 +170,8 @@ class InputRepository(Repository[Input]):
                 func.sum(Input.num_bytes).label("sum_num_bytes"),
                 func.sum(Input.num_rows).label("sum_num_rows"),
                 func.sum(Input.num_files).label("sum_num_files"),
+                func.min(Input.schema_id).label("min_schema_id"),
+                func.max(Input.schema_id).label("max_schema_id"),
             ).group_by(
                 Input.run_id,
                 Input.job_id,
@@ -187,6 +188,8 @@ class InputRepository(Repository[Input]):
                 func.sum(Input.num_bytes).label("sum_num_bytes"),
                 func.sum(Input.num_rows).label("sum_num_rows"),
                 func.sum(Input.num_files).label("sum_num_files"),
+                func.min(Input.schema_id).label("min_schema_id"),
+                func.max(Input.schema_id).label("max_schema_id"),
             ).group_by(
                 Input.job_id,
                 Input.dataset_id,
@@ -203,6 +206,9 @@ class InputRepository(Repository[Input]):
                 num_bytes=row.sum_num_bytes,
                 num_rows=row.sum_num_rows,
                 num_files=row.sum_num_files,
+                # If all outputs within Dataset -> Run|Job have the same schema, save it.
+                # If not, it's impossible to merge.
+                schema_id=row.max_schema_id if row.min_schema_id == row.max_schema_id else None,
             )
             for row in query_result.all()
         ]
