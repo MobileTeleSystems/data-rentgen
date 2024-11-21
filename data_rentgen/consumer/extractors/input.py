@@ -17,8 +17,8 @@ def extract_input(
         dataset=extract_dataset(dataset),
         schema=extract_schema(dataset),
     )
-    if dataset.inputFacets.dataQualityMetrics:
-        result.num_rows = dataset.inputFacets.dataQualityMetrics.rows
-        result.num_bytes = dataset.inputFacets.dataQualityMetrics.bytes
-        result.num_files = dataset.inputFacets.dataQualityMetrics.files
+    if dataset.inputFacets.inputStatistics:
+        result.num_rows = dataset.inputFacets.inputStatistics.rows
+        result.num_bytes = dataset.inputFacets.inputStatistics.bytes
+        result.num_files = dataset.inputFacets.inputStatistics.files
     return result
