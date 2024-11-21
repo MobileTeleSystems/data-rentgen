@@ -7,14 +7,14 @@ from data_rentgen.consumer.openlineage.base import OpenLineageBase
 from data_rentgen.consumer.openlineage.dataset_facets.base import (
     OpenLineageDatasetFacet,
 )
-from data_rentgen.consumer.openlineage.dataset_facets.dataquality_metrics import (
-    OpenLineageDataQualityMetricsInputDatasetFacet,
-)
 from data_rentgen.consumer.openlineage.dataset_facets.datasource import (
     OpenLineageDatasourceDatasetFacet,
 )
 from data_rentgen.consumer.openlineage.dataset_facets.documentation import (
     OpenLineageDocumentationDatasetFacet,
+)
+from data_rentgen.consumer.openlineage.dataset_facets.input_statistics import (
+    OpenLineageInputStatisticsInputDatasetFacet,
 )
 from data_rentgen.consumer.openlineage.dataset_facets.lifecycle_change import (
     OpenLineageDatasetLifecycleStateChange,
@@ -39,12 +39,12 @@ from data_rentgen.consumer.openlineage.dataset_facets.symlinks import (
 
 __all__ = [
     "OpenLineageDatasetFacet",
-    "OpenLineageDataQualityMetricsInputDatasetFacet",
     "OpenLineageDatasourceDatasetFacet",
     "OpenLineageDocumentationDatasetFacet",
     "OpenLineageLifecycleStateChangeDatasetFacet",
     "OpenLineageDatasetPreviousIdentifier",
     "OpenLineageDatasetLifecycleStateChange",
+    "OpenLineageInputStatisticsInputDatasetFacet",
     "OpenLineageOutputStatisticsOutputDatasetFacet",
     "OpenLineageSchemaDatasetFacet",
     "OpenLineageSchemaField",
@@ -64,7 +64,6 @@ class OpenLineageDatasetFacets(OpenLineageBase):
     """
 
     documentation: OpenLineageDocumentationDatasetFacet | None = None
-    dataQualityMetrics: OpenLineageDataQualityMetricsInputDatasetFacet | None = None
     dataSource: OpenLineageDatasourceDatasetFacet | None = None
     lifecycleStateChange: OpenLineageLifecycleStateChangeDatasetFacet | None = None
     datasetSchema: OpenLineageSchemaDatasetFacet | None = Field(default=None, alias="schema")
@@ -77,7 +76,7 @@ class OpenLineageInputDatasetFacets(OpenLineageBase):
     See [InputDataset](https://github.com/OpenLineage/OpenLineage/blob/main/spec/OpenLineage.json).
     """
 
-    dataQualityMetrics: OpenLineageDataQualityMetricsInputDatasetFacet | None = None
+    inputStatistics: OpenLineageInputStatisticsInputDatasetFacet | None = None
 
 
 class OpenLineageOutputDatasetFacets(OpenLineageBase):

@@ -13,10 +13,10 @@ from data_rentgen.consumer.openlineage.dataset import (
     OpenLineageOutputDataset,
 )
 from data_rentgen.consumer.openlineage.dataset_facets import (
-    OpenLineageDataQualityMetricsInputDatasetFacet,
     OpenLineageDatasetFacets,
     OpenLineageDatasetLifecycleStateChange,
     OpenLineageInputDatasetFacets,
+    OpenLineageInputStatisticsInputDatasetFacet,
     OpenLineageLifecycleStateChangeDatasetFacet,
     OpenLineageOutputDatasetFacets,
     OpenLineageOutputStatisticsOutputDatasetFacet,
@@ -106,9 +106,9 @@ def test_extractors_extract_input(
         namespace="hdfs://test-hadoop:9820",
         name="/user/hive/warehouse/mydb.db/mytable",
         inputFacets=OpenLineageInputDatasetFacets(
-            dataQualityMetrics=OpenLineageDataQualityMetricsInputDatasetFacet(
+            inputStatistics=OpenLineageInputStatisticsInputDatasetFacet(
                 rowCount=row_count,
-                bytes=byte_count,
+                size=byte_count,
                 fileCount=file_count,
             ),
         ),
