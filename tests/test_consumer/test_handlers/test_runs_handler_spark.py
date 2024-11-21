@@ -65,7 +65,6 @@ async def test_runs_handler_spark(
     job_query = select(Job).order_by(Job.name).options(selectinload(Job.location).selectinload(Location.addresses))
     job_scalars = await async_session.scalars(job_query)
     jobs = job_scalars.all()
-
     assert len(jobs) == 1
     assert jobs[0].name == "spark_session"
     assert jobs[0].location.type == "local"
@@ -188,7 +187,7 @@ async def test_runs_handler_spark(
     assert hive_input.operation_id == job_operation.id
     assert hive_input.run_id == application_run.id
     assert hive_input.job_id == application_run.job_id
-    assert hive_input.dataset_id == hdfs_warehouse.id
+    assert hive_input.dataset_id == hive_table.id
     assert hive_input.schema_id == hive_schema.id
     assert hive_input.num_bytes is None
     assert hive_input.num_rows is None
