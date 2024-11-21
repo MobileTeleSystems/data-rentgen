@@ -122,6 +122,7 @@ class LineageOutputRelationSchemaFieldV1(BaseModel):
 
 
 class LineageOutputRelationSchemaV1(BaseModel):
+    id: int = Field(description="Schema id")
     fields: list[LineageOutputRelationSchemaFieldV1] = Field(description="Schema fields")
 
     model_config = ConfigDict(from_attributes=True)
