@@ -23,26 +23,28 @@ METASTORE = DatasetSymlinkTypeDTO.METASTORE
 WAREHOUSE = DatasetSymlinkTypeDTO.WAREHOUSE
 
 
-def connect_dataset_with_symlinks(dataset: DatasetDTO, symlinks: list[DatasetDTO]) -> list[DatasetSymlinkDTO]:
-    result: list[DatasetSymlinkDTO] = []
+def connect_dataset_with_symlinks(
+    dataset: DatasetDTO,
+    symlink: DatasetDTO,
+    type: OpenLineageSymlinkType,
+) -> list[DatasetSymlinkDTO]:
+    result = []
+    is_metastore_symlink = type == OpenLineageSymlinkType.TABLE
 
-    for identifier in symlinks:
-        is_metastore_symlink = identifier.symlink_type == OpenLineageSymlinkType.TABLE
-
-        result.append(
-            DatasetSymlinkDTO(
-                from_dataset=dataset,
-                to_dataset=identifier,
-                type=METASTORE if is_metastore_symlink else WAREHOUSE,
-            ),
-        )
-        result.append(
-            DatasetSymlinkDTO(
-                from_dataset=identifier,
-                to_dataset=dataset,
-                type=WAREHOUSE if is_metastore_symlink else METASTORE,
-            ),
-        )
+    result.append(
+        DatasetSymlinkDTO(
+            from_dataset=dataset,
+            to_dataset=symlink,
+            type=METASTORE if is_metastore_symlink else WAREHOUSE,
+        ),
+    )
+    result.append(
+        DatasetSymlinkDTO(
+            from_dataset=symlink,
+            to_dataset=dataset,
+            type=WAREHOUSE if is_metastore_symlink else METASTORE,
+        ),
+    )
 
     return sorted(result, key=lambda x: x.type)
 
@@ -52,11 +54,10 @@ def extract_dataset(dataset: OpenLineageDataset | OpenLineageSymlinkIdentifier) 
         name=dataset.name,
         location=extract_dataset_location(dataset),
         format=extract_dataset_format(dataset),
-        symlink_type=dataset.type if isinstance(dataset, OpenLineageSymlinkIdentifier) else None,
     )
 
 
-def extract_io_dataset(dataset: OpenLineageDataset) -> DatasetDTO:
+def extract_io_dataset(dataset: OpenLineageDataset) -> tuple[DatasetDTO, list[DatasetSymlinkDTO]]:
     if dataset.facets.symlinks:
         table_symlinks = [
             identifier
@@ -71,20 +72,35 @@ def extract_io_dataset(dataset: OpenLineageDataset) -> DatasetDTO:
                     table_symlinks[0].name,
                 )
             table_dataset = table_symlinks[0]
-            return DatasetDTO(
-                name=table_dataset.name,
-                location=extract_dataset_location(table_dataset),
-                format=extract_dataset_format(table_dataset),
-                dataset_symlinks=[extract_dataset(dataset)],
-                symlink_type=table_dataset.type,
+            return (
+                DatasetDTO(
+                    name=table_dataset.name,
+                    location=extract_dataset_location(table_dataset),
+                    format=extract_dataset_format(table_dataset),
+                ),
+                connect_dataset_with_symlinks(
+                    extract_dataset(dataset),
+                    extract_dataset(table_dataset),
+                    OpenLineageSymlinkType.TABLE,
+                ),
             )
-        return DatasetDTO(
-            name=dataset.name,
-            location=extract_dataset_location(dataset),
-            format=extract_dataset_format(dataset),
-            dataset_symlinks=[extract_dataset(symlink) for symlink in dataset.facets.symlinks.identifiers],
+        symlinks = [
+            connect_dataset_with_symlinks(
+                extract_dataset(dataset),
+                extract_dataset(identifier),
+                identifier.type,
+            )
+            for identifier in dataset.facets.symlinks.identifiers
+        ]
+        return (
+            DatasetDTO(
+                name=dataset.name,
+                location=extract_dataset_location(dataset),
+                format=extract_dataset_format(dataset),
+            ),
+            [symlink for sub_symlinks in symlinks for symlink in sub_symlinks],
         )
-    return extract_dataset(dataset)
+    return (extract_dataset(dataset), [])
 
 
 def extract_dataset_location(dataset: OpenLineageDataset | OpenLineageSymlinkIdentifier) -> LocationDTO:

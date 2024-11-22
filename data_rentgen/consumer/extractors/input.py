@@ -4,21 +4,22 @@
 from data_rentgen.consumer.extractors.dataset import extract_io_dataset
 from data_rentgen.consumer.extractors.schema import extract_schema
 from data_rentgen.consumer.openlineage.dataset import OpenLineageInputDataset
-from data_rentgen.dto import InputDTO
+from data_rentgen.dto import DatasetSymlinkDTO, InputDTO
 from data_rentgen.dto.operation import OperationDTO
 
 
 def extract_input(
     operation: OperationDTO,
     dataset: OpenLineageInputDataset,
-) -> InputDTO:
+) -> tuple[InputDTO, list[DatasetSymlinkDTO]]:
+    dataset_dto, symlinks = extract_io_dataset(dataset)
     result = InputDTO(
         operation=operation,
-        dataset=extract_io_dataset(dataset),
+        dataset=dataset_dto,
         schema=extract_schema(dataset),
     )
     if dataset.inputFacets.inputStatistics:
         result.num_rows = dataset.inputFacets.inputStatistics.rows
         result.num_bytes = dataset.inputFacets.inputStatistics.bytes
         result.num_files = dataset.inputFacets.inputStatistics.files
-    return result
+    return result, symlinks

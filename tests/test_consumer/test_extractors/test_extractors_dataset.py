@@ -61,8 +61,6 @@ def test_extractors_extract_dataset_hdfs_with_table_symlink():
             addresses={"hdfs://test-hadoop:9820"},
         ),
         name="/warehouse/mydb.db/mytable",
-        symlink_type=None,
-        dataset_symlinks=[],
     )
 
     hive_dataset = DatasetDTO(
@@ -72,13 +70,11 @@ def test_extractors_extract_dataset_hdfs_with_table_symlink():
             addresses={"hive://test-hadoop:9083"},
         ),
         name="mydb.mytable",
-        dataset_symlinks=[hdfs_dataset],
-        symlink_type=OpenLineageSymlinkType.TABLE,
     )
 
-    dataset = extract_io_dataset(dataset)
+    dataset, symlinks = extract_io_dataset(dataset)
     assert dataset == hive_dataset
-    assert connect_dataset_with_symlinks(dataset, dataset.dataset_symlinks) == [
+    assert symlinks == [
         DatasetSymlinkDTO(from_dataset=hdfs_dataset, to_dataset=hive_dataset, type=DatasetSymlinkTypeDTO.METASTORE),
         DatasetSymlinkDTO(from_dataset=hive_dataset, to_dataset=hdfs_dataset, type=DatasetSymlinkTypeDTO.WAREHOUSE),
     ]
@@ -196,13 +192,12 @@ def test_extractors_extract_dataset_hive_with_location_symlink():
             addresses={"hive://test-hadoop:9083"},
         ),
         name="mydb.mytable",
-        dataset_symlinks=[hdfs_dataset],
     )
 
-    dataset = extract_io_dataset(dataset)
+    dataset, symlinks = extract_io_dataset(dataset)
 
     assert dataset == hive_dataset
-    assert connect_dataset_with_symlinks(dataset, dataset.dataset_symlinks) == [
+    assert symlinks == [
         DatasetSymlinkDTO(from_dataset=hdfs_dataset, to_dataset=hive_dataset, type=DatasetSymlinkTypeDTO.METASTORE),
         DatasetSymlinkDTO(from_dataset=hive_dataset, to_dataset=hdfs_dataset, type=DatasetSymlinkTypeDTO.WAREHOUSE),
     ]

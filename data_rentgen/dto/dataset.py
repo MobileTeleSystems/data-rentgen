@@ -15,8 +15,6 @@ class DatasetDTO:
     name: str
     format: str | None = None
     id: int | None = field(default=None, compare=False)
-    symlink_type: str | None = field(default=None, compare=False)
-    dataset_symlinks: list[DatasetDTO] = field(default_factory=list)
 
     @cached_property
     def unique_key(self) -> tuple:
