@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from data_rentgen.consumer.extractors.dataset import extract_io_dataset
+from data_rentgen.consumer.extractors.dataset import extract_dataset_and_symlinks
 from data_rentgen.consumer.extractors.schema import extract_schema
 from data_rentgen.consumer.openlineage.dataset import OpenLineageOutputDataset
 from data_rentgen.dto import DatasetSymlinkDTO, OutputDTO, OutputTypeDTO
@@ -17,7 +17,7 @@ def extract_output(
         output_type = OutputTypeDTO(lifecycle_change.lifecycleStateChange)
     else:
         output_type = OutputTypeDTO.APPEND
-    dataset_dto, symlink = extract_io_dataset(dataset)
+    dataset_dto, symlink = extract_dataset_and_symlinks(dataset)
     result = OutputDTO(
         type=output_type,
         operation=operation,

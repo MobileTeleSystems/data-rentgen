@@ -57,7 +57,7 @@ def extract_dataset(dataset: OpenLineageDataset | OpenLineageSymlinkIdentifier) 
     )
 
 
-def extract_io_dataset(dataset: OpenLineageDataset) -> tuple[DatasetDTO, list[DatasetSymlinkDTO]]:
+def extract_dataset_and_symlinks(dataset: OpenLineageDataset) -> tuple[DatasetDTO, list[DatasetSymlinkDTO]]:
     if dataset.facets.symlinks:
         table_symlinks = [
             identifier
@@ -65,6 +65,11 @@ def extract_io_dataset(dataset: OpenLineageDataset) -> tuple[DatasetDTO, list[Da
             if identifier.type == OpenLineageSymlinkType.TABLE
         ]
         if table_symlinks:
+            # We are swap dataset with its TABLE symlink to make a more clean lineage.
+            # As example by swapping hdfs file with it's hive table.
+            # We have got that all operations interact with one table instead of many files(which can be different partitions).
+            # Discuss about this issue: https://github.com/OpenLineage/OpenLineage/issues/2718
+
             # TODO: add support for multiple TABLE symlinks
             if len(table_symlinks) > 1:
                 logger.warning(
@@ -84,21 +89,23 @@ def extract_io_dataset(dataset: OpenLineageDataset) -> tuple[DatasetDTO, list[Da
                     OpenLineageSymlinkType.TABLE,
                 ),
             )
-        symlinks = [
-            connect_dataset_with_symlinks(
-                extract_dataset(dataset),
-                extract_dataset(identifier),
-                identifier.type,
+        symlinks = []
+        for identifier in dataset.facets.symlinks.identifiers:
+            symlinks.extend(
+                connect_dataset_with_symlinks(
+                    extract_dataset(dataset),
+                    extract_dataset(identifier),
+                    identifier.type,
+                ),
             )
-            for identifier in dataset.facets.symlinks.identifiers
-        ]
+
         return (
             DatasetDTO(
                 name=dataset.name,
                 location=extract_dataset_location(dataset),
                 format=extract_dataset_format(dataset),
             ),
-            [symlink for sub_symlinks in symlinks for symlink in sub_symlinks],
+            symlinks,
         )
     return (extract_dataset(dataset), [])
 
