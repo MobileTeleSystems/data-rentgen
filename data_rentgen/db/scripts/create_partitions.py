@@ -101,20 +101,6 @@ def generate_partition_range(start: date, end: date, granularity: Granularity) -
     return parts
 
 
-def generate_partition_statements(start: date, end: date, granularity: Granularity) -> list[str]:
-    name = start.strftime(granularity.to_format())
-
-    start_str = start.isoformat()
-    end_str = end.isoformat()
-
-    result = []
-    for table in PARTITIONED_TABLES:
-        result.append(
-            f"CREATE TABLE IF NOT EXISTS {table}_{name} PARTITION OF {table} FOR VALUES FROM ('{start_str}') TO ('{end_str}')",
-        )
-    return result
-
-
 async def create_partition(start: date, end: date, granularity: Granularity, session: AsyncSession):
     partition_name = start.strftime(granularity.to_format())
 
