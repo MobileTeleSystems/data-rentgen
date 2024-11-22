@@ -65,10 +65,10 @@ def extract_dataset_and_symlinks(dataset: OpenLineageDataset) -> tuple[DatasetDT
             if identifier.type == OpenLineageSymlinkType.TABLE
         ]
         if table_symlinks:
-            # We are swap dataset with its TABLE symlink to make a more clean lineage.
-            # As example by swapping hdfs file with it's hive table.
-            # We have got that all operations interact with one table instead of many files(which can be different partitions).
-            # Discuss about this issue: https://github.com/OpenLineage/OpenLineage/issues/2718
+            # We are swapping the dataset with its TABLE symlink to create a cleaner lineage.
+            # For example, by replacing an HDFS file with its corresponding Hive table.
+            # This ensures that all operations interact with a single table instead of multiple files (which may represent different partitions).
+            # Discussion on this issue: https://github.com/OpenLineage/OpenLineage/issues/2718
 
             # TODO: add support for multiple TABLE symlinks
             if len(table_symlinks) > 1:
