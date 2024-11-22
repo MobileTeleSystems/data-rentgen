@@ -58,24 +58,26 @@ def extract_dataset(dataset: OpenLineageDataset | OpenLineageSymlinkIdentifier) 
 
 
 def extract_dataset_and_symlinks(dataset: OpenLineageDataset) -> tuple[DatasetDTO, list[DatasetSymlinkDTO]]:
-    if dataset.facets.symlinks:
-        table_symlinks = [
-            identifier
-            for identifier in dataset.facets.symlinks.identifiers
-            if identifier.type == OpenLineageSymlinkType.TABLE
-        ]
-        if table_symlinks:
-            # We are swapping the dataset with its TABLE symlink to create a cleaner lineage.
-            # For example, by replacing an HDFS file with its corresponding Hive table.
-            # This ensures that all operations interact with a single table instead of multiple files (which may represent different partitions).
-            # Discussion on this issue: https://github.com/OpenLineage/OpenLineage/issues/2718
+    if not dataset.facets.symlinks:
+        return extract_dataset(dataset), []
 
-            # TODO: add support for multiple TABLE symlinks
-            if len(table_symlinks) > 1:
-                logger.warning(
-                    "Dataset has more than one TABLE symlink. Only the first one will be used for replacement. Symlink name: %s",
-                    table_symlinks[0].name,
-                )
+    table_symlinks = [
+        identifier
+        for identifier in dataset.facets.symlinks.identifiers
+        if identifier.type == OpenLineageSymlinkType.TABLE
+    ]
+    if table_symlinks:
+        # We are swapping the dataset with its TABLE symlink to create a cleaner lineage.
+        # For example, by replacing an HDFS file with its corresponding Hive table.
+        # This ensures that all operations interact with a single table instead of multiple files (which may represent different partitions).
+        # Discussion on this issue: https://github.com/OpenLineage/OpenLineage/issues/2718
+
+        # TODO: add support for multiple TABLE symlinks
+        if len(table_symlinks) > 1:
+            logger.warning(
+                "Dataset has more than one TABLE symlink. Only the first one will be used for replacement. Symlink name: %s",
+                table_symlinks[0].name,
+            )
             table_dataset = table_symlinks[0]
             return (
                 DatasetDTO(
@@ -89,25 +91,25 @@ def extract_dataset_and_symlinks(dataset: OpenLineageDataset) -> tuple[DatasetDT
                     OpenLineageSymlinkType.TABLE,
                 ),
             )
-        symlinks = []
-        for identifier in dataset.facets.symlinks.identifiers:
-            symlinks.extend(
-                connect_dataset_with_symlinks(
-                    extract_dataset(dataset),
-                    extract_dataset(identifier),
-                    identifier.type,
-                ),
-            )
 
-        return (
-            DatasetDTO(
-                name=dataset.name,
-                location=extract_dataset_location(dataset),
-                format=extract_dataset_format(dataset),
+    symlinks = []
+    for identifier in dataset.facets.symlinks.identifiers:
+        symlinks.extend(
+            connect_dataset_with_symlinks(
+                extract_dataset(dataset),
+                extract_dataset(identifier),
+                identifier.type,
             ),
-            symlinks,
         )
-    return (extract_dataset(dataset), [])
+
+    return (
+        DatasetDTO(
+            name=dataset.name,
+            location=extract_dataset_location(dataset),
+            format=extract_dataset_format(dataset),
+        ),
+        symlinks,
+    )
 
 
 def extract_dataset_location(dataset: OpenLineageDataset | OpenLineageSymlinkIdentifier) -> LocationDTO:

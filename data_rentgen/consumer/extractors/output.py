@@ -17,7 +17,7 @@ def extract_output(
         output_type = OutputTypeDTO(lifecycle_change.lifecycleStateChange)
     else:
         output_type = OutputTypeDTO.APPEND
-    dataset_dto, symlink = extract_dataset_and_symlinks(dataset)
+    dataset_dto, symlinks = extract_dataset_and_symlinks(dataset)
     result = OutputDTO(
         type=output_type,
         operation=operation,
@@ -29,4 +29,4 @@ def extract_output(
         result.num_bytes = dataset.outputFacets.outputStatistics.bytes
         result.num_files = dataset.outputFacets.outputStatistics.files
 
-    return result, symlink
+    return result, symlinks
