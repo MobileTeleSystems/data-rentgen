@@ -695,15 +695,16 @@ def extracted_postgres_input(
 
 
 @pytest.fixture
-def extracted_hdfs_output(
+def extracted_hive_output(
     extracted_spark_operation: OperationDTO,
     extracted_hdfs_dataset: DatasetDTO,
+    extracted_hive_dataset: DatasetDTO,
     extracted_dataset_schema: SchemaDTO,
 ) -> OutputDTO:
     return OutputDTO(
         type=OutputTypeDTO.CREATE,
         operation=extracted_spark_operation,
-        dataset=extracted_hdfs_dataset,
+        dataset=extracted_hive_dataset,
         schema=extracted_dataset_schema,
         num_rows=1_000_000,
         num_bytes=1000 * 1024 * 1024,
@@ -745,7 +746,7 @@ def test_extractors_extract_batch_spark(
     extracted_spark_app_run: RunDTO,
     extracted_spark_operation: OperationDTO,
     extracted_postgres_input: InputDTO,
-    extracted_hdfs_output: OutputDTO,
+    extracted_hive_output: OutputDTO,
     input_transformation,
 ):
     events = [
@@ -761,8 +762,8 @@ def test_extractors_extract_batch_spark(
     assert extracted.locations() == [
         extracted_spark_location,
         extracted_postgres_location,
-        extracted_hdfs_location,
         extracted_hive_location,
+        extracted_hdfs_location,
     ]
 
     assert extracted.jobs() == [extracted_spark_app_job]
@@ -772,8 +773,8 @@ def test_extractors_extract_batch_spark(
 
     assert extracted.datasets() == [
         extracted_postgres_dataset,
-        extracted_hdfs_dataset,
         extracted_hive_dataset,
+        extracted_hdfs_dataset,
     ]
 
     assert extracted.dataset_symlinks() == [
@@ -784,4 +785,4 @@ def test_extractors_extract_batch_spark(
     # Both input & output schemas are the same
     assert extracted.schemas() == [extracted_dataset_schema]
     assert extracted.inputs() == [extracted_postgres_input]
-    assert extracted.outputs() == [extracted_hdfs_output]
+    assert extracted.outputs() == [extracted_hive_output]

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TypeVar
 
-from data_rentgen.consumer.extractors.dataset import extract_dataset_symlinks
 from data_rentgen.consumer.extractors.input import extract_input
 from data_rentgen.consumer.extractors.operation import extract_operation
 from data_rentgen.consumer.extractors.output import extract_output
@@ -234,17 +233,18 @@ def extract_batch(events: list[OpenLineageRunEvent]) -> BatchExtractionResult:
         if event.job.facets.jobType and event.job.facets.jobType.jobType == OpenLineageJobType.JOB:
             operation = extract_operation(event)
             result.add_operation(operation)
-
             for input_dataset in event.inputs:
-                result.add_input(extract_input(operation, input_dataset))
+                input, symlinks = extract_input(operation, input_dataset)
+                result.add_input(input)
+                for symlink in symlinks:
+                    result.add_dataset_symlink(symlink)
 
             for output_dataset in event.outputs:
-                result.add_output(extract_output(operation, output_dataset))
+                output, symlinks = extract_output(operation, output_dataset)
+                result.add_output(output)
+                for symlink in symlinks:  # noqa: WPS440
+                    result.add_dataset_symlink(symlink)
 
-            for dataset in event.inputs + event.outputs:
-                dataset_symlinks = extract_dataset_symlinks(dataset)
-                for dataset_symlink in dataset_symlinks:
-                    result.add_dataset_symlink(dataset_symlink)
         else:
             run = extract_run(event)
             result.add_run(run)

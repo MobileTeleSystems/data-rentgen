@@ -115,19 +115,22 @@ def test_extractors_extract_input(
     )
     operation_dto = Mock(spec=OperationDTO)
 
-    assert extract_input(operation_dto, input) == InputDTO(
-        operation=operation_dto,
-        dataset=DatasetDTO(
-            name="/user/hive/warehouse/mydb.db/mytable",
-            location=LocationDTO(
-                type="hdfs",
-                name="test-hadoop:9820",
-                addresses={"hdfs://test-hadoop:9820"},
+    assert extract_input(operation_dto, input) == (
+        InputDTO(
+            operation=operation_dto,
+            dataset=DatasetDTO(
+                name="/user/hive/warehouse/mydb.db/mytable",
+                location=LocationDTO(
+                    type="hdfs",
+                    name="test-hadoop:9820",
+                    addresses={"hdfs://test-hadoop:9820"},
+                ),
             ),
+            num_rows=row_count,
+            num_bytes=byte_count,
+            num_files=file_count,
         ),
-        num_rows=row_count,
-        num_bytes=byte_count,
-        num_files=file_count,
+        [],
     )
 
 
@@ -176,18 +179,21 @@ def test_extractors_extract_output(
     )
     operation_dto = Mock(spec=OperationDTO)
 
-    assert extract_output(operation_dto, output) == OutputDTO(
-        type=expected_type,
-        operation=operation_dto,
-        dataset=DatasetDTO(
-            name="/user/hive/warehouse/mydb.db/mytable",
-            location=LocationDTO(
-                type="hdfs",
-                name="test-hadoop:9820",
-                addresses={"hdfs://test-hadoop:9820"},
+    assert extract_output(operation_dto, output) == (
+        OutputDTO(
+            type=expected_type,
+            operation=operation_dto,
+            dataset=DatasetDTO(
+                name="/user/hive/warehouse/mydb.db/mytable",
+                location=LocationDTO(
+                    type="hdfs",
+                    name="test-hadoop:9820",
+                    addresses={"hdfs://test-hadoop:9820"},
+                ),
             ),
+            num_rows=row_count,
+            num_bytes=byte_count,
+            num_files=file_count,
         ),
-        num_rows=row_count,
-        num_bytes=byte_count,
-        num_files=file_count,
+        [],
     )

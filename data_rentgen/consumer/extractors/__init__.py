@@ -3,9 +3,9 @@
 
 from data_rentgen.consumer.extractors.batch import BatchExtractionResult, extract_batch
 from data_rentgen.consumer.extractors.dataset import (
+    connect_dataset_with_symlinks,
     extract_dataset,
-    extract_dataset_aliases,
-    extract_dataset_symlinks,
+    extract_dataset_and_symlinks,
 )
 from data_rentgen.consumer.extractors.input import extract_input
 from data_rentgen.consumer.extractors.job import extract_job
@@ -15,9 +15,9 @@ from data_rentgen.consumer.extractors.run import extract_run, extract_run_minima
 from data_rentgen.consumer.extractors.schema import extract_schema
 
 __all__ = [
+    "extract_dataset_and_symlinks",
     "extract_dataset",
-    "extract_dataset_aliases",
-    "extract_dataset_symlinks",
+    "connect_dataset_with_symlinks",
     "extract_job",
     "extract_run",
     "extract_run_minimal",
