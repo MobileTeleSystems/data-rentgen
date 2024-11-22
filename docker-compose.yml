@@ -29,7 +29,7 @@ services:
     tmpfs:
       - /tmp/prometheus-metrics
     healthcheck:
-      test: [CMD-SHELL, curl, -f, http://localhost:8000/monitoring/ping]
+      test: [CMD-SHELL, curl -f http://localhost:8000/monitoring/ping]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -81,7 +81,7 @@ services:
     ports:
       - 3000:3000
     healthcheck:
-      test: [CMD-SHELL, curl, -f, http://localhost:3000/]
+      test: [CMD-SHELL, curl -f http://localhost:3000/]
       interval: 30s
       timeout: 5s
       retries: 3
