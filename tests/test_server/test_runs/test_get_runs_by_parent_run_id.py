@@ -6,6 +6,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Run
+from tests.fixtures.mocks import MockedUser
 from tests.test_server.utils.enrich import enrich_runs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -14,9 +15,11 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 async def test_get_runs_by_job_id_missing_since(
     test_client: AsyncClient,
     new_run: Run,
+    mocked_user: MockedUser,
 ):
     response = await test_client.get(
         "v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "parent_run_id": str(new_run.parent_run_id),
         },
@@ -52,11 +55,13 @@ async def test_get_runs_by_job_id_missing_since(
 async def test_get_runs_by_parent_run_id_unknown(
     test_client: AsyncClient,
     new_run: Run,
+    mocked_user: MockedUser,
 ) -> None:
     since = new_run.created_at
 
     response = await test_client.get(
         "v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             "parent_run_id": str(new_run.parent_run_id),
@@ -83,12 +88,14 @@ async def test_get_runs_by_parent_run_id(
     test_client: AsyncClient,
     async_session: AsyncSession,
     runs_with_same_parent: list[Run],
+    mocked_user: MockedUser,
 ) -> None:
     since = min(run.created_at for run in runs_with_same_parent)
     runs = await enrich_runs(runs_with_same_parent, async_session)
 
     response = await test_client.get(
         "v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             "parent_run_id": str(runs_with_same_parent[0].parent_run_id),
@@ -134,6 +141,7 @@ async def test_get_runs_by_parent_run_id_with_until(
     test_client: AsyncClient,
     async_session: AsyncSession,
     runs_with_same_parent: list[Run],
+    mocked_user: MockedUser,
 ) -> None:
     since = min(run.created_at for run in runs_with_same_parent)
     until = since + timedelta(seconds=1)
@@ -143,6 +151,7 @@ async def test_get_runs_by_parent_run_id_with_until(
 
     response = await test_client.get(
         "v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             "until": until.isoformat(),

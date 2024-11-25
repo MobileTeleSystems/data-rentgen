@@ -30,7 +30,7 @@ def generate_new_uuid(instant: datetime | None = None) -> NewUUID:
     return _build_uuidv7(timestamp_ms, node)
 
 
-def generate_incremental_uuid(instant: datetime, data: bytes) -> NewUUID:
+def generate_incremental_uuid(instant: datetime, data: str) -> NewUUID:
     """Generate new UUID for an instant of time and data. Each function call with the same arguments returns the same result.
 
     UUID version is an implementation detail, and **should not** be relied on.
@@ -48,7 +48,7 @@ def generate_incremental_uuid(instant: datetime, data: bytes) -> NewUUID:
     # generate the rest of bytes using some hash.
     # can be used to generate consistent UUIDs for some input, e.g. external runId.
     # if data is some static value, e.g. job name, mix it with timestamp to make it more random
-    digest = sha1(instant_utc.isoformat().encode("utf-8") + data, usedforsecurity=False).digest()
+    digest = sha1(instant_utc.isoformat().encode("utf-8") + data.encode("utf-8"), usedforsecurity=False).digest()
     # sha1 returns 160bit hash, we need only first 76 bits
     node = int(digest.hex(), 16) >> 84
 
@@ -73,7 +73,7 @@ def _build_uuidv7(timestamp: int, node: int) -> NewUUID:
     return NewUUID(int=uuid_int)
 
 
-def generate_static_uuid(data: bytes) -> BaseUUID:
+def generate_static_uuid(data: str) -> BaseUUID:
     """Generate static UUID for data. Each function call returns the same UUID value.
 
     UUID version is an implementation detailed, and **should not** be relied on.

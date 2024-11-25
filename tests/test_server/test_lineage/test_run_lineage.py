@@ -6,6 +6,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Job, OutputType, Run
+from tests.fixtures.mocks import MockedUser
 from tests.test_server.fixtures.factories.schema import create_schema
 from tests.test_server.utils.enrich import enrich_datasets, enrich_jobs, enrich_runs
 from tests.test_server.utils.lineage_result import LineageResult
@@ -17,9 +18,11 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
 async def test_get_run_lineage_unknown_id(
     test_client: AsyncClient,
     new_run: Run,
+    mocked_user: MockedUser,
 ):
     response = await test_client.get(
         "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "start_node_id": str(new_run.id),
@@ -38,9 +41,11 @@ async def test_get_run_lineage_no_operations(
     async_session: AsyncSession,
     job: Job,
     run: Run,
+    mocked_user: MockedUser,
 ):
     response = await test_client.get(
         "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "start_node_id": str(run.id),
@@ -99,9 +104,11 @@ async def test_get_run_lineage_no_inputs_outputs(
     async_session: AsyncSession,
     job: Job,
     run: Run,
+    mocked_user: MockedUser,
 ):
     response = await test_client.get(
         "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(run.id),
@@ -161,6 +168,7 @@ async def test_get_run_lineage_simple(
     test_client: AsyncClient,
     async_session: AsyncSession,
     simple_lineage: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = simple_lineage
     run = lineage.runs[0]
@@ -184,6 +192,7 @@ async def test_get_run_lineage_simple(
 
     response = await test_client.get(
         "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(run.id),
@@ -303,6 +312,7 @@ async def test_get_run_lineage_with_granularity_operation(
     test_client: AsyncClient,
     async_session: AsyncSession,
     simple_lineage: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = simple_lineage
     run = lineage.runs[0]
@@ -328,6 +338,7 @@ async def test_get_run_lineage_with_granularity_operation(
 
     response = await test_client.get(
         "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(run.id),
@@ -473,6 +484,7 @@ async def test_get_run_lineage_with_direction_downstream(
     test_client: AsyncClient,
     async_session: AsyncSession,
     simple_lineage: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = simple_lineage
     run = lineage.runs[0]
@@ -492,6 +504,7 @@ async def test_get_run_lineage_with_direction_downstream(
 
     response = await test_client.get(
         "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(run.id),
@@ -589,6 +602,7 @@ async def test_get_run_lineage_with_direction_upstream(
     test_client: AsyncClient,
     async_session: AsyncSession,
     simple_lineage: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = simple_lineage
     run = lineage.runs[0]
@@ -608,6 +622,7 @@ async def test_get_run_lineage_with_direction_upstream(
 
     response = await test_client.get(
         "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(run.id),
@@ -704,6 +719,7 @@ async def test_get_run_lineage_with_until(
     test_client: AsyncClient,
     async_session: AsyncSession,
     simple_lineage: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = simple_lineage
 
@@ -734,6 +750,7 @@ async def test_get_run_lineage_with_until(
 
     response = await test_client.get(
         "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             "until": until.isoformat(),
@@ -854,6 +871,7 @@ async def test_get_run_lineage_with_depth(
     test_client: AsyncClient,
     async_session: AsyncSession,
     lineage_with_depth: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = lineage_with_depth
     # Select only relations marked with *
@@ -913,6 +931,7 @@ async def test_get_run_lineage_with_depth(
 
     response = await test_client.get(
         "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": first_level_run.created_at.isoformat(),
             "start_node_id": str(first_level_run.id),
@@ -1036,6 +1055,7 @@ async def test_get_run_lineage_with_depth_and_granularity_operation(
     test_client: AsyncClient,
     async_session: AsyncSession,
     lineage_with_depth: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = lineage_with_depth
     # Select only relations marked with *
@@ -1107,6 +1127,7 @@ async def test_get_run_lineage_with_depth_and_granularity_operation(
 
     response = await test_client.get(
         "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": first_level_run.created_at.isoformat(),
             "start_node_id": str(first_level_run.id),
@@ -1256,6 +1277,7 @@ async def test_get_run_lineage_with_depth_ignore_cycles(
     test_client: AsyncClient,
     async_session: AsyncSession,
     cyclic_lineage: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = cyclic_lineage
     # Select all relations:
@@ -1274,6 +1296,7 @@ async def test_get_run_lineage_with_depth_ignore_cycles(
 
     response = await test_client.get(
         "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(run.id),
@@ -1397,6 +1420,7 @@ async def test_get_run_lineage_with_depth_ignore_unrelated_datasets(
     test_client: AsyncClient,
     async_session: AsyncSession,
     branchy_lineage: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = branchy_lineage
     # Start from R1, build lineage with direction=BOTH
@@ -1446,6 +1470,7 @@ async def test_get_run_lineage_with_depth_ignore_unrelated_datasets(
 
     response = await test_client.get(
         "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             "start_node_id": str(run.id),
@@ -1569,6 +1594,7 @@ async def test_get_run_lineage_with_symlinks(
     test_client: AsyncClient,
     async_session: AsyncSession,
     lineage_with_symlinks: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = lineage_with_symlinks
     run = lineage.runs[1]
@@ -1602,6 +1628,7 @@ async def test_get_run_lineage_with_symlinks(
 
     response = await test_client.get(
         "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(run.id),
@@ -1730,6 +1757,7 @@ async def test_get_run_lineage_unmergeable_inputs_and_outputs(
     test_client: AsyncClient,
     async_session: AsyncSession,
     duplicated_lineage: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = duplicated_lineage
 
@@ -1772,6 +1800,7 @@ async def test_get_run_lineage_unmergeable_inputs_and_outputs(
 
     response = await test_client.get(
         "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(run.id),
@@ -1871,6 +1900,7 @@ async def test_get_dataset_lineage_empty_io_stats_and_schema(
     test_client: AsyncClient,
     async_session: AsyncSession,
     duplicated_lineage: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = duplicated_lineage
 
@@ -1914,6 +1944,7 @@ async def test_get_dataset_lineage_empty_io_stats_and_schema(
 
     response = await test_client.get(
         "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(run.id),

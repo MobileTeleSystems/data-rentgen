@@ -68,6 +68,11 @@ faststream = {extras = ["kafka", "cli"], version = "^0.5.30", optional = true}
 # used by aiokafka for LZ4, Snappy, ZSTD compression algorithms
 cramjam = {version = "^2.8.3", optional = true}
 packaging = {version = "^24.2", optional = true}
+devtools = "^0.12.2"
+python-jose = "^3.3.0"
+itsdangerous = "^2.2.0"
+python-multipart = "^0.0.17"
+types-python-jose = "^3.3.4.20240106"
 
 [tool.poetry.extras]
 server = [

@@ -10,6 +10,7 @@ from data_rentgen.server.settings.cors import CORSSettings
 from data_rentgen.server.settings.monitoring import MonitoringSettings
 from data_rentgen.server.settings.openapi import OpenAPISettings
 from data_rentgen.server.settings.request_id import RequestIDSettings
+from data_rentgen.server.settings.session import SessionSettings
 from data_rentgen.server.settings.static_files import StaticFilesSettings
 
 
@@ -62,4 +63,8 @@ class ServerSettings(BaseModel):
     openapi: OpenAPISettings = Field(
         default_factory=OpenAPISettings,
         description=":ref:`OpenAPI.json settings <configuration-server-openapi>`",
+    )
+    session: SessionSettings = Field(
+        default_factory=SessionSettings,  # type: ignore[arg-type]
+        description=":ref:`Session settings <backend-configuration-server-session>`",
     )

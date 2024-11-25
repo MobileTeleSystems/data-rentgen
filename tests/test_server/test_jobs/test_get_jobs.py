@@ -5,6 +5,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Job
+from tests.fixtures.mocks import MockedUser
 from tests.test_server.utils.enrich import enrich_jobs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -14,9 +15,13 @@ async def test_get_jobs_no_filters(
     test_client: AsyncClient,
     jobs: list[Job],
     async_session: AsyncSession,
+    mocked_user: MockedUser,
 ):
     jobs = await enrich_jobs(jobs, async_session)
-    response = await test_client.get("v1/jobs")
+    response = await test_client.get(
+        "v1/jobs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+    )
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {

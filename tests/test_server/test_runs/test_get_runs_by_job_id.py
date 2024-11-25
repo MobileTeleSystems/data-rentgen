@@ -6,6 +6,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Job, Run
+from tests.fixtures.mocks import MockedUser
 from tests.test_server.utils.enrich import enrich_runs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -14,9 +15,11 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 async def test_get_runs_by_job_id_missing_since(
     test_client: AsyncClient,
     new_run: Run,
+    mocked_user: MockedUser,
 ):
     response = await test_client.get(
         "v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "job_id": new_run.job_id,
         },
@@ -52,9 +55,11 @@ async def test_get_runs_by_job_id_missing_since(
 async def test_get_runs_by_unknown_job_id(
     test_client: AsyncClient,
     new_run: Run,
+    mocked_user: MockedUser,
 ):
     response = await test_client.get(
         "v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": new_run.created_at.isoformat(),
             "job_id": new_run.job_id,
@@ -82,6 +87,7 @@ async def test_get_runs_by_job_id(
     jobs: list[Job],
     runs: list[Run],
     async_session: AsyncSession,
+    mocked_user: MockedUser,
 ):
     job_ids = {run.job_id for run in runs}
     jobs = [job for job in jobs if job.id in job_ids]
@@ -95,6 +101,7 @@ async def test_get_runs_by_job_id(
     since = min(run.created_at for run in selected_runs)
     response = await test_client.get(
         "v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             "job_id": selected_job.id,
@@ -140,6 +147,7 @@ async def test_get_runs_by_job_id_with_until(
     test_client: AsyncClient,
     runs_with_same_job: list[Run],
     async_session: AsyncSession,
+    mocked_user: MockedUser,
 ):
     since = min(run.created_at for run in runs_with_same_job)
     until = since + timedelta(seconds=1)
@@ -149,6 +157,7 @@ async def test_get_runs_by_job_id_with_until(
 
     response = await test_client.get(
         "v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "job_id": runs[0].job_id,
             "since": since.isoformat(),

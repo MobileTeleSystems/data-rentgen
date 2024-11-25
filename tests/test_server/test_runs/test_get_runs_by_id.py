@@ -5,6 +5,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Run
+from tests.fixtures.mocks import MockedUser
 from tests.test_server.utils.enrich import enrich_runs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -13,9 +14,11 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 async def test_get_runs_by_unknown_id(
     test_client: AsyncClient,
     new_run: Run,
+    mocked_user: MockedUser,
 ):
     response = await test_client.get(
         "v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={"run_id": str(new_run.id)},
     )
 
@@ -39,11 +42,13 @@ async def test_get_runs_by_one_id(
     test_client: AsyncClient,
     run: Run,
     async_session: AsyncSession,
+    mocked_user: MockedUser,
 ):
     [run] = await enrich_runs([run], async_session)
 
     response = await test_client.get(
         "v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={"run_id": str(run.id)},
     )
 
@@ -85,12 +90,14 @@ async def test_get_runs_by_multiple_ids(
     test_client: AsyncClient,
     runs: list[Run],
     async_session: AsyncSession,
+    mocked_user: MockedUser,
 ):
     # create more objects than pass to endpoint, to test filtering
     selected_runs = await enrich_runs(runs[:2], async_session)
 
     response = await test_client.get(
         "v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={"run_id": [str(run.id) for run in selected_runs]},
     )
 

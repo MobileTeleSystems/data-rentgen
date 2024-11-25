@@ -30,7 +30,7 @@ class InputRepository(Repository[Input]):
             str(input.dataset.id),
             str(input.schema.id) if input.schema else "",
         ]
-        return generate_incremental_uuid(created_at, ".".join(id_components).encode("utf-8"))
+        return generate_incremental_uuid(created_at, ".".join(id_components))
 
     async def create_or_update_bulk(self, inputs: list[InputDTO]) -> list[Input]:
         if not inputs:

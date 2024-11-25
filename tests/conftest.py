@@ -3,6 +3,7 @@ pytest_plugins = [
     "tests.fixtures.db_settings",
     "tests.fixtures.async_engine",
     "tests.fixtures.async_session",
+    "tests.fixtures.mocks",
     "tests.test_database.fixtures.alembic",
     "tests.test_consumer.fixtures.consumer_app_settings",
     "tests.test_consumer.fixtures.test_broker",

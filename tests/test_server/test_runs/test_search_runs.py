@@ -6,6 +6,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Run
+from tests.fixtures.mocks import MockedUser
 from tests.test_server.utils.enrich import enrich_runs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -14,9 +15,11 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 async def test_search_runs_missing_since(
     test_client: AsyncClient,
     new_run: Run,
+    mocked_user: MockedUser,
 ):
     response = await test_client.get(
         "v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "search_query": new_run.external_id,
         },
@@ -53,6 +56,7 @@ async def test_search_runs_by_external_id(
     test_client: AsyncClient,
     async_session: AsyncSession,
     runs_search: dict[str, Run],
+    mocked_user: MockedUser,
 ) -> None:
     runs = await enrich_runs(
         [
@@ -66,6 +70,7 @@ async def test_search_runs_by_external_id(
 
     response = await test_client.get(
         "/v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             # search by word prefix
@@ -112,6 +117,7 @@ async def test_search_runs_by_job_name(
     test_client: AsyncClient,
     async_session: AsyncSession,
     runs_search: dict[str, Run],
+    mocked_user: MockedUser,
 ) -> None:
     runs = await enrich_runs(
         [
@@ -125,6 +131,7 @@ async def test_search_runs_by_job_name(
 
     response = await test_client.get(
         "/v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             "search_query": "airflow_dag",
@@ -170,6 +177,7 @@ async def test_search_runs_by_job_type(
     test_client: AsyncClient,
     async_session: AsyncSession,
     runs_search: dict[str, Run],
+    mocked_user: MockedUser,
 ) -> None:
     runs = await enrich_runs(
         [
@@ -183,6 +191,7 @@ async def test_search_runs_by_job_type(
 
     response = await test_client.get(
         "/v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             "search_query": "SPARK",
@@ -227,11 +236,13 @@ async def test_search_runs_by_job_type(
 async def test_search_runs_no_results(
     test_client: AsyncClient,
     runs_search: dict[str, Run],
+    mocked_user: MockedUser,
 ) -> None:
     since = min(run.created_at for run in runs_search.values())
 
     response = await test_client.get(
         "/v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             "search_query": "not-found",

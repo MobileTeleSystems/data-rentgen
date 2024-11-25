@@ -5,6 +5,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Location
+from tests.fixtures.mocks import MockedUser
 from tests.test_server.utils.enrich import enrich_locations
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -14,9 +15,13 @@ async def test_get_locations_no_filters(
     test_client: AsyncClient,
     locations: list[Location],
     async_session: AsyncSession,
+    mocked_user: MockedUser,
 ):
     locations = await enrich_locations(locations, async_session)
-    response = await test_client.get("v1/locations")
+    response = await test_client.get(
+        "v1/locations",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+    )
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
@@ -47,12 +52,17 @@ async def test_get_locations_with_type_filter(
     test_client: AsyncClient,
     locations: list[Location],
     async_session: AsyncSession,
+    mocked_user: MockedUser,
 ):
     location_type = locations[0].type
     locations = [location for location in locations if location.type == location_type]
     locations = await enrich_locations(locations, async_session)
 
-    response = await test_client.get("v1/locations", params={"location_type": location_type})
+    response = await test_client.get(
+        "v1/locations",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={"location_type": location_type},
+    )
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {

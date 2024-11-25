@@ -10,7 +10,7 @@ from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
 
-from data_rentgen.exceptions import ApplicationError
+from data_rentgen.exceptions import ApplicationError, AuthorizationError
 from data_rentgen.server.errors.base import APIErrorSchema, BaseErrorSchema
 from data_rentgen.server.errors.registration import get_response_for_exception
 from data_rentgen.server.settings.server import ServerSettings
@@ -27,7 +27,7 @@ def http_exception_handler(_request: Request, exc: HTTPException) -> Response:
     return exception_json_response(
         status=exc.status_code,
         content=content,
-        headers=exc.headers,
+        headers=exc.headers,  # type: ignore[arg-type]
     )
 
 
@@ -108,6 +108,7 @@ def exception_json_response(
 
 def apply_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(ApplicationError, application_exception_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(AuthorizationError, application_exception_handler)  # type: ignore[arg-type]
     app.add_exception_handler(
         RequestValidationError,
         validation_exception_handler,  # type: ignore[arg-type]
