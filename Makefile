@@ -63,7 +63,7 @@ db-partitions: ##@DB Create partitions
 broker: broker-start ##@Broker Prepare broker (in docker)
 
 broker-start: ##Broker Start broker
-	docker compose -f docker-compose.test.yml up -d --wait kafka $(DOCKER_COMPOSE_ARGS)
+	docker compose -f docker-compose.test.yml up -d --wait broker $(DOCKER_COMPOSE_ARGS)
 
 
 test: test-db test-broker ##@Test Run tests
@@ -83,7 +83,7 @@ test-db-start: ##@TestDB Start database
 test-broker: test-broker-start ##@TestBroker Prepare broker (in docker)
 
 test-broker-start: ##@TestBroker Start broker
-	docker compose -f docker-compose.test.yml up -d --wait kafka $(DOCKER_COMPOSE_ARGS)
+	docker compose -f docker-compose.test.yml up -d --wait broker $(DOCKER_COMPOSE_ARGS)
 
 test-ci: test-db test-broker ##@Test Run CI tests
 	${POETRY} run coverage run -m pytest

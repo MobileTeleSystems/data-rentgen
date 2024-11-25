@@ -14,7 +14,7 @@ services:
       timeout: 5s
       retries: 3
 
-  kafka:
+  broker:
     image: bitnami/kafka:3.7
     restart: unless-stopped
     env_file: .env.docker
