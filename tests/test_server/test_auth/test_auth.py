@@ -14,7 +14,7 @@ from tests.fixtures.mocks import MockedUser
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
-async def test_invalid_token(
+async def test_dummy_auth_invalid_token(
     test_client: AsyncClient,
     mocked_user: MockedUser,
 ):
