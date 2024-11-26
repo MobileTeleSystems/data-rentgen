@@ -49,3 +49,18 @@ async def test_expired_token(
     assert response.json() == {
         "error": {"code": "unauthorized", "details": None, "message": "Invalid token"},
     }, response.json()
+
+
+async def test_generate_valid_token(
+    test_client: AsyncClient,
+):
+    response = await test_client.post("v1/auth/token", data={"username": "test", "password": "test"})
+
+    token = response.json()["access_token"]
+
+    response = await test_client.get(
+        "v1/datasets",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
