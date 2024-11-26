@@ -52,3 +52,14 @@ async def test_get_jobs_no_filters(
             for job in sorted(jobs, key=lambda x: x.name)
         ],
     }
+
+
+async def test_get_jobs_unauthorized(
+    test_client: AsyncClient,
+):
+    response = await test_client.get("v1/jobs")
+
+    assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
+    assert response.json() == {
+        "error": {"code": "unauthorized", "details": None, "message": "Missing auth credentials"},
+    }, response.json()

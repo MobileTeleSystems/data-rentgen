@@ -36,6 +36,17 @@ async def test_get_job_lineage_unknown_id(
     }
 
 
+async def test_get_job_lineage_unauthorized(
+    test_client: AsyncClient,
+):
+    response = await test_client.get("v1/jobs/lineage")
+
+    assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
+    assert response.json() == {
+        "error": {"code": "unauthorized", "details": None, "message": "Missing auth credentials"},
+    }, response.json()
+
+
 async def test_get_job_lineage_no_runs(
     test_client: AsyncClient,
     async_session: AsyncSession,

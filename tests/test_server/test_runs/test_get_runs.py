@@ -5,6 +5,7 @@ import pytest
 from httpx import AsyncClient
 from uuid6 import uuid7
 
+from data_rentgen.db.utils.uuid import generate_new_uuid
 from tests.fixtures.mocks import MockedUser
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -78,3 +79,14 @@ async def test_get_runs_by_run_id_until_less_than_since(
             ],
         },
     }
+
+
+async def test_get_runs_unauthorized(
+    test_client: AsyncClient,
+):
+    response = await test_client.get("v1/runs", params={"run_id": str(generate_new_uuid())})
+
+    assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
+    assert response.json() == {
+        "error": {"code": "unauthorized", "details": None, "message": "Missing auth credentials"},
+    }, response.json()

@@ -112,3 +112,19 @@ async def test_update_location_writing_null_to_external_id(
         "addresses": [{"url": address.url} for address in location.addresses],
         "external_id": None,
     }
+
+
+async def test_patch_location_without_auth(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    location: Location,
+):
+    response = await test_client.patch(
+        f"v1/locations/{location.id}",
+        json={"external_id": "external_id"},
+    )
+
+    assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
+    assert response.json() == {
+        "error": {"code": "unauthorized", "details": None, "message": "Missing auth credentials"},
+    }, response.json()

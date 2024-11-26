@@ -37,6 +37,17 @@ async def test_get_dataset_lineage_unknown_id(
     }
 
 
+async def test_get_dataset_lineage_unauthorized(
+    test_client: AsyncClient,
+):
+    response = await test_client.get("v1/datasets/lineage")
+
+    assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
+    assert response.json() == {
+        "error": {"code": "unauthorized", "details": None, "message": "Missing auth credentials"},
+    }, response.json()
+
+
 async def test_get_dataset_lineage_no_relations(
     test_client: AsyncClient,
     async_session: AsyncSession,
