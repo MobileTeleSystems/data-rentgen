@@ -10,6 +10,7 @@ from data_rentgen.logging.setup_logging import setup_logging
 from data_rentgen.server.api.handlers import apply_exception_handlers
 from data_rentgen.server.api.router import api_router
 from data_rentgen.server.middlewares import apply_middlewares
+from data_rentgen.server.providers.auth import AuthProvider
 from data_rentgen.server.settings import ServerApplicationSettings
 
 
@@ -29,6 +30,8 @@ def application_factory(settings: ServerApplicationSettings) -> FastAPI:
     application.include_router(api_router)
 
     apply_exception_handlers(application)
+    auth_class: type[AuthProvider] = settings.auth.provider  # type: ignore[assignment]
+    auth_class.setup(application)
     apply_middlewares(application, settings.server)
 
     application.dependency_overrides.update(

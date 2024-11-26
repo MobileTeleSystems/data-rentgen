@@ -5,6 +5,7 @@ import pytest
 from httpx import AsyncClient
 
 from data_rentgen.db.utils.uuid import generate_new_uuid
+from tests.fixtures.mocks import MockedUser
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
 
@@ -18,7 +19,12 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
         ("jobs", "JOB"),
     ],
 )
-async def test_get_lineage_no_filter(test_client: AsyncClient, entity_kind: str, granularity: str):
+async def test_get_lineage_no_filter(
+    test_client: AsyncClient,
+    entity_kind: str,
+    granularity: str,
+    mocked_user: MockedUser,
+):
     expected_response = {
         "error": {
             "code": "invalid_request",
@@ -44,7 +50,10 @@ async def test_get_lineage_no_filter(test_client: AsyncClient, entity_kind: str,
     if granularity:
         [detail["input"].update({"granularity": granularity}) for detail in expected_response["error"]["details"]]
 
-    response = await test_client.get(f"v1/{entity_kind}/lineage")
+    response = await test_client.get(
+        f"v1/{entity_kind}/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+    )
 
     assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, response.json()
     assert response.json() == expected_response
@@ -64,11 +73,13 @@ async def test_get_lineage_missing_id(
     entity_kind: str,
     start_node_id: str,
     test_client: AsyncClient,
+    mocked_user: MockedUser,
 ):
     since = datetime.now()
 
     response = await test_client.get(
         f"v1/{entity_kind}/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             "start_node_id": start_node_id,
@@ -91,10 +102,12 @@ async def test_get_lineage_start_node_id_int_type_validation(
     entity_kind: str,
     start_node_id: str,
     test_client: AsyncClient,
+    mocked_user: MockedUser,
 ):
     since = datetime.now(tz=timezone.utc)
     response = await test_client.get(
         f"v1/{entity_kind}/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             "start_node_id": start_node_id,
@@ -131,10 +144,12 @@ async def test_get_lineage_start_node_id_uuid_type_validation(
     entity_kind: str,
     start_node_id: int,
     test_client: AsyncClient,
+    mocked_user: MockedUser,
 ):
     since = datetime.now(tz=timezone.utc)
     response = await test_client.get(
         f"v1/{entity_kind}/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             "start_node_id": start_node_id,
@@ -162,12 +177,13 @@ async def test_get_lineage_start_node_id_uuid_type_validation(
     }
 
 
-async def test_get_lineage_until_less_than_since(test_client: AsyncClient):
+async def test_get_lineage_until_less_than_since(test_client: AsyncClient, mocked_user: MockedUser):
     since = datetime.now(tz=timezone.utc)
     until = since - timedelta(days=1)
 
     response = await test_client.get(
         "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             "until": until.isoformat(),
@@ -203,6 +219,7 @@ async def test_get_lineage_until_less_than_since(test_client: AsyncClient):
 )
 async def test_get_lineage_depth_out_of_bounds(
     test_client: AsyncClient,
+    mocked_user: MockedUser,
     depth: int,
     error_type: str,
     error_message: str,
@@ -211,6 +228,7 @@ async def test_get_lineage_depth_out_of_bounds(
     since = datetime.now(tz=timezone.utc)
     response = await test_client.get(
         "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             "start_node_id": str(generate_new_uuid()),

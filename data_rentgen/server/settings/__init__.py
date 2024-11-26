@@ -6,6 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from data_rentgen.db.settings import DatabaseSettings
 from data_rentgen.logging.settings import LoggingSettings
+from data_rentgen.server.settings.auth import AuthSettings
 from data_rentgen.server.settings.server import ServerSettings
 
 
@@ -37,6 +38,10 @@ class ServerApplicationSettings(BaseSettings):
         DATA_RENTGEN__SERVER__DEBUG=True
     """
 
+    auth: AuthSettings = Field(
+        default_factory=AuthSettings,
+        description="Auth settings",
+    )
     database: DatabaseSettings = Field(description=":ref:`Database settings <configuration-database>`")
     logging: LoggingSettings = Field(
         default_factory=LoggingSettings,

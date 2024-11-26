@@ -6,6 +6,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Job, Operation, Run
+from tests.fixtures.mocks import MockedUser
 from tests.test_server.utils.enrich import enrich_datasets, enrich_jobs, enrich_runs
 from tests.test_server.utils.lineage_result import LineageResult
 
@@ -15,9 +16,11 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
 async def test_get_operation_lineage_unknown_id(
     test_client: AsyncClient,
     new_operation: Operation,
+    mocked_user: MockedUser,
 ):
     response = await test_client.get(
         "v1/operations/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "start_node_id": str(new_operation.id),
@@ -31,15 +34,28 @@ async def test_get_operation_lineage_unknown_id(
     }
 
 
+async def test_get_operation_lineage_unauthorized(
+    test_client: AsyncClient,
+):
+    response = await test_client.get("v1/operations/lineage")
+
+    assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
+    assert response.json() == {
+        "error": {"code": "unauthorized", "details": None, "message": "Missing auth credentials"},
+    }, response.json()
+
+
 async def test_get_operation_lineage_no_inputs_outputs(
     test_client: AsyncClient,
     async_session: AsyncSession,
     job: Job,
     run: Run,
     operation: Operation,
+    mocked_user: MockedUser,
 ):
     response = await test_client.get(
         "v1/operations/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": datetime.now(tz=timezone.utc).isoformat(),
             "start_node_id": str(operation.id),
@@ -116,6 +132,7 @@ async def test_get_operation_lineage_simple(
     test_client: AsyncClient,
     async_session: AsyncSession,
     simple_lineage: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = simple_lineage
     operation = lineage.operations[0]
@@ -137,6 +154,7 @@ async def test_get_operation_lineage_simple(
 
     response = await test_client.get(
         "v1/operations/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(operation.id),
@@ -279,6 +297,7 @@ async def test_get_operation_lineage_with_direction_downstream(
     test_client: AsyncClient,
     async_session: AsyncSession,
     simple_lineage: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = simple_lineage
     operation = lineage.operations[0]
@@ -298,6 +317,7 @@ async def test_get_operation_lineage_with_direction_downstream(
 
     response = await test_client.get(
         "v1/operations/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(operation.id),
@@ -418,6 +438,7 @@ async def test_get_operation_lineage_with_direction_upstream(
     test_client: AsyncClient,
     async_session: AsyncSession,
     simple_lineage: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = simple_lineage
     operation = lineage.operations[0]
@@ -437,6 +458,7 @@ async def test_get_operation_lineage_with_direction_upstream(
 
     response = await test_client.get(
         "v1/operations/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(operation.id),
@@ -556,6 +578,7 @@ async def test_get_operation_lineage_with_until(
     test_client: AsyncClient,
     async_session: AsyncSession,
     simple_lineage: LineageResult,
+    mocked_user: MockedUser,
 ):
     # TODO: This test should be change cause `until` for operation has sense only for `depth` > 1
     lineage = simple_lineage
@@ -590,6 +613,7 @@ async def test_get_operation_lineage_with_until(
 
     response = await test_client.get(
         "v1/operations/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             "until": until.isoformat(),
@@ -729,6 +753,7 @@ async def test_get_operation_lineage_with_depth(
     test_client: AsyncClient,
     async_session: AsyncSession,
     lineage_with_depth: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = lineage_with_depth
     # Select only relations marked with *
@@ -796,6 +821,7 @@ async def test_get_operation_lineage_with_depth(
 
     response = await test_client.get(
         "v1/operations/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             "start_node_id": str(first_level_operation.id),
@@ -944,6 +970,7 @@ async def test_get_operation_lineage_with_depth_ignore_cycles(
     test_client: AsyncClient,
     async_session: AsyncSession,
     cyclic_lineage: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = cyclic_lineage
     # Select all relations:
@@ -960,6 +987,7 @@ async def test_get_operation_lineage_with_depth_ignore_cycles(
 
     response = await test_client.get(
         "v1/operations/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             "start_node_id": str(operation.id),
@@ -1108,6 +1136,7 @@ async def test_get_operation_lineage_with_depth_ignore_unrelated_datasets(
     test_client: AsyncClient,
     async_session: AsyncSession,
     branchy_lineage: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = branchy_lineage
     # Start from O1, build lineage with direction=BOTH
@@ -1155,6 +1184,7 @@ async def test_get_operation_lineage_with_depth_ignore_unrelated_datasets(
 
     response = await test_client.get(
         "v1/operations/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             "start_node_id": str(operation.id),
@@ -1303,6 +1333,7 @@ async def test_get_operation_lineage_with_symlinks(
     test_client: AsyncClient,
     async_session: AsyncSession,
     lineage_with_symlinks: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = lineage_with_symlinks
     operation = lineage.operations[0]
@@ -1335,6 +1366,7 @@ async def test_get_operation_lineage_with_symlinks(
 
     response = await test_client.get(
         "v1/operations/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(operation.id),
@@ -1482,6 +1514,7 @@ async def test_get_operation_lineage_with_empty_io_stats_and_schema(
     test_client: AsyncClient,
     async_session: AsyncSession,
     simple_lineage: LineageResult,
+    mocked_user: MockedUser,
 ):
     lineage = simple_lineage
 
@@ -1525,6 +1558,7 @@ async def test_get_operation_lineage_with_empty_io_stats_and_schema(
 
     response = await test_client.get(
         "v1/operations/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(operation.id),

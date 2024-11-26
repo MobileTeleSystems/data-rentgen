@@ -30,7 +30,7 @@ class OutputRepository(Repository[Output]):
             str(output.dataset.id),
             str(output.schema.id) if output.schema else "",
         ]
-        return generate_incremental_uuid(created_at, ".".join(id_components).encode("utf-8"))
+        return generate_incremental_uuid(created_at, ".".join(id_components))
 
     async def create_or_update_bulk(self, outputs: list[OutputDTO]) -> list[Output]:
         if not outputs:

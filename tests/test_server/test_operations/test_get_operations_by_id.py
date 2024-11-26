@@ -4,6 +4,7 @@ import pytest
 from httpx import AsyncClient
 
 from data_rentgen.db.models import Operation
+from tests.fixtures.mocks import MockedUser
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
@@ -11,9 +12,11 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 async def test_get_operations_by_unknown_id(
     test_client: AsyncClient,
     new_operation: Operation,
+    mocked_user: MockedUser,
 ):
     response = await test_client.get(
         "v1/operations",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={"operation_id": str(new_operation.id)},
     )
 
@@ -36,9 +39,11 @@ async def test_get_operations_by_unknown_id(
 async def test_get_operations_by_one_id(
     test_client: AsyncClient,
     operation: Operation,
+    mocked_user: MockedUser,
 ):
     response = await test_client.get(
         "v1/operations",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={"operation_id": str(operation.id)},
     )
 
@@ -76,12 +81,14 @@ async def test_get_operations_by_one_id(
 async def test_get_operations_by_multiple_ids(
     test_client: AsyncClient,
     operations: list[Operation],
+    mocked_user: MockedUser,
 ):
     # create more objects than pass to endpoint, to test filtering
     selected_operations = operations[:2]
 
     response = await test_client.get(
         "v1/operations",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "operation_id": [str(operation.id) for operation in selected_operations],
         },

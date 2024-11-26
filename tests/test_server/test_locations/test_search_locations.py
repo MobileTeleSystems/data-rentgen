@@ -5,6 +5,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Location
+from tests.fixtures.mocks import MockedUser
 from tests.test_server.utils.enrich import enrich_locations
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -14,6 +15,7 @@ async def test_search_locations_by_address_url(
     test_client: AsyncClient,
     async_session: AsyncSession,
     locations_search: tuple[dict[str, Location], dict[str, Location]],
+    mocked_user: MockedUser,
 ) -> None:
     _, locations_by_address = locations_search
 
@@ -21,6 +23,7 @@ async def test_search_locations_by_address_url(
 
     response = await test_client.get(
         "/v1/locations",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         # search by word prefix
         params={"search_query": "my-cluster"},
     )
@@ -54,6 +57,7 @@ async def test_search_locations_by_location_name(
     test_client: AsyncClient,
     async_session: AsyncSession,
     locations_search: tuple[dict[str, Location], dict[str, Location]],
+    mocked_user: MockedUser,
 ) -> None:
     locations_by_name, _ = locations_search
     locations = await enrich_locations(
@@ -63,6 +67,7 @@ async def test_search_locations_by_location_name(
 
     response = await test_client.get(
         "/v1/locations",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={"search_query": "postgres.public"},
     )
 
@@ -95,6 +100,7 @@ async def test_search_locations_by_location_name_and_address_url(
     test_client: AsyncClient,
     async_session: AsyncSession,
     locations_search: tuple[dict[str, Location], dict[str, Location]],
+    mocked_user: MockedUser,
 ) -> None:
     locations_by_location, locations_by_address = locations_search
     # Location name `my-cluster` and address url `hdfs://my-cluster-namenode:8020`
@@ -109,6 +115,7 @@ async def test_search_locations_by_location_name_and_address_url(
 
     response = await test_client.get(
         "/v1/locations",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={"search_query": "cluster"},
     )
 
@@ -140,9 +147,11 @@ async def test_search_locations_by_location_name_and_address_url(
 async def test_search_locations_no_results(
     test_client: AsyncClient,
     locations_search: tuple[dict[str, Location], dict[str, Location]],
+    mocked_user: MockedUser,
 ) -> None:
     response = await test_client.get(
         "/v1/locations",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={"search_query": "not-found"},
     )
 

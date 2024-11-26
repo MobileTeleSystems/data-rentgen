@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query
 
+from data_rentgen.db.models import User
 from data_rentgen.server.errors import get_error_responses
 from data_rentgen.server.errors.schemas import InvalidRequestSchema
 from data_rentgen.server.schemas.v1 import (
@@ -13,6 +14,7 @@ from data_rentgen.server.schemas.v1 import (
     OperationResponseV1,
     PageResponseV1,
 )
+from data_rentgen.server.services import get_user
 from data_rentgen.server.services.lineage import LineageService
 from data_rentgen.server.utils.lineage_response import build_lineage_response
 from data_rentgen.services import UnitOfWork
@@ -28,6 +30,7 @@ router = APIRouter(
 async def operations(
     query_args: Annotated[OperationQueryV1, Depends()],
     unit_of_work: Annotated[UnitOfWork, Depends()],
+    current_user: User = Depends(get_user()),
 ) -> PageResponseV1[OperationResponseV1]:
     pagination = await unit_of_work.operation.paginate(
         page=query_args.page,
@@ -44,6 +47,7 @@ async def operations(
 async def get_operations_lineage(
     query_args: Annotated[OperationLineageQueryV1, Query()],
     lineage_service: Annotated[LineageService, Depends()],
+    current_user: User = Depends(get_user()),
 ) -> LineageResponseV1:
     lineage = await lineage_service.get_lineage_by_operations(
         start_node_ids=[query_args.start_node_id],  # type: ignore[list-item]

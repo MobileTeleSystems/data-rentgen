@@ -5,6 +5,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Location
+from tests.fixtures.mocks import MockedUser
 from tests.test_server.utils.enrich import enrich_locations
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -21,11 +22,13 @@ async def test_add_location_external_id(
     test_client: AsyncClient,
     async_session: AsyncSession,
     location: Location,
+    mocked_user: MockedUser,
 ):
     [location] = await enrich_locations([location], async_session)
     assert location.external_id is None
     response = await test_client.patch(
         f"v1/locations/{location.id}",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         json={"external_id": "external_id"},
     )
     [location] = await enrich_locations([location], async_session)
@@ -44,9 +47,11 @@ async def test_update_location_external_id(
     test_client: AsyncClient,
     async_session: AsyncSession,
     location: Location,
+    mocked_user: MockedUser,
 ):
     response = await test_client.patch(
         f"v1/locations/{location.id}",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         json={"external_id": "new_external_id"},
     )
     [location] = await enrich_locations([location], async_session)
@@ -64,9 +69,11 @@ async def test_update_location_external_id(
 async def test_update_location_not_found(
     test_client: AsyncClient,
     new_location: Location,
+    mocked_user: MockedUser,
 ):
     response = await test_client.patch(
         f"v1/locations/{new_location.id}",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         json={"external_id": "new_external_id"},
     )
 
@@ -88,9 +95,11 @@ async def test_update_location_writing_null_to_external_id(
     test_client: AsyncClient,
     async_session: AsyncSession,
     location: Location,
+    mocked_user: MockedUser,
 ):
     response = await test_client.patch(
         f"v1/locations/{location.id}",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         json={"external_id": None},
     )
 
@@ -103,3 +112,19 @@ async def test_update_location_writing_null_to_external_id(
         "addresses": [{"url": address.url} for address in location.addresses],
         "external_id": None,
     }
+
+
+async def test_patch_location_without_auth(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    location: Location,
+):
+    response = await test_client.patch(
+        f"v1/locations/{location.id}",
+        json={"external_id": "external_id"},
+    )
+
+    assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
+    assert response.json() == {
+        "error": {"code": "unauthorized", "details": None, "message": "Missing auth credentials"},
+    }, response.json()

@@ -4,6 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
+from data_rentgen.db.models import User
 from data_rentgen.server.errors import get_error_responses
 from data_rentgen.server.errors.schemas import InvalidRequestSchema, NotFoundSchema
 from data_rentgen.server.schemas.v1 import (
@@ -12,6 +13,7 @@ from data_rentgen.server.schemas.v1 import (
     PageResponseV1,
     UpdateLocationRequestV1,
 )
+from data_rentgen.server.services import get_user
 from data_rentgen.services import UnitOfWork
 
 router = APIRouter(
@@ -25,6 +27,7 @@ router = APIRouter(
 async def paginate_locations(
     query_args: Annotated[LocationPaginateQueryV1, Depends()],
     unit_of_work: Annotated[UnitOfWork, Depends()],
+    current_user: User = Depends(get_user()),
 ) -> PageResponseV1[LocationResponseV1]:
     pagination = await unit_of_work.location.paginate(
         page=query_args.page,
@@ -41,6 +44,7 @@ async def update_location(
     location_id: int,
     location_data: UpdateLocationRequestV1,
     unit_of_work: Annotated[UnitOfWork, Depends()],
+    current_user: User = Depends(get_user()),
 ) -> LocationResponseV1:
     location = await unit_of_work.location.update_external_id(location_id, location_data.external_id)
     return LocationResponseV1.model_validate(location)

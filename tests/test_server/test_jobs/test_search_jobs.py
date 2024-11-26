@@ -5,6 +5,7 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Job
+from tests.fixtures.mocks import MockedUser
 from tests.test_server.utils.enrich import enrich_jobs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -14,6 +15,7 @@ async def test_search_jobs_by_address_url(
     test_client: AsyncClient,
     async_session: AsyncSession,
     jobs_search: tuple[dict[str, Job], dict[str, Job], dict[str, Job]],
+    mocked_user: MockedUser,
 ) -> None:
     _, _, jobs_by_address = jobs_search
     # Job with id 8 has two addresses urls: [http://airflow-host:2080, http://airflow-host:8020] and random name
@@ -21,6 +23,7 @@ async def test_search_jobs_by_address_url(
 
     response = await test_client.get(
         "/v1/jobs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={"search_query": "airflow-host"},
     )
 
@@ -59,6 +62,7 @@ async def test_search_jobs_by_location_name(
     test_client: AsyncClient,
     async_session: AsyncSession,
     jobs_search: tuple[dict[str, Job], dict[str, Job], dict[str, Job]],
+    mocked_user: MockedUser,
 ) -> None:
     _, jobs_by_location, _ = jobs_search
     # Job with id 5 has location names `data-product-host`
@@ -66,6 +70,7 @@ async def test_search_jobs_by_location_name(
 
     response = await test_client.get(
         "/v1/jobs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={"search_query": "data-product"},
     )
 
@@ -104,6 +109,7 @@ async def test_search_jobs_by_job_name(
     test_client: AsyncClient,
     async_session: AsyncSession,
     jobs_search: tuple[dict[str, Job], dict[str, Job], dict[str, Job]],
+    mocked_user: MockedUser,
 ) -> None:
     jobs_by_name, _, jobs_by_address = jobs_search
     # Jobs with ids 0 and 2 has job name `airflow-task` and `airflow-task`
@@ -121,6 +127,7 @@ async def test_search_jobs_by_job_name(
 
     response = await test_client.get(
         "/v1/jobs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         # search by word prefix
         params={"search_query": "airflo"},
     )
@@ -160,6 +167,7 @@ async def test_search_jobs_by_location_name_and_address_url(
     test_client: AsyncClient,
     async_session: AsyncSession,
     jobs_search: tuple[dict[str, Job], dict[str, Job], dict[str, Job]],
+    mocked_user: MockedUser,
 ) -> None:
     _, jobs_by_location, jobs_by_address = jobs_search
     # Job with id 4 has location name `my-cluster`
@@ -168,6 +176,7 @@ async def test_search_jobs_by_location_name_and_address_url(
 
     response = await test_client.get(
         "/v1/jobs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={"search_query": "my-cluster"},
     )
 
@@ -205,9 +214,11 @@ async def test_search_jobs_by_location_name_and_address_url(
 async def test_search_jobs_no_results(
     test_client: AsyncClient,
     jobs_search: tuple[dict[str, Job], dict[str, Job], dict[str, Job]],
+    mocked_user: MockedUser,
 ) -> None:
     response = await test_client.get(
         "/v1/jobs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={"search_query": "not-found"},
     )
 

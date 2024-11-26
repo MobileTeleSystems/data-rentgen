@@ -5,6 +5,7 @@ import pytest
 from httpx import AsyncClient
 
 from data_rentgen.db.models import Operation, Run
+from tests.fixtures.mocks import MockedUser
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
@@ -12,9 +13,11 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 async def test_get_operations_missing_since(
     test_client: AsyncClient,
     new_operation: Operation,
+    mocked_user: MockedUser,
 ):
     response = await test_client.get(
         "v1/operations",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "run_id": str(new_operation.run_id),
         },
@@ -48,9 +51,11 @@ async def test_get_operations_missing_since(
 async def test_get_operations_by_unknown_run_id(
     test_client: AsyncClient,
     new_operation: Operation,
+    mocked_user: MockedUser,
 ):
     response = await test_client.get(
         "v1/operations",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": new_operation.created_at.isoformat(),
             "run_id": str(new_operation.run_id),
@@ -77,6 +82,7 @@ async def test_get_operations_by_run_id(
     test_client: AsyncClient,
     runs: list[Run],
     operations: list[Operation],
+    mocked_user: MockedUser,
 ):
     run_ids = {operation.run_id for operation in operations}
     runs = [run for run in runs if run.id in run_ids]
@@ -87,6 +93,7 @@ async def test_get_operations_by_run_id(
     since = min(operation.created_at for operation in selected_operations)
     response = await test_client.get(
         "v1/operations",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
             "run_id": str(selected_run.id),
@@ -128,6 +135,7 @@ async def test_get_operations_by_run_id(
 async def test_get_operations_by_run_id_with_until(
     test_client: AsyncClient,
     operations_with_same_run: list[Operation],
+    mocked_user: MockedUser,
 ):
     since = operations_with_same_run[0].created_at
     until = since + timedelta(seconds=1)
@@ -138,6 +146,7 @@ async def test_get_operations_by_run_id_with_until(
 
     response = await test_client.get(
         "v1/operations",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "run_id": str(operations_with_same_run[0].run_id),
             "since": since.isoformat(),
