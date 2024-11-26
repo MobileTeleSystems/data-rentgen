@@ -29,7 +29,7 @@ async def test_dummy_auth_invalid_token(
     }, response.json()
 
 
-async def test_expired_token(
+async def test_dummy_auth_expired_token(
     test_client: AsyncClient,
     user: User,
     access_token_settings: JWTSettings,
@@ -51,7 +51,7 @@ async def test_expired_token(
     }, response.json()
 
 
-async def test_generate_valid_token(
+async def test_dummy_auth_generate_valid_token(
     test_client: AsyncClient,
 ):
     response = await test_client.post("v1/auth/token", data={"username": "test", "password": "test"})
