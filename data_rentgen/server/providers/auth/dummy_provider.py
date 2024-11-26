@@ -1,10 +1,10 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 import logging
+from pprint import pformat
 from time import time
 from typing import Annotated, Any
 
-from devtools import pformat
 from fastapi import Depends, FastAPI
 
 from data_rentgen.db.models import User
