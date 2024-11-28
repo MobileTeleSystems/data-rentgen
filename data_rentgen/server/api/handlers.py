@@ -8,9 +8,10 @@ import logging
 from asgi_correlation_id import correlation_id
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
+from fastapi.responses import RedirectResponse
 from pydantic import ValidationError
 
-from data_rentgen.exceptions import ApplicationError, AuthorizationError
+from data_rentgen.exceptions import ApplicationError, AuthorizationError, RedirectError
 from data_rentgen.server.errors.base import APIErrorSchema, BaseErrorSchema
 from data_rentgen.server.errors.registration import get_response_for_exception
 from data_rentgen.server.settings.server import ServerSettings
@@ -91,6 +92,10 @@ def application_exception_handler(request: Request, exc: ApplicationError) -> Re
     )
 
 
+def redirect_exception_handler(_: Request, exc: RedirectError) -> Response:
+    return RedirectResponse(url=exc.message)
+
+
 def exception_json_response(
     status: int,
     content: BaseErrorSchema,
@@ -107,6 +112,7 @@ def exception_json_response(
 
 
 def apply_exception_handlers(app: FastAPI) -> None:
+    app.add_exception_handler(RedirectError, redirect_exception_handler)  # type: ignore[arg-type]
     app.add_exception_handler(ApplicationError, application_exception_handler)  # type: ignore[arg-type]
     app.add_exception_handler(AuthorizationError, application_exception_handler)  # type: ignore[arg-type]
     app.add_exception_handler(

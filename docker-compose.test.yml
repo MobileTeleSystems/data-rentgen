@@ -28,6 +28,19 @@ services:
       timeout: 5s
       retries: 5
 
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    command: start-dev
+    restart: unless-stopped
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - 8080:8080
+    volumes:
+      - keycloak_data:/opt/keycloak/data
+
 volumes:
   postgres_test_data:
   kafka_test_data:
+  keycloak_data:

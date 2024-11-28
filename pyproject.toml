@@ -72,6 +72,7 @@ python-jose = {version = "^3.3.0", optional = true}
 itsdangerous = {version = "^2.2.0", optional = true}
 python-multipart = {version = "^0.0.17", optional = true}
 types-python-jose = {version = "^3.3.4.20240106", optional = true}
+python-keycloak = {version = "^4.7.2", optional = true}
 
 [tool.poetry.extras]
 server = [
@@ -95,6 +96,7 @@ server = [
   "itsdangerous",
   "python-multipart",
   "types-python-jose",
+  "python-keycloak",
 ]
 consumer = [
   "faststream",
@@ -127,6 +129,7 @@ coverage = "^7.6.7"
 psycopg2-binary = "^2.9.9"
 gevent = "^24.11.1"
 deepdiff = "^8.0.1"
+responses = "*"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.0.1"
@@ -229,6 +232,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "starlette_exporter"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "keycloak.*"
 ignore_missing_imports = true
 
 [tool.autoflake]
