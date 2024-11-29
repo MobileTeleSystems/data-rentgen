@@ -12,7 +12,7 @@ from data_rentgen.dto import UserDTO
 from data_rentgen.exceptions.auth import AuthorizationError
 from data_rentgen.exceptions.redirect import RedirectError
 from data_rentgen.server.providers.auth.base_provider import AuthProvider
-from data_rentgen.server.settings.auth.keycloack import KeycloakAuthProviderSettings
+from data_rentgen.server.settings.auth.keycloak import KeycloakAuthProviderSettings
 from data_rentgen.services import UnitOfWork
 
 logger = logging.getLogger(__name__)
