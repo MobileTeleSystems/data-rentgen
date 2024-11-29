@@ -3,10 +3,8 @@ from http import HTTPStatus
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.db.models import Dataset, Location, User
-from data_rentgen.db.utils.uuid import generate_new_uuid
+from data_rentgen.db.models import User
 from data_rentgen.server.settings.auth.jwt import JWTSettings
 from data_rentgen.server.utils.jwt import sign_jwt
 from tests.fixtures.mocks import MockedUser
