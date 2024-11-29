@@ -35,19 +35,45 @@ async def test_dummy_auth_expired_token(
     access_token_settings: JWTSettings,
 ):
     token = sign_jwt(
-        {"user_id": user.id, "exp": time.time() + 1},
+        {"user_id": user.id, "exp": time.time() - 10000},
         access_token_settings.secret_key.get_secret_value(),
         access_token_settings.security_algorithm,
     )
 
     response = await test_client.get(
         "v1/datasets",
-        headers={"Authorization": f"Bearer {token + 'invalid'}"},
+        headers={"Authorization": f"Bearer {token}"},
     )
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
     assert response.json() == {
         "error": {"code": "unauthorized", "details": None, "message": "Invalid token"},
+    }, response.json()
+
+
+async def test_dummy_auth_unexisten_user(
+    test_client: AsyncClient,
+    user: User,
+    access_token_settings: JWTSettings,
+):
+    token = sign_jwt(
+        {"user_id": user.id + 666, "exp": time.time() + 100000},
+        access_token_settings.secret_key.get_secret_value(),
+        access_token_settings.security_algorithm,
+    )
+
+    response = await test_client.get(
+        "v1/datasets",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == HTTPStatus.NOT_FOUND, response.json()
+    assert response.json() == {
+        "error": {
+            "code": "not_found",
+            "details": {"entity_type": "User", "field": "user_id", "value": user.id + 666},
+            "message": f"User with user_id={user.id + 666} not found",
+        },
     }, response.json()
 
 

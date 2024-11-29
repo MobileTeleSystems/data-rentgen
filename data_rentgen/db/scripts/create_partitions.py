@@ -109,7 +109,7 @@ async def create_partition(start: date, end: date, granularity: Granularity, ses
 
     for table in PARTITIONED_TABLES:
         statement = f"CREATE TABLE IF NOT EXISTS {table}_{partition_name} PARTITION OF {table} FOR VALUES FROM ('{start_str}') TO ('{end_str}')"
-        logger.info("Executing statement: %s", statement)
+        logger.debug("Executing statement: %s", statement)
         await session.execute(text(statement))
 
 
