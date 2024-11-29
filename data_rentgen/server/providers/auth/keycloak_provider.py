@@ -5,29 +5,24 @@ from typing import Annotated, Any
 
 from fastapi import Depends, FastAPI, Request
 from keycloak import KeycloakOpenID
-from sqlalchemy.ext.asyncio import AsyncSession
 
+from data_rentgen.db.models import User
 from data_rentgen.dependencies import Stub
 from data_rentgen.dto import UserDTO
 from data_rentgen.exceptions.auth import AuthorizationError
 from data_rentgen.exceptions.redirect import RedirectError
 from data_rentgen.server.providers.auth.base_provider import AuthProvider
 from data_rentgen.server.settings.auth.keycloack import KeycloakAuthProviderSettings
-from data_rentgen.server.utils.state import generate_state
 from data_rentgen.services import UnitOfWork
 
 logger = logging.getLogger(__name__)
-
-
-def get_unit_of_work(session: AsyncSession = Depends(Stub(AsyncSession))) -> UnitOfWork:
-    return UnitOfWork(session)
 
 
 class KeycloakAuthProvider(AuthProvider):
     def __init__(
         self,
         settings: Annotated[KeycloakAuthProviderSettings, Depends(Stub(KeycloakAuthProviderSettings))],
-        unit_of_work: Annotated[UnitOfWork, Depends(get_unit_of_work)],
+        unit_of_work: Annotated[UnitOfWork, Depends()],
     ) -> None:
         self.settings = settings
         self._uow = unit_of_work
@@ -76,63 +71,57 @@ class KeycloakAuthProvider(AuthProvider):
         except Exception as e:
             raise AuthorizationError("Failed to get token") from e
 
-    async def get_current_user(self, access_token: str, *args, **kwargs) -> Any:  # noqa: WPS231
+    async def get_current_user(self, access_token: str, *args, **kwargs) -> User:
         request: Request = kwargs["request"]
         refresh_token = request.session.get("refresh_token")
 
         if not access_token:
             logger.debug("No access token found in session.")
-            self.redirect_to_auth(request.url.path)
+            self.redirect_to_auth()
 
-        try:
-            # if user is disabled or blocked in Keycloak after the token is issued, he will
-            # remain authorized until the token expires (not more than 15 minutes in MTS SSO)
-            token_info = self.keycloak_openid.decode_token(token=access_token)
-        except Exception as e:
-            logger.info("Access token is invalid or expired: %s", e)
-            token_info = None
+        # if user is disabled or blocked in Keycloak after the token is issued, he will
+        # remain authorized until the token expires (not more than 15 minutes in MTS SSO)
+        token_info = self.decode_token(access_token)
 
-        if not token_info and refresh_token:
+        if token_info is None and refresh_token:
             logger.debug("Access token invalid. Attempting to refresh.")
+            access_token, refresh_token = self.refresh_access_token(refresh_token)
+            request.session["access_token"] = access_token
+            request.session["refresh_token"] = refresh_token
 
-            try:
-                new_tokens = await self.refresh_access_token(refresh_token)
+            token_info = self.decode_token(access_token)
 
-                new_access_token = new_tokens.get("access_token")
-                new_refresh_token = new_tokens.get("refresh_token")
-                request.session["access_token"] = new_access_token
-                request.session["refresh_token"] = new_refresh_token
-
-                token_info = self.keycloak_openid.decode_token(
-                    token=new_access_token,
-                )
-                logger.debug("Access token refreshed and decoded successfully.")
-            except Exception as err:
-                logger.debug("Failed to refresh access token: %s", err)
-                self.redirect_to_auth(request.url.path)
+            if token_info is None:
+                # If there is no token_info after refresh user get redirect
+                self.redirect_to_auth()
 
         # these names are hardcoded in keycloak:
         # https://github.com/keycloak/keycloak/blob/3ca3a4ad349b4d457f6829eaf2ae05f1e01408be/core/src/main/java/org/keycloak/representations/IDToken.java
-        user_id = token_info.get("sub")
-        login = token_info.get("preferred_username")
+        user_id = token_info.get("sub")  # type: ignore[union-attr]
+        login = token_info.get("preferred_username")  # type: ignore[union-attr]
         if not user_id:
             raise AuthorizationError("Invalid token payload")
-        user = await self._uow.user._get(login)  # noqa: WPS437
-        if not user:
-            user = await self._uow.user._create(  # noqa: WPS437
-                UserDTO(name=login),
-            )
+        return await self._uow.user.get_or_create(UserDTO(name=login))  # type: ignore[arg-type]
 
-        return user
+    def decode_token(self, access_token: str) -> dict[str, Any] | None:
+        try:
+            return self.keycloak_openid.decode_token(token=access_token)
+        except Exception as err:
+            logger.info("Access token is invalid or expired: %s", err)
+            return None
 
-    async def refresh_access_token(self, refresh_token: str) -> dict[str, Any]:
-        return self.keycloak_openid.refresh_token(refresh_token)
+    def refresh_access_token(self, refresh_token: str) -> tuple[str, str]:  # type: ignore[return]
+        try:
+            new_tokens = self.keycloak_openid.refresh_token(refresh_token)
+            logger.debug("Access token refreshed")
+            return new_tokens.get("access_token"), new_tokens.get("refresh_token")
+        except Exception as err:
+            logger.debug("Failed to refresh access token: %s", err)
+            self.redirect_to_auth()
 
-    def redirect_to_auth(self, path: str) -> None:
-        state = generate_state(path)
+    def redirect_to_auth(self) -> None:
         auth_url = self.keycloak_openid.auth_url(
             redirect_uri=self.settings.keycloak.redirect_uri,
             scope=self.settings.keycloak.scope,
-            state=state,
         )
         raise RedirectError(message=auth_url, details="Authorize on provided url")

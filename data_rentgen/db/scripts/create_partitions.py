@@ -72,9 +72,9 @@ def get_parser() -> ArgumentParser:
     parser.add_argument(
         "--end",
         type=isoparse,
-        default=datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0) + relativedelta(months=1),
+        default=datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0) + relativedelta(months=2),
         nargs="?",
-        help="End date for partitions, default is the first day of next month.",
+        help="End date for partitions, default is the last day of next month.",
     )
     parser.add_argument(
         "--granularity",
@@ -109,7 +109,7 @@ async def create_partition(start: date, end: date, granularity: Granularity, ses
 
     for table in PARTITIONED_TABLES:
         statement = f"CREATE TABLE IF NOT EXISTS {table}_{partition_name} PARTITION OF {table} FOR VALUES FROM ('{start_str}') TO ('{end_str}')"
-        logger.debug("Executing statement: %s", statement)
+        logger.info("Executing statement: %s", statement)
         await session.execute(text(statement))
 
 
