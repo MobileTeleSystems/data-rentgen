@@ -19,8 +19,8 @@ Data Rentgen supports different auth provider implementations. You can change im
 
 Right now service has two scenarios for authentication:
 
-- `Dummy(JWT Tokens) https://jwt.io/` a lightweight option for testing and development.
-- `Keycloak authentication https://www.keycloak.org/` recommended option. Integrates with Keycloak for token-based authentication.
+- `Dummy(JWT Tokens) <https://jwt.io/>`_ a lightweight option for testing and development.
+- `Keycloak authentication <https://www.keycloak.org/>`_ recommended option. Integrates with Keycloak for token-based authentication.
 
 .. toctree::
     :maxdepth: 1

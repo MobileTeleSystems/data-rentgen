@@ -48,7 +48,6 @@ extensions = [
     "numpydoc",
     "sphinx_copybutton",
     "sphinx.ext.autodoc",
-    #    "sphinx.ext.autosummary", -- Turn of in case of stub warnings
     "sphinx.ext.intersphinx",
     "sphinxcontrib.autodoc_pydantic",
     "sphinxcontrib.towncrier",  # provides `towncrier-draft-entries` directive

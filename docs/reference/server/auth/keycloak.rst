@@ -6,7 +6,7 @@ Keycloak Provider
 Description
 -----------
 
-Keycloak auth provider uses `python-keycloak <https://pypi.org/project/python-keycloak/>` library to interact with Keycloak server. During the authentication process,
+Keycloak auth provider uses `python-keycloak <https://pypi.org/project/python-keycloak/>`_ library to interact with Keycloak server. During the authentication process,
 KeycloakAuthProvider redirects user to Keycloak authentication page.
 
 After successful authentication, Keycloak redirects user back to Data.Rentgen with authorization code.
