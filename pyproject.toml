@@ -70,7 +70,7 @@ cramjam = {version = "^2.8.3", optional = true}
 packaging = {version = "^24.2", optional = true}
 python-jose = {version = "^3.3.0", optional = true}
 itsdangerous = {version = "^2.2.0", optional = true}
-python-multipart = {version = "^0.0.17", optional = true}
+python-multipart = {version = "^0.0.18", optional = true}
 types-python-jose = {version = "^3.3.4.20240106", optional = true}
 python-keycloak = {version = "^4.7.2", optional = true}
 
