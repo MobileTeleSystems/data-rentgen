@@ -49,7 +49,7 @@ async def test_dummy_auth_expired_token(
     }, response.json()
 
 
-async def test_dummy_auth_unexisten_user(
+async def test_dummy_auth_unexisting_user(
     test_client: AsyncClient,
     user: User,
     access_token_settings: JWTSettings,
