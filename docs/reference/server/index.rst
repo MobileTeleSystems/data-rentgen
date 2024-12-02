@@ -72,5 +72,6 @@ See also
 .. toctree::
     :maxdepth: 1
 
+    auth/index
     configuration/index
     openapi

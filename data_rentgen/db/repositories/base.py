@@ -56,8 +56,8 @@ class Repository(ABC, Generic[Model]):
             items_query = items_query.options(*options)
 
         total_query = select(func.count()).select_from(query.subquery())
-
         items_result: ScalarResult[Model] = await self._session.scalars(items_query)
+
         total_count: int = await self._session.scalar(total_query)  # type: ignore[assignment]
         return PaginationDTO[model_type](  # type: ignore[valid-type]
             items=list(items_result.all()),

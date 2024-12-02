@@ -72,9 +72,9 @@ def get_parser() -> ArgumentParser:
     parser.add_argument(
         "--end",
         type=isoparse,
-        default=datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0) + relativedelta(months=1),
+        default=datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0) + relativedelta(months=2),
         nargs="?",
-        help="End date for partitions, default is the first day of next month.",
+        help="End date for partitions, default is the last day of next month.",
     )
     parser.add_argument(
         "--granularity",

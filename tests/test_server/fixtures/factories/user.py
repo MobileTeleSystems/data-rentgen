@@ -27,7 +27,7 @@ async def user(
 ) -> AsyncGenerator[User, None]:
     params = request.param
     item = user_factory(**params)
-
+    del item.id
     async with async_session_maker() as async_session:
         async_session.add(item)
 

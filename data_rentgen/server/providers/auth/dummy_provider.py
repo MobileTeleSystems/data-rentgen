@@ -10,6 +10,7 @@ from fastapi import Depends, FastAPI
 from data_rentgen.db.models import User
 from data_rentgen.dependencies import Stub
 from data_rentgen.dto import UserDTO
+from data_rentgen.exceptions import EntityNotFoundError
 from data_rentgen.exceptions.auth import AuthorizationError
 from data_rentgen.server.providers.auth.base_provider import AuthProvider
 from data_rentgen.server.settings.auth.dummy import DummyAuthProviderSettings
@@ -36,12 +37,15 @@ class DummyAuthProvider(AuthProvider):
         app.dependency_overrides[DummyAuthProviderSettings] = lambda: settings
         return app
 
-    async def get_current_user(self, access_token: str, *args, **kwargs) -> User | None:
+    async def get_current_user(self, access_token: str, *args, **kwargs) -> User:
         if not access_token:
             raise AuthorizationError("Missing auth credentials")
 
         user_id = self._get_user_id_from_token(access_token)
-        return await self._uow.user.read_by_id(user_id)
+        user = await self._uow.user.read_by_id(user_id)
+        if user is None:
+            raise EntityNotFoundError("User", "user_id", user_id)  # type: ignore[call-arg]
+        return user
 
     async def get_token_password_grant(
         self,
@@ -57,11 +61,7 @@ class DummyAuthProvider(AuthProvider):
 
         logger.info("Get/create user %r in database", login)
         async with self._uow:
-            user = await self._uow.user._get(login)  # noqa: WPS437
-            if not user:
-                user = await self._uow.user._create(  # noqa: WPS437
-                    UserDTO(name=login),
-                )
+            user = await self._uow.user.get_or_create(UserDTO(name=login))
 
         logger.info("User with id %r found", user.id)
         logger.info("Generate access token for user id %r", user.id)
