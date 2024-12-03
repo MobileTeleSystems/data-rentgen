@@ -45,7 +45,7 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.10"
-# https://github.com/pydantic/pydantic/issues/10494
+# https://github.com/pydantic/pydantic/issues/10964
 pydantic = "~2.8.2"
 typing-extensions = "^4.12.2"
 pydantic-settings = {version = "^2.5.2", optional = true}
