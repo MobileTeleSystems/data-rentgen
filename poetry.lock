@@ -1040,39 +1040,39 @@ standard = ["email-validator (>=2.0.0)", "fastapi-cli[standard] (>=0.0.5)", "htt
 
 [[package]]
 name = "faststream"
-version = "0.5.30"
+version = "0.5.31"
 description = "FastStream: the simplest way to work with a messaging queues"
 optional = true
 python-versions = ">=3.8"
 files = [
-    {file = "faststream-0.5.30-py3-none-any.whl", hash = "sha256:bf48826be99210f3e9c7dff1b2a17b4bc4762c873c5558ac81b9b873549ae6a1"},
-    {file = "faststream-0.5.30.tar.gz", hash = "sha256:50ad5288719cfa75c13e9c277d40afae62533a590facad6e6d215e868f2b97f4"},
+    {file = "faststream-0.5.31-py3-none-any.whl", hash = "sha256:78579d160af74ccfeb1cce7018b34194b635d8ba1cc62b6730fceed07910f12c"},
+    {file = "faststream-0.5.31.tar.gz", hash = "sha256:3890867ff2d31552e8599950162a68a2dffa0a303e53945fcb20b3ea0c51603c"},
 ]
 
 [package.dependencies]
 aiokafka = {version = ">=0.9,<0.13", optional = true, markers = "extra == \"kafka\""}
 anyio = ">=3.7.1,<5"
 fast-depends = ">=2.4.0b0,<3.0.0"
-typer = {version = ">=0.9,<0.12 || >0.12,<1", optional = true, markers = "extra == \"cli\""}
+typer = {version = ">=0.9,<0.12 || >0.12,<=0.14", optional = true, markers = "extra == \"cli\""}
 typing-extensions = ">=4.8.0"
-watchfiles = {version = ">=0.15.0,<0.25.0", optional = true, markers = "extra == \"cli\""}
+watchfiles = {version = ">=0.15.0,<1.1.0", optional = true, markers = "extra == \"cli\""}
 
 [package.extras]
-cli = ["typer (>=0.9,!=0.12,<1)", "watchfiles (>=0.15.0,<0.25.0)"]
+cli = ["typer (>=0.9,!=0.12,<=0.14)", "watchfiles (>=0.15.0,<1.1.0)"]
 confluent = ["confluent-kafka (>=2,<3)", "confluent-kafka (>=2.6,<3)"]
-dev = ["aio-pika (>=9,<10)", "aiokafka (>=0.9,<0.13)", "bandit (==1.7.10)", "cairosvg", "codespell (==2.3.0)", "confluent-kafka (>=2,<3)", "confluent-kafka (>=2.6,<3)", "confluent-kafka-stubs", "coverage[toml] (==7.6.1)", "coverage[toml] (==7.6.4)", "detect-secrets (==1.5.0)", "dirty-equals (==0.8.0)", "email-validator (==2.2.0)", "fastapi (==0.115.2)", "httpx (==0.27.2)", "mdx-include (==1.4.2)", "mike (==2.1.3)", "mkdocs-git-revision-date-localized-plugin (==1.2.9)", "mkdocs-glightbox (==0.4.0)", "mkdocs-literate-nav (==0.6.1)", "mkdocs-macros-plugin (==1.3.6)", "mkdocs-material (==9.5.42)", "mkdocs-minify-plugin (==0.8.0)", "mkdocs-static-i18n (==1.2.3)", "mkdocstrings[python] (==0.26.2)", "mypy (==1.12.1)", "nats-py (>=2.7.0,<=3.0.0)", "opentelemetry-sdk (>=1.24.0,<2.0.0)", "pillow", "pre-commit (==3.5.0)", "pre-commit (==4.0.1)", "prometheus-client (>=0.20.0,<0.30.0)", "pydantic-settings (>=2.0.0,<3.0.0)", "pytest (==8.3.3)", "pytest-asyncio (==0.24.0)", "pyyaml (==6.0.2)", "redis (>=5.0.0,<6.0.0)", "requests", "ruff (==0.7.0)", "semgrep (==1.92.0)", "typer (>=0.9,!=0.12,<1)", "types-aiofiles", "types-deprecated", "types-docutils", "types-pygments", "types-pyyaml", "types-redis", "types-setuptools", "types-ujson", "typing-extensions (>=4.8.0,<4.12.1)", "watchfiles (>=0.15.0,<0.25.0)"]
-devdocs = ["cairosvg", "mdx-include (==1.4.2)", "mike (==2.1.3)", "mkdocs-git-revision-date-localized-plugin (==1.2.9)", "mkdocs-glightbox (==0.4.0)", "mkdocs-literate-nav (==0.6.1)", "mkdocs-macros-plugin (==1.3.6)", "mkdocs-material (==9.5.42)", "mkdocs-minify-plugin (==0.8.0)", "mkdocs-static-i18n (==1.2.3)", "mkdocstrings[python] (==0.26.2)", "pillow", "requests"]
+dev = ["aio-pika (>=9,<10)", "aiokafka (>=0.9,<0.13)", "bandit (==1.7.10)", "cairosvg", "codespell (==2.3.0)", "confluent-kafka (>=2,<3)", "confluent-kafka (>=2.6,<3)", "confluent-kafka-stubs", "coverage[toml] (==7.6.1)", "coverage[toml] (==7.6.8)", "detect-secrets (==1.5.0)", "dirty-equals (==0.8.0)", "email-validator (==2.2.0)", "fastapi (==0.115.5)", "httpx (==0.27.2)", "mdx-include (==1.4.2)", "mike (==2.1.3)", "mkdocs-git-revision-date-localized-plugin (==1.3.0)", "mkdocs-glightbox (==0.4.0)", "mkdocs-literate-nav (==0.6.1)", "mkdocs-macros-plugin (==1.3.7)", "mkdocs-material (==9.5.46)", "mkdocs-minify-plugin (==0.8.0)", "mkdocs-static-i18n (==1.2.3)", "mkdocstrings[python] (==0.27.0)", "mypy (==1.13.0)", "nats-py (>=2.7.0,<=3.0.0)", "opentelemetry-sdk (>=1.24.0,<2.0.0)", "pillow", "pre-commit (==3.5.0)", "pre-commit (==4.0.1)", "prometheus-client (>=0.20.0,<0.30.0)", "pydantic-settings (>=2.0.0,<3.0.0)", "pytest (==8.3.3)", "pytest-asyncio (==0.24.0)", "pyyaml (==6.0.2)", "redis (>=5.0.0,<6.0.0)", "requests", "ruff (==0.8.0)", "semgrep (==1.97.0)", "typer (>=0.9,!=0.12,<=0.14)", "types-aiofiles", "types-deprecated", "types-docutils", "types-pygments", "types-pyyaml", "types-redis", "types-setuptools", "types-ujson", "typing-extensions (>=4.8.0,<4.12.1)", "watchfiles (>=0.15.0,<1.1.0)"]
+devdocs = ["cairosvg", "mdx-include (==1.4.2)", "mike (==2.1.3)", "mkdocs-git-revision-date-localized-plugin (==1.3.0)", "mkdocs-glightbox (==0.4.0)", "mkdocs-literate-nav (==0.6.1)", "mkdocs-macros-plugin (==1.3.7)", "mkdocs-material (==9.5.46)", "mkdocs-minify-plugin (==0.8.0)", "mkdocs-static-i18n (==1.2.3)", "mkdocstrings[python] (==0.27.0)", "pillow", "requests"]
 kafka = ["aiokafka (>=0.9,<0.13)"]
-lint = ["aio-pika (>=9,<10)", "aiokafka (>=0.9,<0.13)", "bandit (==1.7.10)", "codespell (==2.3.0)", "confluent-kafka (>=2,<3)", "confluent-kafka (>=2.6,<3)", "confluent-kafka-stubs", "mypy (==1.12.1)", "nats-py (>=2.7.0,<=3.0.0)", "opentelemetry-sdk (>=1.24.0,<2.0.0)", "prometheus-client (>=0.20.0,<0.30.0)", "redis (>=5.0.0,<6.0.0)", "ruff (==0.7.0)", "semgrep (==1.92.0)", "typer (>=0.9,!=0.12,<1)", "types-aiofiles", "types-deprecated", "types-docutils", "types-pygments", "types-pyyaml", "types-redis", "types-setuptools", "types-ujson", "watchfiles (>=0.15.0,<0.25.0)"]
+lint = ["aio-pika (>=9,<10)", "aiokafka (>=0.9,<0.13)", "bandit (==1.7.10)", "codespell (==2.3.0)", "confluent-kafka (>=2,<3)", "confluent-kafka (>=2.6,<3)", "confluent-kafka-stubs", "mypy (==1.13.0)", "nats-py (>=2.7.0,<=3.0.0)", "opentelemetry-sdk (>=1.24.0,<2.0.0)", "prometheus-client (>=0.20.0,<0.30.0)", "redis (>=5.0.0,<6.0.0)", "ruff (==0.8.0)", "semgrep (==1.97.0)", "typer (>=0.9,!=0.12,<=0.14)", "types-aiofiles", "types-deprecated", "types-docutils", "types-pygments", "types-pyyaml", "types-redis", "types-setuptools", "types-ujson", "watchfiles (>=0.15.0,<1.1.0)"]
 nats = ["nats-py (>=2.7.0,<=3.0.0)"]
-optionals = ["aio-pika (>=9,<10)", "aiokafka (>=0.9,<0.13)", "confluent-kafka (>=2,<3)", "confluent-kafka (>=2.6,<3)", "nats-py (>=2.7.0,<=3.0.0)", "opentelemetry-sdk (>=1.24.0,<2.0.0)", "prometheus-client (>=0.20.0,<0.30.0)", "redis (>=5.0.0,<6.0.0)", "typer (>=0.9,!=0.12,<1)", "watchfiles (>=0.15.0,<0.25.0)"]
+optionals = ["aio-pika (>=9,<10)", "aiokafka (>=0.9,<0.13)", "confluent-kafka (>=2,<3)", "confluent-kafka (>=2.6,<3)", "nats-py (>=2.7.0,<=3.0.0)", "opentelemetry-sdk (>=1.24.0,<2.0.0)", "prometheus-client (>=0.20.0,<0.30.0)", "redis (>=5.0.0,<6.0.0)", "typer (>=0.9,!=0.12,<=0.14)", "watchfiles (>=0.15.0,<1.1.0)"]
 otel = ["opentelemetry-sdk (>=1.24.0,<2.0.0)"]
 prometheus = ["prometheus-client (>=0.20.0,<0.30.0)"]
 rabbit = ["aio-pika (>=9,<10)"]
 redis = ["redis (>=5.0.0,<6.0.0)"]
-test-core = ["coverage[toml] (==7.6.1)", "coverage[toml] (==7.6.4)", "dirty-equals (==0.8.0)", "pytest (==8.3.3)", "pytest-asyncio (==0.24.0)", "typing-extensions (>=4.8.0,<4.12.1)"]
-testing = ["coverage[toml] (==7.6.1)", "coverage[toml] (==7.6.4)", "dirty-equals (==0.8.0)", "email-validator (==2.2.0)", "fastapi (==0.115.2)", "httpx (==0.27.2)", "pydantic-settings (>=2.0.0,<3.0.0)", "pytest (==8.3.3)", "pytest-asyncio (==0.24.0)", "pyyaml (==6.0.2)", "typing-extensions (>=4.8.0,<4.12.1)"]
-types = ["aio-pika (>=9,<10)", "aiokafka (>=0.9,<0.13)", "confluent-kafka (>=2,<3)", "confluent-kafka (>=2.6,<3)", "confluent-kafka-stubs", "mypy (==1.12.1)", "nats-py (>=2.7.0,<=3.0.0)", "opentelemetry-sdk (>=1.24.0,<2.0.0)", "prometheus-client (>=0.20.0,<0.30.0)", "redis (>=5.0.0,<6.0.0)", "typer (>=0.9,!=0.12,<1)", "types-aiofiles", "types-deprecated", "types-docutils", "types-pygments", "types-pyyaml", "types-redis", "types-setuptools", "types-ujson", "watchfiles (>=0.15.0,<0.25.0)"]
+test-core = ["coverage[toml] (==7.6.1)", "coverage[toml] (==7.6.8)", "dirty-equals (==0.8.0)", "pytest (==8.3.3)", "pytest-asyncio (==0.24.0)", "typing-extensions (>=4.8.0,<4.12.1)"]
+testing = ["coverage[toml] (==7.6.1)", "coverage[toml] (==7.6.8)", "dirty-equals (==0.8.0)", "email-validator (==2.2.0)", "fastapi (==0.115.5)", "httpx (==0.27.2)", "pydantic-settings (>=2.0.0,<3.0.0)", "pytest (==8.3.3)", "pytest-asyncio (==0.24.0)", "pyyaml (==6.0.2)", "typing-extensions (>=4.8.0,<4.12.1)"]
+types = ["aio-pika (>=9,<10)", "aiokafka (>=0.9,<0.13)", "confluent-kafka (>=2,<3)", "confluent-kafka (>=2.6,<3)", "confluent-kafka-stubs", "mypy (==1.13.0)", "nats-py (>=2.7.0,<=3.0.0)", "opentelemetry-sdk (>=1.24.0,<2.0.0)", "prometheus-client (>=0.20.0,<0.30.0)", "redis (>=5.0.0,<6.0.0)", "typer (>=0.9,!=0.12,<=0.14)", "types-aiofiles", "types-deprecated", "types-docutils", "types-pygments", "types-pyyaml", "types-redis", "types-setuptools", "types-ujson", "watchfiles (>=0.15.0,<1.1.0)"]
 
 [[package]]
 name = "filelock"
@@ -1506,13 +1506,13 @@ trio = ["trio (>=0.22.0,<1.0)"]
 
 [[package]]
 name = "httpx"
-version = "0.27.2"
+version = "0.28.0"
 description = "The next generation HTTP client."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "httpx-0.27.2-py3-none-any.whl", hash = "sha256:7bb2708e112d8fdd7829cd4243970f0c223274051cb35ee80c03301ee29a3df0"},
-    {file = "httpx-0.27.2.tar.gz", hash = "sha256:f7c2be1d2f3c3c3160d441802406b206c2b76f5947b11115e6df10c6c65e66c2"},
+    {file = "httpx-0.28.0-py3-none-any.whl", hash = "sha256:dc0b419a0cfeb6e8b34e85167c0da2671206f5095f1baa9663d23bcfd6b535fc"},
+    {file = "httpx-0.28.0.tar.gz", hash = "sha256:0858d3bab51ba7e386637f22a61d8ccddaeec5f3fe4209da3a6168dbb91573e0"},
 ]
 
 [package.dependencies]
@@ -1520,7 +1520,6 @@ anyio = "*"
 certifi = "*"
 httpcore = "==1.*"
 idna = "*"
-sniffio = "*"
 
 [package.extras]
 brotli = ["brotli", "brotlicffi"]
@@ -2347,13 +2346,13 @@ dev = ["build", "flake8", "mypy", "pytest", "twine"]
 
 [[package]]
 name = "pytest"
-version = "8.3.3"
+version = "8.3.4"
 description = "pytest: simple powerful testing with Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pytest-8.3.3-py3-none-any.whl", hash = "sha256:a6853c7375b2663155079443d2e45de913a911a11d669df02a50814944db57b2"},
-    {file = "pytest-8.3.3.tar.gz", hash = "sha256:70b98107bd648308a7952b06e6ca9a50bc660be218d53c257cc1fc94fda10181"},
+    {file = "pytest-8.3.4-py3-none-any.whl", hash = "sha256:50e16d954148559c9a74109af1eaf0c945ba2d8f30f0a3d3335edde19788b6f6"},
+    {file = "pytest-8.3.4.tar.gz", hash = "sha256:965370d062bce11e73868e0335abac31b4d3de0e82f4007408d242b4f8610761"},
 ]
 
 [package.dependencies]
@@ -2490,13 +2489,13 @@ files = [
 
 [[package]]
 name = "python-keycloak"
-version = "4.7.2"
+version = "4.7.3"
 description = "python-keycloak is a Python package providing access to the Keycloak API."
 optional = true
 python-versions = "<4.0,>=3.9"
 files = [
-    {file = "python_keycloak-4.7.2-py3-none-any.whl", hash = "sha256:c2751a1ddda7362b6922b0093b553343dcae0f6e39e47be489116ae66d8a9bbb"},
-    {file = "python_keycloak-4.7.2.tar.gz", hash = "sha256:9a7fbef6df7b6ad1978ab65d340cc5048e547df1e11771ace661a198932cc4e4"},
+    {file = "python_keycloak-4.7.3-py3-none-any.whl", hash = "sha256:638a21a450a525989733299b6db1627a0656e770b6cadb2c1d21edb2244df3ce"},
+    {file = "python_keycloak-4.7.3.tar.gz", hash = "sha256:bb819be1a0c2fca7f41fe045216c1aa03d612c1b62237fd9ccb98688156c4d2b"},
 ]
 
 [package.dependencies]
@@ -2509,13 +2508,13 @@ requests-toolbelt = ">=0.6.0"
 
 [[package]]
 name = "python-multipart"
-version = "0.0.18"
+version = "0.0.19"
 description = "A streaming multipart parser for Python"
 optional = true
 python-versions = ">=3.8"
 files = [
-    {file = "python_multipart-0.0.18-py3-none-any.whl", hash = "sha256:efe91480f485f6a361427a541db4796f9e1591afc0fb8e7a4ba06bfbc6708996"},
-    {file = "python_multipart-0.0.18.tar.gz", hash = "sha256:7a68db60c8bfb82e460637fa4750727b45af1d5e2ed215593f917f64694d34fe"},
+    {file = "python_multipart-0.0.19-py3-none-any.whl", hash = "sha256:f8d5b0b9c618575bf9df01c684ded1d94a338839bdd8223838afacfb4bb2082d"},
+    {file = "python_multipart-0.0.19.tar.gz", hash = "sha256:905502ef39050557b7a6af411f454bc19526529ca46ae6831508438890ce12cc"},
 ]
 
 [[package]]
@@ -3626,4 +3625,4 @@ server = ["alembic", "asgi-correlation-id", "coloredlogs", "fastapi", "greenlet"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "416dbe214705764f2f8502b265865f9c6639523521ca15f30daa8514053664e7"
+content-hash = "569f1311c16e50c05b1e095ca985030568cacbff600dc34deb5bf94a2961a869"
