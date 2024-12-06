@@ -15,6 +15,7 @@ def apply_request_id_middleware(app: FastAPI, settings: RequestIDSettings) -> Fa
     app.add_middleware(
         CorrelationIdMiddleware,
         generator=lambda: uuid7().hex,
+        validator=None,
         **settings.model_dump(exclude={"enabled"}),
     )
     return app
