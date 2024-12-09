@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from asgi_correlation_id import CorrelationIdMiddleware
 from fastapi import FastAPI
-from uuid6 import uuid7
+from uuid6 import uuid8
 
 from data_rentgen.server.settings.server import RequestIDSettings
 
@@ -14,7 +14,7 @@ def apply_request_id_middleware(app: FastAPI, settings: RequestIDSettings) -> Fa
 
     app.add_middleware(
         CorrelationIdMiddleware,
-        generator=lambda: uuid7().hex,
+        generator=lambda: uuid8().hex,
         validator=None,
         **settings.model_dump(exclude={"enabled"}),
     )
