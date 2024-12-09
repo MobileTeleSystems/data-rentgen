@@ -58,13 +58,13 @@ python-json-logger = {version = "^2.0.7", optional = true}
 coloredlogs = {version = "^15.0.1", optional = true}
 uuid6 = {version = "^2024.7.10", optional = true}
 python-dateutil = {version = "^2.9.0.post0", optional = true}
-fastapi = {version = "^0.115.4", optional = true}
+fastapi = {version = "^0.115.6", optional = true}
 starlette = {version = "^0.41.2", optional = true}
 starlette-exporter = {version = "^0.23.0", optional = true}
 uvicorn = {version = "^0.32.0", optional = true}
 asyncpg = {version = "^0.30.0", optional = true}
 asgi-correlation-id = {version = "^4.3.4", optional = true}
-faststream = {extras = ["kafka", "cli"], version = "^0.5.31", optional = true}
+faststream = {extras = ["kafka", "cli"], version = "^0.5.33", optional = true}
 # used by aiokafka for LZ4, Snappy, ZSTD compression algorithms
 cramjam = {version = "^2.8.3", optional = true}
 packaging = {version = "^24.2", optional = true}
@@ -125,7 +125,7 @@ pytest-asyncio = "^0.21.1"
 pytest-randomly = "^3.16.0"
 pytest-deadfixtures = "^2.2.1"
 pytest-rerunfailures = "^15.0"
-coverage = "^7.6.7"
+coverage = "^7.6.9"
 psycopg2-binary = "^2.9.9"
 gevent = "^24.11.1"
 deepdiff = "^8.0.1"
