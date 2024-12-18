@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 from faststream import Depends, Logger
-from faststream.kafka import KafkaRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.consumer.extractors import BatchExtractionResult, extract_batch
@@ -12,15 +11,16 @@ from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
 from data_rentgen.dependencies import Stub
 from data_rentgen.services.uow import UnitOfWork
 
-router = KafkaRouter()
+__all__ = [
+    "runs_events_subscriber",
+]
 
 
 def get_unit_of_work(session: AsyncSession = Depends(Stub(AsyncSession))) -> UnitOfWork:
     return UnitOfWork(session)
 
 
-@router.subscriber("input.runs", group_id="data-rentgen", batch=True)
-async def runs_handler(
+async def runs_events_subscriber(
     events: list[OpenLineageRunEvent],
     logger: Logger,
     unit_of_work: UnitOfWork = Depends(get_unit_of_work),
