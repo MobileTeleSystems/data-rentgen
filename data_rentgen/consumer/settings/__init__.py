@@ -4,6 +4,7 @@
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from data_rentgen.consumer.settings.consumer import ConsumerSettings
 from data_rentgen.consumer.settings.kafka import KafkaSettings
 from data_rentgen.db.settings import DatabaseSettings
 from data_rentgen.logging.settings import LoggingSettings
@@ -38,12 +39,16 @@ class ConsumerApplicationSettings(BaseSettings):
     """
 
     database: DatabaseSettings = Field(description=":ref:`Database settings <configuration-database>`")
-    kafka: KafkaSettings = Field(
-        description=":ref:`Kafka settings <configuration-consumer-kafka>`",
-    )
     logging: LoggingSettings = Field(
         default_factory=LoggingSettings,
         description=":ref:`Logging settings <configuration-consumer-logging>`",
+    )
+    kafka: KafkaSettings = Field(
+        description=":ref:`Kafka settings <configuration-consumer-kafka>`",
+    )
+    consumer: ConsumerSettings = Field(
+        default_factory=ConsumerSettings,
+        description=":ref:`Consumer settings <configuration-consumer-specific>`",
     )
 
     model_config = SettingsConfigDict(env_prefix="DATA_RENTGEN__", env_nested_delimiter="__", extra="forbid")

@@ -449,6 +449,8 @@ per-file-ignores = [
   "data_rentgen/server/services/lineage.py:WPS441",
 # N815 variable 'openlineageAdapterVersion' in class scope should not be mixedCase
   "data_rentgen/consumer/openlineage/*.py:N815",
+# WPS432 Found magic number: 50
+  "data_rentgen/*settings*.py:WPS432",
 # TAE001 too few type annotations
 # WPS231 Found function with too much cognitive complexity
 # S101 Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.

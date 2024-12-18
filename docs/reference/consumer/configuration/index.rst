@@ -1,7 +1,7 @@
 .. _configuration-consumer:
 
-Kafka consumer configuration
-============================
+Consumer configuration
+======================
 
 .. toctree::
     :maxdepth: 1
@@ -9,6 +9,7 @@ Kafka consumer configuration
     :hidden:
 
     kafka
+    consumer-specific
     logging
 
 
