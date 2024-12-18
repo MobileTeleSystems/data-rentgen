@@ -46,7 +46,7 @@ def get_public_key_pem(public_key):
 
 @pytest.fixture
 def create_session_cookie(rsa_keys, server_app_settings):
-    def _create_session_cookie(user, expire_in_msec=1000) -> str:
+    def _create_session_cookie(user, expire_in_msec=5000) -> str:
         private_pem = rsa_keys["private_pem"]
         session_secret_key = server_app_settings.server.session.secret_key
 
