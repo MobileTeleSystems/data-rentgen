@@ -85,7 +85,7 @@ class KeycloakAuthProvider(AuthProvider):
         token_info = self.decode_token(access_token)
         if token_info is None and refresh_token:
             logger.debug("Access token invalid. Attempting to refresh.")
-            access_token, refresh_token = self.refresh_access_token(refresh_token, str(request.url))
+            access_token, refresh_token = self.refresh_access_token(refresh_token)
             request.session["access_token"] = access_token
             request.session["refresh_token"] = refresh_token
 
@@ -103,9 +103,6 @@ class KeycloakAuthProvider(AuthProvider):
             raise AuthorizationError("Invalid token payload")
         return await self._uow.user.get_or_create(UserDTO(name=login))  # type: ignore[arg-type]
 
-    async def logout(self, refresh_token: str):
-        return self.keycloak_openid.logout(refresh_token)
-
     def decode_token(self, access_token: str) -> dict[str, Any] | None:
         try:
             return self.keycloak_openid.decode_token(token=access_token)
@@ -113,7 +110,7 @@ class KeycloakAuthProvider(AuthProvider):
             logger.info("Access token is invalid or expired: %s", err)
             return None
 
-    def refresh_access_token(self, refresh_token: str, origin_url: str) -> tuple[str, str]:  # type: ignore[return]
+    def refresh_access_token(self, refresh_token: str) -> tuple[str, str]:  # type: ignore[return]
         try:
             new_tokens = self.keycloak_openid.refresh_token(refresh_token)
             logger.debug("Access token refreshed")
