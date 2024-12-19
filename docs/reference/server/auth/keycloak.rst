@@ -28,7 +28,7 @@ Interaction schema
 
             == Client Authentication at Keycloak ==
 
-            Client -> Backend : Request endpoint with authentication (/locations)
+            Client -> Backend : Request endpoint with authentication (/v1/locations)
 
             Backend x-[#red]> Client: 401 with redirect url in 'details' response field
 
@@ -46,9 +46,10 @@ Interaction schema
 
             Backend -> Keycloak : Check original 'state' and exchange code for token's
             Keycloak --> Backend : Return token's
-            Backend --> Client : Set token's in user's browser in cookies and redirect /locations
+            Backend --> Client : Set token's in user's browser in cookies
+            Clietn --> Client : Get response from backend and redirect to /locations
 
-            Client --> Backend : Redirect to /locations
+            Client --> Backend : Request to /v1/locations
             Backend -> Backend : Get user info from token and check user in internal backend database
             Backend -> Backend : Create user in internal backend database if not exist
             Backend -[#green]> Client -- : Return requested data

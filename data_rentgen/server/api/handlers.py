@@ -91,7 +91,7 @@ def application_exception_handler(request: Request, exc: ApplicationError) -> Re
     )
 
 
-def redirect_exception_handler(request: Request, exc: RedirectError) -> Response:
+def not_authorized_redirect_exception_handler(request: Request, exc: RedirectError) -> Response:
     logger.info("Redirect user to keycloak")
     response = get_response_for_exception(RedirectError)
     if not response:
@@ -123,7 +123,7 @@ def exception_json_response(
 
 
 def apply_exception_handlers(app: FastAPI) -> None:
-    app.add_exception_handler(RedirectError, redirect_exception_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(RedirectError, not_authorized_redirect_exception_handler)  # type: ignore[arg-type]
     app.add_exception_handler(ApplicationError, application_exception_handler)  # type: ignore[arg-type]
     app.add_exception_handler(AuthorizationError, application_exception_handler)  # type: ignore[arg-type]
     app.add_exception_handler(
