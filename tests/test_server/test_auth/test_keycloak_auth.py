@@ -1,3 +1,4 @@
+import base64
 import logging
 
 import pytest
@@ -7,6 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Dataset, User
 from data_rentgen.server.settings import ServerApplicationSettings as Settings
+from data_rentgen.server.settings.auth.keycloak import KeycloakSettings
 from tests.test_server.utils.enrich import enrich_datasets
 
 KEYCLOAK_PROVIDER = "data_rentgen.server.providers.auth.keycloak_provider.KeycloakAuthProvider"
@@ -25,14 +27,32 @@ pytestmark = [pytest.mark.asyncio, pytest.mark.server]
     ],
     indirect=True,
 )
-async def test_get_keycloak_user_unauthorized(test_client: AsyncClient, mock_keycloak_well_known, caplog):
+async def test_get_keycloak_user_unauthorized(
+    test_client: AsyncClient,
+    mock_keycloak_well_known,
+    caplog,
+    server_app_settings: Settings,
+):
+    k_settings = KeycloakSettings.model_validate(server_app_settings.auth.keycloak)
+
     response = await test_client.get("/v1/datasets")
 
     # redirect unauthorized user to Keycloak
-    assert response.status_code == 307
-    assert "protocol/openid-connect/auth?" in str(
-        response.next_request.url,
+    state = str(response.url).encode("utf-8")
+    state = base64.b64encode(state)
+    redirect_url = (
+        f"{k_settings.server_url}/realms/{k_settings.realm_name}/protocol/openid-connect/auth?client_id="
+        f"{k_settings.client_id}&response_type=code&redirect_uri={k_settings.redirect_uri}"
+        f"&scope={k_settings.scope}&state={state.decode('utf-8')}&nonce="
     )
+    assert response.status_code == 401
+    assert response.json() == {
+        "error": {
+            "code": "auth_redirect",
+            "message": "Authorize on provided url",
+            "details": redirect_url,
+        },
+    }
 
 
 @responses.activate

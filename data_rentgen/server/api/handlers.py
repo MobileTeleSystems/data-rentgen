@@ -8,7 +8,6 @@ import logging
 from asgi_correlation_id import correlation_id
 from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import RedirectResponse
 from pydantic import ValidationError
 
 from data_rentgen.exceptions import ApplicationError, AuthorizationError, RedirectError
@@ -92,8 +91,20 @@ def application_exception_handler(request: Request, exc: ApplicationError) -> Re
     )
 
 
-def redirect_exception_handler(_: Request, exc: RedirectError) -> Response:
-    return RedirectResponse(url=exc.message)
+def redirect_exception_handler(request: Request, exc: RedirectError) -> Response:
+    logger.info("Redirect user to keycloak")
+    response = get_response_for_exception(RedirectError)
+    if not response:
+        return unknown_exception_handler(request, exc)
+    content = response.schema(  # type: ignore[call-arg]
+        message=exc.message,
+        details=exc.details,
+    )
+
+    return exception_json_response(
+        status=response.status,
+        content=content,
+    )
 
 
 def exception_json_response(
