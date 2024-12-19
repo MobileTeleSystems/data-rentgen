@@ -22,82 +22,81 @@ Interaction schema
 
         @startuml
             title DummyAuthProvider
-            participant "Client"
+            participant "Frontend"
             participant "Backend"
             participant "Keycloak"
 
-            == Client Authentication at Keycloak ==
+            == Frontend Authentication at Keycloak ==
 
-            Client -> Backend : Request endpoint with authentication (/v1/locations)
+            Frontend -> Backend : Request endpoint with authentication (/v1/locations)
 
-            Backend x-[#red]> Client: 401 with redirect url in 'details' response field
+            Backend x-[#red]> Frontend: 401 with redirect url in 'details' response field
 
-            Client -> Keycloak : Redirect user to Keycloak login page
+            Frontend -> Keycloak : Redirect user to Keycloak login page
 
             alt Successful login
-                Client --> Keycloak : Log in with login and password
+                Frontend --> Keycloak : Log in with login and password
             else Login failed
-                Keycloak x-[#red]> Client -- : Display error (401 Unauthorized)
+                Keycloak x-[#red]> Frontend -- : Display error (401 Unauthorized)
             end
 
-            Keycloak -> Client : Callback to Client /callback which is proxy between Keycloak and Backend
+            Keycloak -> Frontend : Callback to Frontend /callback which is proxy between Keycloak and Backend
 
-            Client -> Backend : Send request to Backend '/v1/auth/callback'
+            Frontend -> Backend : Send request to Backend '/v1/auth/callback'
 
             Backend -> Keycloak : Check original 'state' and exchange code for token's
             Keycloak --> Backend : Return token's
-            Backend --> Client : Set token's in user's browser in cookies
-            Clietn --> Client : Get response from backend and redirect to /locations
+            Backend --> Frontend : Set token's in user's browser in cookies
 
-            Client --> Backend : Request to /v1/locations
+            Frontend --> Backend : Request to /v1/locations with session cookies
             Backend -> Backend : Get user info from token and check user in internal backend database
             Backend -> Backend : Create user in internal backend database if not exist
-            Backend -[#green]> Client -- : Return requested data
+            Backend -[#green]> Frontend -- : Return requested data
 
 
             == GET v1/datasets ==
 
 
             alt Successful case
-                "Client" -> "Backend" ++ : access_token
+                "Frontend" -> "Backend" ++ : access_token
                 "Backend" --> "Backend" : Validate token
                 "Backend" --> "Backend" : Check user in internal backend database
                 "Backend" -> "Backend" : Get data
-                "Backend" -[#green]> "Client" -- : Return data
+                "Backend" -[#green]> "Frontend" -- : Return data
 
             else Token is expired (Successful case)
-                "Client" -> "Backend" ++ : access_token, refresh_token
+                "Frontend" -> "Backend" ++ : access_token, refresh_token
                 "Backend" --> "Backend" : Validate token
                 "Backend" -[#yellow]> "Backend" : Token is expired
                 "Backend" --> "Keycloak" : Try to refresh token
                 "Backend" --> "Backend" : Validate new token
                 "Backend" --> "Backend" : Check user in internal backend database
                 "Backend" -> "Backend" : Get data
-                "Backend" -[#green]> "Client" -- : Return data
+                "Backend" -[#green]> "Frontend" -- : Return data
 
             else Create new User
-                "Client" -> "Backend" ++ : access_token
+                "Frontend" -> "Backend" ++ : access_token
                 "Backend" --> "Backend" : Validate token
                 "Backend" --> "Backend" : Check user in internal backend database
                 "Backend" --> "Backend" : Create new user
                 "Backend" -> "Backend" : Get data
-                "Backend" -[#green]> "Client" -- : Return data
+                "Backend" -[#green]> "Frontend" -- : Return data
 
             else Token is expired and bad refresh token
-                "Client" -> "Backend" ++ : access_token, refresh_token
+                "Frontend" -> "Backend" ++ : access_token, refresh_token
                 "Backend" --> "Backend" : Validate token
                 "Backend" -[#yellow]> "Backend" : Token is expired
                 "Backend" --> "Keycloak" : Try to refresh token
-                "Backend" x-[#red]> "Client" -- : RedirectResponse can't refresh
+                "Backend" x-[#red]> "Frontend" -- : RedirectResponse can't refresh
 
             else Bad Token payload
-                "Client" -> "Backend" ++ : access_token, refresh_token
+                "Frontend" -> "Backend" ++ : access_token, refresh_token
                 "Backend" --> "Backend" : Validate token
-                "Backend" x-[#red]> "Client" -- : 307 Authorization error
+                "Backend" x-[#red]> "Frontend" -- : 307 Authorization error
 
             end
 
-            deactivate "Client"
+            deactivate "Frontend"
         @enduml
 
 
