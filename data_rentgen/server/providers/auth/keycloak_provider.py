@@ -69,6 +69,7 @@ class KeycloakAuthProvider(AuthProvider):
                 redirect_uri=redirect_uri,
             )
         except Exception as e:
+            logger.error("Error when trying to get token: %s", e)
             raise AuthorizationError("Failed to get token") from e
 
     async def get_current_user(self, access_token: str, *args, **kwargs) -> User:
@@ -82,7 +83,6 @@ class KeycloakAuthProvider(AuthProvider):
         # if user is disabled or blocked in Keycloak after the token is issued, he will
         # remain authorized until the token expires (not more than 15 minutes in MTS SSO)
         token_info = self.decode_token(access_token)
-
         if token_info is None and refresh_token:
             logger.debug("Access token invalid. Attempting to refresh.")
             access_token, refresh_token = self.refresh_access_token(refresh_token)
@@ -119,9 +119,12 @@ class KeycloakAuthProvider(AuthProvider):
             logger.debug("Failed to refresh access token: %s", err)
             self.redirect_to_auth()
 
-    def redirect_to_auth(self) -> None:
+    def redirect_to_auth(self):
+
         auth_url = self.keycloak_openid.auth_url(
             redirect_uri=self.settings.keycloak.redirect_uri,
             scope=self.settings.keycloak.scope,
         )
-        raise RedirectError(message=auth_url, details="Authorize on provided url")
+
+        logger.info("Raising redirect error with url: %s", auth_url)
+        raise RedirectError(message="Please authorize using provided URL", details=auth_url)
