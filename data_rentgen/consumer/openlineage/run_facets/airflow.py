@@ -14,7 +14,7 @@ class OpenLineageAirflowDagInfo(OpenLineageBase):
     """
 
     dag_id: str
-    owner: str
+    owner: str | None = None
 
 
 class OpenLineageAirflowDagRunType(Enum):

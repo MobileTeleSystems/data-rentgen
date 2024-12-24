@@ -188,9 +188,11 @@ def enrich_run_user(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
     # Airflow using different facets for version above provider-opelineage/1.11.0.
     airflow_application_details = event.run.facets.airflow
     if airflow_application_details and airflow_application_details.dag.owner != "airflow":
-        run.user = UserDTO(name=airflow_application_details.dag.owner)
+        if airflow_application_details.dag.owner is not None:
+            run.user = UserDTO(name=airflow_application_details.dag.owner)
     airflow_application_dag_details = event.run.facets.airflowDagRun
     if airflow_application_dag_details and airflow_application_dag_details.dag.owner != "airflow":
-        run.user = UserDTO(name=airflow_application_dag_details.dag.owner)
+        if airflow_application_dag_details.dag.owner is not None:
+            run.user = UserDTO(name=airflow_application_dag_details.dag.owner)
 
     return run
