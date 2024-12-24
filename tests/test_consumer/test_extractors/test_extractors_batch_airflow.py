@@ -66,7 +66,7 @@ def airflow_dag_run_event_start() -> OpenLineageRunEvent:
                     openlineageAdapterVersion=Version("1.10.0"),
                 ),
                 airflowDagRun=OpenLineageAirflowDagRunFacet(
-                    dag=OpenLineageAirflowDagInfo(dag_id="mydag"),
+                    dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="airflow"),
                     dagRun=OpenLineageAirflowDagRunInfo(
                         run_id="manual__2024-07-05T09:04:13:979349+00:00",
                         run_type=OpenLineageAirflowDagRunType.MANUAL,
@@ -137,7 +137,7 @@ def airflow_task_run_event_start() -> OpenLineageRunEvent:
                     openlineageAdapterVersion=Version("1.10.0"),
                 ),
                 airflow=OpenLineageAirflowTaskRunFacet(
-                    dag=OpenLineageAirflowDagInfo(dag_id="mydag"),
+                    dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="airflow"),
                     dagRun=OpenLineageAirflowDagRunInfo(
                         run_id="manual__2024-07-05T09:04:13:979349+00:00",
                         run_type=OpenLineageAirflowDagRunType.MANUAL,

@@ -182,6 +182,15 @@ def enrich_run_user(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
     spark_application_details = event.run.facets.spark_applicationDetails
     if spark_application_details:
         run.user = UserDTO(name=spark_application_details.userName)
+
     # Airflow DAG and task have 'owner' field, but if can be either user or group name,
     # and also it does not mean that this exact user started this run.
+    # Airflow using different facets for version above provider-opelineage/1.11.0.
+    airflow_application_details = event.run.facets.airflow
+    if airflow_application_details and airflow_application_details.dag.owner != "airflow":
+        run.user = UserDTO(name=airflow_application_details.dag.owner)
+    airflow_application_dag_details = event.run.facets.airflowDagRun
+    if airflow_application_dag_details and airflow_application_dag_details.dag.owner != "airflow":
+        run.user = UserDTO(name=airflow_application_dag_details.dag.owner)
+
     return run

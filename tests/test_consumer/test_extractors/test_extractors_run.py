@@ -174,7 +174,7 @@ def test_extractors_extract_run_airflow_dag_2_3_plus():
                     openlineageAdapterVersion=Version("1.10.0"),
                 ),
                 airflowDagRun=OpenLineageAirflowDagRunFacet(
-                    dag=OpenLineageAirflowDagInfo(dag_id="mydag"),
+                    dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="airflow"),
                     dagRun=OpenLineageAirflowDagRunInfo(
                         run_id="manual__2024-07-05T09:04:13:979349+00:00",
                         run_type=OpenLineageAirflowDagRunType.MANUAL,
@@ -237,7 +237,7 @@ def test_extractors_extract_run_airflow_dag_2_x():
                     openlineageAdapterVersion=Version("1.10.0"),
                 ),
                 airflowDagRun=OpenLineageAirflowDagRunFacet(
-                    dag=OpenLineageAirflowDagInfo(dag_id="mydag"),
+                    dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="airflow"),
                     dagRun=OpenLineageAirflowDagRunInfo(
                         run_id="manual__2024-07-05T09:04:13:979349+00:00",
                         run_type=OpenLineageAirflowDagRunType.MANUAL,
@@ -300,7 +300,7 @@ def test_extractors_extract_run_airflow_task_with_ti_persistent_log_url():
                     openlineageAdapterVersion=Version("1.10.0"),
                 ),
                 airflow=OpenLineageAirflowTaskRunFacet(
-                    dag=OpenLineageAirflowDagInfo(dag_id="mydag"),
+                    dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="airflow"),
                     dagRun=OpenLineageAirflowDagRunInfo(
                         run_id="manual__2024-07-05T09:04:13:979349+00:00",
                         run_type=OpenLineageAirflowDagRunType.MANUAL,
@@ -372,7 +372,7 @@ def test_extractors_extract_run_airflow_task_2_9_plus():
                     openlineageAdapterVersion=Version("1.9.0"),
                 ),
                 airflow=OpenLineageAirflowTaskRunFacet(
-                    dag=OpenLineageAirflowDagInfo(dag_id="mydag"),
+                    dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="airflow"),
                     dagRun=OpenLineageAirflowDagRunInfo(
                         run_id="backfill__2024-07-05T09:04:13:979349+00:00",
                         run_type=OpenLineageAirflowDagRunType.BACKFILL_JOB,
@@ -436,7 +436,7 @@ def test_extractors_extract_run_airflow_task_2_x():
             runId=run_id,
             facets=OpenLineageRunFacets(
                 airflow=OpenLineageAirflowTaskRunFacet(
-                    dag=OpenLineageAirflowDagInfo(dag_id="mydag"),
+                    dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="airflow"),
                     dagRun=OpenLineageAirflowDagRunInfo(
                         run_id="scheduled__2024-07-05T09:04:13:979349+00:00",
                         run_type=OpenLineageAirflowDagRunType.SCHEDULED,

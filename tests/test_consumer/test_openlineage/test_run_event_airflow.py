@@ -150,6 +150,7 @@ def test_run_event_airflow_dag_start():
                 airflowDagRun=OpenLineageAirflowDagRunFacet(
                     dag=OpenLineageAirflowDagInfo(
                         dag_id="mydag",
+                        owner="myuser",
                     ),
                     dagRun=OpenLineageAirflowDagRunInfo(
                         run_id="manual__2024-07-05T09:04:12.162809+00:00",
@@ -400,6 +401,7 @@ def test_run_event_airflow_task_start():
                 airflow=OpenLineageAirflowTaskRunFacet(
                     dag=OpenLineageAirflowDagInfo(
                         dag_id="mydag",
+                        owner="myuser",
                     ),
                     dagRun=OpenLineageAirflowDagRunInfo(
                         run_id="manual__2024-07-05T09:04:12.162809+00:00",
