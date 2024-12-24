@@ -2,13 +2,13 @@ import json
 import time
 from base64 import b64encode
 
+import jwt
 import pytest
 import responses
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from itsdangerous import TimestampSigner
-import jwt
 
 
 @pytest.fixture(scope="session")
