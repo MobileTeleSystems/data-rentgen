@@ -127,7 +127,7 @@ coverage = "^7.6.9"
 psycopg2-binary = "^2.9.9"
 gevent = "^24.11.1"
 deepdiff = "^8.1.1"
-responses = "*"
+respx = "^0.22.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.0.1"

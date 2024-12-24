@@ -5,7 +5,7 @@ from pprint import pformat
 from time import time
 from typing import Annotated, Any
 
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 
 from data_rentgen.db.models import User
 from data_rentgen.dependencies import Stub
@@ -37,7 +37,7 @@ class DummyAuthProvider(AuthProvider):
         app.dependency_overrides[DummyAuthProviderSettings] = lambda: settings
         return app
 
-    async def get_current_user(self, access_token: str, *args, **kwargs) -> User:
+    async def get_current_user(self, access_token: str | None, request: Request) -> User:
         if not access_token:
             raise AuthorizationError("Missing auth credentials")
 
@@ -49,12 +49,8 @@ class DummyAuthProvider(AuthProvider):
 
     async def get_token_password_grant(
         self,
-        grant_type: str | None = None,
-        login: str | None = None,
-        password: str | None = None,
-        scopes: list[str] | None = None,
-        client_id: str | None = None,
-        client_secret: str | None = None,
+        login: str,
+        password: str,
     ) -> dict[str, Any]:
         if not login:
             raise AuthorizationError("Missing auth credentials")
@@ -75,10 +71,6 @@ class DummyAuthProvider(AuthProvider):
     async def get_token_authorization_code_grant(
         self,
         code: str,
-        redirect_uri: str,
-        scopes: list[str] | None = None,
-        client_id: str | None = None,
-        client_secret: str | None = None,
     ) -> dict[str, Any]:
         raise NotImplementedError("Authorization code grant is not supported by DummyAuthProvider.")
 

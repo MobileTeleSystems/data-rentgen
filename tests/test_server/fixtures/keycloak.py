@@ -4,11 +4,14 @@ from base64 import b64encode
 
 import jwt
 import pytest
-import responses
+import pytest_asyncio
+import respx
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from itsdangerous import TimestampSigner
+
+from data_rentgen.server.settings.auth.keycloak import KeycloakSettings
 
 
 @pytest.fixture(scope="session")
@@ -84,14 +87,13 @@ def create_session_cookie(rsa_keys, server_app_settings):
 
 
 @pytest.fixture
-def mock_keycloak_well_known(server_app_settings):
-    server_url = server_app_settings.auth.dict()["keycloak"]["server_url"]
-    realm_name = server_app_settings.auth.dict()["keycloak"]["client_id"]
-    well_known_url = f"{server_url}/realms/{realm_name}/.well-known/openid-configuration"
+def mock_keycloak_well_known(server_app_settings, respx_mock):
+    keycloak_settings = KeycloakSettings.model_validate(server_app_settings.auth.keycloak)
+    server_url = keycloak_settings.server_url
+    realm_name = keycloak_settings.realm_name
 
-    responses.add(
-        responses.GET,
-        well_known_url,
+    respx_mock.get(f"{server_url}/realms/{realm_name}/.well-known/openid-configuration").respond(
+        status_code=200,
         json={
             "authorization_endpoint": f"{server_url}/realms/{realm_name}/protocol/openid-connect/auth",
             "token_endpoint": f"{server_url}/realms/{realm_name}/protocol/openid-connect/token",
@@ -100,37 +102,34 @@ def mock_keycloak_well_known(server_app_settings):
             "jwks_uri": f"{server_url}/realms/{realm_name}/protocol/openid-connect/certs",
             "issuer": f"{server_url}/realms/{realm_name}",
         },
-        status=200,
         content_type="application/json",
     )
 
 
 @pytest.fixture
-def mock_keycloak_realm(server_app_settings, rsa_keys):
-    server_url = server_app_settings.auth.dict()["keycloak"]["server_url"]
-    realm_name = server_app_settings.auth.dict()["keycloak"]["client_id"]
-    realm_url = f"{server_url}/realms/{realm_name}"
+def mock_keycloak_realm(server_app_settings, rsa_keys, respx_mock):
+    keycloak_settings = KeycloakSettings.model_validate(server_app_settings.auth.keycloak)
+    server_url = keycloak_settings.server_url
+    realm_name = keycloak_settings.realm_name
     public_pem_str = get_public_key_pem(rsa_keys["public_key"])
 
-    responses.add(
-        responses.GET,
-        realm_url,
+    respx_mock.get(f"{server_url}/realms/{realm_name}").respond(
+        status_code=200,
         json={
             "realm": realm_name,
             "public_key": public_pem_str,
             "token-service": f"{server_url}/realms/{realm_name}/protocol/openid-connect/token",
             "account-service": f"{server_url}/realms/{realm_name}/account",
         },
-        status=200,
         content_type="application/json",
     )
 
 
 @pytest.fixture
-def mock_keycloak_token_refresh(user, server_app_settings, rsa_keys):
-    server_url = server_app_settings.auth.dict()["keycloak"]["server_url"]
-    realm_name = server_app_settings.auth.dict()["keycloak"]["client_id"]
-    token_url = f"{server_url}/realms/{realm_name}/protocol/openid-connect/token"
+def mock_keycloak_token_refresh(user, server_app_settings, rsa_keys, respx_mock):
+    keycloak_settings = KeycloakSettings.model_validate(server_app_settings.auth.keycloak)
+    server_url = keycloak_settings.server_url
+    realm_name = keycloak_settings.realm_name
 
     # generate new access and refresh tokens
     expires_in = int(time.time()) + 5000
@@ -152,15 +151,13 @@ def mock_keycloak_token_refresh(user, server_app_settings, rsa_keys):
     )
     new_refresh_token = "mock_new_refresh_token"
 
-    responses.add(
-        responses.POST,
-        token_url,
+    respx_mock.post(f"{server_url}/realms/{realm_name}/protocol/openid-connect/token").respond(
+        status_code=200,
         json={
             "access_token": new_access_token,
             "refresh_token": new_refresh_token,
             "token_type": "bearer",
             "expires_in": expires_in,
         },
-        status=200,
         content_type="application/json",
     )

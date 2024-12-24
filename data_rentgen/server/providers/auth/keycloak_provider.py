@@ -1,10 +1,11 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 import logging
-from typing import Annotated, Any
+from typing import Annotated, Any, NoReturn
 
 from fastapi import Depends, FastAPI, Request
-from keycloak import KeycloakOpenID
+from jwcrypto.common import JWException
+from keycloak import KeycloakOpenID, KeycloakOperationError
 
 from data_rentgen.db.models import User
 from data_rentgen.dependencies import Stub
@@ -44,87 +45,71 @@ class KeycloakAuthProvider(AuthProvider):
 
     async def get_token_password_grant(
         self,
-        grant_type: str | None = None,
-        login: str | None = None,
-        password: str | None = None,
-        scopes: list[str] | None = None,
-        client_id: str | None = None,
-        client_secret: str | None = None,
+        login: str,
+        password: str,
     ) -> dict[str, Any]:
         raise NotImplementedError("Password grant is not supported by KeycloakAuthProvider.")
 
     async def get_token_authorization_code_grant(
         self,
         code: str,
-        redirect_uri: str,
-        scopes: list[str] | None = None,
-        client_id: str | None = None,
-        client_secret: str | None = None,
     ) -> dict[str, Any]:
         try:
-            redirect_uri = redirect_uri or self.settings.keycloak.redirect_uri
-            return self.keycloak_openid.token(
+            return await self.keycloak_openid.a_token(
                 grant_type="authorization_code",
                 code=code,
-                redirect_uri=redirect_uri,
             )
-        except Exception as e:
-            logger.error("Error when trying to get token: %s", e)
+        except KeycloakOperationError as e:
             raise AuthorizationError("Failed to get token") from e
 
-    async def get_current_user(self, access_token: str, *args, **kwargs) -> User:
-        request: Request = kwargs["request"]
-        refresh_token = request.session.get("refresh_token")
-
+    async def get_current_user(self, access_token: str | None, request: Request) -> User:
         if not access_token:
             logger.debug("No access token found in session.")
-            self.redirect_to_auth()
+            await self.redirect_to_auth()
 
         # if user is disabled or blocked in Keycloak after the token is issued, he will
         # remain authorized until the token expires (not more than 15 minutes in MTS SSO)
-        token_info = self.decode_token(access_token)
+        token_info = await self.decode_token(access_token)
+        refresh_token = request.session.get("refresh_token")
+
         if token_info is None and refresh_token:
             logger.debug("Access token invalid. Attempting to refresh.")
-            access_token, refresh_token = self.refresh_access_token(refresh_token)
+            access_token, refresh_token = await self.refresh_access_token(refresh_token)
+            token_info = await self.decode_token(access_token)
             request.session["access_token"] = access_token
             request.session["refresh_token"] = refresh_token
 
-            token_info = self.decode_token(access_token)
+        if token_info is None:
+            await self.redirect_to_auth()
 
-            if token_info is None:
-                # If there is no token_info after refresh user get redirect
-                self.redirect_to_auth()
-
-        # these names are hardcoded in keycloak:
+        # this name is hardcoded in keycloak:
         # https://github.com/keycloak/keycloak/blob/3ca3a4ad349b4d457f6829eaf2ae05f1e01408be/core/src/main/java/org/keycloak/representations/IDToken.java
-        user_id = token_info.get("sub")  # type: ignore[union-attr]
         login = token_info.get("preferred_username")  # type: ignore[union-attr]
-        if not user_id:
+        if not login:
             raise AuthorizationError("Invalid token payload")
         return await self._uow.user.get_or_create(UserDTO(name=login))  # type: ignore[arg-type]
 
-    def decode_token(self, access_token: str) -> dict[str, Any] | None:
+    async def decode_token(self, access_token: str) -> dict[str, Any] | None:
         try:
-            return self.keycloak_openid.decode_token(token=access_token)
-        except Exception as err:
+            return await self.keycloak_openid.a_decode_token(token=access_token)
+        except (KeycloakOperationError, JWException) as err:
             logger.info("Access token is invalid or expired: %s", err)
             return None
 
-    def refresh_access_token(self, refresh_token: str) -> tuple[str, str]:  # type: ignore[return]
+    async def refresh_access_token(self, refresh_token: str) -> tuple[str, str]:  # type: ignore[return]
         try:
-            new_tokens = self.keycloak_openid.refresh_token(refresh_token)
+            new_tokens = await self.keycloak_openid.a_refresh_token(refresh_token)
             logger.debug("Access token refreshed")
-            return new_tokens.get("access_token"), new_tokens.get("refresh_token")
-        except Exception as err:
+            return new_tokens["access_token"], new_tokens["refresh_token"]
+        except (KeycloakOperationError, JWException) as err:
             logger.debug("Failed to refresh access token: %s", err)
-            self.redirect_to_auth()
+            await self.redirect_to_auth()
 
-    def redirect_to_auth(self):
-
-        auth_url = self.keycloak_openid.auth_url(
+    async def redirect_to_auth(self) -> NoReturn:
+        auth_url = await self.keycloak_openid.a_auth_url(
             redirect_uri=self.settings.keycloak.redirect_uri,
             scope=self.settings.keycloak.scope,
         )
 
-        logger.info("Raising redirect error with url: %s", auth_url)
+        logger.info("Redirecting user to auth url: %s", auth_url)
         raise RedirectError(message="Please authorize using provided URL", details=auth_url)
