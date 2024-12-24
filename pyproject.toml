@@ -68,11 +68,10 @@ faststream = {extras = ["kafka", "cli"], version = "^0.5.33", optional = true}
 # used by aiokafka for LZ4, Snappy, ZSTD compression algorithms
 cramjam = {version = "^2.9.1", optional = true}
 packaging = {version = "^24.2", optional = true}
-python-jose = {version = "^3.3.0", optional = true}
 itsdangerous = {version = "^2.2.0", optional = true}
 python-multipart = {version = "^0.0.20", optional = true}
-types-python-jose = {version = "^3.3.4.20240106", optional = true}
 python-keycloak = {version = "^5.1.1", optional = true}
+pyjwt = {version = "^2.10.1 ", optional = true}
 
 [tool.poetry.extras]
 server = [
@@ -92,10 +91,9 @@ server = [
   "uuid6",
   "python-dateutil",
   "packaging",
-  "python-jose",
+  "pyjwt",
   "itsdangerous",
   "python-multipart",
-  "types-python-jose",
   "python-keycloak",
 ]
 consumer = [

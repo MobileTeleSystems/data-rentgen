@@ -32,7 +32,7 @@ class JWTSettings(BaseModel):
             """
             Algorithm used for signing JWT tokens.
 
-            See `python-jose <https://python-jose.readthedocs.io/en/latest/jws/index.html#supported-algorithms>`_
+            See `pyjwt <https://pyjwt.readthedocs.io/en/latest/algorithms.html>`_
             documentation.
             """,
         ),

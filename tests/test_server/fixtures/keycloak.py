@@ -8,7 +8,7 @@ from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 from itsdangerous import TimestampSigner
-from jose import jwt
+import jwt
 
 
 @pytest.fixture(scope="session")
@@ -60,7 +60,11 @@ def create_session_cookie(rsa_keys, server_app_settings):
             "exp": int(time.time()) + (expire_in_msec / 1000),
         }
 
-        access_token = jwt.encode(payload, private_pem, algorithm="RS256")
+        access_token = jwt.encode(
+            payload=payload,
+            key=private_pem,
+            algorithm="RS256",
+        )
         refresh_token = "mock_refresh_token"
 
         session_data = {
@@ -127,11 +131,10 @@ def mock_keycloak_token_refresh(user, server_app_settings, rsa_keys):
     server_url = server_app_settings.auth.dict()["keycloak"]["server_url"]
     realm_name = server_app_settings.auth.dict()["keycloak"]["client_id"]
     token_url = f"{server_url}/realms/{realm_name}/protocol/openid-connect/token"
-    private_pem = rsa_keys["private_pem"]
 
     # generate new access and refresh tokens
-    expires_in = int(time.time()) + 1000
-
+    expires_in = int(time.time()) + 5000
+    private_pem = rsa_keys["private_pem"]
     payload = {
         "sub": str(user.id),
         "preferred_username": user.name,
@@ -142,7 +145,11 @@ def mock_keycloak_token_refresh(user, server_app_settings, rsa_keys):
         "exp": expires_in,
     }
 
-    new_access_token = jwt.encode(payload, private_pem, algorithm="RS256")
+    new_access_token = jwt.encode(
+        payload=payload,
+        key=private_pem,
+        algorithm="RS256",
+    )
     new_refresh_token = "mock_new_refresh_token"
 
     responses.add(
