@@ -17,6 +17,7 @@ from data_rentgen.db.models import (
     Run,
     RunStartReason,
     RunStatus,
+    User,
 )
 
 RESOURCES_PATH = Path(__file__).parent.parent.joinpath("resources").resolve()
@@ -76,6 +77,10 @@ async def test_runs_handler_airflow(
     runs = run_scalars.all()
     assert len(runs) == 2
 
+    user_query = select(User).where(User.name == "myuser")
+    user_scalars = await async_session.scalars(user_query)
+    user = user_scalars.one_or_none()
+
     dag_run = runs[0]
     assert dag_run.id == UUID("01908223-0782-79b8-9495-b1c38aaee839")
     assert dag_run.created_at == datetime(2024, 7, 5, 9, 4, 12, 162000, tzinfo=timezone.utc)
@@ -97,7 +102,8 @@ async def test_runs_handler_airflow(
     assert task_run.status == RunStatus.SUCCEEDED
     assert task_run.started_at == datetime(2024, 7, 5, 9, 4, 20, 783845, tzinfo=timezone.utc)
     assert task_run.ended_at == datetime(2024, 7, 5, 9, 7, 37, 858423, tzinfo=timezone.utc)
-    assert task_run.started_by_user_id is None
+    assert task_run.started_by_user_id is not None
+    assert task_run.started_by_user_id == user.id
     assert task_run.start_reason == RunStartReason.MANUAL
     assert task_run.end_reason is None
     assert task_run.external_id == "manual__2024-07-05T09:04:12.162809+00:00"
