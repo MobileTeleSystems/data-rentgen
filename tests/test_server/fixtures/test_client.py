@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture
 async def test_client(test_server_app: FastAPI) -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(
         transport=ASGITransport(app=test_server_app),

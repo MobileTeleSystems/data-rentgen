@@ -1,6 +1,5 @@
 # SPDX-FileCopyrightText: 2024 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from http import HTTPStatus
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
@@ -34,6 +33,7 @@ async def token(
 ) -> AuthTokenSchema:
     user_token = await auth_provider.get_token_password_grant(
         login=form_data.username,
+        password=form_data.password,
     )
     return AuthTokenSchema.model_validate(user_token)
 
@@ -46,9 +46,8 @@ async def auth_callback(
 ):
     code_grant = await auth_provider.get_token_authorization_code_grant(
         code=code,
-        redirect_uri=auth_provider.settings.keycloak.redirect_uri,
     )
     request.session["access_token"] = code_grant["access_token"]
     request.session["refresh_token"] = code_grant["refresh_token"]
 
-    return HTTPStatus.OK
+    return {}

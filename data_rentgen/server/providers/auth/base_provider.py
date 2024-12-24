@@ -3,7 +3,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 
 from data_rentgen.db.models import User
 
@@ -51,7 +51,7 @@ class AuthProvider(ABC):
         ...
 
     @abstractmethod
-    async def get_current_user(self, access_token: Any, *args, **kwargs) -> User | None:
+    async def get_current_user(self, access_token: str | None, request: Request) -> User:
         """
         This method should return currently logged in user.
 
@@ -70,12 +70,8 @@ class AuthProvider(ABC):
     @abstractmethod
     async def get_token_password_grant(
         self,
-        grant_type: str | None = None,
-        login: str | None = None,
-        password: str | None = None,
-        scopes: list[str] | None = None,
-        client_id: str | None = None,
-        client_secret: str | None = None,
+        login: str,
+        password: str,
     ) -> dict[str, Any]:
         """
         This method should perform authentication and return JWT token.
@@ -103,10 +99,6 @@ class AuthProvider(ABC):
     async def get_token_authorization_code_grant(
         self,
         code: str,
-        redirect_uri: str,
-        scopes: list[str] | None = None,
-        client_id: str | None = None,
-        client_secret: str | None = None,
     ) -> dict[str, Any]:
         """
         Obtain a token using the Authorization Code grant.

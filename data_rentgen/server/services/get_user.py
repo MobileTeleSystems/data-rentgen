@@ -21,7 +21,7 @@ def get_user() -> Callable[[Request, AuthProvider, str], Coroutine[Any, Any, Use
     ) -> User:
         # keycloak provider patches session and store access_token in cookie,
         # dummy auth stores access_token in "Authorization" header
-        access_token = request.session.get("access_token", "") or access_token
+        access_token = request.session.get("access_token") or access_token
         return await auth_provider.get_current_user(  # type: ignore[return-value]
             access_token=access_token,
             request=request,

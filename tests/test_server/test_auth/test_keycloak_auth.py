@@ -1,11 +1,9 @@
 import logging
 
 import pytest
-import responses
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.db.models import Dataset, User
+from data_rentgen.db.models import User
 from data_rentgen.server.settings import ServerApplicationSettings as Settings
 from data_rentgen.server.settings.auth.keycloak import KeycloakSettings
 
@@ -13,7 +11,6 @@ KEYCLOAK_PROVIDER = "data_rentgen.server.providers.auth.keycloak_provider.Keyclo
 pytestmark = [pytest.mark.asyncio, pytest.mark.server]
 
 
-@responses.activate
 @pytest.mark.parametrize(
     "server_app_settings",
     [
@@ -25,11 +22,11 @@ pytestmark = [pytest.mark.asyncio, pytest.mark.server]
     ],
     indirect=True,
 )
-async def test_get_keycloak_user_unauthorized(
+async def test_keycloak_get_current_user_unauthorized(
     test_client: AsyncClient,
-    mock_keycloak_well_known,
-    caplog,
     server_app_settings: Settings,
+    mock_keycloak_well_known,
+    mock_keycloak_realm,
 ):
     settings = KeycloakSettings.model_validate(server_app_settings.auth.keycloak)
 
@@ -41,7 +38,7 @@ async def test_get_keycloak_user_unauthorized(
         f"{settings.client_id}&response_type=code&redirect_uri={settings.redirect_uri}"
         f"&scope={settings.scope}&state=&nonce="
     )
-    assert response.status_code == 401
+    assert response.status_code == 401, response.json()
     assert response.json() == {
         "error": {
             "code": "auth_redirect",
@@ -51,7 +48,6 @@ async def test_get_keycloak_user_unauthorized(
     }
 
 
-@responses.activate
 @pytest.mark.parametrize(
     "server_app_settings",
     [
@@ -63,9 +59,9 @@ async def test_get_keycloak_user_unauthorized(
     ],
     indirect=True,
 )
-async def test_get_keycloak_user_authorized(
+@pytest.mark.flaky  # sometimes cookie signature may be regenerated
+async def test_keycloak_get_current_user_authorized(
     test_client: AsyncClient,
-    async_session: AsyncSession,
     user: User,
     server_app_settings: Settings,
     create_session_cookie,
@@ -83,11 +79,10 @@ async def test_get_keycloak_user_authorized(
     )
 
     assert response.cookies.get("session") == session_cookie
-    assert response.status_code == 200
+    assert response.status_code == 200, response.json()
     assert response.json() == {"name": user.name}
 
 
-@responses.activate
 @pytest.mark.parametrize(
     "server_app_settings",
     [
@@ -99,11 +94,10 @@ async def test_get_keycloak_user_authorized(
     ],
     indirect=True,
 )
-async def test_get_keycloak_user_expired_access_token(
+async def test_keycloak_get_current_user_refresh_access_token(
     caplog,
     user: User,
     test_client: AsyncClient,
-    async_session: AsyncSession,
     server_app_settings: Settings,
     create_session_cookie,
     mock_keycloak_well_known,
@@ -122,5 +116,36 @@ async def test_get_keycloak_user_expired_access_token(
         )
 
     assert response.cookies.get("session") != session_cookie, caplog.text  # cookie is updated
-    assert response.status_code == 200
+    assert response.status_code == 200, response.json()
     assert response.json() == {"name": user.name}
+
+
+@pytest.mark.parametrize(
+    "server_app_settings",
+    [
+        {
+            "auth": {
+                "provider": KEYCLOAK_PROVIDER,
+            },
+        },
+    ],
+    indirect=True,
+)
+async def test_keycloak_auth_callback(
+    caplog,
+    user: User,
+    test_client: AsyncClient,
+    server_app_settings: Settings,
+    mock_keycloak_well_known,
+    mock_keycloak_realm,
+    mock_keycloak_token_refresh,
+):
+    with caplog.at_level(logging.DEBUG):
+        response = await test_client.get(
+            "/v1/auth/callback",
+            params={"code": "testcode"},
+        )
+
+    assert response.cookies.get("session"), caplog.text  # cookie is set
+    assert response.status_code == 200, response.json()
+    assert response.json() == {}
