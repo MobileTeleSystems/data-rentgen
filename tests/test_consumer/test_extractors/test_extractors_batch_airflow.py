@@ -36,6 +36,7 @@ from data_rentgen.dto import (
     RunDTO,
     RunStartReasonDTO,
     RunStatusDTO,
+    UserDTO,
 )
 
 
@@ -66,7 +67,7 @@ def airflow_dag_run_event_start() -> OpenLineageRunEvent:
                     openlineageAdapterVersion=Version("1.10.0"),
                 ),
                 airflowDagRun=OpenLineageAirflowDagRunFacet(
-                    dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="airflow"),
+                    dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="myuser"),
                     dagRun=OpenLineageAirflowDagRunInfo(
                         run_id="manual__2024-07-05T09:04:13:979349+00:00",
                         run_type=OpenLineageAirflowDagRunType.MANUAL,
@@ -137,7 +138,7 @@ def airflow_task_run_event_start() -> OpenLineageRunEvent:
                     openlineageAdapterVersion=Version("1.10.0"),
                 ),
                 airflow=OpenLineageAirflowTaskRunFacet(
-                    dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="airflow"),
+                    dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="myuser"),
                     dagRun=OpenLineageAirflowDagRunInfo(
                         run_id="manual__2024-07-05T09:04:13:979349+00:00",
                         run_type=OpenLineageAirflowDagRunType.MANUAL,
@@ -231,6 +232,10 @@ def extracted_airflow_dag_run(
         status=RunStatusDTO.SUCCEEDED,
         started_at=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
         start_reason=RunStartReasonDTO.MANUAL,
+        user=UserDTO(
+            name="myuser",
+            id=None,
+        ),
         ended_at=datetime(2024, 7, 5, 9, 8, 5, 691973, tzinfo=timezone.utc),
         external_id="manual__2024-07-05T09:04:13:979349+00:00",
         persistent_log_url="http://airflow-host:8081/dags/mydag/grid?dag_run_id=manual__2024-07-05T09%3A04%3A13%3A979349%2B00%3A00",
@@ -247,6 +252,10 @@ def extracted_airflow_task_run(
         status=RunStatusDTO.SUCCEEDED,
         started_at=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
         start_reason=RunStartReasonDTO.MANUAL,
+        user=UserDTO(
+            name="myuser",
+            id=None,
+        ),
         ended_at=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
         external_id="manual__2024-07-05T09:04:13:979349+00:00",
         attempt="1",
@@ -300,7 +309,6 @@ def test_extractors_extract_batch_airflow(
 
     assert not extracted.datasets()
     assert not extracted.dataset_symlinks()
-    assert not extracted.users()
     assert not extracted.schemas()
     assert not extracted.operations()
     assert not extracted.inputs()
