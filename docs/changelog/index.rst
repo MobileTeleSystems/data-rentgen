@@ -3,3 +3,4 @@
     :caption: Changelog
 
     DRAFT
+    0.1.0
