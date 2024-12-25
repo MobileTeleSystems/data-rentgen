@@ -23,7 +23,7 @@ sys.path.insert(0, os.fspath(PROJECT_ROOT_DIR))
 
 # -- Project information -----------------------------------------------------
 
-project = "arrakis"
+project = "Data.Rentgen"
 copyright = "2024 MTS PJSC"
 author = "DataOps.ETL"
 
@@ -48,7 +48,6 @@ extensions = [
     "numpydoc",
     "sphinx_copybutton",
     "sphinx.ext.autodoc",
-    "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
     "sphinxcontrib.autodoc_pydantic",
     "sphinxcontrib.towncrier",  # provides `towncrier-draft-entries` directive
@@ -57,13 +56,14 @@ extensions = [
     "sphinxcontrib.plantuml",
     "sphinx_favicon",
     "sphinx_last_updated_by_git",
+    "sphinxarg.ext",
 ]
 
 swagger = [
     {
-        "name": "Arrakis REST API",
+        "name": "Data.Rentgen REST API",
         "page": "openapi",
-        "id": "arrakis-api",
+        "id": "data-rentgen-api",
         "options": {
             "url": "_static/openapi.json",
         },
@@ -116,9 +116,7 @@ html_theme = "furo"
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
-html_theme_options = {
-    "sidebar_hide_name": True,
-}
+html_theme_options = {}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -129,12 +127,12 @@ html_css_files = [
     "custom.css",
 ]
 
-html_logo = "./_static/logo_no_title.svg"
+html_logo = "./_static/logo.svg"
+html_title = "Data.Rentgen"
 favicons = [
     {"rel": "icon", "href": "icon.svg", "type": "image/svg+xml"},
 ]
 
-# TODO: remove after https://github.com/mgeier/sphinx-last-updated-by-git/pull/77
 git_exclude_patterns = ["docs/_static/logo.svg"]
 
 # The master toctree document.
@@ -156,11 +154,11 @@ todo_include_todos = False
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = "arrakis-doc"
+htmlhelp_basename = "data-rentgen-doc"
 
 
 # which is the equivalent to:
-issues_uri = "https://github.com/MobileTeleSystems/arrakis/issues/{issue}"
-issues_pr_uri = "https://github.com/MobileTeleSystems/arrakis/pulls/{pr}"
-issues_commit_uri = "https://github.com/MobileTeleSystems/arrakis/commit/{commit}"
+issues_uri = "https://github.com/MobileTeleSystems/data-rentgen/issues/{issue}"
+issues_pr_uri = "https://github.com/MobileTeleSystems/data-rentgen/pulls/{pr}"
+issues_commit_uri = "https://github.com/MobileTeleSystems/data-rentgen/commit/{commit}"
 issues_user_uri = "https://github.com/{user}"

@@ -1,0 +1,59 @@
+name: Dev release
+
+on:
+  push:
+    branches-ignore:
+      - dependabot/**
+      - pre-commit-ci-update-config
+      - master
+  workflow_dispatch:
+
+env:
+  DEFAULT_PYTHON: '3.13'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  wait-code-analysis:
+    name: Dev release package
+    runs-on: ubuntu-latest
+    if: github.repository == 'MobileTeleSystems/data-rentgen'  # prevent running on forks
+
+    environment:
+      name: test-pypi
+      url: https://test.pypi.org/p/data-rentgen
+    permissions:
+      id-token: write # to auth in Test PyPI
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+
+      - name: Install poetry
+        uses: snok/install-poetry@v1
+
+      - name: Generate unique version and update test version
+        run: |
+          poetry self add poetry-bumpversion
+          version=$(poetry version -s)
+          poetry version "${version}.dev${GITHUB_RUN_ID}"
+
+      - name: Fix logo in Readme
+        run: |
+          sed -i "s#image:: docs/#image:: https://raw.githubusercontent.com/MobileTeleSystems/data-rentgen/$GITHUB_SHA/docs/#g" README.rst
+
+      - name: Build package
+        run: poetry build
+
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/

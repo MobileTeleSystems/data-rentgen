@@ -3,10 +3,10 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
-name = "data-arrakis"
+name = "data-rentgen"
 version = "0.0.1"
 license = "Apache-2.0"
-description = "Arrakis REST API + client"
+description = "Data.Rentgen REST API + Kafka consumer"
 authors = ["DataOps.ETL <onetools@mts.ru>"]
 readme = "README.rst"
 classifiers = [
@@ -21,109 +21,150 @@ classifiers = [
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries",
     "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
 ]
 keywords = ["Lineage", "FastAPI", "REST", "FastStream"]
 packages = [
-    { include = "arrakis" },
+    { include = "data_rentgen" },
 ]
 include = [
-    {path = "arrakis/py.typed"},
-    {path = "arrakis/**/*.yml"},
-    {path = "arrakis/**/*.ini"},
+    {path = "data_rentgen/py.typed"},
+    {path = "data_rentgen/**/*.yml"},
+    {path = "data_rentgen/**/*.ini"},
 ]
 
 [tool.poetry.urls]  # Optional
-"Homepage" = "https://github.com/MobileTeleSystems/arrakis"
-"Documentation" = "https://data-arrakis.readthedocs.io/"
-"Source" = "https://github.com/MobileTeleSystems/arrakis"
-"CI/CD" = "https://github.com/MobileTeleSystems/arrakis/actions"
-"Tracker" = "https://github.com/MobileTeleSystems/arrakis/issues"
+"Homepage" = "https://github.com/MobileTeleSystems/data-rentgen"
+"Documentation" = "https://data-rentgen.readthedocs.io/"
+"Source" = "https://github.com/MobileTeleSystems/data-rentgen"
+"CI/CD" = "https://github.com/MobileTeleSystems/data-rentgen/actions"
+"Tracker" = "https://github.com/MobileTeleSystems/data-rentgen/issues"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-pydantic = "^2.7.4"
+# https://github.com/pydantic/pydantic/issues/10964
+pydantic = "~2.8.2"
 typing-extensions = "^4.12.2"
-fastapi = {version = "^0.111.0", optional = true}
-starlette = {version = "^0.37.2", optional = true}
-starlette-exporter = {version = "^0.23.0", optional = true}
-uvicorn = {version = "^0.30.1", optional = true}
-pydantic-settings = {version = "^2.3.4", optional = true}
-alembic = {version = "^1.13.2", optional = true}
-sqlalchemy = {version = "^2.0.31", optional = true}
-asyncpg = {version = "^0.29.0", optional = true}
+pydantic-settings = {version = "^2.7.0", optional = true}
+alembic = {version = "^1.14.0", optional = true}
+sqlalchemy = {version = "^2.0.35", optional = true}
 sqlalchemy-utils = {version = "^0.41.2", optional = true}
-python-json-logger = {version = "^2.0.7", optional = true}
+greenlet = {version = "^3.1.1", optional = true}
+pyyaml = {version = "^6.0.2", optional = true}
+python-json-logger = {version = "^3.2.1", optional = true}
 coloredlogs = {version = "^15.0.1", optional = true}
-pyyaml = {version = "^6.0.1", optional = true}
-asgi-correlation-id = {version = "^4.3.1", optional = true}
-uuid6 = {version = "^2024.1.12", optional = true}
+uuid6 = {version = "^2024.7.10", optional = true}
+python-dateutil = {version = "^2.9.0.post0", optional = true}
+fastapi = {version = "^0.115.6", optional = true}
+starlette = {version = "^0.41.2", optional = true}
+starlette-exporter = {version = "^0.23.0", optional = true}
+uvicorn = {version = "^0.34.0", optional = true}
+asyncpg = {version = "^0.30.0", optional = true}
+asgi-correlation-id = {version = "^4.3.4", optional = true}
+faststream = {extras = ["kafka", "cli"], version = "^0.5.33", optional = true}
+# used by aiokafka for LZ4, Snappy, ZSTD compression algorithms
+cramjam = {version = "^2.9.1", optional = true}
+packaging = {version = "^24.2", optional = true}
+itsdangerous = {version = "^2.2.0", optional = true}
+python-multipart = {version = "^0.0.20", optional = true}
+python-keycloak = {version = "^5.1.1", optional = true}
+pyjwt = {version = "^2.10.1 ", optional = true}
 
 [tool.poetry.extras]
-backend = [
+server = [
   "fastapi",
   "starlette",
   "uvicorn",
+  "starlette-exporter",
+  "asgi-correlation-id",
+  "pydantic-settings",
   "alembic",
   "sqlalchemy",
   "sqlalchemy-utils",
+  "greenlet",
   "pyyaml",
   "python-json-logger",
   "coloredlogs",
-  "starlette-exporter",
-  "asgi-correlation-id",
   "uuid6",
+  "python-dateutil",
+  "packaging",
+  "pyjwt",
+  "itsdangerous",
+  "python-multipart",
+  "python-keycloak",
+]
+consumer = [
+  "faststream",
+  "cramjam",
   "pydantic-settings",
+  "alembic",
+  "sqlalchemy",
+  "sqlalchemy-utils",
+  "greenlet",
+  "pyyaml",
+  "python-json-logger",
+  "coloredlogs",
+  "uuid6",
+  "python-dateutil",
+  "packaging",
 ]
 postgres = [
   "asyncpg",
 ]
 
 [tool.poetry.group.test.dependencies]
-pytest = "^8.2.2"
-httpx = "^0.26.0"
+pytest = "^8.3.4"
+httpx = "^0.27.0"
 # TODO: remove version limit after fixing https://github.com/pytest-dev/pytest-asyncio/issues/706
 pytest-asyncio = "^0.21.1"
-pytest-randomly = "^3.15.0"
+pytest-randomly = "^3.16.0"
 pytest-deadfixtures = "^2.2.1"
-pytest-rerunfailures = "^14.0"
-coverage = "^7.5.4"
+pytest-rerunfailures = "^15.0"
+coverage = "^7.6.9"
 psycopg2-binary = "^2.9.9"
-gevent = "^24.2.1"
+gevent = "^24.11.1"
+deepdiff = "^8.1.1"
+respx = "^0.22.0"
 
 [tool.poetry.group.dev.dependencies]
-pre-commit = "^3.7.1"
-mypy = "^1.10.1"
-black = "^24.4.2"
+pre-commit = "^4.0.1"
+mypy = "^1.14.0"
+black = "^24.10.0"
 isort = "^5.13.2"
-flake8 = "^7.1.0"
+flake8 = "^7.1.1"
 bandit = "^1.7.9"
-sqlalchemy = {extras = ["mypy"], version = "^2.0.31"}
+sqlalchemy = {extras = ["mypy"], version = "^2.0.32"}
 wemake-python-styleguide = "^0.19.2"
 flake8-pyproject = "^1.2.3"
-types-pyyaml = "^6.0.12.20240311"
+types-pyyaml = "^6.0.12"
+types-python-dateutil = "^2.9.0"
+types-jwcrypto = "^1.5.0.20241221"
+icecream = "^2.1.3"
 
 [tool.poetry.group.docs.dependencies]
 autodoc-pydantic = "^2.2.0"
-numpydoc = "^1.7.0"
-sphinx = "^7.3.7"
-furo = "^2024.5.6"
+numpydoc = "^1.8.0"
+sphinx = "^8.1.3"
+furo = "^2024.7.18"
 sphinx-copybutton = "^0.5.2"
 sphinxcontrib-towncrier = "^0.4.0a0"
-towncrier = "^23.11.0"
-sphinx-issues = "^4.1.0"
-sphinx-design = "^0.6.0"
+# TODO: remove upper limit after https://github.com/sphinx-contrib/sphinxcontrib-towncrier/issues/92
+towncrier = {version = ">=23.11,<24.7"}
+sphinx-issues = "^5.0.0"
+sphinx-design = "^0.6.1"
 sphinx-favicon = "^1.0.1"
-sphinx-last-updated-by-git = "^0.3.7"
+sphinx-last-updated-by-git = "^0.3.8"
 # uncomment after https://github.com/zqmillet/sphinx-plantuml/pull/4
 # sphinx-plantuml = "^1.0.0"
+sphinx-argparse = "^0.5.2"
 
 [tool.poetry.plugins."tricoder_package_spy.register"]
-"data-arrakis" = "arrakis"
+"data-rentgen" = "data_rentgen"
 
-[tool.poetry_bumpversion.file."arrakis/__init__.py"]
+[tool.poetry_bumpversion.file."data_rentgen/__init__.py"]
 search = '_raw_version = "{current_version}"'
 replace = '_raw_version = "{new_version}"'
 
@@ -133,11 +174,14 @@ replace = 'ver = Version.parse("{new_version}")'
 
 [tool.pytest.ini_options]
 markers = [
-    "backend: tests for backend (require running database)",
+    "server: tests for server (require running database)",
+    "consumer: tests for consumer (require running database)",
+    "db: tests for db",
+    "lineage: tests for lineage endpoints (require running database)"
 ]
 
 [tool.coverage.paths]
-source = ["arrakis"]
+source = ["data_rentgen"]
 
 [tool.coverage.run]
 branch = true
@@ -154,12 +198,12 @@ precision = 2
 exclude_lines = [
   "pragma: no cover",
   "def __repr__",
-  "if .*debug:",
+  "if .*debug",
   "raise AssertionError",
   "raise NotImplementedError",
   "if __name__ == .__main__.:",
   "if TYPE_CHECKING:",
-  "if log.isEnabledFor(logging.DEBUG):",
+  "if logger.isEnabledFor",
   "if sys.version_info",
   "@(abc\\.)?abstractmethod",
   "\\.\\.\\.",
@@ -174,7 +218,7 @@ exclude = "(\\.eggs|\\.git|\\.mypy_cache|\\.tox|\\.venv|_build|buck-out|build|di
 
 [tool.isort]
 profile = "black"
-known_first_party = ["arrakis", "tests"]
+known_first_party = ["data_rentgen", "tests"]
 
 [tool.mypy]
 python_version = "3.10"
@@ -189,6 +233,10 @@ ignore_missing_imports = true
 module = "starlette_exporter"
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "keycloak.*"
+ignore_missing_imports = true
+
 [tool.autoflake]
 imports = ["tests", "app"]
 ignore-init-module-imports = true
@@ -198,8 +246,8 @@ remove-unused-variables = true
 docstring_style = "sphinx"
 
 [tool.codespell]
-ignore-words-list = "selectin"
 exclude-file = "poetry.lock"
+ignore-words-list = "selectin"
 
 [tool.flake8]
 jobs = 4
@@ -208,8 +256,8 @@ i-control-code = false
 # Max of noqa in a module
 max-noqa-comments = 10
 max-annotation-complexity = 4
-max-returns = 5
-max-awaits = 5
+max-returns = 6
+max-awaits = 8
 max-local-variables = 20
 max-name-length = 60
 # Max of expressions in a function
@@ -376,18 +424,32 @@ ignore = [
   "E704",
 # WPS220 Found too deep nesting: 34 > 20
   "WPS220",
+# Found wrong metadata variable: __all__
+  "WPS410",
+# constant 'UUID' imported as non constant 'UUIDv7'
+  "N811",
+# Found subclassing a builtin: str
+  "WPS600",
+# Found underscored number: 5_000_000
+  "WPS303",
+# Found complex default value: Depends(some)
+  "WPS404",
+# Do not perform function calls in argument defaults: Depends(some)
+  "B008",
 ]
 
 per-file-ignores = [
-# F401 imported but unused
-# WPS410 Found wrong metadata variable: __all__
-  "__init__.py:F401,WPS410",
 # WPS102 Found incorrect module name pattern
-# WPS432 Found magic number: 256
-  "*migrations/*.py:WPS102,WPS432",
+# WPS432 Found magic number: 255
+  "data_rentgen/db/*.py:WPS102,WPS432",
 # WPS237 Found a too complex `f` string
-  "*exceptions/*.py:WPS237",
-  "*exceptions/__init__.py:F40,WPS410",
+  "data_rentgen/server/exceptions/*.py:WPS237",
+# WPS441 Found control variable used after block: input
+  "data_rentgen/server/services/lineage.py:WPS441",
+# N815 variable 'openlineageAdapterVersion' in class scope should not be mixedCase
+  "data_rentgen/consumer/openlineage/*.py:N815",
+# WPS432 Found magic number: 50
+  "data_rentgen/*settings*.py:WPS432",
 # TAE001 too few type annotations
 # WPS231 Found function with too much cognitive complexity
 # S101 Use of assert detected. The enclosed code will be removed when compiling to optimised byte code.
@@ -401,8 +463,8 @@ per-file-ignores = [
 ]
 
 [tool.towncrier]
-name = "Arrakis"
-package = "arrakis"
+name = "Data.Rentgen"
+package = "data_rentgen"
 filename = "docs/changelog/NEXT_RELEASE.rst"
 directory = "docs/changelog/next_release/"
 title_format = "{version} ({project_date})"

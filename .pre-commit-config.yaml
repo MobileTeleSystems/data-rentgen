@@ -3,13 +3,11 @@ default_language_version:
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: check-added-large-files
       - id: check-ast
       - id: check-merge-conflict
-      - id: check-yaml
-        args: [--unsafe]
       - id: debug-statements
       - id: detect-private-key
       - id: end-of-file-fixer
@@ -41,16 +39,13 @@ repos:
       - id: chmod
         args: ['644']
         exclude_types: [shell]
-        exclude: ^(.*__main__\.py|arrakis/backend/export_openapi_schema\.py|arrakis/backend/scripts/manage_admins\.py)$
+        exclude: ^(.*__main__\.py|data_rentgen/server/scripts/export_openapi_schema\.py|data_rentgen/db/scripts/create_partitions\.py)$
       - id: chmod
         args: ['755']
-        types: [shell]
-      - id: chmod
-        args: ['755']
-        files: ^(.*__main__\.py)$
+        files: ^(.*__main__\.py|data_rentgen/server/scripts/export_openapi_schema\.py|data_rentgen/db/scripts/create_partitions\.py)$
       - id: insert-license
         files: .*\.py$
-        exclude: ^(arrakis/backend/dependencies/stub.py|docs/.*\.py|tests/.*\.py)$
+        exclude: ^(data_rentgen/dependencies/stub.py|docs/.*\.py|tests/.*\.py)$
         args:
           - --license-filepath
           - .spdx-license-header.txt
@@ -58,7 +53,7 @@ repos:
           - --no-extra-eol
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.16.0
+    rev: v3.19.1
     hooks:
       - id: pyupgrade
         args: [--py37-plus, --keep-runtime-typing]
@@ -75,19 +70,19 @@ repos:
         args: [--in-place]
 
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 24.4.2
+    rev: 24.10.0
     hooks:
       - id: black
 
   - repo: https://github.com/asottile/blacken-docs
-    rev: 1.16.0
+    rev: 1.19.1
     hooks:
       - id: blacken-docs
         additional_dependencies:
-          - black==24.4.2
+          - black==24.8.0
 
   - repo: https://github.com/pycqa/bandit
-    rev: 1.7.9
+    rev: 1.8.0
     hooks:
       - id: bandit
         args:
@@ -108,7 +103,7 @@ repos:
       - id: docker-compose-check
 
   - repo: https://github.com/macisamuele/language-formatters-pre-commit-hooks
-    rev: v2.13.0
+    rev: v2.14.0
     hooks:
       - id: pretty-format-yaml
         args: [--autofix, --indent, '2', --offset, '2']
@@ -122,7 +117,7 @@ repos:
           - tomli
 
   - repo: https://github.com/sbrunner/hooks
-    rev: 1.0.0
+    rev: 1.1.2
     hooks:
       - id: poetry-check
         additional_dependencies:
@@ -138,12 +133,12 @@ repos:
         entry: flake8
         language: python
         types: [python]
-        files: ^arrakis/.*$
+        files: ^data_rentgen/.*$
         pass_filenames: true
 
       - id: mypy
         name: mypy
-        entry: mypy ./arrakis --config-file ./pyproject.toml
+        entry: mypy ./data_rentgen --config-file ./pyproject.toml
         language: python
         types: [python]
         require_serial: true

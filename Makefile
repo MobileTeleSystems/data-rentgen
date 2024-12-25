@@ -2,8 +2,9 @@
 
 include .env.local
 
-PIP = .venv/bin/pip
-POETRY = .venv/bin/poetry
+VENV = .venv
+PIP = ${VENV}/bin/pip
+POETRY = ${VENV}/bin/poetry
 
 # Fix docker build and docker compose build using different backends
 COMPOSE_DOCKER_CLI_BUILD = 1
@@ -25,11 +26,11 @@ help: ##@Help Show this help
 
 
 
-venv-init: venv-cleanup  venv-install##@Env Init venv and install poetry dependencies
+venv: venv-cleanup  venv-install##@Env Init venv and install poetry dependencies
 
 venv-cleanup: ##@Env Cleanup venv
 	@rm -rf .venv || true
-	python3.12 -m venv .venv
+	python -m venv ${VENV}
 	${PIP} install -U setuptools wheel pip
 	${PIP} install poetry
 
@@ -37,46 +38,79 @@ venv-install: ##@Env Install requirements to venv
 	${POETRY} config virtualenvs.create false
 	${POETRY} self add poetry-bumpversion
 	${POETRY} install --no-root --all-extras --with dev,test,docs $(ARGS)
+	${PIP} install -U flake8-commas
+	${PIP} install --no-deps sphinx-plantuml
 
 
-
-db: db-start db-upgrade ##@DB Prepare database (in docker)
+db: db-start db-upgrade db-partitions ##@DB Prepare database (in docker)
 
 db-start: ##@DB Start database
-	docker compose -f docker-compose.test.yml up -d --wait db $(DOCKER_COMPOSE_ARGS)
+	docker compose up -d --wait db $(DOCKER_COMPOSE_ARGS)
 
 db-revision: ##@DB Generate migration file
-	${POETRY} run python -m arrakis.backend.db.migrations revision --autogenerate
+	${POETRY} run python -m data_rentgen.db.migrations revision --autogenerate $(ARGS)
 
 db-upgrade: ##@DB Run migrations to head
-	${POETRY} run python -m arrakis.backend.db.migrations upgrade head
+	${POETRY} run python -m data_rentgen.db.migrations upgrade head $(ARGS)
 
 db-downgrade: ##@DB Downgrade head migration
-	${POETRY} run python -m arrakis.backend.db.migrations downgrade head-1
+	${POETRY} run python -m data_rentgen.db.migrations downgrade head-1 $(ARGS)
+
+db-partitions: ##@DB Create partitions
+	${POETRY} run python -m data_rentgen.db.scripts.create_partitions --start 2024-07-01
 
 
-test: db-start ##@Test Run tests
+broker: broker-start ##@Broker Prepare broker (in docker)
+
+broker-start: ##Broker Start broker
+	docker compose -f docker-compose.test.yml up -d --wait broker $(DOCKER_COMPOSE_ARGS)
+
+
+test: test-db test-broker ##@Test Run tests
 	${POETRY} run pytest $(PYTEST_ARGS)
 
-check-fixtures: ##@Test Check declared fixtures
+test-lineage: test-db ##@Test Run linege tests
+	${POETRY} run pytest -m lineage $(PYTEST_ARGS)
+
+test-server: test-db ##@Test Run server tests
+	${POETRY} run pytest -m server $(PYTEST_ARGS)
+
+test-db: test-db-start db-upgrade db-partitions ##@TestDB Prepare database (in docker)
+
+test-db-start: ##@TestDB Start database
+	docker compose -f docker-compose.test.yml up -d --wait db $(DOCKER_COMPOSE_ARGS)
+
+test-broker: test-broker-start ##@TestBroker Prepare broker (in docker)
+
+test-broker-start: ##@TestBroker Start broker
+	docker compose -f docker-compose.test.yml up -d --wait broker $(DOCKER_COMPOSE_ARGS)
+
+test-ci: test-db test-broker ##@Test Run CI tests
+	${POETRY} run coverage run -m pytest
+
+test-check-fixtures: ##@Test Check declared fixtures
 	${POETRY} run pytest --dead-fixtures $(PYTEST_ARGS)
 
-cleanup: ##@Test Cleanup tests dependencies
+test-cleanup: ##@Test Cleanup tests dependencies
 	docker compose -f docker-compose.test.yml down $(ARGS)
 
 
 
-dev: db-start ##@Application Run development server (without docker)
-	${POETRY} run python -m arrakis.backend $(ARGS)
+dev-server: db-start ##@Application Run development server (without docker)
+	${POETRY} run python -m data_rentgen.server $(ARGS)
+
+dev-consumer: db-start broker-start ##@Application Run development broker (without docker)
+	${POETRY} run python -m data_rentgen.consumer $(ARGS)
 
 prod-build: ##@Application Build docker image
-	docker build --progress=plain --network=host -t mtsrus/arrakis-backend:develop -f ./docker/Dockerfile.backend $(ARGS) .
+	docker build --progress=plain --network=host -t mtsrus/data-rentgen:develop -f ./docker/Dockerfile $(ARGS) .
 
-prod: ##@Application Run production server (with docker)
+prod: ##@Application Run production containers
 	docker compose up -d
 
-prod-stop: ##@Application Stop production server
+prod-cleanup: ##@Application Stop production containers
 	docker compose down $(ARGS)
+
 
 .PHONY: docs
 
@@ -92,3 +126,6 @@ docs-cleanup: ##@Docs Cleanup docs
 	$(MAKE) -C docs clean
 
 docs-fresh: docs-cleanup docs-build ##@Docs Cleanup & build docs
+
+openapi: ##@Docs Generate OpenAPI schema
+	python -m data_rentgen.server.scripts.export_openapi_schema docs/_static/openapi.json

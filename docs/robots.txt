@@ -2,4 +2,4 @@ User-agent: *
 Allow: /*/stable/
 Allow: /en/stable/   # Fallback for bots that don't understand wildcards
 Disallow: /
-Sitemap: https://data-arrakis.readthedocs.io/sitemap.xml
+Sitemap: https://data-rentgen.readthedocs.io/sitemap.xml

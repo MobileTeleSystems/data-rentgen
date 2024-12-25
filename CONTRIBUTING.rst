@@ -17,7 +17,7 @@ Please follow `instruction <https://docs.github.com/en/get-started/quickstart/se
 Create a fork
 ~~~~~~~~~~~~~
 
-If you are not a member of a development team building arrakis, you should create a fork before making any changes.
+If you are not a member of a development team building Data.Rentgen, you should create a fork before making any changes.
 
 Please follow `instruction <https://docs.github.com/en/get-started/quickstart/fork-a-repo>`_.
 
@@ -28,9 +28,9 @@ Open terminal and run these commands:
 
 .. code:: bash
 
-    git clone https://github.com/MobileTeleSystems/arrakis -b develop
+    git clone https://github.com/MobileTeleSystems/data-rentgen -b develop
 
-    cd arrakis
+    cd data_rentgen
 
 Setup environment
 ~~~~~~~~~~~~~~~~~
@@ -41,7 +41,7 @@ Secondly, create virtualenv and install dependencies:
 
 .. code:: bash
 
-    make venv-init
+    make venv
 
 If you already have venv, but need to install dependencies required for development:
 
@@ -92,17 +92,23 @@ Start DB container:
 
 .. code:: bash
 
-    make db
+    make db broker
 
 Then start development server:
 
 .. code:: bash
 
-    make dev
+    make dev-server
 
 And open http://localhost:8000/docs
 
 Settings are stored in ``.env.local`` file.
+
+To start developlment consumer, open a new terminal window/tab, and run:
+
+.. code:: bash
+
+    make dev-consumer
 
 Working with migrations
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -117,7 +123,7 @@ Generate revision:
 
 .. code:: bash
 
-    make db-revision
+    make db-revision ARGS="-m 'Message'"
 
 Upgrade db to ``head`` migration:
 
@@ -134,20 +140,15 @@ Downgrade db to ``head-1`` migration:
 Run tests locally
 ~~~~~~~~~~~~~~~~~
 
-Start all containers with dependencies:
-
-.. code:: bash
-
-    make db  # for backend & client tests
-    make dev  # for client test, run in separate terminal tab
-
-Run tests:
+This is as simple as:
 
 .. code:: bash
 
     make test
 
-You can pass additional arguments, they will be passed to pytest:
+This command starts all necessary containers (Postgres, Kafka), runs all necessary migrations, and then runs Pytest.
+
+You can pass additional arguments to pytest like this:
 
 .. code:: bash
 
@@ -157,22 +158,13 @@ Stop all containers and remove created volumes:
 
 .. code:: bash
 
-    make cleanup ARGS="-v"
+    make test-cleanup ARGS="-v"
 
 Get fixtures not used by any test:
 
 .. code:: bash
 
-    make check-fixtures
-
-Build CI image locally
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-This image is build in CI for testing purposes, but you can do that locally as well:
-
-.. code:: bash
-
-    make test-build
+    make test-check-fixtures
 
 Run production instance locally
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -242,7 +234,7 @@ After pull request is created, it get a corresponding number, e.g. 123 (``pr_num
 Write release notes
 ~~~~~~~~~~~~~~~~~~~
 
-``arrakis`` uses `towncrier <https://pypi.org/project/towncrier/>`_
+Data.Rentgen uses `towncrier <https://pypi.org/project/towncrier/>`_
 for changelog management.
 
 To submit a change note about your PR, add a text file into the

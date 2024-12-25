@@ -3,17 +3,10 @@ services:
     image: postgres:16
     restart: unless-stopped
     env_file: .env.docker
-    # PROMETHEUS_MULTIPROC_DIR is required for multiple workers, see:
-    # https://prometheus.github.io/client_python/multiprocess/
-    environment:
-      PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus-metrics
     ports:
       - 5432:5432
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    # tmpfs dir is cleaned up each container restart
-    tmpfs:
-      - /tmp/prometheus-metrics
     healthcheck:
       test: pg_isready
       start_period: 5s
@@ -21,15 +14,82 @@ services:
       timeout: 5s
       retries: 3
 
-  backend:
-    image: mtsrus/arrakis-backend:develop
+  server:
+    image: mtsrus/data-rentgen:develop
+    command: python -m data_rentgen.server --host 0.0.0.0 --port 8000
     restart: unless-stopped
     env_file: .env.docker
     ports:
       - 8000:8000
+    # PROMETHEUS_MULTIPROC_DIR is required for multiple workers, see:
+    # https://prometheus.github.io/client_python/multiprocess/
+    environment:
+      PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus-metrics
+    # tmpfs dir is cleaned up each container restart
+    tmpfs:
+      - /tmp/prometheus-metrics
+    healthcheck:
+      test: [CMD-SHELL, curl -f http://localhost:8000/monitoring/ping]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    depends_on:
+      db:
+        condition: service_healthy
+      db-migration:
+        condition: service_completed_successfully
+
+  broker:
+    image: bitnami/kafka:3.7
+    restart: unless-stopped
+    env_file: .env.docker
+    ports:
+      - 9093:9093
+    volumes:
+      - kafka_data:/bitnami/kafka
+    healthcheck:
+      test: [CMD-SHELL, kafka-topics.sh --bootstrap-server 127.0.0.1:9095 --list]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  consumer:
+    image: mtsrus/data-rentgen:develop
+    command: python -m data_rentgen.consumer
+    restart: unless-stopped
+    env_file: .env.docker
+    depends_on:
+      broker:
+        condition: service_healthy
+      db-migration:
+        condition: service_completed_successfully
+
+  db-migration:
+    image: mtsrus/data-rentgen:develop
+    command: |
+      python -m data_rentgen.db.migrations upgrade head && python -m data_rentgen.db.scripts.create_partitions
+    env_file: .env.docker
     depends_on:
       db:
         condition: service_healthy
 
+  frontend:
+    image: mtsrus/data-rentgen-ui:develop
+    restart: unless-stopped
+    env_file: .env.docker
+    ports:
+      - 3000:3000
+    healthcheck:
+      test: [CMD-SHELL, curl -f http://localhost:3000/]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    depends_on:
+      server:
+        condition: service_healthy
+
 volumes:
   postgres_data:
+  kafka_data:

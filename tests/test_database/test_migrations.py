@@ -1,5 +1,3 @@
-# SPDX-FileCopyrightText: 2023 MTS PJSC
-# SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
 import pytest
@@ -7,9 +5,9 @@ from alembic.autogenerate import compare_metadata
 from alembic.runtime.migration import MigrationContext
 from sqlalchemy import Connection, MetaData, create_engine
 
-from arrakis.backend.db.models import Base
+from data_rentgen.db.models import Base
 
-pytestmark = [pytest.mark.backend]
+pytestmark = [pytest.mark.db]
 
 
 def get_diff_db_metadata(connection: Connection, metadata: MetaData):
