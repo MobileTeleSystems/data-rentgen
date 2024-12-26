@@ -53,3 +53,23 @@ jobs:
             linux/arm64/v8
           provenance: mode=max
 
+      - name: Convert README to Markdown
+        uses: docker://pandoc/core:2.9
+        with:
+          args: >-
+            --output=README.md
+            --from=rst
+            --to=gfm
+            --wrap=none
+            README.rst
+
+      - name: Update DockerHub Description
+        uses: peter-evans/dockerhub-description@v4
+        if: github.ref_type == 'tag'
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          # this requires token with read+write+delete permissions. read+write is not enough!
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: mtsrus/syncmaster-server
+          short-description: ${{ github.event.repository.description }}
+          enable-url-completion: true
