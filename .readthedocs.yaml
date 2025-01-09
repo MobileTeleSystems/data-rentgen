@@ -13,7 +13,6 @@ build:
       - python -m pip install poetry
       - python -m pip install --no-deps sphinx-plantuml # remove after https://github.com/zqmillet/sphinx-plantuml/pull/4
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m poetry config virtualenvs.create false
-      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m poetry config virtualenvs.prefer-active-python true
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m poetry debug info
     post_install:
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m poetry install --no-root --all-extras --with docs --without dev,test
