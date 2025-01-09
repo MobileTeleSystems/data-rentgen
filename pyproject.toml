@@ -137,7 +137,7 @@ isort = "^5.13.2"
 flake8 = "^7.1.1"
 bandit = "^1.7.9"
 sqlalchemy = {extras = ["mypy"], version = "^2.0.32"}
-wemake-python-styleguide = "^0.19.2"
+wemake-python-styleguide = "^1.0.0"
 flake8-pyproject = "^1.2.3"
 types-pyyaml = "^6.0.12.20241230"
 types-python-dateutil = "^2.9.0"
@@ -436,6 +436,8 @@ ignore = [
   "WPS404",
 # Do not perform function calls in argument defaults: Depends(some)
   "B008",
+# Found `__init__.py` module with logic
+  "WPS412",
 ]
 
 per-file-ignores = [
