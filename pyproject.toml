@@ -48,7 +48,7 @@ python = "^3.10"
 # https://github.com/pydantic/pydantic/issues/10964
 pydantic = "~2.8.2"
 typing-extensions = "^4.12.2"
-pydantic-settings = {version = "^2.7.0", optional = true}
+pydantic-settings = {version = "^2.7.1", optional = true}
 alembic = {version = "^1.14.0", optional = true}
 sqlalchemy = {version = "^2.0.35", optional = true}
 sqlalchemy-utils = {version = "^0.41.2", optional = true}
@@ -123,7 +123,7 @@ pytest-asyncio = "^0.21.1"
 pytest-randomly = "^3.16.0"
 pytest-deadfixtures = "^2.2.1"
 pytest-rerunfailures = "^15.0"
-coverage = "^7.6.9"
+coverage = "^7.6.10"
 psycopg2-binary = "^2.9.9"
 gevent = "^24.11.1"
 deepdiff = "^8.1.1"
@@ -131,7 +131,7 @@ respx = "^0.22.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.0.1"
-mypy = "^1.14.0"
+mypy = "^1.14.1"
 black = "^24.10.0"
 isort = "^5.13.2"
 flake8 = "^7.1.1"
@@ -139,7 +139,7 @@ bandit = "^1.7.9"
 sqlalchemy = {extras = ["mypy"], version = "^2.0.32"}
 wemake-python-styleguide = "^0.19.2"
 flake8-pyproject = "^1.2.3"
-types-pyyaml = "^6.0.12"
+types-pyyaml = "^6.0.12.20241230"
 types-python-dateutil = "^2.9.0"
 types-jwcrypto = "^1.5.0.20241221"
 icecream = "^2.1.3"
