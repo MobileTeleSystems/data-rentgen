@@ -49,7 +49,7 @@ repos:
         args:
           - --license-filepath
           - .spdx-license-header.txt
-          - --use-current-year
+          - --allow-past-years
           - --no-extra-eol
 
   - repo: https://github.com/asottile/pyupgrade
