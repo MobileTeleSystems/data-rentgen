@@ -1,8 +1,10 @@
-# SPDX-FileCopyrightText: 2024 MTS PJSC
+# SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
 from data_rentgen.db.models.address import Address
 from data_rentgen.db.models.base import Base
+from data_rentgen.db.models.custom_properties import CustomProperties
+from data_rentgen.db.models.custom_user_properties import CustomUserProperties
 from data_rentgen.db.models.dataset import Dataset
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
 from data_rentgen.db.models.input import Input
@@ -17,6 +19,8 @@ from data_rentgen.db.models.user import User
 __all__ = [
     "Address",
     "Base",
+    "CustomProperties",
+    "CustomUserProperties",
     "Dataset",
     "DatasetSymlink",
     "DatasetSymlinkType",
