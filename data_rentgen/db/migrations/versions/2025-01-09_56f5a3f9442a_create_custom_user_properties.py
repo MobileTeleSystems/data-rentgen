@@ -10,7 +10,7 @@ Create Date: 2025-01-09 13:25:39.718162
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.dialects.postgresql import TSTZRANGE, ExcludeConstraint
+from sqlalchemy.dialects.postgresql import JSONB, TSTZRANGE, ExcludeConstraint
 
 # revision identifiers, used by Alembic.
 revision = "56f5a3f9442a"
@@ -26,7 +26,7 @@ def upgrade() -> None:
         sa.Column("id", sa.BigInteger(), nullable=False),
         sa.Column("user_id", sa.BigInteger, nullable=False),
         sa.Column("property_id", sa.BigInteger, nullable=False),
-        sa.Column("value", sa.String, nullable=False),
+        sa.Column("value", JSONB, nullable=False),
         sa.Column(
             "during",
             TSTZRANGE,
