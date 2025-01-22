@@ -2,8 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-from sqlalchemy import BigInteger, ForeignKey, String, text
-from sqlalchemy.dialects.postgresql import TSTZRANGE, ExcludeConstraint
+from sqlalchemy import BigInteger, ForeignKey, text
+from sqlalchemy.dialects.postgresql import JSONB, TSTZRANGE, ExcludeConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from data_rentgen.db.models.base import Base
@@ -38,8 +38,8 @@ class CustomUserProperties(Base):
         doc="Id of user's custom property",
     )
 
-    value: Mapped[str] = mapped_column(
-        String,
+    value: Mapped[JSONB] = mapped_column(
+        JSONB,
         nullable=False,
     )
 

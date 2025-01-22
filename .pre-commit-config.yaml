@@ -109,7 +109,7 @@ repos:
         args: [--autofix, --indent, '2', --offset, '2']
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.3.0
+    rev: v2.4.0
     hooks:
       - id: codespell
         args: [-w]
