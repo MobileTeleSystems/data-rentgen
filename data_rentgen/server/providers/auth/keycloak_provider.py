@@ -37,7 +37,9 @@ class KeycloakAuthProvider(AuthProvider):
 
     @classmethod
     def setup(cls, app: FastAPI) -> FastAPI:
-        settings = KeycloakAuthProviderSettings.model_validate(app.state.settings.auth.dict(exclude={"provider"}))
+        settings = KeycloakAuthProviderSettings.model_validate(
+            app.state.settings.auth.dict(exclude={"provider"}),
+        )
         logger.info("Using %s provider with settings:\n%s", cls.__name__, settings)
         app.dependency_overrides[AuthProvider] = cls
         app.dependency_overrides[KeycloakAuthProviderSettings] = lambda: settings
@@ -48,7 +50,9 @@ class KeycloakAuthProvider(AuthProvider):
         login: str,
         password: str,
     ) -> dict[str, Any]:
-        raise NotImplementedError("Password grant is not supported by KeycloakAuthProvider.")
+        raise NotImplementedError(
+            "Password grant is not supported by KeycloakAuthProvider.",
+        )
 
     async def get_token_authorization_code_grant(
         self,
@@ -58,11 +62,16 @@ class KeycloakAuthProvider(AuthProvider):
             return await self.keycloak_openid.a_token(
                 grant_type="authorization_code",
                 code=code,
+                redirect_uri=self.settings.keycloak.redirect_uri,
             )
         except KeycloakOperationError as e:
             raise AuthorizationError("Failed to get token") from e
 
-    async def get_current_user(self, access_token: str | None, request: Request) -> User:
+    async def get_current_user(
+        self,
+        access_token: str | None,
+        request: Request,
+    ) -> User:
         if not access_token:
             logger.debug("No access token found in session.")
             await self.redirect_to_auth()
@@ -112,4 +121,7 @@ class KeycloakAuthProvider(AuthProvider):
         )
 
         logger.info("Redirecting user to auth url: %s", auth_url)
-        raise RedirectError(message="Please authorize using provided URL", details=auth_url)
+        raise RedirectError(
+            message="Please authorize using provided URL",
+            details=auth_url,
+        )
