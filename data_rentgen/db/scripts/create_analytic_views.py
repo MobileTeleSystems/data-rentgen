@@ -47,7 +47,7 @@ def get_parser() -> ArgumentParser:
         type=Depth,
         choices=[item.value for item in Depth],
         nargs="+",
-        help="Depth of matherialized view data (created_at filter). Default is day",
+        help="Depth of matherialized view data (created_at filter). You can provide list of args",
     )
     return parser
 
