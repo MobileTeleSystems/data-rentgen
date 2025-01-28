@@ -49,13 +49,6 @@ def get_parser() -> ArgumentParser:
         nargs="?",
         help="Depth of matherialized view data (created_at filter). Default is day",
     )
-    parser.add_argument(
-        "-r",
-        "--refresh",
-        action="store_true",
-        default=False,
-        help="If provide will update views",
-    )
     return parser
 
 
@@ -103,11 +96,13 @@ async def create_views(depths: Depths, session: AsyncSession):
         statement = get_statement(base_table, depths)
         logger.debug("Executing statement: %s", statement)
         await session.execute(text(statement))
+        await session.commit()
+        await refresh_view(base_table + view_sufix_map[depths], session)
 
 
 async def refresh_view(view_name: str, session: AsyncSession):
+    logger.info("Refresh view: %s", view_name)
     statement = f"REFRESH MATERIALIZED VIEW {view_name}"
-    logger.debug("Executing statement: %s", statement)
     await session.execute(text(statement))
 
 
@@ -117,7 +112,6 @@ async def main(args: list[str]) -> None:
     parser = get_parser()
     params = parser.parse_args(args)
     depths = params.depths
-    refresh = params.refresh
 
     db_settings = DatabaseSettings()
     session_factory = create_session_factory(db_settings)
@@ -126,12 +120,11 @@ async def main(args: list[str]) -> None:
             depths = Depths(depths)
             logger.info("Create views with depths: %s", depths)
             await create_views(depths, session)
-            await session.commit()
-        if refresh:
-            logger.info("Refresh views")
-            for suffix in view_sufix_map.values():
-                for base_name in ("output", "input"):
-                    await refresh_view(base_name + suffix, session)
+        else:
+            logger.info("Create all views")
+            for depth in Depths:
+                logger.info("Create views with depths: %s", depth)
+                await create_views(depth, session)
 
 
 if __name__ == "__main__":

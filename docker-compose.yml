@@ -74,6 +74,15 @@ services:
       db:
         condition: service_healthy
 
+  db-views:
+    image: mtsrus/data-rentgen:develop
+    command: |
+      python -m data_rentgen.db.scripts.create_analytic_views
+    env_file: .env.docker
+    depends_on:
+      db-migration:
+        condition: service_completed_successfully
+
   frontend:
     image: mtsrus/data-rentgen-ui:develop
     restart: unless-stopped
