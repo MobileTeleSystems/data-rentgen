@@ -26,19 +26,18 @@ help: ##@Help Show this help
 
 
 
-venv: venv-cleanup  venv-install##@Env Init venv and install poetry dependencies
+venv: venv-cleanup venv-install##@Env Init venv and install poetry dependencies
 
 venv-cleanup: ##@Env Cleanup venv
 	@rm -rf .venv || true
 	python -m venv ${VENV}
 	${PIP} install -U setuptools wheel pip
-	${PIP} install poetry
+	${PIP} install poetry poetry-bumpversion
 
 venv-install: ##@Env Install requirements to venv
 	${POETRY} config virtualenvs.create false
 	${POETRY} self add poetry-bumpversion
 	${POETRY} install --no-root --all-extras --with dev,test,docs $(ARGS)
-	${PIP} install -U flake8-commas
 	${PIP} install --no-deps sphinx-plantuml
 
 

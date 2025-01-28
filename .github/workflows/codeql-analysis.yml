@@ -50,7 +50,6 @@ jobs:
       - name: Install dependencies
         run: |
           poetry install --no-root --all-extras --with dev --without docs,test
-          pip install -U flake8-commas
 
       - name: Run flake8
         run: poetry run flake8 data_rentgen/
