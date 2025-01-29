@@ -28,7 +28,7 @@ With Docker
   .. dropdown:: ``docker-compose.yml``
 
       .. literalinclude:: ../../../docker-compose.yml
-          :emphasize-lines: 77-91
+          :emphasize-lines: 86-100
 
   .. dropdown:: ``.env.docker``
 

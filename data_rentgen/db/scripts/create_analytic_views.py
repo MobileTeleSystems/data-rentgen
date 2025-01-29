@@ -88,7 +88,6 @@ def get_statement(base_table: str, type: str) -> str:
             JOIN dataset d ON agr.dataset_id = d.id
             LEFT JOIN location l ON d.location_id = l.id
         )
-        WITH DATA
     """
 
 
