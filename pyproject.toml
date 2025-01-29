@@ -444,6 +444,8 @@ per-file-ignores = [
 # WPS102 Found incorrect module name pattern
 # WPS432 Found magic number: 255
   "data_rentgen/db/*.py:WPS102,WPS432",
+# S608 Possible SQL injection
+  "data_rentgen/db/scripts/create_analytic_views.py:S608",
 # WPS237 Found a too complex `f` string
   "data_rentgen/server/exceptions/*.py:WPS237",
 # WPS441 Found control variable used after block: input
