@@ -28,7 +28,7 @@ def upgrade() -> None:
 
 def downgrade() -> None:
     for base_table in ("output", "input"):
-        for _, suffix in view_sufix_map.items():
+        for suffix in view_sufix_map.values():
             view_name = base_table + suffix
             op.execute(sa.text(f"DROP VIEW IF EXISTS {view_name}"))
 
