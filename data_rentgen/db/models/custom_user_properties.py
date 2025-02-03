@@ -45,6 +45,6 @@ class CustomUserProperties(Base):
 
     during: Mapped[TSTZRANGE] = mapped_column(
         TSTZRANGE,
-        server_defaults=text("tstzrange(now(), NULL, '[)')"),
+        server_default=text("tstzrange(now(), NULL, '[)')"),
         nullable=False,
     )
