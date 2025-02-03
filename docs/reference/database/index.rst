@@ -13,7 +13,7 @@ After migrations are performed, it is required to run script which creates parti
 By default, it creates monthly partitions, for current and next month. This can be changed by overriding command args.
 This script should run on schedule, for example by adding a dedicated entry to `crontab <https://help.ubuntu.com/community/CronHowto>`_.
 
-Along with migrations analytics views are created. By default these materializd views are empty(`WITH NO DATA`).
+Along with migrations analytics views are created. By default these materialized views are empty(``WITH NO DATA``).
 In order to fill these tables with data you need to run refresh script. The command for this shown below.
 Views based on data in ``output`` and ``input`` tables and has such structure:
 
