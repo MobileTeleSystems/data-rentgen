@@ -132,8 +132,8 @@ respx = "^0.22.0"
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.0.1"
 mypy = "^1.14.1"
-black = "^24.10.0"
-isort = "^5.13.2"
+black = ">=24.10,<26.0"
+isort = ">=5.13.2,<7.0.0"
 flake8 = "^7.1.1"
 bandit = "^1.7.9"
 sqlalchemy = {extras = ["mypy"], version = "^2.0.32"}
