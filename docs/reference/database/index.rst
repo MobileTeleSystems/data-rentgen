@@ -13,7 +13,8 @@ After migrations are performed, it is required to run script which creates parti
 By default, it creates monthly partitions, for current and next month. This can be changed by overriding command args.
 This script should run on schedule, for example by adding a dedicated entry to `crontab <https://help.ubuntu.com/community/CronHowto>`_.
 
-Additionally after migrations you can run a script which creates analytics views.
+Along with migrations analytics views are created. By default these materializd views are empty(`WITH NO DATA`).
+In order to fill these tables with data you need to run refresh script. The command for this shown below.
 Views based on data in ``output`` and ``input`` tables and has such structure:
 
   .. code:: text
@@ -30,8 +31,8 @@ Views based on data in ``output`` and ``input`` tables and has such structure:
     sum_files - Sum of files in given interval. ``num_files`` - column.
 
 We provide three types of views: ``day``, ``week`` and ``month``, based on the time period in which the aggregation occur.
-By default, script creates pair views for all intervals.
-You can specify which views to create with ``depth`` parameter. Options are: ``day``, ``week``, ``month``.
+Views are created for all intervals and by default, script refresh all views.
+You can specify which views to refresh with ``depth`` parameter. Options are: ``day``, ``week``, ``month``.
 
 Requirements
 ------------
@@ -80,11 +81,11 @@ With Docker
 
     0 0 * * * docker exec data-rentgen-server-1 "python -m data_rentgen.db.scripts.create_partitions"
 
-* Create analytic views:
+* Refresh analytic views:
 
   .. code:: console
 
-    $ docker exec data-rentgen-server-1 "python -m data_rentgen.db.scripts.create_analytic_views"
+    $ docker exec data-rentgen-server-1 "python -m data_rentgen.db.scripts.refresh_analytic_views"
 
 * Add analytic views refresh script to crontab, to run every day:
 
@@ -94,7 +95,7 @@ With Docker
 
   .. code:: text
 
-    0 0 * * * docker exec data-rentgen-server-1 "python -m data_rentgen.db.scripts.create_analytic_views"
+    0 0 * * * docker exec data-rentgen-server-1 "python -m data_rentgen.db.scripts.refresh_analytic_views"
 
 
 Without Docker
@@ -162,7 +163,7 @@ Without Docker
 
   .. code:: console
 
-    $ python -m data_rentgen.db.scripts.create_analytic_views
+    $ python -m data_rentgen.db.scripts.refresh_analytic_views
 
 * Add analytic views refresh script to crontab, to run every day:
 
@@ -173,7 +174,7 @@ Without Docker
   .. code:: text
 
     # read settings from .env file, and run script using a specific venv with all required dependencies
-    0 0 * * * /bin/bash -c "source /some/.env && /some/.venv/bin/python -m data_rentgen.db.scripts.create_analytic_views"
+    0 0 * * * /bin/bash -c "source /some/.env && /some/.venv/bin/python -m data_rentgen.db.scripts.refresh_analytic_views"
 
 
 
