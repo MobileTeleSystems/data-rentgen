@@ -445,7 +445,7 @@ per-file-ignores = [
 # WPS432 Found magic number: 255
   "data_rentgen/db/*.py:WPS102,WPS432",
 # S608 Possible SQL injection
-  "data_rentgen/db/scripts/create_analytic_views.py:S608",
+  "data_rentgen/db/migrations/versions/2025-02-03_f017d4c58658_create_analytic_view.py:S608,WPS102",
 # WPS237 Found a too complex `f` string
   "data_rentgen/server/exceptions/*.py:WPS237",
 # WPS441 Found control variable used after block: input
