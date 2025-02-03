@@ -86,10 +86,15 @@ class BatchExtractionResult:  # noqa: WPS338, WPS214
 
     @staticmethod
     def _add(context: dict[tuple, T], new_item: T) -> dict[tuple, T]:  # noqa: WPS602
-        if new_item.unique_key in context:
-            context[new_item.unique_key] = context[new_item.unique_key].merge(new_item)
+        key = new_item.unique_key
+        if key in context:
+            old_item = context[key]
+            if old_item is new_item:
+                return context
+
+            context[key] = old_item.merge(new_item)
         else:
-            context[new_item.unique_key] = new_item
+            context[key] = new_item
         return context
 
     def add_location(self, location: LocationDTO):
