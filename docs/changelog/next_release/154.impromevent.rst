@@ -1,0 +1,5 @@
+Fix multiple ``proxyUrl`` for spark facet with ``master="yarn"``. When spark application send lineage, the ``proxyUrl`` field may come in this form:
+.. code-block:: rst
+    http://node-mn-0001.msk.mts.ru:8088/proxy/application_1733,http://node-mn-0002.msk.mts.ru:8088/proxy/application_7400
+
+We are using only first url(before ``,``).
