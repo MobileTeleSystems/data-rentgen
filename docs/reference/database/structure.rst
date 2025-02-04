@@ -128,6 +128,27 @@ Database structure
         num_files: bigint
     }
 
+    entity DatasetColumnRelation {
+        * id: bigint
+        ----
+        * fingerprint: uuid(v5)
+        * source_column: varchar(255)
+        * target_column: varchar(255) null
+        type: smallint
+    }
+
+    entity ColumnLineage {
+        * id: uuid(v7)
+        * created_at: timestamptz
+        ----
+        * operation_id: uuid(v7)
+        * run_id: uuid(v7)
+        * job_id: bigint
+        * source_dataset_id: bigint
+        * target_dataset_id: bigint
+        * fingerprint: uuid(v5)
+    }
+
     Address ||--o{ Location
 
     Dataset ||--o{ Location
@@ -152,5 +173,12 @@ Database structure
     Output ||--o{ Job
     Output ||--o{ Dataset
     Output |o--o{ Schema
+
+    ColumnLineage ||--o{ Operation
+    ColumnLineage ||--o{ Run
+    ColumnLineage ||--o{ Job
+    ColumnLineage "source_dataset_id" ||--o{ Dataset
+    ColumnLineage "target_dataset_id" ||--o{ Dataset
+    ColumnLineage ||--o{ DatasetColumnRelation
 
     @enduml
