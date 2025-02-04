@@ -1,7 +1,12 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+from data_rentgen.dto.column_lineage import ColumnLineageDTO
 from data_rentgen.dto.dataset import DatasetDTO
+from data_rentgen.dto.dataset_column_relation import (
+    DatasetColumnRelationDTO,
+    DatasetColumnRelationTypeDTO,
+)
 from data_rentgen.dto.dataset_symlink import DatasetSymlinkDTO, DatasetSymlinkTypeDTO
 from data_rentgen.dto.input import InputDTO
 from data_rentgen.dto.job import JobDTO, JobTypeDTO
@@ -18,7 +23,10 @@ from data_rentgen.dto.schema import SchemaDTO
 from data_rentgen.dto.user import UserDTO
 
 __all__ = [
+    "ColumnLineageDTO",
     "DatasetDTO",
+    "DatasetColumnRelationDTO",
+    "DatasetColumnRelationTypeDTO",
     "DatasetSymlinkDTO",
     "DatasetSymlinkTypeDTO",
     "LocationDTO",

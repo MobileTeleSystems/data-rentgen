@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TypeVar
 
+from data_rentgen.consumer.extractors.column_lineage import extract_column_lineage
 from data_rentgen.consumer.extractors.input import extract_input
 from data_rentgen.consumer.extractors.operation import extract_operation
 from data_rentgen.consumer.extractors.output import extract_output
@@ -11,7 +12,9 @@ from data_rentgen.consumer.extractors.run import extract_run
 from data_rentgen.consumer.openlineage.job_facets.job_type import OpenLineageJobType
 from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
 from data_rentgen.dto import (
+    ColumnLineageDTO,
     DatasetDTO,
+    DatasetSymlinkDTO,
     InputDTO,
     JobDTO,
     LocationDTO,
@@ -21,12 +24,12 @@ from data_rentgen.dto import (
     SchemaDTO,
     UserDTO,
 )
-from data_rentgen.dto.dataset_symlink import DatasetSymlinkDTO
 
 T = TypeVar(
     "T",
     LocationDTO,
     DatasetDTO,
+    ColumnLineageDTO,
     DatasetSymlinkDTO,
     JobDTO,
     RunDTO,
@@ -65,6 +68,7 @@ class BatchExtractionResult:  # noqa: WPS338, WPS214
         self._operations: dict[tuple, OperationDTO] = {}
         self._inputs: dict[tuple, InputDTO] = {}
         self._outputs: dict[tuple, OutputDTO] = {}
+        self._column_lineage: dict[tuple, ColumnLineageDTO] = {}
         self._schemas: dict[tuple, SchemaDTO] = {}
         self._users: dict[tuple, UserDTO] = {}
 
@@ -79,6 +83,7 @@ class BatchExtractionResult:  # noqa: WPS338, WPS214
             f"operations={len(self._operations)}, "
             f"inputs={len(self._inputs)}, "
             f"outputs={len(self._outputs)}, "
+            f"column_lineage={len(self._column_lineage)}, "
             f"schemas={len(self._schemas)}, "
             f"users={len(self._users)}"
             ")"
@@ -138,6 +143,12 @@ class BatchExtractionResult:  # noqa: WPS338, WPS214
         self.add_dataset(output.dataset)
         if output.schema:
             self.add_schema(output.schema)
+
+    def add_column_lineage(self, lineage: ColumnLineageDTO):
+        self._add(self._column_lineage, lineage)
+        self.add_dataset(lineage.source_dataset)
+        self.add_dataset(lineage.target_dataset)
+        self.add_operation(lineage.operation)
 
     def add_schema(self, schema: SchemaDTO):
         self._add(self._schemas, schema)
@@ -200,6 +211,13 @@ class BatchExtractionResult:  # noqa: WPS338, WPS214
             output.schema = self._get_schema(output.schema.unique_key)
         return output
 
+    def _get_column_lineage(self, output_key: tuple) -> ColumnLineageDTO:
+        lineage = self._column_lineage[output_key]
+        lineage.operation = self._get_operation(lineage.operation.unique_key)
+        lineage.source_dataset = self._get_dataset(lineage.source_dataset.unique_key)
+        lineage.target_dataset = self._get_dataset(lineage.target_dataset.unique_key)
+        return lineage
+
     def locations(self) -> list[LocationDTO]:
         return list(map(self._get_location, self._locations))
 
@@ -224,6 +242,9 @@ class BatchExtractionResult:  # noqa: WPS338, WPS214
     def outputs(self) -> list[OutputDTO]:
         return list(map(self._get_output, self._outputs))
 
+    def column_lineage(self) -> list[ColumnLineageDTO]:
+        return list(map(self._get_column_lineage, self._column_lineage))
+
     def schemas(self) -> list[SchemaDTO]:
         return list(map(self._get_schema, self._schemas))
 
@@ -231,7 +252,7 @@ class BatchExtractionResult:  # noqa: WPS338, WPS214
         return list(map(self._get_user, self._users))
 
 
-def extract_batch(events: list[OpenLineageRunEvent]) -> BatchExtractionResult:
+def extract_batch(events: list[OpenLineageRunEvent]) -> BatchExtractionResult:  # noqa: WPS231
     result = BatchExtractionResult()
 
     for event in events:
@@ -249,6 +270,11 @@ def extract_batch(events: list[OpenLineageRunEvent]) -> BatchExtractionResult:
                 result.add_output(output)
                 for symlink in symlinks:  # noqa: WPS440
                     result.add_dataset_symlink(symlink)
+
+            for dataset in event.inputs + event.outputs:
+                column_lineage = extract_column_lineage(operation, dataset)
+                for item in column_lineage:
+                    result.add_column_lineage(item)
 
         else:
             run = extract_run(event)

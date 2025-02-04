@@ -5,7 +5,11 @@ from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing_extensions import Annotated
 
+from data_rentgen.db.repositories.column_lineage import ColumnLineageRepository
 from data_rentgen.db.repositories.dataset import DatasetRepository
+from data_rentgen.db.repositories.dataset_column_relation import (
+    DatasetColumnRelationRepository,
+)
 from data_rentgen.db.repositories.dataset_symlink import DatasetSymlinkRepository
 from data_rentgen.db.repositories.input import InputRepository
 from data_rentgen.db.repositories.job import JobRepository
@@ -33,6 +37,8 @@ class UnitOfWork:
         self.schema = SchemaRepository(session)
         self.input = InputRepository(session)
         self.output = OutputRepository(session)
+        self.dataset_column_relation = DatasetColumnRelationRepository(session)
+        self.column_lineage = ColumnLineageRepository(session)
         self.user = UserRepository(session)
 
     async def __aenter__(self):
