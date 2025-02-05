@@ -106,7 +106,7 @@ class ColumnLineage(Base):
         SQL_UUID,
         index=False,
         nullable=False,
-        doc="Datase column relation fingerprint",
+        doc="Dataset column relation fingerprint",
     )
     dataset_column_relations: Mapped[list[DatasetColumnRelation]] = relationship(
         DatasetColumnRelation,
