@@ -20,7 +20,9 @@ from data_rentgen.dto import RunDTO, RunStartReasonDTO, RunStatusDTO
 from data_rentgen.dto.user import UserDTO
 
 
-def extract_run_minimal(facet: OpenLineageRunEvent | OpenLineageParentRunFacet) -> RunDTO:
+def extract_run_minimal(
+    facet: OpenLineageRunEvent | OpenLineageParentRunFacet,
+) -> RunDTO:
     return RunDTO(
         id=facet.run.runId,  # type: ignore [arg-type]
         job=extract_job(facet.job),
@@ -85,7 +87,10 @@ def enrich_run_identifiers(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
 def enrich_run_logs(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
     spark_application_details = event.run.facets.spark_applicationDetails
     if spark_application_details:
-        run.running_log_url = spark_application_details.proxyUrl or spark_application_details.uiWebUrl
+        if spark_application_details.proxyUrl:
+            run.running_log_url = spark_application_details.proxyUrl.split(",")[0]
+        else:
+            run.running_log_url = spark_application_details.uiWebUrl
         run.persistent_log_url = spark_application_details.historyUrl
         return run
 
@@ -97,9 +102,15 @@ def enrich_run_logs(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
 
         processing_engine = event.run.facets.processing_engine
         if processing_engine and processing_engine.version >= Version("2.3.0"):
-            run.persistent_log_url = get_airflow_2_3_plus_dag_run_url(namespace, airflow_dag_run_facet)
+            run.persistent_log_url = get_airflow_2_3_plus_dag_run_url(
+                namespace,
+                airflow_dag_run_facet,
+            )
         else:
-            run.persistent_log_url = get_airflow_2_x_dag_run_url(namespace, airflow_dag_run_facet)
+            run.persistent_log_url = get_airflow_2_x_dag_run_url(
+                namespace,
+                airflow_dag_run_facet,
+            )
 
     airflow_task_run_facet = event.run.facets.airflow
     if airflow_task_run_facet:
@@ -114,9 +125,15 @@ def enrich_run_logs(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
 
         processing_engine = event.run.facets.processing_engine
         if processing_engine and processing_engine.version >= Version("2.9.1"):
-            run.persistent_log_url = get_airflow_2_9_plus_task_log_url(namespace, airflow_task_run_facet)
+            run.persistent_log_url = get_airflow_2_9_plus_task_log_url(
+                namespace,
+                airflow_task_run_facet,
+            )
         else:
-            run.persistent_log_url = get_airflow_2_x_task_log_url(namespace, airflow_task_run_facet)
+            run.persistent_log_url = get_airflow_2_x_task_log_url(
+                namespace,
+                airflow_task_run_facet,
+            )
     return run
 
 
@@ -162,7 +179,9 @@ def get_airflow_2_x_task_log_url(  # noqa: WPS114
 ) -> str:
     # https://github.com/apache/airflow/blob/2.1.0/airflow/models/taskinstance.py#L524-L528
     dag_id = quote(airflow_task_run_facet.dag.dag_id)
-    execution_date = quote(airflow_task_run_facet.dagRun.data_interval_start.isoformat())
+    execution_date = quote(
+        airflow_task_run_facet.dagRun.data_interval_start.isoformat(),
+    )
     task_id = quote(airflow_task_run_facet.task.task_id)
     return f"{namespace}/log?&dag_id={dag_id}&task_id={task_id}&execution_date={execution_date}"
 
