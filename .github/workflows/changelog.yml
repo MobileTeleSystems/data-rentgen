@@ -1,0 +1,64 @@
+name: Changelog
+
+on:
+  pull_request:
+    types: [opened, synchronize, labeled, unlabeled, reopened]
+    branches-ignore:
+      - master
+
+env:
+  DEFAULT_PYTHON: '3.12'
+
+permissions:
+  contents: read
+
+jobs:
+  check-changelog:
+    name: Changelog Entry Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: "!contains(github.event.pull_request.labels.*.name, 'ci:skip-changelog') && github.event.pull_request.user.login != 'pre-commit-ci[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'"
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+
+      - name: Install poetry
+        uses: snok/install-poetry@v1
+
+      - name: Cache poetry
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-python-${{ env.DEFAULT_PYTHON }}-changelog-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-python-${{ env.DEFAULT_PYTHON }}-changelog-${{ hashFiles('**/poetry.lock') }}
+            ${{ runner.os }}-python-${{ env.DEFAULT_PYTHON }}-changelog-
+            ${{ runner.os }}-python
+            ${{ runner.os }}-
+
+      - name: Install dependencies
+        run: |
+          poetry install --no-root --with docs --without dev,test
+
+      - name: Check changelog entry exists
+        run: |
+          if [ ! -s docs/changelog/next_release/${{ github.event.pull_request.number }}.*.rst ]; then
+              echo "Please add corresponding file 'docs/changelog/next_release/<issue number>.<change type>.rst' with changes description"
+              exit 1
+          fi
+
+      - name: Validate changelog
+        run: |-
+          # Fetch the pull request' base branch so towncrier will be able to
+          # compare the current branch with the base branch.
+          git fetch --no-tags origin +refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
+          poetry run towncrier check --compare-with origin/${{ github.base_ref }}
+          poetry run towncrier --draft
