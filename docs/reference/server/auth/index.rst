@@ -33,4 +33,4 @@ Right now service has two scenarios for authentication:
     :maxdepth: 1
     :caption: For developers
 
-    customserver
+    custom
