@@ -17,6 +17,38 @@ class LocationResponseV1(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class LocationDatasetStatisticsReponseV1(BaseModel):
+    """Location dataset statistics response."""
+
+    total_datasets: int = Field(description="Total number of datasets bound to this location")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LocationJobStatisticsReponseV1(BaseModel):
+    """Location job statistics response."""
+
+    total_jobs: int = Field(description="Total number of jobs bound to this location")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LocationStatisticsReponseV1(BaseModel):
+    """Location statistics response."""
+
+    datasets: LocationDatasetStatisticsReponseV1 = Field(description="Dataset statistics")
+    jobs: LocationJobStatisticsReponseV1 = Field(description="Dataset statistics")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class LocationDetailedResponseV1(BaseModel):
+    data: LocationResponseV1 = Field(description="Location data")
+    statistics: LocationStatisticsReponseV1 = Field(description="Location statistics")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class LocationPaginateQueryV1(PaginateQueryV1):
     """Query params for Location paginate request."""
 
