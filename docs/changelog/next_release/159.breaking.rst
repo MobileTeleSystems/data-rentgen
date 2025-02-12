@@ -1,0 +1,50 @@
+Change response schema of ``GET /runs`` from:
+
+.. code:: python
+
+    {
+        "meta": {...},
+        "items": [
+            {
+                "kind": "RUN",
+                "id": ...,
+                # ...
+            }
+        ],
+    }
+
+to:
+
+.. code:: python
+
+    {
+        "meta": {...},
+        "items": [
+            {
+                "data": {
+                    "kind": "RUN",
+                    "id": ...,
+                    # ...
+                },
+                "statistics": {
+                    "inputs": {
+                        "total_datasets": 2,
+                        "total_bytes": 123456,
+                        "total_rows": 100,
+                        "total_files": 0,
+                    },
+                    "outputs": {
+                        "total_datasets": 2,
+                        "total_bytes": 123456,
+                        "total_rows": 100,
+                        "total_files": 0,
+                    },
+                    "operations": {
+                        "total_operations": 10,
+                    },
+                },
+            }
+        ],
+    }
+
+This allows to show run statistics in UI without building up lineage graph.

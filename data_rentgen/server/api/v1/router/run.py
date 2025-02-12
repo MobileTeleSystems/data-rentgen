@@ -10,13 +10,12 @@ from data_rentgen.server.errors.schemas import InvalidRequestSchema
 from data_rentgen.server.schemas.v1 import (
     LineageResponseV1,
     PageResponseV1,
+    RunDetailedResponseV1,
     RunLineageQueryV1,
-    RunResponseV1,
     RunsQueryV1,
 )
-from data_rentgen.server.services import LineageService, get_user
+from data_rentgen.server.services import LineageService, RunService, get_user
 from data_rentgen.server.utils.lineage_response import build_lineage_response
-from data_rentgen.services import UnitOfWork
 
 router = APIRouter(prefix="/runs", tags=["Runs"], responses=get_error_responses(include={InvalidRequestSchema}))
 
@@ -24,10 +23,10 @@ router = APIRouter(prefix="/runs", tags=["Runs"], responses=get_error_responses(
 @router.get("", summary="Paginated list of Runs")
 async def runs(
     query_args: Annotated[RunsQueryV1, Depends()],
-    unit_of_work: Annotated[UnitOfWork, Depends()],
+    run_service: Annotated[RunService, Depends()],
     current_user: User = Depends(get_user()),
-) -> PageResponseV1[RunResponseV1]:
-    pagination = await unit_of_work.run.paginate(
+) -> PageResponseV1[RunDetailedResponseV1]:
+    pagination = await run_service.paginate(
         page=query_args.page,
         page_size=query_args.page_size,
         since=query_args.since,
@@ -37,7 +36,7 @@ async def runs(
         parent_run_id=query_args.parent_run_id,
         search_query=query_args.search_query,
     )
-    return PageResponseV1[RunResponseV1].from_pagination(pagination)
+    return PageResponseV1[RunDetailedResponseV1].from_pagination(pagination)
 
 
 @router.get("/lineage", summary="Get Run lineage graph")
