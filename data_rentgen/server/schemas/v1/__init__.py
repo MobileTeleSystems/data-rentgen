@@ -5,7 +5,11 @@ from data_rentgen.server.schemas.v1.dataset import (
     DatasetPaginateQueryV1,
     DatasetResponseV1,
 )
-from data_rentgen.server.schemas.v1.job import JobPaginateQueryV1, JobResponseV1
+from data_rentgen.server.schemas.v1.job import (
+    JobDetailedResponseV1,
+    JobPaginateQueryV1,
+    JobResponseV1,
+)
 from data_rentgen.server.schemas.v1.lineage import (
     DatasetLineageQueryV1,
     JobLineageQueryV1,
@@ -81,8 +85,9 @@ __all__ = [
     "OperationQueryV1",
     "OperationResponseV1",
     "OperationStatisticsReponseV1",
-    "JobResponseV1",
-    "JobPaginateQueryV1",
+    "JobDetailedResponseV1",
     "JobLineageQueryV1",
+    "JobPaginateQueryV1",
+    "JobResponseV1",
     "PaginateQueryV1",
 ]

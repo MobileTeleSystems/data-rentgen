@@ -41,16 +41,18 @@ async def test_search_jobs_by_address_url(
         },
         "items": [
             {
-                "kind": "JOB",
-                "id": job.id,
-                "name": job.name,
-                "type": job.type,
-                "location": {
-                    "id": job.location.id,
-                    "name": job.location.name,
-                    "type": job.location.type,
-                    "addresses": [{"url": address.url} for address in job.location.addresses],
-                    "external_id": job.location.external_id,
+                "data": {
+                    "kind": "JOB",
+                    "id": job.id,
+                    "name": job.name,
+                    "type": job.type,
+                    "location": {
+                        "id": job.location.id,
+                        "type": job.location.type,
+                        "name": job.location.name,
+                        "addresses": [{"url": address.url} for address in job.location.addresses],
+                        "external_id": job.location.external_id,
+                    },
                 },
             }
             for job in jobs
@@ -88,16 +90,18 @@ async def test_search_jobs_by_location_name(
         },
         "items": [
             {
-                "kind": "JOB",
-                "id": job.id,
-                "name": job.name,
-                "type": job.type,
-                "location": {
-                    "id": job.location.id,
-                    "name": job.location.name,
-                    "type": job.location.type,
-                    "addresses": [{"url": address.url} for address in job.location.addresses],
-                    "external_id": job.location.external_id,
+                "data": {
+                    "kind": "JOB",
+                    "id": job.id,
+                    "name": job.name,
+                    "type": job.type,
+                    "location": {
+                        "id": job.location.id,
+                        "type": job.location.type,
+                        "name": job.location.name,
+                        "addresses": [{"url": address.url} for address in job.location.addresses],
+                        "external_id": job.location.external_id,
+                    },
                 },
             }
             for job in jobs
@@ -146,16 +150,18 @@ async def test_search_jobs_by_job_name(
         },
         "items": [
             {
-                "kind": "JOB",
-                "id": job.id,
-                "name": job.name,
-                "type": job.type,
-                "location": {
-                    "id": job.location.id,
-                    "name": job.location.name,
-                    "type": job.location.type,
-                    "addresses": [{"url": address.url} for address in job.location.addresses],
-                    "external_id": job.location.external_id,
+                "data": {
+                    "kind": "JOB",
+                    "id": job.id,
+                    "name": job.name,
+                    "type": job.type,
+                    "location": {
+                        "id": job.location.id,
+                        "type": job.location.type,
+                        "name": job.location.name,
+                        "addresses": [{"url": address.url} for address in job.location.addresses],
+                        "external_id": job.location.external_id,
+                    },
                 },
             }
             for job in jobs
@@ -194,16 +200,18 @@ async def test_search_jobs_by_location_name_and_address_url(
         },
         "items": [
             {
-                "kind": "JOB",
-                "id": job.id,
-                "name": job.name,
-                "type": job.type,
-                "location": {
-                    "id": job.location.id,
-                    "name": job.location.name,
-                    "type": job.location.type,
-                    "addresses": [{"url": address.url} for address in job.location.addresses],
-                    "external_id": job.location.external_id,
+                "data": {
+                    "kind": "JOB",
+                    "id": job.id,
+                    "name": job.name,
+                    "type": job.type,
+                    "location": {
+                        "id": job.location.id,
+                        "type": job.location.type,
+                        "name": job.location.name,
+                        "addresses": [{"url": address.url} for address in job.location.addresses],
+                        "external_id": job.location.external_id,
+                    },
                 },
             }
             for job in jobs
