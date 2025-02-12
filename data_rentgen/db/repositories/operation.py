@@ -4,7 +4,7 @@
 from datetime import datetime, timezone
 from typing import Sequence
 
-from sqlalchemy import any_, func, select
+from sqlalchemy import Row, any_, func, select
 from sqlalchemy.dialects.postgresql import insert
 
 from data_rentgen.db.models import Operation, OperationStatus, OperationType
@@ -131,3 +131,24 @@ class OperationRepository(Repository[Operation]):
         )
         result = await self._session.scalars(query)
         return list(result.all())
+
+    async def get_stats_by_run_ids(self, run_ids: Sequence[UUID]) -> dict[UUID, Row]:
+        if not run_ids:
+            return {}
+
+        # unlike list_by_run_ids, we need to get all statistics for specific runs, regardless of time range
+        min_created_at = extract_timestamp_from_uuid(min(run_ids))
+        query = (
+            select(
+                Operation.run_id.label("run_id"),
+                func.count(Operation.id.distinct()).label("total_operations"),
+            )
+            .where(
+                Operation.created_at >= min_created_at,
+                Operation.run_id == any_(run_ids),  # type: ignore[arg-type]
+            )
+            .group_by(Operation.run_id)
+        )
+
+        query_result = await self._session.execute(query)
+        return {row.run_id: row for row in query_result.all()}

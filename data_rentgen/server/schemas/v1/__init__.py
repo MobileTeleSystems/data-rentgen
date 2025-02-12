@@ -37,14 +37,25 @@ from data_rentgen.server.schemas.v1.pagination import (
     PageResponseV1,
     PaginateQueryV1,
 )
-from data_rentgen.server.schemas.v1.run import RunResponseV1, RunsQueryV1
+from data_rentgen.server.schemas.v1.run import (
+    RunDetailedResponseV1,
+    RunIOStatisticsReponseV1,
+    RunOperationStatisticsReponseV1,
+    RunResponseV1,
+    RunsQueryV1,
+    RunStatisticsReponseV1,
+)
 from data_rentgen.server.schemas.v1.user import UserResponseV1
 
 __all__ = [
     "AddressResponseV1",
+    "RunDetailedResponseV1",
+    "RunIOStatisticsReponseV1",
+    "RunLineageQueryV1",
+    "RunOperationStatisticsReponseV1",
     "RunResponseV1",
     "RunsQueryV1",
-    "RunLineageQueryV1",
+    "RunStatisticsReponseV1",
     "UserResponseV1",
     "DatasetPaginateQueryV1",
     "DatasetResponseV1",

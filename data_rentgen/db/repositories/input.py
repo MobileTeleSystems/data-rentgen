@@ -239,3 +239,27 @@ class InputRepository(Repository[Input]):
 
         query_result = await self._session.execute(query)
         return {row.operation_id: row for row in query_result.all()}
+
+    async def get_stats_by_run_ids(self, run_ids: Sequence[UUID]) -> dict[UUID, Row]:
+        if not run_ids:
+            return {}
+
+        # unlike list_by_run_ids, we need to get all statistics for specific runs, regardless of time range
+        min_created_at = extract_timestamp_from_uuid(min(run_ids))
+        query = (
+            select(
+                Input.run_id.label("run_id"),
+                func.count(Input.dataset_id.distinct()).label("total_datasets"),
+                func.sum(Input.num_bytes).label("total_bytes"),
+                func.sum(Input.num_rows).label("total_rows"),
+                func.sum(Input.num_files).label("total_files"),
+            )
+            .where(
+                Input.created_at >= min_created_at,
+                Input.run_id == any_(run_ids),  # type: ignore[arg-type]
+            )
+            .group_by(Input.run_id)
+        )
+
+        query_result = await self._session.execute(query)
+        return {row.run_id: row for row in query_result.all()}

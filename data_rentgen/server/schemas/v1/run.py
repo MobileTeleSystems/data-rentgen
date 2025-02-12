@@ -72,6 +72,44 @@ class RunResponseV1(BaseModel):
         return str(value)
 
 
+class RunIOStatisticsReponseV1(BaseModel):
+    """Run IO statistics response."""
+
+    total_datasets: int = Field(default=0, description="Total number of datasets")
+    total_bytes: int = Field(default=0, description="Total number of bytes")
+    total_rows: int = Field(default=0, description="Total number of rows")
+    total_files: int = Field(default=0, description="Total number of files")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RunOperationStatisticsReponseV1(BaseModel):
+    """Run operation statistics response."""
+
+    total_operations: int = Field(default=0, description="Total number of operations")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RunStatisticsReponseV1(BaseModel):
+    """Run statistics response."""
+
+    outputs: RunIOStatisticsReponseV1 = Field(description="Output statistics")
+    inputs: RunIOStatisticsReponseV1 = Field(description="Input statistics")
+    operations: RunOperationStatisticsReponseV1 = Field(description="Operation statistics")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class RunDetailedResponseV1(BaseModel):
+    """Run response."""
+
+    data: RunResponseV1 = Field(description="Run data")
+    statistics: RunStatisticsReponseV1 = Field(description="Run statistics")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class RunsQueryV1(PaginateQueryV1):
     """Query params for Runs paginate request."""
 
