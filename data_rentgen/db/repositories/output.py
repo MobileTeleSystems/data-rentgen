@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Literal, Sequence
 from uuid import UUID
 
-from sqlalchemy import ColumnElement, Select, any_, func, literal_column, select
+from sqlalchemy import ColumnElement, Row, Select, any_, func, literal_column, select
 from sqlalchemy.dialects.postgresql import insert
 
 from data_rentgen.db.models import Output, OutputType
@@ -219,3 +219,32 @@ class OutputRepository(Repository[Output]):
             )
             for row in results.all()
         ]
+
+    async def get_stats_by_operation_ids(self, operation_ids: Sequence[UUID]) -> dict[UUID, Row]:
+        if not operation_ids:
+            return {}
+
+        # Input created_at is always the same as operation's created_at
+        # do not use `tuple_(Input.created_at, Input.operation_id).in_(...),
+        # as this is too complex filter for Postgres to make an optimal query plan
+        min_created_at = extract_timestamp_from_uuid(min(operation_ids))
+        max_created_at = extract_timestamp_from_uuid(max(operation_ids))
+
+        query = (
+            select(
+                Output.operation_id.label("operation_id"),
+                func.count(Output.dataset_id.distinct()).label("total_datasets"),
+                func.sum(Output.num_bytes).label("total_bytes"),
+                func.sum(Output.num_rows).label("total_rows"),
+                func.sum(Output.num_files).label("total_files"),
+            )
+            .where(
+                Output.created_at >= min_created_at,
+                Output.created_at <= max_created_at,
+                Output.operation_id == any_(operation_ids),  # type: ignore[arg-type]
+            )
+            .group_by(Output.operation_id)
+        )
+
+        query_result = await self._session.execute(query)
+        return {row.operation_id: row for row in query_result.all()}

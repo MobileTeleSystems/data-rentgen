@@ -64,6 +64,37 @@ class OperationResponseV1(BaseModel):
         return str(value)
 
 
+class OperationIOStatisticsReponseV1(BaseModel):
+    """Operation IO statistics response."""
+
+    total_datasets: int = Field(default=0, description="Total number of datasets")
+    total_bytes: int = Field(default=0, description="Total number of bytes")
+    total_rows: int = Field(default=0, description="Total number of rows")
+    total_files: int = Field(default=0, description="Total number of files")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class OperationStatisticsReponseV1(BaseModel):
+    """Operation statistics response."""
+
+    outputs: OperationIOStatisticsReponseV1 = Field(description="Output statistics")
+    inputs: OperationIOStatisticsReponseV1 = Field(description="Input statistics")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class OperationDetailedResponseV1(BaseModel):
+    """Operation response."""
+
+    data: OperationResponseV1 = Field(description="Operation data")
+    statistics: OperationStatisticsReponseV1 = Field(
+        description="Operation statistics",
+    )
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class OperationQueryV1(PaginateQueryV1):
     """Query params for Operations paginate request."""
 
