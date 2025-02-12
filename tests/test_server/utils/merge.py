@@ -9,7 +9,7 @@ def _not_none(value: Any) -> bool:
     return value is not None
 
 
-def merge_io(inputs_outputs: Sequence[IO], get_key: Callable[[IO], tuple]) -> Sequence[IO]:
+def merge_io(inputs_outputs: Sequence[IO], get_key: Callable[[IO], tuple]) -> list[IO]:
     if not inputs_outputs:
         return []
 
@@ -58,9 +58,9 @@ def merge_io(inputs_outputs: Sequence[IO], get_key: Callable[[IO], tuple]) -> Se
     return list(merged_inputs_outputs.values())
 
 
-def merge_io_by_runs(inputs_outputs: Sequence[IO]) -> Sequence[IO]:
+def merge_io_by_runs(inputs_outputs: Sequence[IO]) -> list[IO]:
     return merge_io(inputs_outputs, get_key=lambda x: (x.run_id, x.dataset_id))
 
 
-def merge_io_by_jobs(inputs_outputs: Sequence[IO]) -> Sequence[IO]:
+def merge_io_by_jobs(inputs_outputs: Sequence[IO]) -> list[IO]:
     return merge_io(inputs_outputs, get_key=lambda x: (x.job_id, x.dataset_id))

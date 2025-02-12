@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Run
 from tests.fixtures.mocks import MockedUser
+from tests.test_server.utils.convert_to_json import run_to_json
 from tests.test_server.utils.enrich import enrich_runs
 from tests.test_server.utils.lineage_result import LineageResult
 
@@ -68,23 +69,7 @@ async def test_get_runs_by_one_id(
         },
         "items": [
             {
-                "data": {
-                    "kind": "RUN",
-                    "id": str(run.id),
-                    "job_id": run.job_id,
-                    "created_at": run.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                    "parent_run_id": str(run.parent_run_id),
-                    "status": run.status.name,
-                    "external_id": run.external_id,
-                    "attempt": run.attempt,
-                    "persistent_log_url": run.persistent_log_url,
-                    "running_log_url": run.running_log_url,
-                    "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                    "started_by_user": {"name": run.started_by_user.name},
-                    "start_reason": run.start_reason.value,
-                    "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                    "end_reason": run.end_reason,
-                },
+                "data": run_to_json(run),
                 "statistics": {
                     "inputs": {
                         "total_datasets": 0,
@@ -136,23 +121,7 @@ async def test_get_runs_by_multiple_ids(
         },
         "items": [
             {
-                "data": {
-                    "kind": "RUN",
-                    "id": str(run.id),
-                    "job_id": run.job_id,
-                    "created_at": run.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                    "parent_run_id": str(run.parent_run_id),
-                    "status": run.status.name,
-                    "external_id": run.external_id,
-                    "attempt": run.attempt,
-                    "persistent_log_url": run.persistent_log_url,
-                    "running_log_url": run.running_log_url,
-                    "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                    "started_by_user": {"name": run.started_by_user.name},
-                    "start_reason": run.start_reason.value,
-                    "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                    "end_reason": run.end_reason,
-                },
+                "data": run_to_json(run),
                 "statistics": {
                     "inputs": {
                         "total_datasets": 0,
@@ -249,23 +218,7 @@ async def test_get_runs_by_multiple_ids_with_stats(
         },
         "items": [
             {
-                "data": {
-                    "kind": "RUN",
-                    "id": str(run.id),
-                    "job_id": run.job_id,
-                    "created_at": run.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                    "parent_run_id": str(run.parent_run_id),
-                    "status": run.status.name,
-                    "external_id": run.external_id,
-                    "attempt": run.attempt,
-                    "persistent_log_url": run.persistent_log_url,
-                    "running_log_url": run.running_log_url,
-                    "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                    "started_by_user": {"name": run.started_by_user.name},
-                    "start_reason": run.start_reason.value,
-                    "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                    "end_reason": run.end_reason,
-                },
+                "data": run_to_json(run),
                 "statistics": {
                     "inputs": input_stats[run.id],
                     "outputs": output_stats[run.id],

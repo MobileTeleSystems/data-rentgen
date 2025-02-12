@@ -26,6 +26,7 @@ async def test_set_location_external_id(
 ):
     [location] = await enrich_locations([location], async_session)
     assert location.external_id is None
+
     response = await test_client.patch(
         f"v1/locations/{location.id}",
         headers={"Authorization": f"Bearer {mocked_user.access_token}"},

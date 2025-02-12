@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Location
 from tests.fixtures.mocks import MockedUser
+from tests.test_server.utils.convert_to_json import location_to_json
 from tests.test_server.utils.enrich import enrich_locations
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -42,13 +43,7 @@ async def test_search_locations_by_address_url(
         },
         "items": [
             {
-                "data": {
-                    "id": location.id,
-                    "name": location.name,
-                    "type": location.type,
-                    "addresses": [{"url": address.url} for address in location.addresses],
-                    "external_id": location.external_id,
-                },
+                "data": location_to_json(location),
                 "statistics": {
                     "datasets": {
                         "total_datasets": 0,
@@ -95,13 +90,7 @@ async def test_search_locations_by_location_name(
         },
         "items": [
             {
-                "data": {
-                    "id": location.id,
-                    "name": location.name,
-                    "type": location.type,
-                    "addresses": [{"url": address.url} for address in location.addresses],
-                    "external_id": location.external_id,
-                },
+                "data": location_to_json(location),
                 "statistics": {
                     "datasets": {
                         "total_datasets": 0,
@@ -153,13 +142,7 @@ async def test_search_locations_by_location_name_and_address_url(
         },
         "items": [
             {
-                "data": {
-                    "id": location.id,
-                    "name": location.name,
-                    "type": location.type,
-                    "addresses": [{"url": address.url} for address in location.addresses],
-                    "external_id": location.external_id,
-                },
+                "data": location_to_json(location),
                 "statistics": {
                     "datasets": {
                         "total_datasets": 0,
