@@ -21,6 +21,12 @@ class JobResponseV1(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class JobDetailedResponseV1(BaseModel):
+    data: JobResponseV1 = Field(description="Job data")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class JobPaginateQueryV1(PaginateQueryV1):
     """Query params for Jobs paginate request."""
 

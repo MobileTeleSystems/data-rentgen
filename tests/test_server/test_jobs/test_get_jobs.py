@@ -37,16 +37,18 @@ async def test_get_jobs_no_filters(
         },
         "items": [
             {
-                "kind": "JOB",
-                "id": job.id,
-                "name": job.name,
-                "type": job.type,
-                "location": {
-                    "id": job.location.id,
-                    "type": job.location.type,
-                    "name": job.location.name,
-                    "addresses": [{"url": address.url} for address in job.location.addresses],
-                    "external_id": job.location.external_id,
+                "data": {
+                    "kind": "JOB",
+                    "id": job.id,
+                    "name": job.name,
+                    "type": job.type,
+                    "location": {
+                        "id": job.location.id,
+                        "type": job.location.type,
+                        "name": job.location.name,
+                        "addresses": [{"url": address.url} for address in job.location.addresses],
+                        "external_id": job.location.external_id,
+                    },
                 },
             }
             for job in sorted(jobs, key=lambda x: x.name)
