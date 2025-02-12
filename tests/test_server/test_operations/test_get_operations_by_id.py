@@ -6,6 +6,7 @@ from httpx import AsyncClient
 
 from data_rentgen.db.models import Operation
 from tests.fixtures.mocks import MockedUser
+from tests.test_server.utils.convert_to_json import operation_to_json
 from tests.test_server.utils.lineage_result import LineageResult
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -63,20 +64,7 @@ async def test_get_operations_by_one_id(
         },
         "items": [
             {
-                "data": {
-                    "kind": "OPERATION",
-                    "id": str(operation.id),
-                    "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                    "run_id": str(operation.run_id),
-                    "name": operation.name,
-                    "status": operation.status.name,
-                    "type": operation.type.value,
-                    "position": operation.position,
-                    "group": operation.group,
-                    "description": operation.description,
-                    "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                    "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                },
+                "data": operation_to_json(operation),
                 "statistics": {
                     "inputs": {
                         "total_datasets": 0,
@@ -126,20 +114,7 @@ async def test_get_operations_by_multiple_ids(
         },
         "items": [
             {
-                "data": {
-                    "kind": "OPERATION",
-                    "id": str(operation.id),
-                    "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                    "run_id": str(operation.run_id),
-                    "name": operation.name,
-                    "status": operation.status.name,
-                    "type": operation.type.value,
-                    "position": operation.position,
-                    "group": operation.group,
-                    "description": operation.description,
-                    "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                    "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                },
+                "data": operation_to_json(operation),
                 "statistics": {
                     "inputs": {
                         "total_datasets": 0,
@@ -225,20 +200,7 @@ async def test_get_operations_by_multiple_ids_with_stats(
         },
         "items": [
             {
-                "data": {
-                    "kind": "OPERATION",
-                    "id": str(operation.id),
-                    "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                    "run_id": str(operation.run_id),
-                    "name": operation.name,
-                    "status": operation.status.name,
-                    "type": operation.type.value,
-                    "position": operation.position,
-                    "group": operation.group,
-                    "description": operation.description,
-                    "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                    "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                },
+                "data": operation_to_json(operation),
                 "statistics": {
                     "inputs": input_stats[operation.id],
                     "outputs": output_stats[operation.id],

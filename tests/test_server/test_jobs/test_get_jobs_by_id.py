@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Job
 from tests.fixtures.mocks import MockedUser
+from tests.test_server.utils.convert_to_json import job_to_json
 from tests.test_server.utils.enrich import enrich_jobs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -67,19 +68,7 @@ async def test_get_jobs_by_one_id(
         },
         "items": [
             {
-                "data": {
-                    "kind": "JOB",
-                    "id": job.id,
-                    "name": job.name,
-                    "type": job.type,
-                    "location": {
-                        "id": job.location.id,
-                        "type": job.location.type,
-                        "name": job.location.name,
-                        "addresses": [{"url": address.url} for address in job.location.addresses],
-                        "external_id": job.location.external_id,
-                    },
-                },
+                "data": job_to_json(job),
             },
         ],
     }
@@ -114,19 +103,7 @@ async def test_get_jobs_by_multiple_ids(
         },
         "items": [
             {
-                "data": {
-                    "kind": "JOB",
-                    "id": job.id,
-                    "name": job.name,
-                    "type": job.type,
-                    "location": {
-                        "id": job.location.id,
-                        "type": job.location.type,
-                        "name": job.location.name,
-                        "addresses": [{"url": address.url} for address in job.location.addresses],
-                        "external_id": job.location.external_id,
-                    },
-                },
+                "data": job_to_json(job),
             }
             for job in sorted(selected_jobs, key=lambda x: x.name)
         ],
