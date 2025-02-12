@@ -5,6 +5,7 @@ from typing import Sequence
 from sqlalchemy import (
     ColumnElement,
     CompoundSelect,
+    Row,
     Select,
     SQLColumnExpression,
     any_,
@@ -100,6 +101,24 @@ class JobRepository(Repository[Job]):
         )
         result = await self._session.scalars(query)
         return list(result.all())
+
+    async def get_stats_by_location_ids(self, location_ids: Sequence[int]) -> dict[int, Row]:
+        if not location_ids:
+            return {}
+
+        query = (
+            select(
+                Job.location_id.label("location_id"),
+                func.count(Job.id.distinct()).label("total_jobs"),
+            )
+            .where(
+                Job.location_id == any_(location_ids),  # type: ignore[arg-type]
+            )
+            .group_by(Job.location_id)
+        )
+
+        query_result = await self._session.execute(query)
+        return {row.location_id: row for row in query_result.all()}
 
     async def _get(self, job: JobDTO) -> Job | None:
         statement = select(Job).where(Job.location_id == job.location.id, Job.name == job.name)

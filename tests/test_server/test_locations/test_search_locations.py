@@ -42,11 +42,21 @@ async def test_search_locations_by_address_url(
         },
         "items": [
             {
-                "id": location.id,
-                "name": location.name,
-                "type": location.type,
-                "addresses": [{"url": address.url} for address in location.addresses],
-                "external_id": location.external_id,
+                "data": {
+                    "id": location.id,
+                    "name": location.name,
+                    "type": location.type,
+                    "addresses": [{"url": address.url} for address in location.addresses],
+                    "external_id": location.external_id,
+                },
+                "statistics": {
+                    "datasets": {
+                        "total_datasets": 0,
+                    },
+                    "jobs": {
+                        "total_jobs": 0,
+                    },
+                },
             }
             for location in locations
         ],
@@ -85,11 +95,21 @@ async def test_search_locations_by_location_name(
         },
         "items": [
             {
-                "id": location.id,
-                "name": location.name,
-                "type": location.type,
-                "addresses": [{"url": address.url} for address in location.addresses],
-                "external_id": location.external_id,
+                "data": {
+                    "id": location.id,
+                    "name": location.name,
+                    "type": location.type,
+                    "addresses": [{"url": address.url} for address in location.addresses],
+                    "external_id": location.external_id,
+                },
+                "statistics": {
+                    "datasets": {
+                        "total_datasets": 0,
+                    },
+                    "jobs": {
+                        "total_jobs": 0,
+                    },
+                },
             }
             for location in locations
         ],
@@ -133,11 +153,21 @@ async def test_search_locations_by_location_name_and_address_url(
         },
         "items": [
             {
-                "id": location.id,
-                "name": location.name,
-                "type": location.type,
-                "addresses": [{"url": address.url} for address in location.addresses],
-                "external_id": location.external_id,
+                "data": {
+                    "id": location.id,
+                    "name": location.name,
+                    "type": location.type,
+                    "addresses": [{"url": address.url} for address in location.addresses],
+                    "external_id": location.external_id,
+                },
+                "statistics": {
+                    "datasets": {
+                        "total_datasets": 0,
+                    },
+                    "jobs": {
+                        "total_jobs": 0,
+                    },
+                },
             }
             for location in locations
         ],

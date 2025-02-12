@@ -5,6 +5,8 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Location
+from data_rentgen.db.models.dataset import Dataset
+from data_rentgen.db.models.job import Job
 from tests.fixtures.mocks import MockedUser
 from tests.test_server.utils.enrich import enrich_locations
 
@@ -66,11 +68,21 @@ async def test_get_locations_by_one_id(
         },
         "items": [
             {
-                "id": location.id,
-                "name": location.name,
-                "type": location.type,
-                "addresses": [{"url": address.url} for address in location.addresses],
-                "external_id": location.external_id,
+                "data": {
+                    "id": location.id,
+                    "name": location.name,
+                    "type": location.type,
+                    "addresses": [{"url": address.url} for address in location.addresses],
+                    "external_id": location.external_id,
+                },
+                "statistics": {
+                    "datasets": {
+                        "total_datasets": 0,
+                    },
+                    "jobs": {
+                        "total_jobs": 0,
+                    },
+                },
             },
         ],
     }
@@ -105,11 +117,76 @@ async def test_get_locations_by_multiple_ids(
         },
         "items": [
             {
-                "id": location.id,
-                "name": location.name,
-                "type": location.type,
-                "addresses": [{"url": address.url} for address in location.addresses],
-                "external_id": location.external_id,
+                "data": {
+                    "id": location.id,
+                    "name": location.name,
+                    "type": location.type,
+                    "addresses": [{"url": address.url} for address in location.addresses],
+                    "external_id": location.external_id,
+                },
+                "statistics": {
+                    "datasets": {
+                        "total_datasets": 0,
+                    },
+                    "jobs": {
+                        "total_jobs": 0,
+                    },
+                },
+            }
+            for location in sorted(selected_locations, key=lambda x: x.name)
+        ],
+    }
+
+
+async def test_get_locations_by_multiple_ids_with_stats(
+    test_client: AsyncClient,
+    datasets: list[Dataset],
+    jobs: list[Job],
+    async_session: AsyncSession,
+    mocked_user: MockedUser,
+):
+    dataset_location_ids = {dataset.location_id for dataset in datasets}
+    job_location_ids = {job.location_id for job in jobs}
+    location_ids = dataset_location_ids | job_location_ids
+
+    locations = [Location(id=id) for id in location_ids]
+    selected_locations = await enrich_locations(locations, async_session)
+
+    response = await test_client.get(
+        "v1/locations",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={"location_id": list(location_ids)},
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "page": 1,
+            "page_size": 20,
+            "total_count": 10 + 5,
+            "pages_count": 1,
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "previous_page": None,
+        },
+        "items": [
+            {
+                "data": {
+                    "id": location.id,
+                    "name": location.name,
+                    "type": location.type,
+                    "addresses": [{"url": address.url} for address in location.addresses],
+                    "external_id": location.external_id,
+                },
+                "statistics": {
+                    "datasets": {
+                        "total_datasets": int(location.id in dataset_location_ids),
+                    },
+                    "jobs": {
+                        "total_jobs": int(location.id in job_location_ids),
+                    },
+                },
             }
             for location in sorted(selected_locations, key=lambda x: x.name)
         ],

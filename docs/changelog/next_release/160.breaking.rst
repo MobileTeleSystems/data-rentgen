@@ -1,0 +1,63 @@
+Change response schema of ``GET /locations`` from:
+
+.. code:: python
+
+    {
+        "meta": {...},
+        "items": [
+            {
+                "kind": "LOCATION",
+                "id": ...,
+                # ...
+            }
+        ],
+    }
+
+to:
+
+.. code:: python
+
+    {
+        "meta": {...},
+        "items": [
+            {
+                "data": {
+                    "kind": "LOCATION",
+                    "id": ...,
+                    # ...
+                },
+                "statistics": {
+                    "datasets": {"total_datasets": 2},
+                    "jobs": {"total_jobs": 0},
+                },
+            }
+        ],
+    }
+
+Same for ``PATCH /datasets/:id`` - before:
+
+.. code:: python
+
+    {
+        "kind": "LOCATION",
+        "id": ...,
+        # ...
+    }
+
+after:
+
+.. code:: python
+
+    {
+        "data": {
+            "kind": "LOCATION",
+            "id": ...,
+            # ...
+        },
+        "statistics": {
+            "datasets": {"total_datasets": 2},
+            "jobs": {"total_jobs": 0},
+        },
+    }
+
+This allows to show location statistics in UI.

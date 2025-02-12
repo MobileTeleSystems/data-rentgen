@@ -18,7 +18,7 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio]
     ],
     indirect=True,
 )
-async def test_add_location_external_id(
+async def test_set_location_external_id(
     test_client: AsyncClient,
     async_session: AsyncSession,
     location: Location,
@@ -35,15 +35,25 @@ async def test_add_location_external_id(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "id": location.id,
-        "name": location.name,
-        "type": location.type,
-        "addresses": [{"url": address.url} for address in location.addresses],
-        "external_id": "external_id",
+        "data": {
+            "id": location.id,
+            "name": location.name,
+            "type": location.type,
+            "addresses": [{"url": address.url} for address in location.addresses],
+            "external_id": "external_id",
+        },
+        "statistics": {
+            "datasets": {
+                "total_datasets": 0,
+            },
+            "jobs": {
+                "total_jobs": 0,
+            },
+        },
     }
 
 
-async def test_update_location_external_id(
+async def test_change_location_external_id(
     test_client: AsyncClient,
     async_session: AsyncSession,
     location: Location,
@@ -58,11 +68,54 @@ async def test_update_location_external_id(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "id": location.id,
-        "name": location.name,
-        "type": location.type,
-        "addresses": [{"url": address.url} for address in location.addresses],
-        "external_id": "new_external_id",
+        "data": {
+            "id": location.id,
+            "name": location.name,
+            "type": location.type,
+            "addresses": [{"url": address.url} for address in location.addresses],
+            "external_id": "new_external_id",
+        },
+        "statistics": {
+            "datasets": {
+                "total_datasets": 0,
+            },
+            "jobs": {
+                "total_jobs": 0,
+            },
+        },
+    }
+
+
+async def test_reset_location_external_id(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    location: Location,
+    mocked_user: MockedUser,
+):
+    response = await test_client.patch(
+        f"v1/locations/{location.id}",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        json={"external_id": None},
+    )
+
+    [location] = await enrich_locations([location], async_session=async_session)
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "data": {
+            "id": location.id,
+            "name": location.name,
+            "type": location.type,
+            "addresses": [{"url": address.url} for address in location.addresses],
+            "external_id": None,
+        },
+        "statistics": {
+            "datasets": {
+                "total_datasets": 0,
+            },
+            "jobs": {
+                "total_jobs": 0,
+            },
+        },
     }
 
 
@@ -88,29 +141,6 @@ async def test_update_location_not_found(
             },
             "message": f"Location with id={new_location.id} not found",
         },
-    }
-
-
-async def test_update_location_writing_null_to_external_id(
-    test_client: AsyncClient,
-    async_session: AsyncSession,
-    location: Location,
-    mocked_user: MockedUser,
-):
-    response = await test_client.patch(
-        f"v1/locations/{location.id}",
-        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
-        json={"external_id": None},
-    )
-
-    [location] = await enrich_locations([location], async_session=async_session)
-    assert response.status_code == HTTPStatus.OK, response.json()
-    assert response.json() == {
-        "id": location.id,
-        "name": location.name,
-        "type": location.type,
-        "addresses": [{"url": address.url} for address in location.addresses],
-        "external_id": None,
     }
 
 
