@@ -8,15 +8,14 @@ from data_rentgen.db.models import User
 from data_rentgen.server.errors import get_error_responses
 from data_rentgen.server.errors.schemas import InvalidRequestSchema
 from data_rentgen.server.schemas.v1 import (
+    DatasetDetailedResponseV1,
     DatasetLineageQueryV1,
     DatasetPaginateQueryV1,
-    DatasetResponseV1,
     LineageResponseV1,
     PageResponseV1,
 )
-from data_rentgen.server.services import LineageService, get_user
+from data_rentgen.server.services import DatasetService, LineageService, get_user
 from data_rentgen.server.utils.lineage_response import build_lineage_response
-from data_rentgen.services import UnitOfWork
 
 router = APIRouter(prefix="/datasets", tags=["Datasets"], responses=get_error_responses(include={InvalidRequestSchema}))
 
@@ -24,16 +23,16 @@ router = APIRouter(prefix="/datasets", tags=["Datasets"], responses=get_error_re
 @router.get("", summary="Paginated list of Datasets")
 async def paginate_datasets(
     query_args: Annotated[DatasetPaginateQueryV1, Depends()],
-    unit_of_work: Annotated[UnitOfWork, Depends()],
+    dataset_service: Annotated[DatasetService, Depends()],
     current_user: User = Depends(get_user()),
-) -> PageResponseV1[DatasetResponseV1]:
-    pagination = await unit_of_work.dataset.paginate(
+) -> PageResponseV1[DatasetDetailedResponseV1]:
+    pagination = await dataset_service.paginate(
         page=query_args.page,
         page_size=query_args.page_size,
         dataset_ids=query_args.dataset_id,
         search_query=query_args.search_query,
     )
-    return PageResponseV1[DatasetResponseV1].from_pagination(pagination)
+    return PageResponseV1[DatasetDetailedResponseV1].from_pagination(pagination)
 
 
 @router.get("/lineage", summary="Get Dataset lineage graph")

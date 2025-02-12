@@ -67,16 +67,18 @@ async def test_get_datasets_by_one_id(
         },
         "items": [
             {
-                "kind": "DATASET",
-                "id": dataset.id,
-                "format": dataset.format,
-                "name": dataset.name,
-                "location": {
-                    "id": dataset.location.id,
-                    "name": dataset.location.name,
-                    "type": dataset.location.type,
-                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
-                    "external_id": dataset.location.external_id,
+                "data": {
+                    "kind": "DATASET",
+                    "id": dataset.id,
+                    "format": dataset.format,
+                    "name": dataset.name,
+                    "location": {
+                        "id": dataset.location.id,
+                        "name": dataset.location.name,
+                        "type": dataset.location.type,
+                        "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                        "external_id": dataset.location.external_id,
+                    },
                 },
             },
         ],
@@ -112,16 +114,18 @@ async def test_get_datasets_by_multiple_ids(
         },
         "items": [
             {
-                "kind": "DATASET",
-                "id": dataset.id,
-                "format": dataset.format,
-                "name": dataset.name,
-                "location": {
-                    "id": dataset.location.id,
-                    "name": dataset.location.name,
-                    "type": dataset.location.type,
-                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
-                    "external_id": dataset.location.external_id,
+                "data": {
+                    "kind": "DATASET",
+                    "id": dataset.id,
+                    "format": dataset.format,
+                    "name": dataset.name,
+                    "location": {
+                        "id": dataset.location.id,
+                        "name": dataset.location.name,
+                        "type": dataset.location.type,
+                        "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                        "external_id": dataset.location.external_id,
+                    },
                 },
             }
             for dataset in sorted(selected_datasets, key=lambda x: x.name)

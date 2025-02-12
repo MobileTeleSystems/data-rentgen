@@ -42,16 +42,18 @@ async def test_search_datasets_by_address_url(
         },
         "items": [
             {
-                "kind": "DATASET",
-                "id": dataset.id,
-                "format": dataset.format,
-                "name": dataset.name,
-                "location": {
-                    "id": dataset.location.id,
-                    "name": dataset.location.name,
-                    "type": dataset.location.type,
-                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
-                    "external_id": dataset.location.external_id,
+                "data": {
+                    "kind": "DATASET",
+                    "id": dataset.id,
+                    "format": dataset.format,
+                    "name": dataset.name,
+                    "location": {
+                        "id": dataset.location.id,
+                        "name": dataset.location.name,
+                        "type": dataset.location.type,
+                        "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                        "external_id": dataset.location.external_id,
+                    },
                 },
             }
             for dataset in datasets
@@ -100,16 +102,18 @@ async def test_search_datasets_by_location_name(
         },
         "items": [
             {
-                "kind": "DATASET",
-                "id": dataset.id,
-                "format": dataset.format,
-                "name": dataset.name,
-                "location": {
-                    "id": dataset.location.id,
-                    "name": dataset.location.name,
-                    "type": dataset.location.type,
-                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
-                    "external_id": dataset.location.external_id,
+                "data": {
+                    "kind": "DATASET",
+                    "id": dataset.id,
+                    "format": dataset.format,
+                    "name": dataset.name,
+                    "location": {
+                        "id": dataset.location.id,
+                        "name": dataset.location.name,
+                        "type": dataset.location.type,
+                        "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                        "external_id": dataset.location.external_id,
+                    },
                 },
             }
             for dataset in datasets
@@ -147,16 +151,18 @@ async def test_search_datasets_by_dataset_name(
         },
         "items": [
             {
-                "kind": "DATASET",
-                "id": dataset.id,
-                "format": dataset.format,
-                "name": dataset.name,
-                "location": {
-                    "id": dataset.location.id,
-                    "name": dataset.location.name,
-                    "type": dataset.location.type,
-                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
-                    "external_id": dataset.location.external_id,
+                "data": {
+                    "kind": "DATASET",
+                    "id": dataset.id,
+                    "format": dataset.format,
+                    "name": dataset.name,
+                    "location": {
+                        "id": dataset.location.id,
+                        "name": dataset.location.name,
+                        "type": dataset.location.type,
+                        "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                        "external_id": dataset.location.external_id,
+                    },
                 },
             }
             for dataset in datasets
@@ -201,16 +207,18 @@ async def test_search_datasets_by_location_name_and_address_url(
         },
         "items": [
             {
-                "kind": "DATASET",
-                "id": dataset.id,
-                "format": dataset.format,
-                "name": dataset.name,
-                "location": {
-                    "id": dataset.location.id,
-                    "name": dataset.location.name,
-                    "type": dataset.location.type,
-                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
-                    "external_id": dataset.location.external_id,
+                "data": {
+                    "kind": "DATASET",
+                    "id": dataset.id,
+                    "format": dataset.format,
+                    "name": dataset.name,
+                    "location": {
+                        "id": dataset.location.id,
+                        "name": dataset.location.name,
+                        "type": dataset.location.type,
+                        "addresses": [{"url": address.url} for address in dataset.location.addresses],
+                        "external_id": dataset.location.external_id,
+                    },
                 },
             }
             for dataset in datasets

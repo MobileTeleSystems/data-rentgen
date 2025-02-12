@@ -21,6 +21,12 @@ class DatasetResponseV1(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class DatasetDetailedResponseV1(BaseModel):
+    data: DatasetResponseV1 = Field(description="Dataset data")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class DatasetPaginateQueryV1(PaginateQueryV1):
     """Query params for Dataset paginate request."""
 
