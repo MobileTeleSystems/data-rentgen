@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from data_rentgen.server.schemas.v1.address import AddressResponseV1
 from data_rentgen.server.schemas.v1.dataset import (
+    DatasetDetailedResponseV1,
     DatasetPaginateQueryV1,
     DatasetResponseV1,
 )
@@ -58,9 +59,10 @@ __all__ = [
     "RunsQueryV1",
     "RunStatisticsReponseV1",
     "UserResponseV1",
+    "DatasetDetailedResponseV1",
+    "DatasetLineageQueryV1",
     "DatasetPaginateQueryV1",
     "DatasetResponseV1",
-    "DatasetLineageQueryV1",
     "LineageDirectionV1",
     "LineageEntityV1",
     "LineageEntityKindV1",
