@@ -26,8 +26,11 @@ from data_rentgen.server.schemas.v1.location import (
     UpdateLocationRequestV1,
 )
 from data_rentgen.server.schemas.v1.operation import (
+    OperationDetailedResponseV1,
+    OperationIOStatisticsReponseV1,
     OperationQueryV1,
     OperationResponseV1,
+    OperationStatisticsReponseV1,
 )
 from data_rentgen.server.schemas.v1.pagination import (
     PageMetaResponseV1,
@@ -59,9 +62,12 @@ __all__ = [
     "UpdateLocationRequestV1",
     "PageMetaResponseV1",
     "PageResponseV1",
+    "OperationDetailedResponseV1",
+    "OperationIOStatisticsReponseV1",
+    "OperationLineageQueryV1",
     "OperationQueryV1",
     "OperationResponseV1",
-    "OperationLineageQueryV1",
+    "OperationStatisticsReponseV1",
     "JobResponseV1",
     "JobPaginateQueryV1",
     "JobLineageQueryV1",

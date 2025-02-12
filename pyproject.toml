@@ -438,6 +438,8 @@ ignore = [
   "B008",
 # Found `__init__.py` module with logic
   "WPS412",
+# Found incorrect order of methods in a class
+  "WPS338",
 ]
 
 per-file-ignores = [

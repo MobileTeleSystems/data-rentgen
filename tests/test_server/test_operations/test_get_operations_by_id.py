@@ -1,3 +1,4 @@
+from collections import defaultdict
 from http import HTTPStatus
 
 import pytest
@@ -5,6 +6,7 @@ from httpx import AsyncClient
 
 from data_rentgen.db.models import Operation
 from tests.fixtures.mocks import MockedUser
+from tests.test_server.utils.lineage_result import LineageResult
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
@@ -61,18 +63,34 @@ async def test_get_operations_by_one_id(
         },
         "items": [
             {
-                "kind": "OPERATION",
-                "id": str(operation.id),
-                "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.name,
-                "type": operation.type.value,
-                "position": operation.position,
-                "group": operation.group,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "data": {
+                    "kind": "OPERATION",
+                    "id": str(operation.id),
+                    "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "run_id": str(operation.run_id),
+                    "name": operation.name,
+                    "status": operation.status.name,
+                    "type": operation.type.value,
+                    "position": operation.position,
+                    "group": operation.group,
+                    "description": operation.description,
+                    "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                },
+                "statistics": {
+                    "inputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "outputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                },
             },
         ],
     }
@@ -108,19 +126,124 @@ async def test_get_operations_by_multiple_ids(
         },
         "items": [
             {
-                "kind": "OPERATION",
-                "id": str(operation.id),
-                "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.name,
-                "type": operation.type.value,
-                "position": operation.position,
-                "group": operation.group,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "data": {
+                    "kind": "OPERATION",
+                    "id": str(operation.id),
+                    "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "run_id": str(operation.run_id),
+                    "name": operation.name,
+                    "status": operation.status.name,
+                    "type": operation.type.value,
+                    "position": operation.position,
+                    "group": operation.group,
+                    "description": operation.description,
+                    "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                },
+                "statistics": {
+                    "inputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "outputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                },
             }
             for operation in sorted(selected_operations, key=lambda x: (x.run_id.int, -x.id.int))
+        ],
+    }
+
+
+async def test_get_operations_by_multiple_ids_with_stats(
+    test_client: AsyncClient,
+    simple_lineage: LineageResult,
+    mocked_user: MockedUser,
+):
+    input_stats = defaultdict(dict)
+    output_stats = defaultdict(dict)
+    for operation in simple_lineage.operations:
+        input_bytes = 0
+        input_rows = 0
+        input_files = 0
+        output_bytes = 0
+        output_rows = 0
+        output_files = 0
+
+        for input in simple_lineage.inputs:
+            if input.operation_id != operation.id:
+                continue
+            input_bytes += input.num_bytes or 0
+            input_rows += input.num_rows or 0
+            input_files += input.num_files or 0
+
+        for output in simple_lineage.outputs:
+            if output.operation_id != operation.id:
+                continue
+            output_bytes += output.num_bytes or 0
+            output_rows += output.num_rows or 0
+            output_files += output.num_files or 0
+
+        input_stats[operation.id] = {
+            "total_datasets": 1,
+            "total_bytes": input_bytes,
+            "total_rows": input_rows,
+            "total_files": input_files,
+        }
+
+        output_stats[operation.id] = {
+            "total_datasets": 1,
+            "total_bytes": output_bytes,
+            "total_rows": output_rows,
+            "total_files": output_files,
+        }
+
+    response = await test_client.get(
+        "v1/operations",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "operation_id": [str(operation.id) for operation in simple_lineage.operations],
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "page": 1,
+            "page_size": 20,
+            "total_count": len(simple_lineage.operations),
+            "pages_count": 1,
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "previous_page": None,
+        },
+        "items": [
+            {
+                "data": {
+                    "kind": "OPERATION",
+                    "id": str(operation.id),
+                    "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "run_id": str(operation.run_id),
+                    "name": operation.name,
+                    "status": operation.status.name,
+                    "type": operation.type.value,
+                    "position": operation.position,
+                    "group": operation.group,
+                    "description": operation.description,
+                    "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                    "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                },
+                "statistics": {
+                    "inputs": input_stats[operation.id],
+                    "outputs": output_stats[operation.id],
+                },
+            }
+            for operation in sorted(simple_lineage.operations, key=lambda x: (x.run_id.int, -x.id.int))
         ],
     }
