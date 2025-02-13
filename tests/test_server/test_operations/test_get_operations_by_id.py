@@ -64,6 +64,7 @@ async def test_get_operations_by_one_id(
         },
         "items": [
             {
+                "id": str(operation.id),
                 "data": operation_to_json(operation),
                 "statistics": {
                     "inputs": {
@@ -114,6 +115,7 @@ async def test_get_operations_by_multiple_ids(
         },
         "items": [
             {
+                "id": str(operation.id),
                 "data": operation_to_json(operation),
                 "statistics": {
                     "inputs": {
@@ -200,6 +202,7 @@ async def test_get_operations_by_multiple_ids_with_stats(
         },
         "items": [
             {
+                "id": str(operation.id),
                 "data": operation_to_json(operation),
                 "statistics": {
                     "inputs": input_stats[operation.id],

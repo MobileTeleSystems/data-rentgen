@@ -27,9 +27,9 @@ class OperationServiceIOStatistics:
 
         return cls(
             total_datasets=row.total_datasets,
-            total_bytes=row.total_bytes,
-            total_rows=row.total_rows,
-            total_files=row.total_files,
+            total_bytes=row.total_bytes or 0,
+            total_rows=row.total_rows or 0,
+            total_files=row.total_files or 0,
         )
 
 
@@ -41,6 +41,7 @@ class OperationServiceStatistics:
 
 @dataclass
 class OperationServicePageItem:
+    id: UUID
     data: Operation
     statistics: OperationServiceStatistics
 
@@ -80,6 +81,7 @@ class OperationService:
             total_count=pagination.total_count,
             items=[
                 OperationServicePageItem(
+                    id=operation.id,
                     data=operation,
                     statistics=OperationServiceStatistics(
                         inputs=OperationServiceIOStatistics.from_row(input_stats.get(operation.id)),

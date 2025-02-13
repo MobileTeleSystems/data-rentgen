@@ -86,6 +86,7 @@ class OperationStatisticsReponseV1(BaseModel):
 class OperationDetailedResponseV1(BaseModel):
     """Operation response."""
 
+    id: UUID = Field(description="Operation id")
     data: OperationResponseV1 = Field(description="Operation data")
     statistics: OperationStatisticsReponseV1 = Field(
         description="Operation statistics",

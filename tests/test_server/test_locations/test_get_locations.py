@@ -38,6 +38,7 @@ async def test_get_locations_no_filters(
         },
         "items": [
             {
+                "id": str(location.id),
                 "data": location_to_json(location),
                 "statistics": {
                     "datasets": {
@@ -83,6 +84,7 @@ async def test_get_locations_with_type_filter(
         },
         "items": [
             {
+                "id": str(location.id),
                 "data": location_to_json(location),
                 "statistics": {
                     "datasets": {

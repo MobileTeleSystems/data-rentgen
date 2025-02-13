@@ -68,6 +68,7 @@ async def test_get_datasets_by_one_id(
         },
         "items": [
             {
+                "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
             },
         ],
@@ -103,6 +104,7 @@ async def test_get_datasets_by_multiple_ids(
         },
         "items": [
             {
+                "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
             }
             for dataset in sorted(selected_datasets, key=lambda x: x.name)

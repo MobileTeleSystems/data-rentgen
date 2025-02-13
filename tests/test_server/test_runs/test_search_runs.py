@@ -92,6 +92,7 @@ async def test_search_runs_by_external_id(
         },
         "items": [
             {
+                "id": str(run.id),
                 "data": run_to_json(run),
                 "statistics": {
                     "inputs": {
@@ -155,6 +156,7 @@ async def test_search_runs_by_job_name(
         },
         "items": [
             {
+                "id": str(run.id),
                 "data": run_to_json(run),
                 "statistics": {
                     "inputs": {
@@ -218,6 +220,7 @@ async def test_search_runs_by_job_type(
         },
         "items": [
             {
+                "id": str(run.id),
                 "data": run_to_json(run),
                 "statistics": {
                     "inputs": {

@@ -12,6 +12,7 @@ from data_rentgen.services.uow import UnitOfWork
 
 @dataclass
 class JobServiceResult:
+    id: int
     data: Job
 
 
@@ -41,5 +42,5 @@ class JobService:
             page=pagination.page,
             page_size=pagination.page_size,
             total_count=pagination.total_count,
-            items=[JobServiceResult(data=job) for job in pagination.items],
+            items=[JobServiceResult(id=job.id, data=job) for job in pagination.items],
         )

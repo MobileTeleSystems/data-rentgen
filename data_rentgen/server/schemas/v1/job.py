@@ -20,6 +20,7 @@ class JobResponseV1(BaseModel):
 
 
 class JobDetailedResponseV1(BaseModel):
+    id: str = Field(description="Job id", coerce_numbers_to_str=True)
     data: JobResponseV1 = Field(description="Job data")
 
     model_config = ConfigDict(from_attributes=True)

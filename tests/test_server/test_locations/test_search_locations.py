@@ -43,6 +43,7 @@ async def test_search_locations_by_address_url(
         },
         "items": [
             {
+                "id": str(location.id),
                 "data": location_to_json(location),
                 "statistics": {
                     "datasets": {
@@ -90,6 +91,7 @@ async def test_search_locations_by_location_name(
         },
         "items": [
             {
+                "id": str(location.id),
                 "data": location_to_json(location),
                 "statistics": {
                     "datasets": {
@@ -142,6 +144,7 @@ async def test_search_locations_by_location_name_and_address_url(
         },
         "items": [
             {
+                "id": str(location.id),
                 "data": location_to_json(location),
                 "statistics": {
                     "datasets": {

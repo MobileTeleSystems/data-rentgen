@@ -42,6 +42,7 @@ async def test_search_jobs_by_address_url(
         },
         "items": [
             {
+                "id": str(job.id),
                 "data": job_to_json(job),
             }
             for job in jobs
@@ -79,6 +80,7 @@ async def test_search_jobs_by_location_name(
         },
         "items": [
             {
+                "id": str(job.id),
                 "data": job_to_json(job),
             }
             for job in jobs
@@ -127,6 +129,7 @@ async def test_search_jobs_by_job_name(
         },
         "items": [
             {
+                "id": str(job.id),
                 "data": job_to_json(job),
             }
             for job in jobs
@@ -165,6 +168,7 @@ async def test_search_jobs_by_location_name_and_address_url(
         },
         "items": [
             {
+                "id": str(job.id),
                 "data": job_to_json(job),
             }
             for job in jobs

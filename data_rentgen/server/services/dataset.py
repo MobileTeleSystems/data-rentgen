@@ -12,6 +12,7 @@ from data_rentgen.services.uow import UnitOfWork
 
 @dataclass
 class DatasetServiceResult:
+    id: int
     data: Dataset
 
 
@@ -41,5 +42,5 @@ class DatasetService:
             page=pagination.page,
             page_size=pagination.page_size,
             total_count=pagination.total_count,
-            items=[DatasetServiceResult(data=dataset) for dataset in pagination.items],
+            items=[DatasetServiceResult(id=dataset.id, data=dataset) for dataset in pagination.items],
         )

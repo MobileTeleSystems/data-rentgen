@@ -38,6 +38,7 @@ async def test_get_jobs_no_filters(
         },
         "items": [
             {
+                "id": str(job.id),
                 "data": job_to_json(job),
             }
             for job in sorted(jobs, key=lambda x: x.name)

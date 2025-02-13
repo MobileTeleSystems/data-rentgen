@@ -43,6 +43,7 @@ async def test_search_datasets_by_address_url(
         },
         "items": [
             {
+                "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
             }
             for dataset in datasets
@@ -91,6 +92,7 @@ async def test_search_datasets_by_location_name(
         },
         "items": [
             {
+                "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
             }
             for dataset in datasets
@@ -128,6 +130,7 @@ async def test_search_datasets_by_dataset_name(
         },
         "items": [
             {
+                "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
             }
             for dataset in datasets
@@ -172,6 +175,7 @@ async def test_search_datasets_by_location_name_and_address_url(
         },
         "items": [
             {
+                "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
             }
             for dataset in datasets

@@ -117,6 +117,7 @@ async def test_get_runs_by_parent_run_id(
         },
         "items": [
             {
+                "id": str(run.id),
                 "data": run_to_json(run),
                 "statistics": {
                     "inputs": {
@@ -177,6 +178,7 @@ async def test_get_runs_by_parent_run_id_with_until(
         },
         "items": [
             {
+                "id": str(run.id),
                 "data": run_to_json(run),
                 "statistics": {
                     "inputs": {

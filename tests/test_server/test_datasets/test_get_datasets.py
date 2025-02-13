@@ -38,6 +38,7 @@ async def test_get_datasets_no_filters(
         },
         "items": [
             {
+                "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
             }
             for dataset in sorted(datasets, key=lambda x: x.name)

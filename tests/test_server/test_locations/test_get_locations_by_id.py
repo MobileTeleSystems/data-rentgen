@@ -69,6 +69,7 @@ async def test_get_locations_by_one_id(
         },
         "items": [
             {
+                "id": str(location.id),
                 "data": location_to_json(location),
                 "statistics": {
                     "datasets": {
@@ -112,6 +113,7 @@ async def test_get_locations_by_multiple_ids(
         },
         "items": [
             {
+                "id": str(location.id),
                 "data": location_to_json(location),
                 "statistics": {
                     "datasets": {
@@ -161,6 +163,7 @@ async def test_get_locations_by_multiple_ids_with_stats(
         },
         "items": [
             {
+                "id": str(location.id),
                 "data": location_to_json(location),
                 "statistics": {
                     "datasets": {

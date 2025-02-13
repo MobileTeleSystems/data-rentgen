@@ -27,9 +27,9 @@ class RunServiceIOStatistics:
 
         return cls(
             total_datasets=row.total_datasets,
-            total_bytes=row.total_bytes,
-            total_rows=row.total_rows,
-            total_files=row.total_files,
+            total_bytes=row.total_bytes or 0,
+            total_rows=row.total_rows or 0,
+            total_files=row.total_files or 0,
         )
 
 
@@ -56,6 +56,7 @@ class RunServiceStatistics:
 
 @dataclass
 class RunServicePageItem:
+    id: UUID
     data: Run
     statistics: RunServiceStatistics
 
@@ -100,6 +101,7 @@ class RunService:
             total_count=pagination.total_count,
             items=[
                 RunServicePageItem(
+                    id=run.id,
                     data=run,
                     statistics=RunServiceStatistics(
                         inputs=RunServiceIOStatistics.from_row(input_stats.get(run.id)),

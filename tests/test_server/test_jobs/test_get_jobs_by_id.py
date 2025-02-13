@@ -68,6 +68,7 @@ async def test_get_jobs_by_one_id(
         },
         "items": [
             {
+                "id": str(job.id),
                 "data": job_to_json(job),
             },
         ],
@@ -103,6 +104,7 @@ async def test_get_jobs_by_multiple_ids(
         },
         "items": [
             {
+                "id": str(job.id),
                 "data": job_to_json(job),
             }
             for job in sorted(selected_jobs, key=lambda x: x.name)

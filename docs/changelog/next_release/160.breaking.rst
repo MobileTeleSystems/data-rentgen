@@ -21,6 +21,7 @@ to:
         "meta": {...},
         "items": [
             {
+                "id": ...,
                 "data": {
                     "kind": "LOCATION",
                     "id": ...,
@@ -49,6 +50,7 @@ after:
 .. code:: python
 
     {
+        "id": ...,
         "data": {
             "kind": "LOCATION",
             "id": ...,

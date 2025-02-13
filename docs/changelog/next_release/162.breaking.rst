@@ -21,6 +21,7 @@ to:
         "meta": {...},
         "items": [
             {
+                "id": ...,
                 "data": {
                     "kind": "JOB",
                     "id": ...,

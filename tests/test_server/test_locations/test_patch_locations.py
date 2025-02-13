@@ -37,6 +37,7 @@ async def test_set_location_external_id(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
+        "id": str(location.id),
         "data": {
             **location_to_json(location),
             "external_id": "external_id",
@@ -67,6 +68,7 @@ async def test_change_location_external_id(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
+        "id": str(location.id),
         "data": {
             **location_to_json(location),
             "external_id": "new_external_id",
@@ -97,6 +99,7 @@ async def test_reset_location_external_id(
     [location] = await enrich_locations([location], async_session=async_session)
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
+        "id": str(location.id),
         "data": {
             **location_to_json(location),
             "external_id": None,

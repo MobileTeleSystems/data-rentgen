@@ -69,6 +69,7 @@ async def test_get_runs_by_one_id(
         },
         "items": [
             {
+                "id": str(run.id),
                 "data": run_to_json(run),
                 "statistics": {
                     "inputs": {
@@ -121,6 +122,7 @@ async def test_get_runs_by_multiple_ids(
         },
         "items": [
             {
+                "id": str(run.id),
                 "data": run_to_json(run),
                 "statistics": {
                     "inputs": {
@@ -218,6 +220,7 @@ async def test_get_runs_by_multiple_ids_with_stats(
         },
         "items": [
             {
+                "id": str(run.id),
                 "data": run_to_json(run),
                 "statistics": {
                     "inputs": input_stats[run.id],

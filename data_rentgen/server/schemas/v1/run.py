@@ -103,6 +103,7 @@ class RunStatisticsReponseV1(BaseModel):
 class RunDetailedResponseV1(BaseModel):
     """Run response."""
 
+    id: UUID = Field(description="Run id")
     data: RunResponseV1 = Field(description="Run data")
     statistics: RunStatisticsReponseV1 = Field(description="Run statistics")
 

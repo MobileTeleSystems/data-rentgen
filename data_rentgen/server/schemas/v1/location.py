@@ -43,6 +43,7 @@ class LocationStatisticsReponseV1(BaseModel):
 
 
 class LocationDetailedResponseV1(BaseModel):
+    id: str = Field(description="Location id", coerce_numbers_to_str=True)
     data: LocationResponseV1 = Field(description="Location data")
     statistics: LocationStatisticsReponseV1 = Field(description="Location statistics")
 

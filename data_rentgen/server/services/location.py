@@ -43,6 +43,7 @@ class LocationServiceStatistics:
 
 @dataclass
 class LocationServiceResult:
+    id: int
     data: Location
     statistics: LocationServiceStatistics
 
@@ -80,6 +81,7 @@ class LocationService:
             total_count=pagination.total_count,
             items=[
                 LocationServiceResult(
+                    id=location.id,
                     data=location,
                     statistics=LocationServiceStatistics(
                         datasets=LocationServiceDatasetStatistics.from_row(dataset_stats.get(location.id)),
@@ -99,6 +101,7 @@ class LocationService:
         dataset_stats = await self._uow.dataset.get_stats_by_location_ids([location.id])
         job_stats = await self._uow.job.get_stats_by_location_ids([location.id])
         return LocationServiceResult(
+            id=location.id,
             data=location,
             statistics=LocationServiceStatistics(
                 datasets=LocationServiceDatasetStatistics.from_row(dataset_stats.get(location.id)),

@@ -115,6 +115,7 @@ async def test_get_operations_by_run_id(
         },
         "items": [
             {
+                "id": str(operation.id),
                 "data": operation_to_json(operation),
                 "statistics": {
                     "inputs": {
@@ -172,6 +173,7 @@ async def test_get_operations_by_run_id_with_until(
         },
         "items": [
             {
+                "id": str(operation.id),
                 "data": operation_to_json(operation),
                 "statistics": {
                     "inputs": {
