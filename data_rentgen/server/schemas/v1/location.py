@@ -8,7 +8,7 @@ from data_rentgen.server.schemas.v1.pagination import PaginateQueryV1
 
 
 class LocationResponseV1(BaseModel):
-    id: int = Field(description="Location id")
+    id: str = Field(description="Location id", coerce_numbers_to_str=True)
     type: str = Field(description="Location type, e.g kafka, hdfs, postgres")
     name: str = Field(description="Location name, e.g. cluster name")
     addresses: list[AddressResponseV1] = Field(description="List of addresses")

@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from datetime import datetime
 from enum import IntEnum
-from typing import Literal
+from uuid import UUID
 
 from fastapi import Query
 from pydantic import (
@@ -16,7 +16,7 @@ from pydantic import (
 )
 
 from data_rentgen.server.schemas.v1.pagination import PaginateQueryV1
-from data_rentgen.utils import UUID
+from data_rentgen.utils import UUIDv6Plus
 
 
 class OperationStatusV1(IntEnum):
@@ -42,7 +42,6 @@ class OperationStatusV1(IntEnum):
 class OperationResponseV1(BaseModel):
     """Operation response."""
 
-    kind: Literal["OPERATION"] = "OPERATION"
     id: UUID = Field(description="Operation id")
     created_at: datetime = Field(description="Operation creation time")
     run_id: UUID = Field(description="Run operation belongs to")
@@ -112,13 +111,13 @@ class OperationQueryV1(PaginateQueryV1):
             examples=["2008-09-15T15:53:00+05:00"],
         ),
     )
-    operation_id: list[UUID] = Field(
+    operation_id: list[UUIDv6Plus] = Field(
         Query(
             default_factory=list,
             description="Operation ids, for exact match",
         ),
     )
-    run_id: UUID | None = Field(
+    run_id: UUIDv6Plus | None = Field(
         Query(
             default=None,
             description="Run id, can be used only with 'since'",

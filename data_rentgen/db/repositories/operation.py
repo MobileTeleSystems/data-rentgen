@@ -3,6 +3,7 @@
 
 from datetime import datetime, timezone
 from typing import Sequence
+from uuid import UUID
 
 from sqlalchemy import Row, any_, func, select
 from sqlalchemy.dialects.postgresql import insert
@@ -11,7 +12,6 @@ from data_rentgen.db.models import Operation, OperationStatus, OperationType
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid
 from data_rentgen.dto import OperationDTO, PaginationDTO
-from data_rentgen.utils import UUID
 
 
 class OperationRepository(Repository[Operation]):

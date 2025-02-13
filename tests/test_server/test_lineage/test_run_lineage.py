@@ -58,8 +58,18 @@ async def test_get_run_lineage_no_operations(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": run_parents_to_json([run]),
-        "nodes": (jobs_to_json([job]) + runs_to_json([run])),
+        "relations": {
+            "parents": run_parents_to_json([run]),
+            "symlinks": [],
+            "inputs": [],
+            "outputs": [],
+        },
+        "nodes": {
+            "datasets": {},
+            "jobs": jobs_to_json([job]),
+            "runs": runs_to_json([run]),
+            "operations": {},
+        },
     }
 
 
@@ -85,8 +95,18 @@ async def test_get_run_lineage_no_inputs_outputs(
     assert response.status_code == HTTPStatus.OK, response.json()
     # operations without inputs/outputs are excluded
     assert response.json() == {
-        "relations": run_parents_to_json([run]),
-        "nodes": (jobs_to_json([job]) + runs_to_json([run])),
+        "relations": {
+            "parents": run_parents_to_json([run]),
+            "symlinks": [],
+            "inputs": [],
+            "outputs": [],
+        },
+        "nodes": {
+            "datasets": {},
+            "jobs": jobs_to_json([job]),
+            "runs": runs_to_json([run]),
+            "operations": {},
+        },
     }
 
 
@@ -125,12 +145,18 @@ async def test_get_run_lineage_simple(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": (
-            run_parents_to_json([run])
-            + inputs_to_json(merge_io_by_runs(inputs), granularity="RUN")
-            + outputs_to_json(merge_io_by_runs(outputs), granularity="RUN")
-        ),
-        "nodes": (jobs_to_json([job]) + datasets_to_json(datasets) + runs_to_json([run])),
+        "relations": {
+            "parents": run_parents_to_json([run]),
+            "symlinks": [],
+            "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
+            "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json([job]),
+            "runs": runs_to_json([run]),
+            "operations": {},
+        },
     }
 
 
@@ -174,15 +200,18 @@ async def test_get_run_lineage_with_granularity_operation(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": (
-            run_parents_to_json([run])
-            + operation_parents_to_json(operations)
-            + inputs_to_json(inputs, granularity="OPERATION")
-            + outputs_to_json(outputs, granularity="OPERATION")
-        ),
-        "nodes": (
-            jobs_to_json([job]) + datasets_to_json(datasets) + runs_to_json([run]) + operations_to_json(operations)
-        ),
+        "relations": {
+            "parents": run_parents_to_json([run]) + operation_parents_to_json(operations),
+            "symlinks": [],
+            "inputs": inputs_to_json(inputs, granularity="OPERATION"),
+            "outputs": outputs_to_json(outputs, granularity="OPERATION"),
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json([job]),
+            "runs": runs_to_json([run]),
+            "operations": operations_to_json(operations),
+        },
     }
 
 
@@ -219,8 +248,18 @@ async def test_get_run_lineage_with_direction_downstream(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": (run_parents_to_json([run]) + outputs_to_json(merge_io_by_runs(outputs), granularity="RUN")),
-        "nodes": (jobs_to_json([job]) + datasets_to_json(datasets) + runs_to_json([run])),
+        "relations": {
+            "parents": run_parents_to_json([run]),
+            "symlinks": [],
+            "inputs": [],
+            "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json([job]),
+            "runs": runs_to_json([run]),
+            "operations": {},
+        },
     }
 
 
@@ -257,8 +296,18 @@ async def test_get_run_lineage_with_direction_upstream(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": (run_parents_to_json([run]) + inputs_to_json(merge_io_by_runs(inputs), granularity="RUN")),
-        "nodes": (jobs_to_json([job]) + datasets_to_json(datasets) + runs_to_json([run])),
+        "relations": {
+            "parents": run_parents_to_json([run]),
+            "symlinks": [],
+            "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
+            "outputs": [],
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json([job]),
+            "runs": runs_to_json([run]),
+            "operations": {},
+        },
     }
 
 
@@ -303,12 +352,18 @@ async def test_get_run_lineage_with_until(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": (
-            run_parents_to_json([run])
-            + inputs_to_json(merge_io_by_runs(inputs), granularity="RUN")
-            + outputs_to_json(merge_io_by_runs(outputs), granularity="RUN")
-        ),
-        "nodes": (jobs_to_json([job]) + datasets_to_json(datasets) + runs_to_json([run])),
+        "relations": {
+            "parents": run_parents_to_json([run]),
+            "symlinks": [],
+            "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
+            "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json([job]),
+            "runs": runs_to_json([run]),
+            "operations": {},
+        },
     }
 
 
@@ -386,12 +441,18 @@ async def test_get_run_lineage_with_depth(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": (
-            run_parents_to_json(runs)
-            + inputs_to_json(merge_io_by_runs(inputs), granularity="RUN")
-            + outputs_to_json(merge_io_by_runs(outputs), granularity="RUN")
-        ),
-        "nodes": (jobs_to_json(jobs) + datasets_to_json(datasets) + runs_to_json(runs)),
+        "relations": {
+            "parents": run_parents_to_json(runs),
+            "symlinks": [],
+            "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
+            "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json(jobs),
+            "runs": runs_to_json(runs),
+            "operations": {},
+        },
     }
 
 
@@ -482,15 +543,18 @@ async def test_get_run_lineage_with_depth_and_granularity_operation(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": (
-            run_parents_to_json(runs)
-            + operation_parents_to_json(operations)
-            + inputs_to_json(inputs, granularity="OPERATION")
-            + outputs_to_json(outputs, granularity="OPERATION")
-        ),
-        "nodes": (
-            jobs_to_json(jobs) + datasets_to_json(datasets) + runs_to_json(runs) + operations_to_json(operations)
-        ),
+        "relations": {
+            "parents": run_parents_to_json(runs) + operation_parents_to_json(operations),
+            "symlinks": [],
+            "inputs": inputs_to_json(inputs, granularity="OPERATION"),
+            "outputs": outputs_to_json(outputs, granularity="OPERATION"),
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json(jobs),
+            "runs": runs_to_json(runs),
+            "operations": operations_to_json(operations),
+        },
     }
 
 
@@ -524,12 +588,18 @@ async def test_get_run_lineage_with_depth_ignore_cycles(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": (
-            run_parents_to_json(runs)
-            + inputs_to_json(merge_io_by_runs(lineage.inputs), granularity="RUN")
-            + outputs_to_json(merge_io_by_runs(lineage.outputs), granularity="RUN")
-        ),
-        "nodes": (jobs_to_json(jobs) + datasets_to_json(datasets) + runs_to_json(runs)),
+        "relations": {
+            "parents": run_parents_to_json(runs),
+            "symlinks": [],
+            "inputs": inputs_to_json(merge_io_by_runs(lineage.inputs), granularity="RUN"),
+            "outputs": outputs_to_json(merge_io_by_runs(lineage.outputs), granularity="RUN"),
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json(jobs),
+            "runs": runs_to_json(runs),
+            "operations": {},
+        },
     }
 
 
@@ -595,12 +665,18 @@ async def test_get_run_lineage_with_depth_ignore_unrelated_datasets(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": (
-            run_parents_to_json(runs)
-            + inputs_to_json(merge_io_by_runs(inputs), granularity="RUN")
-            + outputs_to_json(merge_io_by_runs(outputs), granularity="RUN")
-        ),
-        "nodes": (jobs_to_json(jobs) + datasets_to_json(datasets) + runs_to_json(runs)),
+        "relations": {
+            "parents": run_parents_to_json(runs),
+            "symlinks": [],
+            "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
+            "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json(jobs),
+            "runs": runs_to_json(runs),
+            "operations": {},
+        },
     }
 
 
@@ -649,13 +725,18 @@ async def test_get_run_lineage_with_symlinks(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": (
-            run_parents_to_json([run])
-            + symlinks_to_json(dataset_symlinks)
-            + inputs_to_json(merge_io_by_runs(inputs), granularity="RUN")
-            + outputs_to_json(merge_io_by_runs(outputs), granularity="RUN")
-        ),
-        "nodes": (jobs_to_json([job]) + datasets_to_json(datasets) + runs_to_json([run])),
+        "relations": {
+            "parents": run_parents_to_json([run]),
+            "symlinks": symlinks_to_json(dataset_symlinks),
+            "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
+            "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json([job]),
+            "runs": runs_to_json([run]),
+            "operations": {},
+        },
     }
 
 
@@ -713,12 +794,18 @@ async def test_get_run_lineage_unmergeable_inputs_and_outputs(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": (
-            run_parents_to_json([run])
-            + inputs_to_json(merge_io_by_runs(inputs), granularity="RUN")
-            + outputs_to_json(merge_io_by_runs(outputs), granularity="RUN")
-        ),
-        "nodes": (jobs_to_json([job]) + datasets_to_json(datasets) + runs_to_json([run])),
+        "relations": {
+            "parents": run_parents_to_json([run]),
+            "symlinks": [],
+            "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
+            "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json([job]),
+            "runs": runs_to_json([run]),
+            "operations": {},
+        },
     }
 
 
@@ -791,10 +878,16 @@ async def test_get_run_lineage_empty_io_stats_and_schema(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": (
-            run_parents_to_json([run])
-            + inputs_to_json(merged_inputs, granularity="RUN")
-            + outputs_to_json(merged_outputs, granularity="RUN")
-        ),
-        "nodes": (jobs_to_json([job]) + datasets_to_json(datasets) + runs_to_json([run])),
+        "relations": {
+            "parents": run_parents_to_json([run]),
+            "symlinks": [],
+            "inputs": inputs_to_json(merged_inputs, granularity="RUN"),
+            "outputs": outputs_to_json(merged_outputs, granularity="RUN"),
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json([job]),
+            "runs": runs_to_json([run]),
+            "operations": {},
+        },
     }

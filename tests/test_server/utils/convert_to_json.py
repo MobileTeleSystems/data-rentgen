@@ -24,8 +24,7 @@ def format_datetime(value: datetime):
 
 def run_parent_to_json(run: Run):
     return {
-        "kind": "PARENT",
-        "from": {"kind": "JOB", "id": run.job_id},
+        "from": {"kind": "JOB", "id": str(run.job_id)},
         "to": {"kind": "RUN", "id": str(run.id)},
     }
 
@@ -36,7 +35,6 @@ def run_parents_to_json(runs: list[Run]):
 
 def operation_parent_to_json(operation: Operation):
     return {
-        "kind": "PARENT",
         "from": {"kind": "RUN", "id": str(operation.run_id)},
         "to": {"kind": "OPERATION", "id": str(operation.id)},
     }
@@ -48,9 +46,8 @@ def operation_parents_to_json(operations: list[Operation]):
 
 def symlink_to_json(symlink: DatasetSymlink):
     return {
-        "kind": "SYMLINK",
-        "from": {"kind": "DATASET", "id": symlink.from_dataset_id},
-        "to": {"kind": "DATASET", "id": symlink.to_dataset_id},
+        "from": {"kind": "DATASET", "id": str(symlink.from_dataset_id)},
+        "to": {"kind": "DATASET", "id": str(symlink.to_dataset_id)},
         "type": symlink.type.value,
     }
 
@@ -61,7 +58,7 @@ def symlinks_to_json(symlinks: list[DatasetSymlink]):
 
 def schema_to_json(schema: Schema):
     return {
-        "id": schema.id,
+        "id": str(schema.id),
         "fields": [
             {
                 "description": None,
@@ -79,11 +76,10 @@ def input_to_json(input: Input, granularity: Literal["OPERATION", "RUN", "JOB"])
     elif granularity == "RUN":
         to = {"kind": "RUN", "id": str(input.run_id)}
     else:
-        to = {"kind": "JOB", "id": input.job_id}
+        to = {"kind": "JOB", "id": str(input.job_id)}
 
     return {
-        "kind": "INPUT",
-        "from": {"kind": "DATASET", "id": input.dataset_id},
+        "from": {"kind": "DATASET", "id": str(input.dataset_id)},
         "to": to,
         "num_bytes": input.num_bytes,
         "num_rows": input.num_rows,
@@ -106,12 +102,11 @@ def output_to_json(output: Output, granularity: Literal["OPERATION", "RUN", "JOB
     elif granularity == "RUN":
         from_ = {"kind": "RUN", "id": str(output.run_id)}
     else:
-        from_ = {"kind": "JOB", "id": output.job_id}
+        from_ = {"kind": "JOB", "id": str(output.job_id)}
 
     return {
-        "kind": "OUTPUT",
         "from": from_,
-        "to": {"kind": "DATASET", "id": output.dataset_id},
+        "to": {"kind": "DATASET", "id": str(output.dataset_id)},
         "type": output.type.value if output.type else None,
         "num_bytes": output.num_bytes,
         "num_rows": output.num_rows,
@@ -134,7 +129,7 @@ def address_to_json(address: Address):
 
 def location_to_json(location: Location):
     return {
-        "id": location.id,
+        "id": str(location.id),
         "name": location.name,
         "type": location.type,
         "addresses": [address_to_json(address) for address in location.addresses],
@@ -143,13 +138,12 @@ def location_to_json(location: Location):
 
 
 def locations_to_json(locations: list[Location]):
-    return [location_to_json(location) for location in sorted(locations, key=lambda x: x.id)]
+    return {str(location.id): location_to_json(location) for location in locations}
 
 
 def dataset_to_json(dataset: Dataset):
     return {
-        "kind": "DATASET",
-        "id": dataset.id,
+        "id": str(dataset.id),
         "format": dataset.format,
         "name": dataset.name,
         "location": location_to_json(dataset.location),
@@ -157,13 +151,12 @@ def dataset_to_json(dataset: Dataset):
 
 
 def datasets_to_json(datasets: list[Dataset]):
-    return [dataset_to_json(dataset) for dataset in sorted(datasets, key=lambda x: x.id)]
+    return {str(dataset.id): dataset_to_json(dataset) for dataset in datasets}
 
 
 def job_to_json(job: Job):
     return {
-        "kind": "JOB",
-        "id": job.id,
+        "id": str(job.id),
         "name": job.name,
         "type": job.type.value,
         "location": location_to_json(job.location),
@@ -171,7 +164,7 @@ def job_to_json(job: Job):
 
 
 def jobs_to_json(jobs: list[Job]):
-    return [job_to_json(job) for job in sorted(jobs, key=lambda x: x.id)]
+    return {str(job.id): job_to_json(job) for job in jobs}
 
 
 def user_to_json(user: User):
@@ -180,9 +173,8 @@ def user_to_json(user: User):
 
 def run_to_json(run: Run):
     return {
-        "kind": "RUN",
         "id": str(run.id),
-        "job_id": run.job_id,
+        "job_id": str(run.job_id),
         "created_at": format_datetime(run.created_at),
         "parent_run_id": str(run.parent_run_id),
         "status": run.status.name,
@@ -199,12 +191,11 @@ def run_to_json(run: Run):
 
 
 def runs_to_json(runs: list[Run]):
-    return [run_to_json(run) for run in sorted(runs, key=lambda x: x.id)]
+    return {str(run.id): run_to_json(run) for run in runs}
 
 
 def operation_to_json(operation: Operation):
     return {
-        "kind": "OPERATION",
         "id": str(operation.id),
         "created_at": format_datetime(operation.created_at),
         "run_id": str(operation.run_id),
@@ -220,4 +211,4 @@ def operation_to_json(operation: Operation):
 
 
 def operations_to_json(operations: list[Operation]):
-    return [operation_to_json(operation) for operation in sorted(operations, key=lambda x: x.id)]
+    return {str(operation.id): operation_to_json(operation) for operation in operations}

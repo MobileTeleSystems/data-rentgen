@@ -1,6 +1,5 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from typing import Literal
 
 from fastapi import Query
 from pydantic import BaseModel, ConfigDict, Field
@@ -12,8 +11,7 @@ from data_rentgen.server.schemas.v1.pagination import PaginateQueryV1
 class JobResponseV1(BaseModel):
     """Job response"""
 
-    kind: Literal["JOB"] = "JOB"
-    id: int = Field(description="Job id")
+    id: str = Field(description="Job id", coerce_numbers_to_str=True)
     location: LocationResponseV1 = Field(description="Corresponding Location")
     name: str = Field(description="Job name")
     type: str = Field(description="Job type")

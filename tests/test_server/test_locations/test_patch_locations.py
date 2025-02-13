@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Location
 from tests.fixtures.mocks import MockedUser
+from tests.test_server.utils.convert_to_json import location_to_json
 from tests.test_server.utils.enrich import enrich_locations
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -37,10 +38,7 @@ async def test_set_location_external_id(
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "data": {
-            "id": location.id,
-            "name": location.name,
-            "type": location.type,
-            "addresses": [{"url": address.url} for address in location.addresses],
+            **location_to_json(location),
             "external_id": "external_id",
         },
         "statistics": {
@@ -70,10 +68,7 @@ async def test_change_location_external_id(
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "data": {
-            "id": location.id,
-            "name": location.name,
-            "type": location.type,
-            "addresses": [{"url": address.url} for address in location.addresses],
+            **location_to_json(location),
             "external_id": "new_external_id",
         },
         "statistics": {
@@ -103,10 +98,7 @@ async def test_reset_location_external_id(
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "data": {
-            "id": location.id,
-            "name": location.name,
-            "type": location.type,
-            "addresses": [{"url": address.url} for address in location.addresses],
+            **location_to_json(location),
             "external_id": None,
         },
         "statistics": {
