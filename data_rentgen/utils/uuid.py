@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 from typing import Any
-from uuid import UUID as OLD_UUID
+from uuid import UUID as PlainUUID
 
 from pydantic import PlainValidator
 from typing_extensions import Annotated
@@ -19,7 +19,7 @@ def uuid_version_validator(run_id: Any) -> UUIDv7:
 
 # Teach Pydantic how to parse and represent UUID v7
 # Right now use uuid from uuid lib cause: https://github.com/tiangolo/fastapi/issues/10259
-UUID = Annotated[
-    OLD_UUID,
+UUIDv6Plus = Annotated[
+    PlainUUID,
     PlainValidator(uuid_version_validator),
 ]

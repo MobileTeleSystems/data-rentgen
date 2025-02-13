@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from datetime import datetime
 from enum import IntEnum
-from typing import Literal
+from uuid import UUID
 
 from fastapi import Query
 from pydantic import (
@@ -17,7 +17,7 @@ from pydantic import (
 
 from data_rentgen.server.schemas.v1.pagination import PaginateQueryV1
 from data_rentgen.server.schemas.v1.user import UserResponseV1
-from data_rentgen.utils import UUID
+from data_rentgen.utils import UUIDv6Plus
 
 
 class RunStatusV1(IntEnum):
@@ -43,10 +43,9 @@ class RunStatusV1(IntEnum):
 class RunResponseV1(BaseModel):
     """Run response"""
 
-    kind: Literal["RUN"] = "RUN"
     id: UUID = Field(description="Run id")
     created_at: datetime = Field(description="Run creation time")
-    job_id: int = Field(description="Job the run is associated with")
+    job_id: str = Field(description="Job the run is associated with", coerce_numbers_to_str=True)
     parent_run_id: UUID | None = Field(description="Parent of current run", default=None)
     status: RunStatusV1 = Field(description="Run status")
     external_id: str | None = Field(description="External id, e.g. Spark applicationid", default=None)
@@ -127,7 +126,7 @@ class RunsQueryV1(PaginateQueryV1):
             examples=["2008-09-15T15:53:00+05:00"],
         ),
     )
-    run_id: list[UUID] = Field(
+    run_id: list[UUIDv6Plus] = Field(
         Query(
             default_factory=list,
             description="Run ids, for exact match",
@@ -140,7 +139,7 @@ class RunsQueryV1(PaginateQueryV1):
         ),
     )
 
-    parent_run_id: UUID | None = Field(
+    parent_run_id: UUIDv6Plus | None = Field(
         Query(
             default=None,
             description="Parent run id, can be used only with 'since' and 'until'",

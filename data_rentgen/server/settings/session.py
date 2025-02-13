@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 DEFAULT_MAX_AGE = 1_209_600
 
@@ -55,5 +55,4 @@ class SessionSettings(BaseModel):
         description="Domain for sharing cookies between subdomains or cross-domains.",
     )
 
-    class Config:
-        extra = "allow"
+    model_config = ConfigDict(extra="allow")

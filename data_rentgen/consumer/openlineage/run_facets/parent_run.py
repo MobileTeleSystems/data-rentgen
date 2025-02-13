@@ -3,7 +3,7 @@
 
 from data_rentgen.consumer.openlineage.base import OpenLineageBase
 from data_rentgen.consumer.openlineage.run_facets.base import OpenLineageRunFacet
-from data_rentgen.utils import UUID
+from data_rentgen.utils import UUIDv6Plus
 
 
 class OpenLineageParentJob(OpenLineageBase):
@@ -20,7 +20,7 @@ class OpenLineageParentRun(OpenLineageBase):
     See [ParentRunFacet](https://github.com/OpenLineage/OpenLineage/blob/main/spec/facets/ParentRunFacet.json).
     """
 
-    runId: UUID
+    runId: UUIDv6Plus
 
 
 class OpenLineageParentRunFacet(OpenLineageRunFacet):

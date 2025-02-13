@@ -88,8 +88,18 @@ async def test_get_lineage_missing_id(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": [],
-        "nodes": [],
+        "relations": {
+            "parents": [],
+            "symlinks": [],
+            "inputs": [],
+            "outputs": [],
+        },
+        "nodes": {
+            "datasets": {},
+            "jobs": {},
+            "runs": {},
+            "operations": {},
+        },
     }
 
 
