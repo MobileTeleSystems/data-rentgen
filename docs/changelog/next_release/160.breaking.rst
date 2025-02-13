@@ -7,7 +7,9 @@ Change response schema of ``GET /locations`` from:
         "items": [
             {
                 "kind": "LOCATION",
-                "id": ...,
+                "id": 123,
+                "name": "rnd_dwh",
+                "type": "hdfs",
                 # ...
             }
         ],
@@ -21,10 +23,11 @@ to:
         "meta": {...},
         "items": [
             {
-                "id": ...,
+                "id": "123",
                 "data": {
-                    "kind": "LOCATION",
-                    "id": ...,
+                    "id": "123",
+                    "name": "rnd_dwh",
+                    "type": "hdfs",
                     # ...
                 },
                 "statistics": {
@@ -41,7 +44,8 @@ Same for ``PATCH /datasets/:id`` - before:
 
     {
         "kind": "LOCATION",
-        "id": ...,
+        "id": 123,
+        "name": "abc",
         # ...
     }
 
@@ -50,10 +54,10 @@ after:
 .. code:: python
 
     {
-        "id": ...,
+        "id": "123",
         "data": {
-            "kind": "LOCATION",
-            "id": ...,
+            "id": "123",
+            "name": "abc",
             # ...
         },
         "statistics": {

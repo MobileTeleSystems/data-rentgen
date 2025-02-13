@@ -7,7 +7,9 @@ Change response schema of ``GET /operations`` from:
         "items": [
             {
                 "kind": "OPERATION",
-                "id": ...,
+                "id": "00000000-0000-0000-0000-000000000000",
+                "name": "abc",
+                "description": "some",
                 # ...
             }
         ],
@@ -21,10 +23,11 @@ to:
         "meta": {...},
         "items": [
             {
-                "id": ...,
+                "id": "00000000-0000-0000-0000-000000000000",
                 "data": {
-                    "kind": "OPERATION",
-                    "id": ...,
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "name": "abc",
+                    "description": "some",
                     # ...
                 },
                 "statistics": {

@@ -7,7 +7,8 @@ Change response schema of ``GET /datasets`` from:
         "items": [
             {
                 "kind": "DATASET",
-                "id": ...,
+                "id": 123,
+                "name": "abc",
                 # ...
             }
         ],
@@ -21,10 +22,10 @@ to:
         "meta": {...},
         "items": [
             {
-                "id": ...,
+                "id": "123",
                 "data": {
-                    "kind": "DATASET",
-                    "id": ...,
+                    "id": "123",
+                    "name": "abc",
                     # ...
                 },
             }

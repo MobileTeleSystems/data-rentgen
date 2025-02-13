@@ -7,7 +7,8 @@ Change response schema of ``GET /jobs`` from:
         "items": [
             {
                 "kind": "JOB",
-                "id": ...,
+                "id": 123,
+                "name": "abc",
                 # ...
             }
         ],
@@ -21,10 +22,10 @@ to:
         "meta": {...},
         "items": [
             {
-                "id": ...,
+                "id": "123",
                 "data": {
-                    "kind": "JOB",
-                    "id": ...,
+                    "id": "123",
+                    "name": "abc",
                     # ...
                 },
             }
