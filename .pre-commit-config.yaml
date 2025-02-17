@@ -82,7 +82,7 @@ repos:
           - black==24.8.0
 
   - repo: https://github.com/pycqa/bandit
-    rev: 1.8.2
+    rev: 1.8.3
     hooks:
       - id: bandit
         args:
@@ -117,7 +117,7 @@ repos:
           - tomli
 
   - repo: https://github.com/sbrunner/hooks
-    rev: 1.2.1
+    rev: 1.3.0
     hooks:
       - id: poetry-check
         additional_dependencies:
