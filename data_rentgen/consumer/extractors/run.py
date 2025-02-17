@@ -84,14 +84,19 @@ def enrich_run_identifiers(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
     return run
 
 
-def enrich_run_logs(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
+def enrich_run_logs(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:  # noqa: WPS231
     spark_application_details = event.run.facets.spark_applicationDetails
     if spark_application_details:
         if spark_application_details.proxyUrl:
-            run.running_log_url = spark_application_details.proxyUrl.split(",")[0]
+            run.running_log_url = spark_application_details.proxyUrl
         else:
             run.running_log_url = spark_application_details.uiWebUrl
         run.persistent_log_url = spark_application_details.historyUrl
+
+        if run.running_log_url:
+            run.running_log_url = run.running_log_url.split(",")[0]
+        if run.persistent_log_url:
+            run.persistent_log_url = run.persistent_log_url.split(",")[0]
         return run
 
     airflow_dag_run_facet = event.run.facets.airflowDagRun
