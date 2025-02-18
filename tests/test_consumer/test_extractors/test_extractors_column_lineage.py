@@ -50,7 +50,7 @@ def test_extractors_extract_dataset_column_relation_type_no_subtype(type):
             DatasetColumnRelationTypeDTO.TRANSFORMATION_MASKING,
         ),
         ("DIRECT", "AGGREGATION", DatasetColumnRelationTypeDTO.AGGREGATION_MASKING),
-        ("INDIRECT", "NEW_MASKING_SUBTYPE", DatasetColumnRelationTypeDTO.UNKNOWN),
+        ("INDIRECT", "JOIN", DatasetColumnRelationTypeDTO.UNKNOWN),
     ),
 )
 def test_extractors_extract_dataset_column_relation_type_masking(
@@ -257,7 +257,7 @@ def test_extractors_extract_column_lineage_operations_with_same_lineage(
     ]
 
 
-def test_extractors_extract_column_lineage_operations_with_cross_lineage(
+def test_extractors_extract_column_lineage_operations_with_crossing_column_lineage(
     extracted_postgres_dataset,
     extracted_hive_dataset,
 ):
@@ -336,13 +336,7 @@ def test_extractors_extract_column_lineage_operations_with_cross_lineage(
             target_dataset=extracted_hive_dataset,
             dataset_column_relations=[
                 DatasetColumnRelationDTO(
-                    type=DatasetColumnRelationTypeDTO.AGGREGATION,
-                    source_column="source_col",
-                    target_column="column",
-                    fingerprint=None,
-                ),
-                DatasetColumnRelationDTO(
-                    type=DatasetColumnRelationTypeDTO.TRANSFORMATION,
+                    type=DatasetColumnRelationTypeDTO.AGGREGATION | DatasetColumnRelationTypeDTO.TRANSFORMATION,
                     source_column="source_col",
                     target_column="column",
                     fingerprint=None,

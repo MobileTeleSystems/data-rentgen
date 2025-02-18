@@ -56,7 +56,9 @@ class DatasetColumnRelationDTO:
         )
 
 
-def merge_dataset_column_relations(relations: list[DatasetColumnRelationDTO]) -> list[DatasetColumnRelationDTO]:
+def merge_dataset_column_relations(
+    relations: list[DatasetColumnRelationDTO],
+) -> list[DatasetColumnRelationDTO]:
     result: dict[tuple, DatasetColumnRelationDTO] = {}
     for relation in relations:
         if relation.unique_key in result:
