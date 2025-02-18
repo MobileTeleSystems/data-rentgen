@@ -257,7 +257,7 @@ def test_extractors_extract_column_lineage_operations_with_same_lineage(
     ]
 
 
-def test_extractors_extract_column_lineage_operations_with_crossing_column_lineage(
+def test_extractors_extract_column_lineage_operations_with_transformation_on_same_column(
     extracted_postgres_dataset,
     extracted_hive_dataset,
 ):
