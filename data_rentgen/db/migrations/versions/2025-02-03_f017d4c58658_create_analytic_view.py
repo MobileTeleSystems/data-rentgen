@@ -22,7 +22,7 @@ def upgrade() -> None:
     for base_table in ("output", "input"):
         for depth, suffix in view_sufix_map.items():
             view_name = base_table + suffix
-            op.execute(sa.text(f"DROP VIEW IF EXISTS {view_name}"))
+            op.execute(sa.text(f"DROP MATERIALIZED VIEW IF EXISTS {view_name}"))
             op.execute(sa.text(get_statement(base_table, depth, suffix)))
 
 
@@ -30,7 +30,7 @@ def downgrade() -> None:
     for base_table in ("output", "input"):
         for suffix in view_sufix_map.values():
             view_name = base_table + suffix
-            op.execute(sa.text(f"DROP VIEW IF EXISTS {view_name}"))
+            op.execute(sa.text(f"DROP MATERIALIZED VIEW IF EXISTS {view_name}"))
 
 
 view_sufix_map = {

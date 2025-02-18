@@ -1,0 +1,123 @@
+Change response schema of ``GET /:entity/lineage`` from:
+
+.. code:: python
+
+    {
+        "relations": [
+            {
+                "kind": "PARENT",
+                "from": {"kind": "JOB", "id": 123},
+                "to": {"kind": "RUN", "id": "00000000-0000-0000-0000-000000000000"},
+            },
+            {
+                "kind": "SYMLINK",
+                "from": {"kind": "DATASET", "id": 234},
+                "to": {"kind": "DATASET", "id": 999},
+            },
+            {
+                "kind": "INPUT",
+                "from": {"kind": "DATASET", "id": 234},
+                "to": {"kind": "OPERATION", "id": "11111111-1111-1111-1111-111111111111"},
+            },
+            {
+                "kind": "OUTPUT",
+                "from": {"kind": "OPERATION", "id": "11111111-1111-1111-1111-111111111111"},
+                "to": {"kind": "DATASET", "id": 234},
+            },
+        ],
+        "nodes": [
+            {"kind": "DATASET", "id": 123, "name": "abc"},
+            {"kind": "JOB", "id": 234, "name": "cde"},
+            {
+                "kind": "RUN",
+                "id": "00000000-0000-0000-0000-000000000000",
+                "external_id": "def",
+            },
+            {
+                "kind": "OPERATION",
+                "id": "11111111-1111-1111-1111-111111111111",
+                "name": "efg",
+            },
+        ],
+    }
+
+to:
+
+.. code:: python
+
+    {
+        "relations": {
+            "parents": [
+                {
+                    "from": {"kind": "JOB", "id": "123"},
+                    "to": {"kind": "RUN", "id": "00000000-0000-0000-0000-000000000000"},
+                },
+            ],
+            "symlinks": [
+                {
+                    "from": {"kind": "DATASET", "id": "234"},
+                    "to": {"kind": "DATASET", "id": "999"},
+                },
+            ],
+            "inputs": [
+                {
+                    "from": {"kind": "DATASET", "id": "234"},
+                    "to": {
+                        "kind": "OPERATION",
+                        "id": "11111111-1111-1111-1111-111111111111",
+                    },
+                },
+            ],
+            "outputs": [
+                {
+                    "from": {
+                        "kind": "OPERATION",
+                        "id": "11111111-1111-1111-1111-111111111111",
+                    },
+                    "to": {"kind": "DATASET", "id": "234"},
+                },
+            ],
+        },
+        "nodes": {
+            "datasets": {
+                "123": {"id": "123", "name": "abc"},
+            },
+            "jobs": {
+                "234": {"id": "234", "name": "cde"},
+            },
+            "runs": {
+                "00000000-0000-0000-0000-000000000000": {
+                    "id": "00000000-0000-0000-0000-000000000000",
+                    "external_id": "def",
+                },
+            },
+            "operations": {
+                "11111111-1111-1111-1111-111111111111": {
+                    "id": "11111111-1111-1111-1111-111111111111",
+                    "name": "efg",
+                },
+            },
+        },
+    }
+
+This allows to replace filters on UI side with O(n) complexity like:
+
+.. code:: javascript
+
+    // O(n)
+    relations.filter((relation) => relation.kind == "INPUT" && relation.from.kind == "DATASET" && relation.from.id == dataset_id)
+    // again O(n)
+    nodes.filter((node) => node.kind == "DATASET" && node.id == dataset_id)
+
+with much more effective ones:
+
+.. code:: javascript
+
+    // O(n) with much smaller n
+    relations.inputs.filter((relation) => relation.from.kind == "DATASET" && relation.from.id == dataset_id)
+    // O(1)
+    nodes.datasets[dataset_id]
+
+The size of output JSON is not much different.
+
+Note that dataset, job and location ids in all responses were converted from ints to strings, because in JSON object keys have to be strings.

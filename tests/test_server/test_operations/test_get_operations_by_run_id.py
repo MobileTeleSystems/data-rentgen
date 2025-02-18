@@ -6,6 +6,7 @@ from httpx import AsyncClient
 
 from data_rentgen.db.models import Operation, Run
 from tests.fixtures.mocks import MockedUser
+from tests.test_server.utils.convert_to_json import operation_to_json
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
@@ -114,18 +115,22 @@ async def test_get_operations_by_run_id(
         },
         "items": [
             {
-                "kind": "OPERATION",
                 "id": str(operation.id),
-                "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.name,
-                "type": operation.type.value,
-                "position": operation.position,
-                "group": operation.group,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "data": operation_to_json(operation),
+                "statistics": {
+                    "inputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "outputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                },
             }
             for operation in sorted(selected_operations, key=lambda x: x.id, reverse=True)
         ],
@@ -168,18 +173,22 @@ async def test_get_operations_by_run_id_with_until(
         },
         "items": [
             {
-                "kind": "OPERATION",
                 "id": str(operation.id),
-                "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.name,
-                "type": operation.type.value,
-                "position": operation.position,
-                "group": operation.group,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "data": operation_to_json(operation),
+                "statistics": {
+                    "inputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "outputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                },
             }
             for operation in sorted(selected_operations, key=lambda x: x.id, reverse=True)
         ],

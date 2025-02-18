@@ -72,8 +72,8 @@ def test_extractors_extract_run_spark_app_yarn():
                     driverHost="localhost",
                     userName="myuser",
                     uiWebUrl="http://localhost:4040",
-                    proxyUrl="http://yarn-proxy:8088/proxy/application_1234_5678",
-                    historyUrl="http://history-server:18081/history/application_1234_5678/",
+                    proxyUrl="http://yarn-proxy:8088/proxy/application_1234_5678,http://yarn-proxy:18088/proxy/application_1234_5678",
+                    historyUrl="http://history-server:18080/history/application_1234_5678,http://history-server:18081/history/application_1234_5678",
                 ),
             ),
         ),
@@ -92,7 +92,7 @@ def test_extractors_extract_run_spark_app_yarn():
         ended_at=None,
         external_id="application_1234_5678",
         attempt=None,
-        persistent_log_url="http://history-server:18081/history/application_1234_5678/",
+        persistent_log_url="http://history-server:18080/history/application_1234_5678",
         running_log_url="http://yarn-proxy:8088/proxy/application_1234_5678",
     )
 
@@ -124,7 +124,7 @@ def test_extractors_extract_run_spark_app_local():
                     deployMode=OpenLineageSparkDeployMode.CLIENT,
                     driverHost="localhost",
                     userName="myuser",
-                    uiWebUrl="http://localhost:4040",
+                    uiWebUrl="http://localhost:4040,http://localhost:4041",
                 ),
             ),
         ),

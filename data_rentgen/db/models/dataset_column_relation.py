@@ -85,5 +85,5 @@ class DatasetColumnRelation(Base):
         SmallInteger(),
         index=False,
         nullable=False,
-        doc="Column relation type",
+        doc="Column transformation type",
     )

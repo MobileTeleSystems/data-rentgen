@@ -7,31 +7,21 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Job, Operation, Run
 from tests.fixtures.mocks import MockedUser
+from tests.test_server.utils.convert_to_json import (
+    datasets_to_json,
+    inputs_to_json,
+    jobs_to_json,
+    operation_parents_to_json,
+    operations_to_json,
+    outputs_to_json,
+    run_parents_to_json,
+    runs_to_json,
+    symlinks_to_json,
+)
 from tests.test_server.utils.enrich import enrich_datasets, enrich_jobs, enrich_runs
 from tests.test_server.utils.lineage_result import LineageResult
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
-
-
-async def test_get_operation_lineage_unknown_id(
-    test_client: AsyncClient,
-    new_operation: Operation,
-    mocked_user: MockedUser,
-):
-    response = await test_client.get(
-        "v1/operations/lineage",
-        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
-        params={
-            "since": datetime.now(tz=timezone.utc).isoformat(),
-            "start_node_id": str(new_operation.id),
-        },
-    )
-
-    assert response.status_code == HTTPStatus.OK, response.json()
-    assert response.json() == {
-        "relations": [],
-        "nodes": [],
-    }
 
 
 async def test_get_operation_lineage_unauthorized(
@@ -67,64 +57,18 @@ async def test_get_operation_lineage_no_inputs_outputs(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": [
-            {
-                "kind": "PARENT",
-                "from": {"kind": "JOB", "id": run.job_id},
-                "to": {"kind": "RUN", "id": str(run.id)},
-            },
-            {
-                "kind": "PARENT",
-                "from": {"kind": "RUN", "id": str(operation.run_id)},
-                "to": {"kind": "OPERATION", "id": str(operation.id)},
-            },
-        ],
-        "nodes": [
-            {
-                "kind": "JOB",
-                "id": job.id,
-                "name": job.name,
-                "type": job.type,
-                "location": {
-                    "id": job.location.id,
-                    "type": job.location.type,
-                    "name": job.location.name,
-                    "addresses": [{"url": address.url} for address in job.location.addresses],
-                    "external_id": job.location.external_id,
-                },
-            },
-            {
-                "kind": "RUN",
-                "id": str(run.id),
-                "job_id": run.job_id,
-                "created_at": run.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "parent_run_id": str(run.parent_run_id),
-                "status": run.status.name,
-                "external_id": run.external_id,
-                "attempt": run.attempt,
-                "persistent_log_url": run.persistent_log_url,
-                "running_log_url": run.running_log_url,
-                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "started_by_user": {"name": run.started_by_user.name},
-                "start_reason": run.start_reason.value,
-                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "end_reason": run.end_reason,
-            },
-            {
-                "kind": "OPERATION",
-                "id": str(operation.id),
-                "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.name,
-                "type": operation.type.value,
-                "position": operation.position,
-                "group": operation.group,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            },
-        ],
+        "relations": {
+            "parents": run_parents_to_json([run]) + operation_parents_to_json([operation]),
+            "symlinks": [],
+            "inputs": [],
+            "outputs": [],
+        },
+        "nodes": {
+            "datasets": {},
+            "jobs": jobs_to_json([job]),
+            "runs": runs_to_json([run]),
+            "operations": operations_to_json([operation]),
+        },
     }
 
 
@@ -163,133 +107,18 @@ async def test_get_operation_lineage_simple(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": [
-            {
-                "kind": "PARENT",
-                "from": {"kind": "JOB", "id": run.job_id},
-                "to": {"kind": "RUN", "id": str(run.id)},
-            },
-        ]
-        + [
-            {
-                "kind": "PARENT",
-                "from": {"kind": "RUN", "id": str(operation.run_id)},
-                "to": {"kind": "OPERATION", "id": str(operation.id)},
-            },
-        ]
-        + [
-            {
-                "kind": "INPUT",
-                "from": {"kind": "DATASET", "id": input.dataset_id},
-                "to": {"kind": "OPERATION", "id": str(input.operation_id)},
-                "num_bytes": input.num_bytes,
-                "num_rows": input.num_rows,
-                "num_files": input.num_files,
-                "schema": {
-                    "id": input.schema_id,
-                    "fields": [
-                        {
-                            "description": None,
-                            "fields": [],
-                            **field,
-                        }
-                        for field in input.schema.fields
-                    ],
-                },
-                "last_interaction_at": input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            }
-            for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
-        ]
-        + [
-            {
-                "kind": "OUTPUT",
-                "from": {"kind": "OPERATION", "id": str(output.operation_id)},
-                "to": {"kind": "DATASET", "id": output.dataset_id},
-                "type": output.type,
-                "num_bytes": output.num_bytes,
-                "num_rows": output.num_rows,
-                "num_files": output.num_files,
-                "schema": {
-                    "id": output.schema_id,
-                    "fields": [
-                        {
-                            "description": None,
-                            "fields": [],
-                            **field,
-                        }
-                        for field in output.schema.fields
-                    ],
-                },
-                "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            }
-            for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))
-        ],
-        "nodes": [
-            {
-                "kind": "JOB",
-                "id": job.id,
-                "name": job.name,
-                "type": job.type,
-                "location": {
-                    "id": job.location.id,
-                    "type": job.location.type,
-                    "name": job.location.name,
-                    "addresses": [{"url": address.url} for address in job.location.addresses],
-                    "external_id": job.location.external_id,
-                },
-            },
-        ]
-        + [
-            {
-                "kind": "DATASET",
-                "id": dataset.id,
-                "format": dataset.format,
-                "name": dataset.name,
-                "location": {
-                    "id": dataset.location.id,
-                    "name": dataset.location.name,
-                    "type": dataset.location.type,
-                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
-                    "external_id": dataset.location.external_id,
-                },
-            }
-            for dataset in sorted(datasets, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "RUN",
-                "id": str(run.id),
-                "job_id": run.job_id,
-                "created_at": run.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "parent_run_id": str(run.parent_run_id),
-                "status": run.status.name,
-                "external_id": run.external_id,
-                "attempt": run.attempt,
-                "persistent_log_url": run.persistent_log_url,
-                "running_log_url": run.running_log_url,
-                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "started_by_user": {"name": run.started_by_user.name},
-                "start_reason": run.start_reason.value,
-                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "end_reason": run.end_reason,
-            },
-        ]
-        + [
-            {
-                "kind": "OPERATION",
-                "id": str(operation.id),
-                "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.name,
-                "type": operation.type.value,
-                "position": operation.position,
-                "group": operation.group,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            },
-        ],
+        "relations": {
+            "parents": run_parents_to_json([run]) + operation_parents_to_json([operation]),
+            "symlinks": [],
+            "inputs": inputs_to_json(inputs, granularity="OPERATION"),
+            "outputs": outputs_to_json(outputs, granularity="OPERATION"),
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json([job]),
+            "runs": runs_to_json([run]),
+            "operations": operations_to_json([operation]),
+        },
     }
 
 
@@ -327,110 +156,18 @@ async def test_get_operation_lineage_with_direction_downstream(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": [
-            {
-                "kind": "PARENT",
-                "from": {"kind": "JOB", "id": run.job_id},
-                "to": {"kind": "RUN", "id": str(run.id)},
-            },
-        ]
-        + [
-            {
-                "kind": "PARENT",
-                "from": {"kind": "RUN", "id": str(operation.run_id)},
-                "to": {"kind": "OPERATION", "id": str(operation.id)},
-            },
-        ]
-        + [
-            {
-                "kind": "OUTPUT",
-                "from": {"kind": "OPERATION", "id": str(output.operation_id)},
-                "to": {"kind": "DATASET", "id": output.dataset_id},
-                "type": output.type,
-                "num_bytes": output.num_bytes,
-                "num_rows": output.num_rows,
-                "num_files": output.num_files,
-                "schema": {
-                    "id": output.schema_id,
-                    "fields": [
-                        {
-                            "description": None,
-                            "fields": [],
-                            **field,
-                        }
-                        for field in output.schema.fields
-                    ],
-                },
-                "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            }
-            for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))
-        ],
-        "nodes": [
-            {
-                "kind": "JOB",
-                "id": job.id,
-                "name": job.name,
-                "type": job.type,
-                "location": {
-                    "id": job.location.id,
-                    "type": job.location.type,
-                    "name": job.location.name,
-                    "addresses": [{"url": address.url} for address in job.location.addresses],
-                    "external_id": job.location.external_id,
-                },
-            },
-        ]
-        + [
-            {
-                "kind": "DATASET",
-                "id": dataset.id,
-                "format": dataset.format,
-                "name": dataset.name,
-                "location": {
-                    "id": dataset.location.id,
-                    "name": dataset.location.name,
-                    "type": dataset.location.type,
-                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
-                    "external_id": dataset.location.external_id,
-                },
-            }
-            for dataset in sorted(datasets, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "RUN",
-                "id": str(run.id),
-                "job_id": run.job_id,
-                "created_at": run.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "parent_run_id": str(run.parent_run_id),
-                "status": run.status.name,
-                "external_id": run.external_id,
-                "attempt": run.attempt,
-                "persistent_log_url": run.persistent_log_url,
-                "running_log_url": run.running_log_url,
-                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "started_by_user": {"name": run.started_by_user.name},
-                "start_reason": run.start_reason.value,
-                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "end_reason": run.end_reason,
-            },
-        ]
-        + [
-            {
-                "kind": "OPERATION",
-                "id": str(operation.id),
-                "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.name,
-                "type": operation.type.value,
-                "position": operation.position,
-                "group": operation.group,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            },
-        ],
+        "relations": {
+            "parents": run_parents_to_json([run]) + operation_parents_to_json([operation]),
+            "symlinks": [],
+            "inputs": [],
+            "outputs": outputs_to_json(outputs, granularity="OPERATION"),
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json([job]),
+            "runs": runs_to_json([run]),
+            "operations": operations_to_json([operation]),
+        },
     }
 
 
@@ -468,109 +205,18 @@ async def test_get_operation_lineage_with_direction_upstream(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": [
-            {
-                "kind": "PARENT",
-                "from": {"kind": "JOB", "id": run.job_id},
-                "to": {"kind": "RUN", "id": str(run.id)},
-            },
-        ]
-        + [
-            {
-                "kind": "PARENT",
-                "from": {"kind": "RUN", "id": str(operation.run_id)},
-                "to": {"kind": "OPERATION", "id": str(operation.id)},
-            },
-        ]
-        + [
-            {
-                "kind": "INPUT",
-                "from": {"kind": "DATASET", "id": input.dataset_id},
-                "to": {"kind": "OPERATION", "id": str(input.operation_id)},
-                "num_bytes": input.num_bytes,
-                "num_rows": input.num_rows,
-                "num_files": input.num_files,
-                "schema": {
-                    "id": input.schema_id,
-                    "fields": [
-                        {
-                            "description": None,
-                            "fields": [],
-                            **field,
-                        }
-                        for field in input.schema.fields
-                    ],
-                },
-                "last_interaction_at": input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            }
-            for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
-        ],
-        "nodes": [
-            {
-                "kind": "JOB",
-                "id": job.id,
-                "name": job.name,
-                "type": job.type,
-                "location": {
-                    "id": job.location.id,
-                    "type": job.location.type,
-                    "name": job.location.name,
-                    "addresses": [{"url": address.url} for address in job.location.addresses],
-                    "external_id": job.location.external_id,
-                },
-            },
-        ]
-        + [
-            {
-                "kind": "DATASET",
-                "id": dataset.id,
-                "format": dataset.format,
-                "name": dataset.name,
-                "location": {
-                    "id": dataset.location.id,
-                    "name": dataset.location.name,
-                    "type": dataset.location.type,
-                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
-                    "external_id": dataset.location.external_id,
-                },
-            }
-            for dataset in sorted(datasets, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "RUN",
-                "id": str(run.id),
-                "job_id": run.job_id,
-                "created_at": run.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "parent_run_id": str(run.parent_run_id),
-                "status": run.status.name,
-                "external_id": run.external_id,
-                "attempt": run.attempt,
-                "persistent_log_url": run.persistent_log_url,
-                "running_log_url": run.running_log_url,
-                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "started_by_user": {"name": run.started_by_user.name},
-                "start_reason": run.start_reason.value,
-                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "end_reason": run.end_reason,
-            },
-        ]
-        + [
-            {
-                "kind": "OPERATION",
-                "id": str(operation.id),
-                "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.name,
-                "type": operation.type.value,
-                "position": operation.position,
-                "group": operation.group,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            },
-        ],
+        "relations": {
+            "parents": run_parents_to_json([run]) + operation_parents_to_json([operation]),
+            "symlinks": [],
+            "inputs": inputs_to_json(inputs, granularity="OPERATION"),
+            "outputs": [],
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json([job]),
+            "runs": runs_to_json([run]),
+            "operations": operations_to_json([operation]),
+        },
     }
 
 
@@ -623,129 +269,18 @@ async def test_get_operation_lineage_with_until(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": [
-            {
-                "kind": "PARENT",
-                "from": {"kind": "JOB", "id": run.job_id},
-                "to": {"kind": "RUN", "id": str(run.id)},
-            },
-            {
-                "kind": "PARENT",
-                "from": {"kind": "RUN", "id": str(operation.run_id)},
-                "to": {"kind": "OPERATION", "id": str(operation.id)},
-            },
-        ]
-        + [
-            {
-                "kind": "INPUT",
-                "from": {"kind": "DATASET", "id": input.dataset_id},
-                "to": {"kind": "OPERATION", "id": str(input.operation_id)},
-                "num_bytes": input.num_bytes,
-                "num_rows": input.num_rows,
-                "num_files": input.num_files,
-                "schema": {
-                    "id": input.schema_id,
-                    "fields": [
-                        {
-                            "description": None,
-                            "fields": [],
-                            **field,
-                        }
-                        for field in input.schema.fields
-                    ],
-                },
-                "last_interaction_at": input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            }
-            for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
-        ]
-        + [
-            {
-                "kind": "OUTPUT",
-                "from": {"kind": "OPERATION", "id": str(output.operation_id)},
-                "to": {"kind": "DATASET", "id": output.dataset_id},
-                "type": output.type,
-                "num_bytes": output.num_bytes,
-                "num_rows": output.num_rows,
-                "num_files": output.num_files,
-                "schema": {
-                    "id": output.schema_id,
-                    "fields": [
-                        {
-                            "description": None,
-                            "fields": [],
-                            **field,
-                        }
-                        for field in output.schema.fields
-                    ],
-                },
-                "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            }
-            for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))
-        ],
-        "nodes": [
-            {
-                "kind": "JOB",
-                "id": job.id,
-                "name": job.name,
-                "type": job.type,
-                "location": {
-                    "id": job.location.id,
-                    "type": job.location.type,
-                    "name": job.location.name,
-                    "addresses": [{"url": address.url} for address in job.location.addresses],
-                    "external_id": job.location.external_id,
-                },
-            },
-        ]
-        + [
-            {
-                "kind": "DATASET",
-                "id": dataset.id,
-                "format": dataset.format,
-                "name": dataset.name,
-                "location": {
-                    "id": dataset.location.id,
-                    "name": dataset.location.name,
-                    "type": dataset.location.type,
-                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
-                    "external_id": dataset.location.external_id,
-                },
-            }
-            for dataset in sorted(datasets, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "RUN",
-                "id": str(run.id),
-                "job_id": run.job_id,
-                "created_at": run.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "parent_run_id": str(run.parent_run_id),
-                "status": run.status.name,
-                "external_id": run.external_id,
-                "attempt": run.attempt,
-                "persistent_log_url": run.persistent_log_url,
-                "running_log_url": run.running_log_url,
-                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "started_by_user": {"name": run.started_by_user.name},
-                "start_reason": run.start_reason.value,
-                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "end_reason": run.end_reason,
-            },
-            {
-                "kind": "OPERATION",
-                "id": str(operation.id),
-                "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.name,
-                "type": operation.type.value,
-                "position": operation.position,
-                "group": operation.group,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            },
-        ],
+        "relations": {
+            "parents": run_parents_to_json([run]) + operation_parents_to_json([operation]),
+            "symlinks": [],
+            "inputs": inputs_to_json(inputs, granularity="OPERATION"),
+            "outputs": outputs_to_json(outputs, granularity="OPERATION"),
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json([job]),
+            "runs": runs_to_json([run]),
+            "operations": operations_to_json([operation]),
+        },
     }
 
 
@@ -831,138 +366,18 @@ async def test_get_operation_lineage_with_depth(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": [
-            {
-                "kind": "PARENT",
-                "from": {"kind": "JOB", "id": run.job_id},
-                "to": {"kind": "RUN", "id": str(run.id)},
-            }
-            for run in sorted(runs, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "PARENT",
-                "from": {"kind": "RUN", "id": str(operation.run_id)},
-                "to": {"kind": "OPERATION", "id": str(operation.id)},
-            }
-            for operation in sorted(operations, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "INPUT",
-                "from": {"kind": "DATASET", "id": input.dataset_id},
-                "to": {"kind": "OPERATION", "id": str(input.operation_id)},
-                "num_bytes": input.num_bytes,
-                "num_rows": input.num_rows,
-                "num_files": input.num_files,
-                "schema": {
-                    "id": input.schema_id,
-                    "fields": [
-                        {
-                            "description": None,
-                            "fields": [],
-                            **field,
-                        }
-                        for field in input.schema.fields
-                    ],
-                },
-                "last_interaction_at": input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            }
-            for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
-        ]
-        + [
-            {
-                "kind": "OUTPUT",
-                "from": {"kind": "OPERATION", "id": str(output.operation_id)},
-                "to": {"kind": "DATASET", "id": output.dataset_id},
-                "type": output.type,
-                "num_bytes": output.num_bytes,
-                "num_rows": output.num_rows,
-                "num_files": output.num_files,
-                "schema": {
-                    "id": output.schema_id,
-                    "fields": [
-                        {
-                            "description": None,
-                            "fields": [],
-                            **field,
-                        }
-                        for field in output.schema.fields
-                    ],
-                },
-                "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            }
-            for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))
-        ],
-        "nodes": [
-            {
-                "kind": "JOB",
-                "id": job.id,
-                "name": job.name,
-                "type": job.type,
-                "location": {
-                    "id": job.location.id,
-                    "name": job.location.name,
-                    "type": job.location.type,
-                    "addresses": [{"url": address.url} for address in job.location.addresses],
-                    "external_id": job.location.external_id,
-                },
-            }
-            for job in sorted(jobs, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "DATASET",
-                "id": dataset.id,
-                "format": dataset.format,
-                "name": dataset.name,
-                "location": {
-                    "id": dataset.location.id,
-                    "name": dataset.location.name,
-                    "type": dataset.location.type,
-                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
-                    "external_id": dataset.location.external_id,
-                },
-            }
-            for dataset in sorted(datasets, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "RUN",
-                "id": str(run.id),
-                "job_id": run.job_id,
-                "created_at": run.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "parent_run_id": str(run.parent_run_id),
-                "status": run.status.name,
-                "external_id": run.external_id,
-                "attempt": run.attempt,
-                "persistent_log_url": run.persistent_log_url,
-                "running_log_url": run.running_log_url,
-                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "started_by_user": {"name": run.started_by_user.name},
-                "start_reason": run.start_reason.value,
-                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "end_reason": run.end_reason,
-            }
-            for run in sorted(runs, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "OPERATION",
-                "id": str(operation.id),
-                "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.name,
-                "type": operation.type.value,
-                "position": operation.position,
-                "group": operation.group,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            }
-            for operation in sorted(operations, key=lambda x: x.id)
-        ],
+        "relations": {
+            "parents": run_parents_to_json(runs) + operation_parents_to_json(operations),
+            "symlinks": [],
+            "inputs": inputs_to_json(inputs, granularity="OPERATION"),
+            "outputs": outputs_to_json(outputs, granularity="OPERATION"),
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json(jobs),
+            "runs": runs_to_json(runs),
+            "operations": operations_to_json(operations),
+        },
     }
 
 
@@ -997,138 +412,18 @@ async def test_get_operation_lineage_with_depth_ignore_cycles(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": [
-            {
-                "kind": "PARENT",
-                "from": {"kind": "JOB", "id": run.job_id},
-                "to": {"kind": "RUN", "id": str(run.id)},
-            }
-            for run in sorted(runs, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "PARENT",
-                "from": {"kind": "RUN", "id": str(operation.run_id)},
-                "to": {"kind": "OPERATION", "id": str(operation.id)},
-            }
-            for operation in sorted(lineage.operations, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "INPUT",
-                "from": {"kind": "DATASET", "id": input.dataset_id},
-                "to": {"kind": "OPERATION", "id": str(input.operation_id)},
-                "num_bytes": input.num_bytes,
-                "num_rows": input.num_rows,
-                "num_files": input.num_files,
-                "schema": {
-                    "id": input.schema_id,
-                    "fields": [
-                        {
-                            "description": None,
-                            "fields": [],
-                            **field,
-                        }
-                        for field in input.schema.fields
-                    ],
-                },
-                "last_interaction_at": input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            }
-            for input in sorted(lineage.inputs, key=lambda x: (x.dataset_id, x.operation_id))
-        ]
-        + [
-            {
-                "kind": "OUTPUT",
-                "from": {"kind": "OPERATION", "id": str(output.operation_id)},
-                "to": {"kind": "DATASET", "id": output.dataset_id},
-                "type": output.type,
-                "num_bytes": output.num_bytes,
-                "num_rows": output.num_rows,
-                "num_files": output.num_files,
-                "schema": {
-                    "id": output.schema_id,
-                    "fields": [
-                        {
-                            "description": None,
-                            "fields": [],
-                            **field,
-                        }
-                        for field in output.schema.fields
-                    ],
-                },
-                "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            }
-            for output in sorted(lineage.outputs, key=lambda x: (x.operation_id, x.dataset_id))
-        ],
-        "nodes": [
-            {
-                "kind": "JOB",
-                "id": job.id,
-                "name": job.name,
-                "type": job.type,
-                "location": {
-                    "id": job.location.id,
-                    "name": job.location.name,
-                    "type": job.location.type,
-                    "addresses": [{"url": address.url} for address in job.location.addresses],
-                    "external_id": job.location.external_id,
-                },
-            }
-            for job in jobs
-        ]
-        + [
-            {
-                "kind": "DATASET",
-                "id": dataset.id,
-                "format": dataset.format,
-                "name": dataset.name,
-                "location": {
-                    "id": dataset.location.id,
-                    "name": dataset.location.name,
-                    "type": dataset.location.type,
-                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
-                    "external_id": dataset.location.external_id,
-                },
-            }
-            for dataset in datasets
-        ]
-        + [
-            {
-                "kind": "RUN",
-                "id": str(run.id),
-                "job_id": run.job_id,
-                "created_at": run.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "parent_run_id": str(run.parent_run_id),
-                "status": run.status.name,
-                "external_id": run.external_id,
-                "attempt": run.attempt,
-                "persistent_log_url": run.persistent_log_url,
-                "running_log_url": run.running_log_url,
-                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "started_by_user": {"name": run.started_by_user.name},
-                "start_reason": run.start_reason.value,
-                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "end_reason": run.end_reason,
-            }
-            for run in sorted(runs, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "OPERATION",
-                "id": str(operation.id),
-                "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.name,
-                "type": operation.type.value,
-                "position": operation.position,
-                "group": operation.group,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            }
-            for operation in sorted(lineage.operations, key=lambda x: x.id)
-        ],
+        "relations": {
+            "parents": run_parents_to_json(runs) + operation_parents_to_json(lineage.operations),
+            "symlinks": [],
+            "inputs": inputs_to_json(lineage.inputs, granularity="OPERATION"),
+            "outputs": outputs_to_json(lineage.outputs, granularity="OPERATION"),
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json(jobs),
+            "runs": runs_to_json(runs),
+            "operations": operations_to_json(lineage.operations),
+        },
     }
 
 
@@ -1194,138 +489,18 @@ async def test_get_operation_lineage_with_depth_ignore_unrelated_datasets(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": [
-            {
-                "kind": "PARENT",
-                "from": {"kind": "JOB", "id": run.job_id},
-                "to": {"kind": "RUN", "id": str(run.id)},
-            }
-            for run in sorted(runs, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "PARENT",
-                "from": {"kind": "RUN", "id": str(operation.run_id)},
-                "to": {"kind": "OPERATION", "id": str(operation.id)},
-            }
-            for operation in sorted(lineage.operations, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "INPUT",
-                "from": {"kind": "DATASET", "id": input.dataset_id},
-                "to": {"kind": "OPERATION", "id": str(input.operation_id)},
-                "num_bytes": input.num_bytes,
-                "num_rows": input.num_rows,
-                "num_files": input.num_files,
-                "schema": {
-                    "id": input.schema_id,
-                    "fields": [
-                        {
-                            "description": None,
-                            "fields": [],
-                            **field,
-                        }
-                        for field in input.schema.fields
-                    ],
-                },
-                "last_interaction_at": input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            }
-            for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
-        ]
-        + [
-            {
-                "kind": "OUTPUT",
-                "from": {"kind": "OPERATION", "id": str(output.operation_id)},
-                "to": {"kind": "DATASET", "id": output.dataset_id},
-                "type": output.type,
-                "num_bytes": output.num_bytes,
-                "num_rows": output.num_rows,
-                "num_files": output.num_files,
-                "schema": {
-                    "id": output.schema_id,
-                    "fields": [
-                        {
-                            "description": None,
-                            "fields": [],
-                            **field,
-                        }
-                        for field in output.schema.fields
-                    ],
-                },
-                "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            }
-            for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))
-        ],
-        "nodes": [
-            {
-                "kind": "JOB",
-                "id": job.id,
-                "name": job.name,
-                "type": job.type,
-                "location": {
-                    "id": job.location.id,
-                    "name": job.location.name,
-                    "type": job.location.type,
-                    "addresses": [{"url": address.url} for address in job.location.addresses],
-                    "external_id": job.location.external_id,
-                },
-            }
-            for job in jobs
-        ]
-        + [
-            {
-                "kind": "DATASET",
-                "id": dataset.id,
-                "format": dataset.format,
-                "name": dataset.name,
-                "location": {
-                    "id": dataset.location.id,
-                    "name": dataset.location.name,
-                    "type": dataset.location.type,
-                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
-                    "external_id": dataset.location.external_id,
-                },
-            }
-            for dataset in datasets
-        ]
-        + [
-            {
-                "kind": "RUN",
-                "id": str(run.id),
-                "job_id": run.job_id,
-                "created_at": run.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "parent_run_id": str(run.parent_run_id),
-                "status": run.status.name,
-                "external_id": run.external_id,
-                "attempt": run.attempt,
-                "persistent_log_url": run.persistent_log_url,
-                "running_log_url": run.running_log_url,
-                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "started_by_user": {"name": run.started_by_user.name},
-                "start_reason": run.start_reason.value,
-                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "end_reason": run.end_reason,
-            }
-            for run in sorted(runs, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "OPERATION",
-                "id": str(operation.id),
-                "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.name,
-                "type": operation.type.value,
-                "position": operation.position,
-                "group": operation.group,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            }
-            for operation in sorted(lineage.operations, key=lambda x: x.id)
-        ],
+        "relations": {
+            "parents": run_parents_to_json(runs) + operation_parents_to_json(lineage.operations),
+            "symlinks": [],
+            "inputs": inputs_to_json(inputs, granularity="OPERATION"),
+            "outputs": outputs_to_json(outputs, granularity="OPERATION"),
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json(jobs),
+            "runs": runs_to_json(runs),
+            "operations": operations_to_json(lineage.operations),
+        },
     }
 
 
@@ -1375,138 +550,18 @@ async def test_get_operation_lineage_with_symlinks(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": [
-            {
-                "kind": "PARENT",
-                "from": {"kind": "JOB", "id": run.job_id},
-                "to": {"kind": "RUN", "id": str(run.id)},
-            },
-            {
-                "kind": "PARENT",
-                "from": {"kind": "RUN", "id": str(operation.run_id)},
-                "to": {"kind": "OPERATION", "id": str(operation.id)},
-            },
-        ]
-        + [
-            {
-                "kind": "SYMLINK",
-                "from": {"kind": "DATASET", "id": symlink.from_dataset_id},
-                "to": {"kind": "DATASET", "id": symlink.to_dataset_id},
-                "type": symlink.type.value,
-            }
-            for symlink in sorted(dataset_symlinks, key=lambda x: (x.from_dataset_id, x.to_dataset_id))
-        ]
-        + [
-            {
-                "kind": "INPUT",
-                "from": {"kind": "DATASET", "id": input.dataset_id},
-                "to": {"kind": "OPERATION", "id": str(input.operation_id)},
-                "num_bytes": input.num_bytes,
-                "num_rows": input.num_rows,
-                "num_files": input.num_files,
-                "schema": {
-                    "id": input.schema_id,
-                    "fields": [
-                        {
-                            "description": None,
-                            "fields": [],
-                            **field,
-                        }
-                        for field in input.schema.fields
-                    ],
-                },
-                "last_interaction_at": input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            }
-            for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
-        ]
-        + [
-            {
-                "kind": "OUTPUT",
-                "from": {"kind": "OPERATION", "id": str(output.operation_id)},
-                "to": {"kind": "DATASET", "id": output.dataset_id},
-                "type": output.type,
-                "num_bytes": output.num_bytes,
-                "num_rows": output.num_rows,
-                "num_files": output.num_files,
-                "schema": {
-                    "id": output.schema_id,
-                    "fields": [
-                        {
-                            "description": None,
-                            "fields": [],
-                            **field,
-                        }
-                        for field in output.schema.fields
-                    ],
-                },
-                "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            }
-            for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))
-        ],
-        "nodes": [
-            {
-                "kind": "JOB",
-                "id": job.id,
-                "name": job.name,
-                "type": job.type,
-                "location": {
-                    "id": job.location.id,
-                    "name": job.location.name,
-                    "type": job.location.type,
-                    "addresses": [{"url": address.url} for address in job.location.addresses],
-                    "external_id": job.location.external_id,
-                },
-            },
-        ]
-        + [
-            {
-                "kind": "DATASET",
-                "id": dataset.id,
-                "format": dataset.format,
-                "name": dataset.name,
-                "location": {
-                    "id": dataset.location.id,
-                    "name": dataset.location.name,
-                    "type": dataset.location.type,
-                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
-                    "external_id": dataset.location.external_id,
-                },
-            }
-            for dataset in sorted(datasets, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "RUN",
-                "id": str(run.id),
-                "job_id": run.job_id,
-                "created_at": run.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "parent_run_id": str(run.parent_run_id),
-                "status": run.status.name,
-                "external_id": run.external_id,
-                "attempt": run.attempt,
-                "persistent_log_url": run.persistent_log_url,
-                "running_log_url": run.running_log_url,
-                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "started_by_user": {"name": run.started_by_user.name},
-                "start_reason": run.start_reason.value,
-                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "end_reason": run.end_reason,
-            },
-            {
-                "kind": "OPERATION",
-                "id": str(operation.id),
-                "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.name,
-                "type": operation.type.value,
-                "position": operation.position,
-                "group": operation.group,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            },
-        ],
+        "relations": {
+            "parents": run_parents_to_json([run]) + operation_parents_to_json([operation]),
+            "symlinks": symlinks_to_json(dataset_symlinks),
+            "inputs": inputs_to_json(inputs, granularity="OPERATION"),
+            "outputs": outputs_to_json(outputs, granularity="OPERATION"),
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json([job]),
+            "runs": runs_to_json([run]),
+            "operations": operations_to_json([operation]),
+        },
     }
 
 
@@ -1567,107 +622,16 @@ async def test_get_operation_lineage_with_empty_io_stats_and_schema(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
-        "relations": [
-            {
-                "kind": "PARENT",
-                "from": {"kind": "JOB", "id": run.job_id},
-                "to": {"kind": "RUN", "id": str(run.id)},
-            },
-            {
-                "kind": "PARENT",
-                "from": {"kind": "RUN", "id": str(operation.run_id)},
-                "to": {"kind": "OPERATION", "id": str(operation.id)},
-            },
-        ]
-        + [
-            {
-                "kind": "INPUT",
-                "from": {"kind": "DATASET", "id": input.dataset_id},
-                "to": {"kind": "OPERATION", "id": str(input.operation_id)},
-                "num_bytes": None,
-                "num_rows": None,
-                "num_files": None,
-                "schema": None,
-                "last_interaction_at": input.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            }
-            for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id))
-        ]
-        + [
-            {
-                "kind": "OUTPUT",
-                "from": {"kind": "OPERATION", "id": str(output.operation_id)},
-                "to": {"kind": "DATASET", "id": output.dataset_id},
-                "type": output.type,
-                "num_bytes": None,
-                "num_rows": None,
-                "num_files": None,
-                "schema": None,
-                "last_interaction_at": output.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-            }
-            for output in sorted(outputs, key=lambda x: (x.operation_id, x.dataset_id))
-        ],
-        "nodes": [
-            {
-                "kind": "JOB",
-                "id": job.id,
-                "name": job.name,
-                "type": job.type,
-                "location": {
-                    "id": job.location.id,
-                    "name": job.location.name,
-                    "type": job.location.type,
-                    "addresses": [{"url": address.url} for address in job.location.addresses],
-                    "external_id": job.location.external_id,
-                },
-            },
-        ]
-        + [
-            {
-                "kind": "DATASET",
-                "id": dataset.id,
-                "format": dataset.format,
-                "name": dataset.name,
-                "location": {
-                    "id": dataset.location.id,
-                    "name": dataset.location.name,
-                    "type": dataset.location.type,
-                    "addresses": [{"url": address.url} for address in dataset.location.addresses],
-                    "external_id": dataset.location.external_id,
-                },
-            }
-            for dataset in sorted(datasets, key=lambda x: x.id)
-        ]
-        + [
-            {
-                "kind": "RUN",
-                "id": str(run.id),
-                "job_id": run.job_id,
-                "created_at": run.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "parent_run_id": str(run.parent_run_id),
-                "status": run.status.name,
-                "external_id": run.external_id,
-                "attempt": run.attempt,
-                "persistent_log_url": run.persistent_log_url,
-                "running_log_url": run.running_log_url,
-                "started_at": run.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "started_by_user": {"name": run.started_by_user.name},
-                "start_reason": run.start_reason.value,
-                "ended_at": run.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "end_reason": run.end_reason,
-            },
-            {
-                "kind": "OPERATION",
-                "id": str(operation.id),
-                "created_at": operation.created_at.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
-                "run_id": str(operation.run_id),
-                "name": operation.name,
-                "status": operation.status.name,
-                "type": operation.type.value,
-                "position": operation.position,
-                "group": operation.group,
-                "description": operation.description,
-                "started_at": operation.started_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "ended_at": operation.ended_at.strftime("%Y-%m-%dT%H:%M:%SZ"),
-            },
-        ],
+        "relations": {
+            "parents": run_parents_to_json([run]) + operation_parents_to_json([operation]),
+            "symlinks": [],
+            "inputs": inputs_to_json(inputs, granularity="OPERATION"),
+            "outputs": outputs_to_json(outputs, granularity="OPERATION"),
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json([job]),
+            "runs": runs_to_json([run]),
+            "operations": operations_to_json([operation]),
+        },
     }

@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Literal, Sequence
 from uuid import UUID
 
-from sqlalchemy import ColumnElement, Select, any_, func, literal_column, select
+from sqlalchemy import ColumnElement, Row, Select, any_, func, literal_column, select
 from sqlalchemy.dialects.postgresql import insert
 
 from data_rentgen.db.models import Input
@@ -162,7 +162,6 @@ class InputRepository(Repository[Input]):
         if granularity == "RUN":
             query = select(
                 func.max(Input.created_at).label("created_at"),
-                literal_column("NULL").label("id"),
                 literal_column("NULL").label("operation_id"),
                 Input.run_id,
                 Input.job_id,
@@ -180,7 +179,6 @@ class InputRepository(Repository[Input]):
         else:
             query = select(
                 func.max(Input.created_at).label("created_at"),
-                literal_column("NULL").label("id"),
                 literal_column("NULL").label("operation_id"),
                 literal_column("NULL").label("run_id"),
                 Input.job_id,
@@ -212,3 +210,56 @@ class InputRepository(Repository[Input]):
             )
             for row in query_result.all()
         ]
+
+    async def get_stats_by_operation_ids(self, operation_ids: Sequence[UUID]) -> dict[UUID, Row]:
+        if not operation_ids:
+            return {}
+
+        # Input created_at is always the same as operation's created_at
+        # do not use `tuple_(Input.created_at, Input.operation_id).in_(...),
+        # as this is too complex filter for Postgres to make an optimal query plan
+        min_created_at = extract_timestamp_from_uuid(min(operation_ids))
+        max_created_at = extract_timestamp_from_uuid(max(operation_ids))
+
+        query = (
+            select(
+                Input.operation_id.label("operation_id"),
+                func.count(Input.dataset_id.distinct()).label("total_datasets"),
+                func.sum(Input.num_bytes).label("total_bytes"),
+                func.sum(Input.num_rows).label("total_rows"),
+                func.sum(Input.num_files).label("total_files"),
+            )
+            .where(
+                Input.created_at >= min_created_at,
+                Input.created_at <= max_created_at,
+                Input.operation_id == any_(operation_ids),  # type: ignore[arg-type]
+            )
+            .group_by(Input.operation_id)
+        )
+
+        query_result = await self._session.execute(query)
+        return {row.operation_id: row for row in query_result.all()}
+
+    async def get_stats_by_run_ids(self, run_ids: Sequence[UUID]) -> dict[UUID, Row]:
+        if not run_ids:
+            return {}
+
+        # unlike list_by_run_ids, we need to get all statistics for specific runs, regardless of time range
+        min_created_at = extract_timestamp_from_uuid(min(run_ids))
+        query = (
+            select(
+                Input.run_id.label("run_id"),
+                func.count(Input.dataset_id.distinct()).label("total_datasets"),
+                func.sum(Input.num_bytes).label("total_bytes"),
+                func.sum(Input.num_rows).label("total_rows"),
+                func.sum(Input.num_files).label("total_files"),
+            )
+            .where(
+                Input.created_at >= min_created_at,
+                Input.run_id == any_(run_ids),  # type: ignore[arg-type]
+            )
+            .group_by(Input.run_id)
+        )
+
+        query_result = await self._session.execute(query)
+        return {row.run_id: row for row in query_result.all()}

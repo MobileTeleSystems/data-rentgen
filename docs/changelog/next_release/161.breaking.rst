@@ -1,0 +1,36 @@
+Change response schema of ``GET /datasets`` from:
+
+.. code:: python
+
+    {
+        "meta": {...},
+        "items": [
+            {
+                "kind": "DATASET",
+                "id": 123,
+                "name": "abc",
+                # ...
+            }
+        ],
+    }
+
+to:
+
+.. code:: python
+
+    {
+        "meta": {...},
+        "items": [
+            {
+                "id": "123",
+                "data": {
+                    "id": "123",
+                    "name": "abc",
+                    # ...
+                },
+            }
+        ],
+    }
+
+
+This makes API response more consistent with others (e.g. ``GET /runs``, ``GET /operations``).
