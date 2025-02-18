@@ -1,13 +1,5 @@
 Implement basic column lineage handler in consumer.
 
-There are 2 DTO classes:
-
-    ``ColumnLineageDTO`` - describes tuple (operation, source_dataset, target_dataset).
-    ``DatasetColumnRelationDTO`` - describes source_column -> target_column (optional) relations within ``ColumnLineageDTO``
-
-Extractor builds list of these ``ColumnLineageDTO`` for each operation, and then perform bulk insert.
-Table rows are immutable, using ``ON CONFLICT DO NOTHING`` with few additional checks to reduce database IO.
-
-Open Lineage integration for Spark before v1.23 (or with columnLineage.datasetLineageEnabled=false, which is still default)
-produced INDIRECT lineage for each combination source_column x target_column,
+Open Lineage integration for Spark before v1.23 (or with ``columnLineage.datasetLineageEnabled=false``, which is still default)
+produced ``INDIRECT`` lineage for each combination source_column x target_column,
 which is amlost the cartesian join. It is VERY expensive to handle, so we ignore this cases.
