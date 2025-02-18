@@ -9,6 +9,10 @@ from data_rentgen.consumer.openlineage.dataset import (
     OpenLineageOutputDataset,
 )
 from data_rentgen.consumer.openlineage.dataset_facets import (
+    OpenLineageColumnLineageDatasetFacet,
+    OpenLineageColumnLineageDatasetFacetField,
+    OpenLineageColumnLineageDatasetFacetFieldRef,
+    OpenLineageColumnLineageDatasetFacetFieldTransformation,
     OpenLineageDatasetFacets,
     OpenLineageDatasetLifecycleStateChange,
     OpenLineageDatasourceDatasetFacet,
@@ -61,7 +65,10 @@ def test_run_event_spark_application_start():
                 "spark_properties": {
                     "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.18.0/integration/spark",
                     "_schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/RunFacet",
-                    "properties": {"spark.master": "local[*]", "spark.app.name": "spark_session"},
+                    "properties": {
+                        "spark.master": "local[*]",
+                        "spark.app.name": "spark_session",
+                    },
                 },
                 "processing_engine": {
                     "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.18.0/integration/spark",
@@ -155,7 +162,10 @@ def test_run_event_spark_application_stop():
                 "spark_properties": {
                     "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.18.0/integration/spark",
                     "_schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/RunFacet",
-                    "properties": {"spark.master": "local[*]", "spark.app.name": "spark_session"},
+                    "properties": {
+                        "spark.master": "local[*]",
+                        "spark.app.name": "spark_session",
+                    },
                 },
                 "processing_engine": {
                     "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.18.0/integration/spark",
@@ -235,7 +245,10 @@ def test_run_event_spark_job_running():
                 "spark_properties": {
                     "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.18.0/integration/spark",
                     "_schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/RunFacet",
-                    "properties": {"spark.master": "local[*]", "spark.app.name": "spark_session"},
+                    "properties": {
+                        "spark.master": "local[*]",
+                        "spark.app.name": "spark_session",
+                    },
                 },
                 "processing_engine": {
                     "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.18.0/integration/spark",
@@ -285,7 +298,11 @@ def test_run_event_spark_job_running():
                         "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.18.0/integration/spark",
                         "_schemaURL": "https://openlineage.io/spec/facets/1-1-1/SchemaDatasetFacet.json#/$defs/SchemaDatasetFacet",
                         "fields": [
-                            {"name": "dt", "type": "timestamp", "description": "Business date"},
+                            {
+                                "name": "dt",
+                                "type": "timestamp",
+                                "description": "Business date",
+                            },
                             {"name": "customer_id", "type": "decimal(20,0)"},
                             {"name": "total_spent", "type": "float"},
                         ],
@@ -381,6 +398,20 @@ def test_run_event_spark_job_running():
                                 ],
                             },
                         },
+                        "dataset": [
+                            {
+                                "namespace": "hdfs://test-hadoop:9820",
+                                "name": "/user/hive/warehouse/mydatabase.db/source_table",
+                                "field": "customer_id",
+                                "transformations": [
+                                    {
+                                        "type": "INDIRECT",
+                                        "subtype": "JOIN",
+                                        "description": "ON (DISCOUNTS.CUSTOMERS_ID=CUSTOMERS.ID)",
+                                    },
+                                ],
+                            },
+                        ],
                     },
                     "lifecycleStateChange": {
                         "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.18.0/integration/spark",
@@ -453,7 +484,10 @@ def test_run_event_spark_job_running():
                                 type="timestamp",
                                 description="Business date",
                             ),
-                            OpenLineageSchemaField(name="customer_id", type="decimal(20,0)"),
+                            OpenLineageSchemaField(
+                                name="customer_id",
+                                type="decimal(20,0)",
+                            ),
                             OpenLineageSchemaField(name="total_spent", type="float"),
                         ],
                     ),
@@ -481,12 +515,82 @@ def test_run_event_spark_job_running():
                     schema=OpenLineageSchemaDatasetFacet(
                         fields=[
                             OpenLineageSchemaField(name="dt", type="timestamp"),
-                            OpenLineageSchemaField(name="customer_id", type="decimal(20,0)"),
+                            OpenLineageSchemaField(
+                                name="customer_id",
+                                type="decimal(20,0)",
+                            ),
                             OpenLineageSchemaField(name="total_spent", type="float"),
                         ],
                     ),
                     lifecycleStateChange=OpenLineageLifecycleStateChangeDatasetFacet(
                         lifecycleStateChange=OpenLineageDatasetLifecycleStateChange.OVERWRITE,
+                    ),
+                    columnLineage=OpenLineageColumnLineageDatasetFacet(
+                        fields={
+                            "dt": OpenLineageColumnLineageDatasetFacetField(
+                                inputFields=[
+                                    OpenLineageColumnLineageDatasetFacetFieldRef(
+                                        namespace="hdfs://test-hadoop:9820",
+                                        name="/user/hive/warehouse/mydatabase.db/source_table",
+                                        field="dt",
+                                        transformations=[
+                                            OpenLineageColumnLineageDatasetFacetFieldTransformation(
+                                                type="DIRECT",
+                                                subtype="IDENTITY",
+                                                description="",
+                                            ),
+                                        ],
+                                    ),
+                                ],
+                            ),
+                            "customer_id": OpenLineageColumnLineageDatasetFacetField(
+                                inputFields=[
+                                    OpenLineageColumnLineageDatasetFacetFieldRef(
+                                        namespace="hdfs://test-hadoop:9820",
+                                        name="/user/hive/warehouse/mydatabase.db/source_table",
+                                        field="customer_id",
+                                        transformations=[
+                                            OpenLineageColumnLineageDatasetFacetFieldTransformation(
+                                                type="DIRECT",
+                                                subtype="IDENTITY",
+                                                description="",
+                                            ),
+                                        ],
+                                    ),
+                                ],
+                            ),
+                            "total_spent": OpenLineageColumnLineageDatasetFacetField(
+                                inputFields=[
+                                    OpenLineageColumnLineageDatasetFacetFieldRef(
+                                        namespace="hdfs://test-hadoop:9820",
+                                        name="/user/hive/warehouse/mydatabase.db/source_table",
+                                        field="total_spent",
+                                        transformations=[
+                                            OpenLineageColumnLineageDatasetFacetFieldTransformation(
+                                                type="DIRECT",
+                                                subtype="IDENTITY",
+                                                description="",
+                                            ),
+                                        ],
+                                    ),
+                                ],
+                            ),
+                        },
+                        dataset=[
+                            OpenLineageColumnLineageDatasetFacetFieldRef(
+                                namespace="hdfs://test-hadoop:9820",
+                                name="/user/hive/warehouse/mydatabase.db/source_table",
+                                field="customer_id",
+                                transformations=[
+                                    OpenLineageColumnLineageDatasetFacetFieldTransformation(
+                                        type="INDIRECT",
+                                        subtype="JOIN",
+                                        masking=False,
+                                        description="ON (DISCOUNTS.CUSTOMERS_ID=CUSTOMERS.ID)",
+                                    ),
+                                ],
+                            ),
+                        ],
                     ),
                 ),
                 outputFacets=OpenLineageOutputDatasetFacets(
