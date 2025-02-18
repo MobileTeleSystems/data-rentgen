@@ -42,19 +42,24 @@ def test_extractors_extract_dataset_column_relation_type_no_subtype(type):
 
 
 @pytest.mark.parametrize(
-    ("subtype", "expected_type"),
+    ("type", "subtype", "expected_type"),
     (
-        ("TRANSFORMATION", DatasetColumnRelationTypeDTO.TRANSFORMATION_MASKING),
-        ("AGGREGATION", DatasetColumnRelationTypeDTO.AGGREGATION_MASKING),
-        ("NEW_MASKING_SUBTYPE", DatasetColumnRelationTypeDTO.UNKNOWN),
+        (
+            "DIRECT",
+            "TRANSFORMATION",
+            DatasetColumnRelationTypeDTO.TRANSFORMATION_MASKING,
+        ),
+        ("DIRECT", "AGGREGATION", DatasetColumnRelationTypeDTO.AGGREGATION_MASKING),
+        ("INDIRECT", "NEW_MASKING_SUBTYPE", DatasetColumnRelationTypeDTO.UNKNOWN),
     ),
 )
 def test_extractors_extract_dataset_column_relation_type_masking(
+    type,
     subtype,
     expected_type,
 ):
     transformation = OpenLineageColumnLineageDatasetFacetFieldTransformation(
-        type="DIRECT",
+        type=type,
         subtype=subtype,
         masking=True,
     )
@@ -288,13 +293,6 @@ def test_extractors_extract_column_lineage_operations_with_cross_lineage(
                                 type="DIRECT",
                                 subtype="TRANSFORMATION",
                             ),
-                        ],
-                    ),
-                    OpenLineageColumnLineageDatasetFacetFieldRef(
-                        namespace="postgres://192.168.1.1:5432",
-                        name="mydb.myschema.mytable",
-                        field="source_col",
-                        transformations=[
                             OpenLineageColumnLineageDatasetFacetFieldTransformation(
                                 type="DIRECT",
                                 subtype="AGGREGATION",
