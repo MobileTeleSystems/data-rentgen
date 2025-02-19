@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from data_rentgen.consumer.extractors.batch import BatchExtractionResult, extract_batch
+from data_rentgen.consumer.extractors.column_lineage import extract_column_lineage
 from data_rentgen.consumer.extractors.dataset import (
     connect_dataset_with_symlinks,
     extract_dataset,
@@ -15,6 +16,7 @@ from data_rentgen.consumer.extractors.run import extract_run, extract_run_minima
 from data_rentgen.consumer.extractors.schema import extract_schema
 
 __all__ = [
+    "extract_column_lineage",
     "extract_dataset_and_symlinks",
     "extract_dataset",
     "connect_dataset_with_symlinks",

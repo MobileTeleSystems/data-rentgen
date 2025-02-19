@@ -10,7 +10,10 @@ from sqlalchemy.orm import selectinload
 from uuid6 import UUID
 
 from data_rentgen.db.models import (
+    ColumnLineage,
     Dataset,
+    DatasetColumnRelation,
+    DatasetColumnRelationType,
     DatasetSymlink,
     DatasetSymlinkType,
     Input,
@@ -63,6 +66,7 @@ async def test_runs_handler_spark(
         await test_broker.publish(event, "input.runs")
 
     job_query = select(Job).order_by(Job.name).options(selectinload(Job.location).selectinload(Location.addresses))
+
     job_scalars = await async_session.scalars(job_query)
     jobs = job_scalars.all()
     assert len(jobs) == 1
@@ -209,3 +213,94 @@ async def test_runs_handler_spark(
     assert clickhouse_output.num_bytes == 5_000_000
     assert clickhouse_output.num_rows == 10_000
     assert clickhouse_output.num_files is None
+
+    column_lineage_query = select(ColumnLineage).order_by(ColumnLineage.id)
+    column_lineage_scalars = await async_session.scalars(column_lineage_query)
+    column_lineage = column_lineage_scalars.all()
+    # There are two rows in column_lineage table, for two events.
+    # One with direct column lineage and second with direct + indirect.
+    # Difference between them should be only in fingerprint
+    assert len(column_lineage) == 2
+
+    first_event_column_lineage = column_lineage[0]
+    assert first_event_column_lineage.created_at == datetime(2024, 7, 5, 9, 6, 29, 463000, tzinfo=timezone.utc)
+    assert first_event_column_lineage.operation_id == job_operation.id
+    assert first_event_column_lineage.run_id == application_run.id
+    assert first_event_column_lineage.job_id == application_run.job_id
+    assert first_event_column_lineage.source_dataset_id == hdfs_warehouse.id
+    assert first_event_column_lineage.target_dataset_id == clickhouse_table.id
+
+    second_event_column_lineage = column_lineage[1]
+    assert second_event_column_lineage.created_at == datetime(2024, 7, 5, 9, 6, 29, 463000, tzinfo=timezone.utc)
+    assert second_event_column_lineage.operation_id == job_operation.id
+    assert second_event_column_lineage.run_id == application_run.id
+    assert second_event_column_lineage.job_id == application_run.job_id
+    assert second_event_column_lineage.source_dataset_id == hdfs_warehouse.id
+    assert second_event_column_lineage.target_dataset_id == clickhouse_table.id
+
+    dataset_column_relation_query = select(DatasetColumnRelation).order_by(
+        DatasetColumnRelation.type,
+        DatasetColumnRelation.fingerprint,
+        DatasetColumnRelation.source_column,
+    )
+    dataset_column_relation_scalars = await async_session.scalars(
+        dataset_column_relation_query,
+    )
+    dataset_column_relation = dataset_column_relation_scalars.all()
+    # In case rows order by type: first 5 rows correspond to direct lineage relations and last to indirect
+    # Ordering by fingerprint separate one event from another
+    assert len(dataset_column_relation) == 7
+
+    # First event(only direct relations)
+    customer_id_relation = dataset_column_relation[0]
+    assert customer_id_relation.source_column == "customer_id"
+    assert customer_id_relation.target_column == "customer_id"
+    assert customer_id_relation.type == DatasetColumnRelationType.IDENTITY.value
+
+    dt_relation = dataset_column_relation[1]
+    assert dt_relation.source_column == "dt"
+    assert dt_relation.target_column == "dt"
+    assert dt_relation.type == DatasetColumnRelationType.IDENTITY.value
+
+    total_spent_relation = dataset_column_relation[2]
+    assert total_spent_relation.source_column == "total_spent"
+    assert total_spent_relation.target_column == "total_spent"
+    assert total_spent_relation.type == DatasetColumnRelationType.IDENTITY.value
+    fingerpints = [
+        customer_id_relation.fingerprint,
+        dt_relation.fingerprint,
+        total_spent_relation.fingerprint,
+    ]
+    assert fingerpints[0] is not None
+    assert all([fingerprint == fingerpints[0] for fingerprint in fingerpints])
+
+    # Second event(direct and indirect relations)
+    customer_id_relation = dataset_column_relation[3]
+    assert customer_id_relation.source_column == "customer_id"
+    assert customer_id_relation.target_column == "customer_id"
+    assert customer_id_relation.type == DatasetColumnRelationType.IDENTITY.value
+
+    dt_relation = dataset_column_relation[4]
+    assert dt_relation.source_column == "dt"
+    assert dt_relation.target_column == "dt"
+    assert dt_relation.type == DatasetColumnRelationType.IDENTITY.value
+
+    total_spent_relation = dataset_column_relation[5]
+    assert total_spent_relation.source_column == "total_spent"
+    assert total_spent_relation.target_column == "total_spent"
+    assert total_spent_relation.type == DatasetColumnRelationType.IDENTITY.value
+
+    # Indirect relation
+    customer_id_indirect_relation = dataset_column_relation[6]
+    assert customer_id_indirect_relation.target_column is None
+    assert customer_id_indirect_relation.source_column == "customer_id"
+    assert customer_id_indirect_relation.type == DatasetColumnRelationType.JOIN.value
+
+    fingerpints = [
+        customer_id_indirect_relation.fingerprint,
+        customer_id_relation.fingerprint,
+        dt_relation.fingerprint,
+        total_spent_relation.fingerprint,
+    ]
+    assert fingerpints[0] is not None
+    assert all([fingerprint == fingerpints[0] for fingerprint in fingerpints])

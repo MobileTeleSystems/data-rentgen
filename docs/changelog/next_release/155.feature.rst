@@ -1,0 +1,5 @@
+Implement basic column lineage handler in consumer.
+
+Open Lineage integration for Spark before v1.23 (or with ``columnLineage.datasetLineageEnabled=false``, which is still default)
+produced ``INDIRECT`` lineage for each combination source_column x target_column,
+which is amlost the cartesian join. It is VERY expensive to handle, so we ignore this cases.

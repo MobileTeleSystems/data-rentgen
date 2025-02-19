@@ -34,7 +34,11 @@ async def runs_events_subscriber(
     logger.info("Saved successfully")
 
 
-async def save_to_db(data: BatchExtractionResult, unit_of_work: UnitOfWork, logger: Logger) -> None:  # noqa: WPS217
+async def save_to_db(  # noqa: WPS217, WPS213
+    data: BatchExtractionResult,
+    unit_of_work: UnitOfWork,
+    logger: Logger,
+) -> None:
     # To avoid deadlocks when parallel consumer instances insert/update the same row,
     # commit changes for each row instead of committing the whole batch. Yes, this cloud be slow.
 
@@ -95,3 +99,12 @@ async def save_to_db(data: BatchExtractionResult, unit_of_work: UnitOfWork, logg
 
         logger.debug("Creating outputs")
         await unit_of_work.output.create_or_update_bulk(data.outputs())
+
+    # If something went wrong here, at least we will have inputs/outputs
+    async with unit_of_work:
+        column_lineage = data.column_lineage()
+        logger.debug("Creating dataset column relations")
+        await unit_of_work.dataset_column_relation.create_bulk_for_column_lineage(column_lineage)
+
+        logger.debug("Creating column lineage")
+        await unit_of_work.column_lineage.create_bulk(column_lineage)

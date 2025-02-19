@@ -10,6 +10,9 @@ from data_rentgen.consumer.openlineage.dataset_facets import (
     OpenLineageSymlinkIdentifier,
     OpenLineageSymlinkType,
 )
+from data_rentgen.consumer.openlineage.dataset_facets.column_lineage import (
+    OpenLineageColumnLineageDatasetFacetFieldRef,
+)
 from data_rentgen.dto import (
     DatasetDTO,
     DatasetSymlinkDTO,
@@ -19,6 +22,9 @@ from data_rentgen.dto import (
 
 logger = logging.getLogger(__name__)
 
+OpenLineageDatasetLike = (
+    OpenLineageDataset | OpenLineageSymlinkIdentifier | OpenLineageColumnLineageDatasetFacetFieldRef
+)
 METASTORE = DatasetSymlinkTypeDTO.METASTORE
 WAREHOUSE = DatasetSymlinkTypeDTO.WAREHOUSE
 
@@ -49,7 +55,7 @@ def connect_dataset_with_symlinks(
     return sorted(result, key=lambda x: x.type)
 
 
-def extract_dataset(dataset: OpenLineageDataset | OpenLineageSymlinkIdentifier) -> DatasetDTO:
+def extract_dataset(dataset: OpenLineageDatasetLike) -> DatasetDTO:
     return DatasetDTO(
         name=dataset.name,
         location=extract_dataset_location(dataset),
@@ -103,7 +109,7 @@ def extract_dataset_and_symlinks(dataset: OpenLineageDataset) -> tuple[DatasetDT
     return dataset_dto, symlinks
 
 
-def extract_dataset_location(dataset: OpenLineageDataset | OpenLineageSymlinkIdentifier) -> LocationDTO:
+def extract_dataset_location(dataset: OpenLineageDatasetLike) -> LocationDTO:
     namespace = dataset.namespace
     if namespace == "file":
         # TODO: remove after https://github.com/OpenLineage/OpenLineage/issues/2709
@@ -122,8 +128,8 @@ def extract_dataset_location(dataset: OpenLineageDataset | OpenLineageSymlinkIde
     )
 
 
-def extract_dataset_format(dataset: OpenLineageDataset | OpenLineageSymlinkIdentifier) -> str | None:
-    if isinstance(dataset, OpenLineageSymlinkIdentifier):
+def extract_dataset_format(dataset: OpenLineageDatasetLike) -> str | None:
+    if isinstance(dataset, (OpenLineageSymlinkIdentifier, OpenLineageColumnLineageDatasetFacetFieldRef)):
         return None
 
     match dataset.facets.storage:

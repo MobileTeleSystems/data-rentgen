@@ -7,7 +7,7 @@ Requirements
 ------------
 
 * `Apache Spark <https://spark.apache.org/>`_ 3.x or higher
-* `OpenLineage integration for Spark <https://openlineage.io/docs/integrations/spark/>`_ 1.19.0 or higher
+* `OpenLineage integration for Spark <https://openlineage.io/docs/integrations/spark/>`_ 1.23.0 or higher
 
 Setup
 -----
@@ -23,7 +23,7 @@ Setup
           # install OpenLineage integration and Kafka client
           .config(
               "spark.jars.packages",
-              "io.openlineage:openlineage-spark_2.12:1.24.2,org.apache.kafka:kafka-clients:3.9.0",
+              "io.openlineage:openlineage-spark_2.12:1.27.0,org.apache.kafka:kafka-clients:3.9.0",
           )
           .config(
               "spark.extraListeners", "io.openlineage.spark.agent.OpenLineageSparkListener"
@@ -65,6 +65,7 @@ Setup
               r"(.*?)(?<remove>(?:\/[^\/=]+=[^\/=]+)+)",
           )
           .config("spark.openlineage.jobName.appendDatasetName", "false")
+          .config("spark.openlineage.columnLineage.datasetLineageEnabled", "true")
           .getOrCreate()
       )
 

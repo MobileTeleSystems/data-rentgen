@@ -18,13 +18,20 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.factory import create_session_factory
 from data_rentgen.db.models import Input, Operation, Output, Run
+from data_rentgen.db.models.column_lineage import ColumnLineage
 from data_rentgen.db.settings import DatabaseSettings
 from data_rentgen.logging.settings import LoggingSettings
 from data_rentgen.logging.setup_logging import setup_logging
 
 logger = logging.getLogger(__name__)
 
-PARTITIONED_TABLES = [Run.__tablename__, Operation.__tablename__, Input.__tablename__, Output.__tablename__]
+PARTITIONED_TABLES = [
+    Run.__tablename__,
+    Operation.__tablename__,
+    Input.__tablename__,
+    Output.__tablename__,
+    ColumnLineage.__tablename__,
+]
 
 
 class Granularity(str, Enum):
