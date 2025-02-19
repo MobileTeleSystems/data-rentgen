@@ -92,7 +92,7 @@ def input_to_json(input: Input, granularity: Literal["OPERATION", "RUN", "JOB"])
 def inputs_to_json(inputs: list[Input], granularity: Literal["OPERATION", "RUN", "JOB"]):
     return [
         input_to_json(input, granularity)
-        for input in sorted(inputs, key=lambda x: (x.dataset_id, x.operation_id or x.run_id or x.job_id))
+        for input in sorted(inputs, key=lambda x: (x.dataset_id, str(x.operation_id or x.run_id or x.job_id)))
     ]
 
 
@@ -119,7 +119,7 @@ def output_to_json(output: Output, granularity: Literal["OPERATION", "RUN", "JOB
 def outputs_to_json(outputs: list[Output], granularity: Literal["OPERATION", "RUN", "JOB"]):
     return [
         output_to_json(output, granularity)
-        for output in sorted(outputs, key=lambda x: (x.operation_id or x.run_id or x.job_id, x.dataset_id))
+        for output in sorted(outputs, key=lambda x: (str(x.operation_id or x.run_id or x.job_id), x.dataset_id))
     ]
 
 
