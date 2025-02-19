@@ -140,6 +140,72 @@ def output_event_with_one_to_two_direct_and_indirect_column_lineage() -> OpenLin
     )
 
 
+@pytest.fixture
+def output_event_with_direct_and_legacy_indirect_column_lineage() -> OpenLineageOutputDataset:
+    return OpenLineageOutputDataset(
+        namespace="hdfs://test-hadoop:9820",
+        name="/user/hive/warehouse/mydb.db/mytable",
+        facets=OpenLineageDatasetFacets(
+            columnLineage=OpenLineageColumnLineageDatasetFacet(
+                fields={
+                    "column_1": OpenLineageColumnLineageDatasetFacetField(
+                        inputFields=[
+                            OpenLineageColumnLineageDatasetFacetFieldRef(
+                                namespace="hive://test-hadoop:9083",
+                                name="mydb.mytable",
+                                field="source_col_1",
+                                transformations=[
+                                    OpenLineageColumnLineageDatasetFacetFieldTransformation(
+                                        type="DIRECT",
+                                        subtype="AGGREGATION",
+                                    ),
+                                ],
+                            ),
+                            OpenLineageColumnLineageDatasetFacetFieldRef(
+                                namespace="hive://test-hadoop:9083",
+                                name="mydb.mytable",
+                                field="source_col_2",
+                                transformations=[
+                                    OpenLineageColumnLineageDatasetFacetFieldTransformation(
+                                        type="INDIRECT",
+                                        subtype="JOIN",
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                    "column_2": OpenLineageColumnLineageDatasetFacetField(
+                        inputFields=[
+                            OpenLineageColumnLineageDatasetFacetFieldRef(
+                                namespace="hive://test-hadoop:9083",
+                                name="mydb.mytable",
+                                field="source_col_3",
+                                transformations=[
+                                    OpenLineageColumnLineageDatasetFacetFieldTransformation(
+                                        type="DIRECT",
+                                        subtype="AGGREGATION",
+                                    ),
+                                ],
+                            ),
+                            OpenLineageColumnLineageDatasetFacetFieldRef(
+                                namespace="hive://test-hadoop:9083",
+                                name="mydb.mytable",
+                                field="source_col_4",
+                                transformations=[
+                                    OpenLineageColumnLineageDatasetFacetFieldTransformation(
+                                        type="INDIRECT",
+                                        subtype="WINDOW",
+                                    ),
+                                ],
+                            ),
+                        ],
+                    ),
+                },
+            ),
+        ),
+    )
+
+
 def get_run_event_with_column_lineage(
     operation_id: UUID,
     column_lineage_facet: OpenLineageColumnLineageDatasetFacet,

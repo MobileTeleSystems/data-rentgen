@@ -124,6 +124,41 @@ def test_extractors_extract_direct_column_lineage(
     ]
 
 
+def test_extractors_extract_legacy_indirect_column_lineage(
+    extracted_spark_operation,
+    extracted_hive_dataset,
+    extracted_hdfs_dataset,
+    output_event_with_direct_and_legacy_indirect_column_lineage,
+):
+    operation = extracted_spark_operation
+
+    column_lineage = extract_column_lineage(
+        operation,
+        output_event_with_direct_and_legacy_indirect_column_lineage,
+    )
+    assert column_lineage == [
+        ColumnLineageDTO(
+            operation=operation,
+            source_dataset=extracted_hive_dataset,
+            target_dataset=extracted_hdfs_dataset,
+            dataset_column_relations=[
+                DatasetColumnRelationDTO(
+                    type=DatasetColumnRelationTypeDTO.AGGREGATION,
+                    source_column="source_col_1",
+                    target_column="column_1",
+                    fingerprint=None,
+                ),
+                DatasetColumnRelationDTO(
+                    type=DatasetColumnRelationTypeDTO.AGGREGATION,
+                    source_column="source_col_3",
+                    target_column="column_2",
+                    fingerprint=None,
+                ),
+            ],
+        ),
+    ]
+
+
 def test_extractors_extract_indirect_column_lineage(
     extracted_spark_operation,
     extracted_hive_dataset,
