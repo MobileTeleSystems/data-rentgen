@@ -130,6 +130,10 @@ def test_extractors_extract_legacy_indirect_column_lineage(
     extracted_hdfs_dataset,
     output_event_with_direct_and_legacy_indirect_column_lineage,
 ):
+    """
+    The output event contains Indirect column lineage in legacy format (inside 'fields', item).
+    This test check's that this data is not included in column lineage.
+    """
     operation = extracted_spark_operation
 
     column_lineage = extract_column_lineage(
