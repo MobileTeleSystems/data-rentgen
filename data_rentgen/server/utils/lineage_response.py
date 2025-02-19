@@ -111,7 +111,7 @@ def _get_input_relations(inputs: dict[Any, Input]) -> list[LineageInputRelationV
         )
         relations.append(relation)
 
-    return sorted(relations, key=lambda x: (x.from_.id, x.to.id))
+    return sorted(relations, key=lambda x: (str(x.from_.id), str(x.to.id)))
 
 
 def _get_output_relations(outputs: dict[Any, Output]) -> list[LineageOutputRelationV1]:
@@ -136,4 +136,4 @@ def _get_output_relations(outputs: dict[Any, Output]) -> list[LineageOutputRelat
         )
         relations.append(relation)
 
-    return sorted(relations, key=lambda x: (x.from_.id, x.to.id, x.type))
+    return sorted(relations, key=lambda x: (str(x.from_.id), str(x.to.id), x.type))
