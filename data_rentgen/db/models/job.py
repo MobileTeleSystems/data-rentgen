@@ -8,7 +8,7 @@ from enum import Enum
 from sqlalchemy import BigInteger, Computed, ForeignKey, Index, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy_utils import ChoiceType  # type: ignore[import-untyped]
+from sqlalchemy_utils import ChoiceType
 
 from data_rentgen.db.models.base import Base
 from data_rentgen.db.models.location import Location

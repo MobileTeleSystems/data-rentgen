@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from sqlalchemy import MetaData, inspect
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy_utils import generic_repr  # type: ignore[import-untyped]
+from sqlalchemy_utils import generic_repr
 
 convention = {
     "all_column_names": lambda constraint, table: "_".join(

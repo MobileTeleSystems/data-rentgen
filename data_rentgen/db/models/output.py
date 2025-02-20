@@ -9,7 +9,7 @@ from enum import Enum
 from sqlalchemy import UUID as SQL_UUID
 from sqlalchemy import BigInteger, DateTime, PrimaryKeyConstraint, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy_utils import ChoiceType  # type: ignore[import-untyped]
+from sqlalchemy_utils import ChoiceType
 from uuid6 import UUID
 
 from data_rentgen.db.models.base import Base
