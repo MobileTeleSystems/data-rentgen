@@ -76,8 +76,7 @@ class DatasetColumnRelation(Base):
         index=False,
         nullable=True,
         doc=(
-            "Target dataset column the data is saved to. "
-            "NULL means the entire target dataset depends on source column"
+            "Target dataset column the data is saved to. NULL means the entire target dataset depends on source column"
         ),
     )
 

@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field, SecretStr
 
 
 class KeycloakSettings(BaseModel):
-
     server_url: str = Field(..., description="Keycloak server URL")
     client_id: str = Field(..., description="Keycloak client ID")
     realm_name: str = Field(..., description="Keycloak realm name")
