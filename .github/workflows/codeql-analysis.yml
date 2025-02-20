@@ -51,8 +51,8 @@ jobs:
         run: |
           poetry install --no-root --all-extras --with dev --without docs,test
 
-      - name: Run flake8
-        run: poetry run ruff check data_rentgen/
+      - name: Run ruff
+        run: poetry run uff check --output-format=github data_rentgen/
 
       - name: Run mypy
         run: poetry run mypy ./data_rentgen --config-file ./pyproject.toml
