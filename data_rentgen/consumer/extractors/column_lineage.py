@@ -67,7 +67,7 @@ def extract_column_lineage(operation: OperationDTO, target_dataset: OpenLineageD
 
             column_lineage_key = (source_dataset_dto.unique_key, target_dataset_dto.unique_key)
             for transformation in input_field.transformations:
-                # OL integration for Spark before v1.23 (or with columnLineage.datasetLineageEnabled=false, which is still default)
+                # OL integration for Spark before v1.23 (or with columnLineage.datasetLineageEnabled=false, which is still default)  # noqa: E501
                 # produced INDIRECT lineage for each combination source_column x target_column,
                 # which is amlost the cartesian join. It is VERY expensive to handle, just ignore.
                 # See https://github.com/OpenLineage/OpenLineage/pull/3097

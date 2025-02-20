@@ -32,7 +32,7 @@ async def operations(
     query_args: Annotated[OperationQueryV1, Depends()],
     unit_of_work: Annotated[UnitOfWork, Depends()],
     operation_service: Annotated[OperationService, Depends()],
-    current_user: User = Depends(get_user()),
+    current_user: Annotated[User, Depends(get_user())],
 ) -> PageResponseV1[OperationDetailedResponseV1]:
     pagination = await operation_service.paginate(
         page=query_args.page,
@@ -49,7 +49,7 @@ async def operations(
 async def get_operations_lineage(
     query_args: Annotated[OperationLineageQueryV1, Query()],
     lineage_service: Annotated[LineageService, Depends()],
-    current_user: User = Depends(get_user()),
+    current_user: Annotated[User, Depends(get_user())],
 ) -> LineageResponseV1:
     lineage = await lineage_service.get_lineage_by_operations(
         start_node_ids=[query_args.start_node_id],  # type: ignore[list-item]

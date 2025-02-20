@@ -2,16 +2,18 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-import http
-from typing import Any, NamedTuple, Type
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from data_rentgen.server.errors.base import APIErrorSchema, BaseErrorSchema
+
+if TYPE_CHECKING:
+    import http
 
 
 class APIErrorResponse(NamedTuple):
     status: int
     description: str
-    schema: Type[BaseErrorSchema]
+    schema: type[BaseErrorSchema]
 
 
 _responses_by_exception: dict[type[Exception], APIErrorResponse] = {}
@@ -40,7 +42,7 @@ def get_response_for_exception(exception_type: type[Exception]) -> APIErrorRespo
 
 def get_response_for_status_code(status_code: int) -> APIErrorResponse | None:
     """Get mapping between status code and JSON body schema (for deserialization)."""
-    return _responses_by_status_code.get(status_code, None)
+    return _responses_by_status_code.get(status_code)
 
 
 def get_error_responses(

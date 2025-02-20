@@ -2,10 +2,11 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from enum import Enum
+from typing import Annotated
 
 from packaging.version import Version as RawVersion
 from pydantic import PlainSerializer, PlainValidator, WithJsonSchema
-from typing_extensions import Annotated, Doc
+from typing_extensions import Doc
 
 from data_rentgen.consumer.openlineage.run_facets.base import OpenLineageRunFacet
 

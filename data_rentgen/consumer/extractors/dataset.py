@@ -32,10 +32,10 @@ WAREHOUSE = DatasetSymlinkTypeDTO.WAREHOUSE
 def connect_dataset_with_symlinks(
     dataset: DatasetDTO,
     symlink: DatasetDTO,
-    type: OpenLineageSymlinkType,
+    type_: OpenLineageSymlinkType,
 ) -> list[DatasetSymlinkDTO]:
     result = []
-    is_metastore_symlink = type == OpenLineageSymlinkType.TABLE
+    is_metastore_symlink = type_ == OpenLineageSymlinkType.TABLE
 
     result.append(
         DatasetSymlinkDTO(
@@ -76,13 +76,13 @@ def extract_dataset_and_symlinks(dataset: OpenLineageDataset) -> tuple[DatasetDT
     if table_symlinks:
         # We are swapping the dataset with its TABLE symlink to create a cleaner lineage.
         # For example, by replacing an HDFS file with its corresponding Hive table.
-        # This ensures that all operations interact with a single table instead of multiple files (which may represent different partitions).
+        # This ensures that all operations interact with a single table instead of multiple files (which may represent different partitions).  # noqa: E501
         # Discussion on this issue: https://github.com/OpenLineage/OpenLineage/issues/2718
 
         # TODO: add support for multiple TABLE symlinks
         if len(table_symlinks) > 1:
             logger.warning(
-                "Dataset has more than one TABLE symlink. Only the first one will be used for replacement. Symlink name: %s",
+                "Dataset has more than one TABLE symlink. Only the first one will be used for replacement. Symlink name: %s",  # noqa: E501
                 table_symlinks[0].name,
             )
         table_dataset_dto = extract_dataset(table_symlinks[0])

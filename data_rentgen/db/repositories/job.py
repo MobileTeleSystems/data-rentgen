@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from typing import Sequence
+from collections.abc import Sequence
 
 from sqlalchemy import (
     ColumnElement,

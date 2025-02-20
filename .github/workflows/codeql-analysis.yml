@@ -52,11 +52,10 @@ jobs:
           poetry install --no-root --all-extras --with dev --without docs,test
 
       - name: Run flake8
-        run: poetry run flake8 data_rentgen/
+        run: poetry run ruff check data_rentgen/
 
       - name: Run mypy
         run: poetry run mypy ./data_rentgen --config-file ./pyproject.toml
-
 
   codeql:
     name: CodeQL
@@ -75,7 +74,7 @@ jobs:
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
-    # Initializes the CodeQL tools for scanning.
+      # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:

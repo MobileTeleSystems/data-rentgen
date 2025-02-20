@@ -34,7 +34,7 @@ async def runs_events_subscriber(
     logger.info("Saved successfully")
 
 
-async def save_to_db(  # noqa: WPS217, WPS213
+async def save_to_db(
     data: BatchExtractionResult,
     unit_of_work: UnitOfWork,
     logger: Logger,

@@ -18,8 +18,10 @@ def decode_jwt(token: str, secret_key: str, security_algorithm: str) -> dict:
         claims = jwt.decode(jwt=token, key=secret_key, algorithms=[security_algorithm])
 
         if "exp" not in claims:
-            raise jwt.ExpiredSignatureError("Missing expiration time in token")
+            err_msg = "Missing expiration time in token"
+            raise jwt.ExpiredSignatureError(err_msg)
 
-        return claims
+        return claims  # noqa: TRY300
     except jwt.PyJWTError as e:
-        raise AuthorizationError("Invalid token") from e
+        err_msg = "Invalid token"
+        raise AuthorizationError(err_msg) from e

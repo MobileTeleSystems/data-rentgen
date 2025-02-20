@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from sqlalchemy import MetaData, inspect
 from sqlalchemy.orm import DeclarativeBase
-from sqlalchemy_utils import generic_repr
+from sqlalchemy_utils import generic_repr  # type: ignore[import-untyped]
 
 convention = {
     "all_column_names": lambda constraint, table: "_".join(
@@ -13,11 +13,11 @@ convention = {
     "ix": "ix__%(table_name)s__%(all_column_names)s",
     "uq": "uq__%(table_name)s__%(all_column_names)s",
     "ck": "ck__%(table_name)s__%(constraint_name)s",
-    "fk": ("fk__%(table_name)s__%(all_column_names)s__" "%(referred_table_name)s"),
+    "fk": ("fk__%(table_name)s__%(all_column_names)s__%(referred_table_name)s"),
     "pk": "pk__%(table_name)s",
 }
 
-data_rentgen_metadata = MetaData(naming_convention=convention)  # type: ignore
+data_rentgen_metadata = MetaData(naming_convention=convention)  # type: ignore[arg-type]
 
 
 @generic_repr

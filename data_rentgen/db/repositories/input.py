@@ -1,8 +1,9 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+from collections.abc import Sequence
 from datetime import datetime, timezone
-from typing import Literal, Sequence
+from typing import Literal
 from uuid import UUID
 
 from sqlalchemy import ColumnElement, Row, Select, any_, func, literal_column, select
@@ -18,17 +19,17 @@ from data_rentgen.dto import InputDTO
 
 
 class InputRepository(Repository[Input]):
-    def get_id(self, input: InputDTO) -> UUID:
+    def get_id(self, input_: InputDTO) -> UUID:
         # `created_at' field of input should be the same as operation's,
         # to avoid scanning all partitions and speed up queries
-        created_at = extract_timestamp_from_uuid(input.operation.id)
+        created_at = extract_timestamp_from_uuid(input_.operation.id)
 
         # instead of using UniqueConstraint on multiple fields, one of which (schema_id) can be NULL,
         # use them to calculate unique id
         id_components = [
-            str(input.operation.id),
-            str(input.dataset.id),
-            str(input.schema.id) if input.schema else "",
+            str(input_.operation.id),
+            str(input_.dataset.id),
+            str(input_.schema.id) if input_.schema else "",
         ]
         return generate_incremental_uuid(created_at, ".".join(id_components))
 
@@ -50,18 +51,18 @@ class InputRepository(Repository[Input]):
             statement,
             [
                 {
-                    "id": self.get_id(input),
-                    "created_at": extract_timestamp_from_uuid(input.operation.id),
-                    "operation_id": input.operation.id,
-                    "run_id": input.operation.run.id,
-                    "job_id": input.operation.run.job.id,  # type: ignore[arg-type]
-                    "dataset_id": input.dataset.id,  # type: ignore[arg-type]
-                    "schema_id": input.schema.id if input.schema else None,
-                    "num_bytes": input.num_bytes,
-                    "num_rows": input.num_rows,
-                    "num_files": input.num_files,
+                    "id": self.get_id(input_),
+                    "created_at": extract_timestamp_from_uuid(input_.operation.id),
+                    "operation_id": input_.operation.id,
+                    "run_id": input_.operation.run.id,
+                    "job_id": input_.operation.run.job.id,  # type: ignore[arg-type]
+                    "dataset_id": input_.dataset.id,  # type: ignore[arg-type]
+                    "schema_id": input_.schema.id if input_.schema else None,
+                    "num_bytes": input_.num_bytes,
+                    "num_rows": input_.num_rows,
+                    "num_files": input_.num_files,
                 }
-                for input in inputs
+                for input_ in inputs
             ],
         )
         return list(result.scalars().all())

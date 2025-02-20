@@ -20,10 +20,12 @@ def setup_logging(settings: LoggingSettings) -> None:
     config_path = settings.custom_config_path or PRESETS_PATH.joinpath(f"{settings.preset}.yml")
 
     if not config_path.exists():
-        raise OSError(f"Logging configuration file '{config_path}' does not exist")
+        msg = f"Logging configuration file '{config_path}' does not exist"
+        raise OSError(msg)
 
     try:
         config = yaml.safe_load(config_path.read_text())
         dictConfig(config)
     except Exception as e:
-        raise LoggingSetupError(f"Error reading logging configuration '{config_path}'") from e
+        msg = f"Error reading logging configuration '{config_path}'"
+        raise LoggingSetupError(msg) from e

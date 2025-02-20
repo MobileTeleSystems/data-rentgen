@@ -27,7 +27,7 @@ class ApplicationVersionMiddleware:
             await self.app(scope, receive, send)
             return
 
-        async def modify_response_headers(message: Message) -> None:  # noqa: WPS430
+        async def modify_response_headers(message: Message) -> None:
             if message["type"] == "http.response.start":
                 headers = MutableHeaders(scope=message)
                 headers.append(self.header_name, self.version)

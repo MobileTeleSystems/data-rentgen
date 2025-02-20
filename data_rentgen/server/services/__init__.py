@@ -10,10 +10,10 @@ from data_rentgen.server.services.run import RunService
 
 __all__ = [
     "DatasetService",
-    "get_user",
     "JobService",
     "LineageService",
     "LocationService",
     "OperationService",
     "RunService",
+    "get_user",
 ]

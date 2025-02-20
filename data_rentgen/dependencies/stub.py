@@ -28,9 +28,7 @@ class Stub:
 
     def __eq__(self, other) -> bool:
         if isinstance(other, Stub):
-            return (
-                self._dependency == other._dependency and self._kwargs == other._kwargs  # noqa: WPS437  # noqa: WPS437
-            )
+            return self._dependency == other._dependency and self._kwargs == other._kwargs
         if not self._kwargs:
             return self._dependency == other
         return False

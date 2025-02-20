@@ -1,8 +1,9 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+from collections.abc import Sequence
 from datetime import datetime, timezone
-from typing import Literal, Sequence
+from typing import Literal
 from uuid import UUID
 
 from sqlalchemy import ColumnElement, Row, Select, any_, func, literal_column, select

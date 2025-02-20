@@ -1,16 +1,17 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
+
 import secrets
 import time
 from datetime import datetime, timezone
 from hashlib import sha1
-from uuid import NAMESPACE_URL
-from uuid import UUID as BaseUUID
-from uuid import uuid5
+from uuid import NAMESPACE_URL, uuid5
+from uuid import UUID as BaseUUID  # noqa: N811
 
-from uuid6 import UUID as NewUUID
+from uuid6 import UUID as NewUUID  # noqa: N811
 
-__all__ = ["generate_new_uuid", "generate_static_uuid", "generate_incremental_uuid", "extract_timestamp_from_uuid"]
+__all__ = ["extract_timestamp_from_uuid", "generate_incremental_uuid", "generate_new_uuid", "generate_static_uuid"]
 
 
 def generate_new_uuid(instant: datetime | None = None) -> NewUUID:
@@ -40,7 +41,7 @@ def generate_incremental_uuid(instant: datetime, data: str) -> NewUUID:
     Using uuid6 lib implementation (MIT License), with few changes:
     * https://github.com/oittaa/uuid6-python/blob/4f879849178b8a7a564f7cb76c3f7a6e5228d9ed/src/uuid6/__init__.py#L128-L147
     * https://github.com/oittaa/uuid6-python/blob/4f879849178b8a7a564f7cb76c3f7a6e5228d9ed/src/uuid6/__init__.py#L46-L51
-    """
+    """  # noqa: E501
 
     instant_utc = instant.astimezone(timezone.utc)
     timestamp_ms = int(instant_utc.timestamp() * 1000)
@@ -85,6 +86,7 @@ def generate_static_uuid(data: str) -> BaseUUID:
 def extract_timestamp_from_uuid(uuid: BaseUUID) -> datetime:
     """Extract timestamp from UUIDv7"""
     uuid = NewUUID(int=uuid.int)
-    if not uuid.version or uuid.version < 6:
-        raise ValueError("Only UUIDv6+ are supported")
+    if not uuid.version or uuid.version < 6:  # noqa: PLR2004
+        msg = "Only UUIDv6+ are supported"
+        raise ValueError(msg)
     return datetime.fromtimestamp(uuid.time / 1000, tz=timezone.utc)

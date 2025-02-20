@@ -24,7 +24,7 @@ router = APIRouter(prefix="/datasets", tags=["Datasets"], responses=get_error_re
 async def paginate_datasets(
     query_args: Annotated[DatasetPaginateQueryV1, Depends()],
     dataset_service: Annotated[DatasetService, Depends()],
-    current_user: User = Depends(get_user()),
+    current_user: Annotated[User, Depends(get_user())],
 ) -> PageResponseV1[DatasetDetailedResponseV1]:
     pagination = await dataset_service.paginate(
         page=query_args.page,
@@ -39,7 +39,7 @@ async def paginate_datasets(
 async def get_datasets_lineage(
     query_args: Annotated[DatasetLineageQueryV1, Query()],
     lineage_service: Annotated[LineageService, Depends()],
-    current_user: User = Depends(get_user()),
+    current_user: Annotated[User, Depends(get_user())],
 ) -> LineageResponseV1:
     lineage = await lineage_service.get_lineage_by_datasets(
         start_node_ids=[query_args.start_node_id],  # type: ignore[list-item]

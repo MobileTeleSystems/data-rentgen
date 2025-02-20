@@ -1,8 +1,6 @@
 import pytest
 
 from data_rentgen.consumer.extractors import (
-    connect_dataset_with_symlinks,
-    extract_dataset,
     extract_dataset_and_symlinks,
 )
 from data_rentgen.consumer.openlineage.dataset import OpenLineageDataset
@@ -85,7 +83,7 @@ def test_extractors_extract_dataset_hdfs_with_table_symlink():
 
 
 @pytest.mark.parametrize(
-    ["storage_layer", "file_format", "expected_format"],
+    ("storage_layer", "file_format", "expected_format"),
     [
         ("default", "parquet", "parquet"),
         ("iceberg", "parquet", "iceberg"),

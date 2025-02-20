@@ -1,4 +1,5 @@
-from typing import Any, Callable, Sequence, TypeVar
+from collections.abc import Sequence
+from typing import Any, Callable, TypeVar
 
 from data_rentgen.db.models import Input, Output
 

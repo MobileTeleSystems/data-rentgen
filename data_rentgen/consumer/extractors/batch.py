@@ -41,7 +41,7 @@ T = TypeVar(
 )
 
 
-class BatchExtractionResult:  # noqa: WPS338, WPS214
+class BatchExtractionResult:
     """Track results of batch extraction.
 
     Calling any ``add_*`` method will add DTO item to the result, including nested DTOs,
@@ -74,7 +74,7 @@ class BatchExtractionResult:  # noqa: WPS338, WPS214
 
     def __repr__(self):
         return (
-            "ExtractionResult("  # noqa: WPS237
+            "ExtractionResult("
             f"locations={len(self._locations)}, "
             f"datasets={len(self._datasets)}, "
             f"dataset_symlinks={len(self._dataset_symlinks)}, "
@@ -90,7 +90,7 @@ class BatchExtractionResult:  # noqa: WPS338, WPS214
         )
 
     @staticmethod
-    def _add(context: dict[tuple, T], new_item: T) -> dict[tuple, T]:  # noqa: WPS602
+    def _add(context: dict[tuple, T], new_item: T) -> dict[tuple, T]:
         key = new_item.unique_key
         if key in context:
             old_item = context[key]
@@ -130,12 +130,12 @@ class BatchExtractionResult:  # noqa: WPS338, WPS214
         self._add(self._operations, operation)
         self.add_run(operation.run)
 
-    def add_input(self, input: InputDTO):
-        self._add(self._inputs, input)
-        self.add_operation(input.operation)
-        self.add_dataset(input.dataset)
-        if input.schema:
-            self.add_schema(input.schema)
+    def add_input(self, input_: InputDTO):
+        self._add(self._inputs, input_)
+        self.add_operation(input_.operation)
+        self.add_dataset(input_.dataset)
+        if input_.schema:
+            self.add_schema(input_.schema)
 
     def add_output(self, output: OutputDTO):
         self._add(self._outputs, output)
@@ -196,12 +196,12 @@ class BatchExtractionResult:  # noqa: WPS338, WPS214
         return operation
 
     def _get_input(self, input_key: tuple) -> InputDTO:
-        input = self._inputs[input_key]
-        input.operation = self._get_operation(input.operation.unique_key)
-        input.dataset = self._get_dataset(input.dataset.unique_key)
-        if input.schema:
-            input.schema = self._get_schema(input.schema.unique_key)
-        return input
+        input_ = self._inputs[input_key]
+        input_.operation = self._get_operation(input_.operation.unique_key)
+        input_.dataset = self._get_dataset(input_.dataset.unique_key)
+        if input_.schema:
+            input_.schema = self._get_schema(input_.schema.unique_key)
+        return input_
 
     def _get_output(self, output_key: tuple) -> OutputDTO:
         output = self._outputs[output_key]
@@ -252,7 +252,7 @@ class BatchExtractionResult:  # noqa: WPS338, WPS214
         return list(map(self._get_user, self._users))
 
 
-def extract_batch(events: list[OpenLineageRunEvent]) -> BatchExtractionResult:  # noqa: WPS231
+def extract_batch(events: list[OpenLineageRunEvent]) -> BatchExtractionResult:
     result = BatchExtractionResult()
 
     for event in events:
@@ -260,15 +260,15 @@ def extract_batch(events: list[OpenLineageRunEvent]) -> BatchExtractionResult:  
             operation = extract_operation(event)
             result.add_operation(operation)
             for input_dataset in event.inputs:
-                input, symlinks = extract_input(operation, input_dataset)
-                result.add_input(input)
+                input_, symlinks = extract_input(operation, input_dataset)
+                result.add_input(input_)
                 for symlink in symlinks:
                     result.add_dataset_symlink(symlink)
 
             for output_dataset in event.outputs:
                 output, symlinks = extract_output(operation, output_dataset)
                 result.add_output(output)
-                for symlink in symlinks:  # noqa: WPS440
+                for symlink in symlinks:
                     result.add_dataset_symlink(symlink)
 
             for dataset in event.inputs + event.outputs:

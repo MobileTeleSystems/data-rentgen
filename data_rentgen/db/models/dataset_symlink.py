@@ -6,7 +6,7 @@ from enum import Enum
 
 from sqlalchemy import BigInteger, ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy_utils import ChoiceType
+from sqlalchemy_utils import ChoiceType  # type: ignore[import-untyped]
 
 from data_rentgen.db.models.base import Base
 from data_rentgen.db.models.dataset import Dataset

@@ -16,8 +16,8 @@ class UserRepository(Repository[User]):
             result = await self._get(user.name) or await self._create(user)
         return result
 
-    async def read_by_id(self, id: int) -> User | None:
-        statement = select(User).where(User.id == id)
+    async def read_by_id(self, id_: int) -> User | None:
+        statement = select(User).where(User.id == id_)
         return await self._session.scalar(statement)
 
     async def _get(self, name: str) -> User | None:

@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import textwrap
-from typing import Dict, Set
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -28,15 +27,15 @@ class MonitoringSettings(BaseModel):
     """
 
     enabled: bool = Field(default=True, description="Set to ``True`` to enable middleware")
-    labels: Dict[str, str] = Field(
+    labels: dict[str, str] = Field(
         default_factory=dict,
         description="""Custom labels added to all metrics, e.g. ``{"instance": "production"}``""",
     )
-    skip_paths: Set[str] = Field(
+    skip_paths: set[str] = Field(
         default_factory=set,
         description="Custom paths should be skipped from metrics, like ``/some/endpoint``",
     )
-    skip_methods: Set[str] = Field(
+    skip_methods: set[str] = Field(
         default={"OPTIONS"},
         description="HTTP methods which should be excluded from metrics",
     )

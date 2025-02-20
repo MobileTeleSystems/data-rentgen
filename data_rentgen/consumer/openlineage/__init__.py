@@ -6,4 +6,4 @@ Currently, openlineage-python [does not support](https://github.com/OpenLineage/
 So we have to write our own deserialization logic.
 
 Also FastStream support only ``pydantic`` models whether openlineage-python provides ``attrs`` models.
-"""
+"""  # noqa: E501

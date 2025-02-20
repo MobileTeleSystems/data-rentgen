@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from typing import List
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -43,17 +42,17 @@ class CORSSettings(BaseModel):
     """
 
     enabled: bool = Field(default=True, description="Set to ``True`` to enable middleware")
-    allow_origins: List[str] = Field(default_factory=list, description="Domains allowed for CORS")
+    allow_origins: list[str] = Field(default_factory=list, description="Domains allowed for CORS")
     allow_credentials: bool = Field(
         default=False,
         description="If ``True``, cookies should be supported for cross-origin request",
     )
-    allow_methods: List[str] = Field(default=["GET"], description="HTTP Methods allowed for CORS")
+    allow_methods: list[str] = Field(default=["GET"], description="HTTP Methods allowed for CORS")
     # https://github.com/snok/asgi-correlation-id#cors
-    allow_headers: List[str] = Field(
+    allow_headers: list[str] = Field(
         default=["X-Request-ID", "X-Request-With"],
         description="HTTP headers allowed for CORS",
     )
-    expose_headers: List[str] = Field(default=["X-Request-ID"], description="HTTP headers exposed from backend")
+    expose_headers: list[str] = Field(default=["X-Request-ID"], description="HTTP headers exposed from backend")
 
     model_config = ConfigDict(extra="allow")

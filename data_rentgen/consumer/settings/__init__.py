@@ -36,7 +36,7 @@ class ConsumerApplicationSettings(BaseSettings):
 
         # same as settings.logging.preset = "json"
         DATA_RENTGEN__LOGGING__PRESET=json
-    """
+    """  # noqa: E501
 
     database: DatabaseSettings = Field(description=":ref:`Database settings <configuration-database>`")
     logging: LoggingSettings = Field(

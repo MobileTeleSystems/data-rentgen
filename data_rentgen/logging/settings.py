@@ -73,7 +73,7 @@ class LoggingSettings(BaseSettings):
         ),
     )
 
-    custom_config_path: Path | None = Field(
+    custom_config_path: Path | None = Field(  # noqa: FA102
         default=None,
         description=textwrap.dedent(
             """

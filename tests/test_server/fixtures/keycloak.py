@@ -4,8 +4,6 @@ from base64 import b64encode
 
 import jwt
 import pytest
-import pytest_asyncio
-import respx
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat

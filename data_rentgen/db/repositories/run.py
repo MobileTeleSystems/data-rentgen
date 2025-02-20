@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Sequence
 from uuid import UUID
 
 from sqlalchemy import (

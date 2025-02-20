@@ -14,13 +14,13 @@ from data_rentgen.consumer.openlineage.job_facets.job_type import (
 )
 
 __all__ = [
-    "OpenLineageJobFacet",
     "OpenLineageDocumentationJobFacet",
-    "OpenLineageJobTypeJobFacet",
+    "OpenLineageJobFacet",
     "OpenLineageJobFacets",
-    "OpenLineageJobProcessingType",
     "OpenLineageJobIntegrationType",
+    "OpenLineageJobProcessingType",
     "OpenLineageJobType",
+    "OpenLineageJobTypeJobFacet",
 ]
 
 

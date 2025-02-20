@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import TYPE_CHECKING
+
 from fastapi import FastAPI
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -10,8 +12,10 @@ from data_rentgen.logging.setup_logging import setup_logging
 from data_rentgen.server.api.handlers import apply_exception_handlers
 from data_rentgen.server.api.router import api_router
 from data_rentgen.server.middlewares import apply_middlewares
-from data_rentgen.server.providers.auth import AuthProvider
 from data_rentgen.server.settings import ServerApplicationSettings
+
+if TYPE_CHECKING:
+    from data_rentgen.server.providers.auth import AuthProvider
 
 
 def application_factory(settings: ServerApplicationSettings) -> FastAPI:

@@ -7,9 +7,9 @@ from data_rentgen.exceptions.entity import EntityNotFoundError
 from data_rentgen.exceptions.redirect import RedirectError
 
 __all__ = [
-    "AuthorizationError",
     "ActionNotAllowedError",
     "ApplicationError",
+    "AuthorizationError",
     "EntityNotFoundError",
     "RedirectError",
 ]

@@ -46,7 +46,7 @@ def upgrade() -> None:
             name=op.f("fk__custom_user_properties__custom_properties_id"),
             ondelete="CASCADE",
         ),
-        ExcludeConstraint(  # noqa: WPS317
+        ExcludeConstraint(
             ("user_id", "="),
             ("property_id", "="),
             ("during", "&&"),

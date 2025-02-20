@@ -72,7 +72,7 @@ async def main(args: list[str]) -> None:
     else:
         depths = sorted(set(depths))
 
-    db_settings = DatabaseSettings()
+    db_settings = DatabaseSettings()  # type: ignore[call-arg]
     session_factory = create_session_factory(db_settings)
     async with session_factory() as session:
         for depth in depths:
