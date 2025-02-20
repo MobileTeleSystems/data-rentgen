@@ -243,6 +243,10 @@ inline-quotes = "double"
 multiline-quotes = "double"
 docstring-quotes = "double"
 
+[[tool.mypy.overrides]]
+module=["sqlalchemy_utils.*"]
+follow_untyped_imports = true
+
 [tool.darglint]
 docstring_style = "sphinx"
 
