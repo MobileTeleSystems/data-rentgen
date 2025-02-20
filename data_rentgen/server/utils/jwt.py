@@ -21,7 +21,9 @@ def decode_jwt(token: str, secret_key: str, security_algorithm: str) -> dict:
             err_msg = "Missing expiration time in token"
             raise jwt.ExpiredSignatureError(err_msg)
 
-        return claims  # noqa: TRY300
     except jwt.PyJWTError as e:
         err_msg = "Invalid token"
         raise AuthorizationError(err_msg) from e
+
+    else:
+        return claims
