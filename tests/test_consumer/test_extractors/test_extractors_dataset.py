@@ -83,7 +83,7 @@ def test_extractors_extract_dataset_hdfs_with_table_symlink():
 
 
 @pytest.mark.parametrize(
-    ("storage_layer", "file_format", "expected_format"),
+    ["storage_layer", "file_format", "expected_format"],
     [
         ("default", "parquet", "parquet"),
         ("iceberg", "parquet", "iceberg"),

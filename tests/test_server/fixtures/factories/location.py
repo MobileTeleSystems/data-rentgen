@@ -1,6 +1,7 @@
 from collections.abc import AsyncGenerator
+from contextlib import AbstractAsyncContextManager
 from random import choice, randint
-from typing import AsyncContextManager, Callable
+from typing import Callable
 
 import pytest
 import pytest_asyncio
@@ -57,7 +58,7 @@ async def new_location(
 @pytest_asyncio.fixture(params=[{}])
 async def location(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[Location, None]:
     params = request.param
 
@@ -74,7 +75,7 @@ async def location(
 @pytest_asyncio.fixture(params=[(5, {})])
 async def locations(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[list[Location], None]:
     size, params = request.param
     async with async_session_maker() as async_session:
@@ -89,7 +90,7 @@ async def locations(
 
 @pytest_asyncio.fixture
 async def locations_search(
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
 ):
     """
     Fixture with explicit location name and address urls for search tests.

@@ -1,6 +1,7 @@
 from collections.abc import AsyncGenerator
+from contextlib import AbstractAsyncContextManager
 from random import choice, randint
-from typing import AsyncContextManager, Callable
+from typing import Callable
 
 import pytest
 import pytest_asyncio
@@ -53,7 +54,7 @@ async def new_job(
 @pytest_asyncio.fixture(params=[{}])
 async def job(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[Job, None]:
     params = request.param
 
@@ -72,7 +73,7 @@ async def job(
 @pytest_asyncio.fixture(params=[(5, {})])
 async def jobs(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[list[Job], None]:
     size, params = request.param
 
@@ -94,7 +95,7 @@ async def jobs(
 @pytest_asyncio.fixture(params=[{}])
 async def jobs_search(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[tuple[dict[str, Job], dict[str, Job], dict[str, Job]], None]:
     """
     Fixture with explicit jobs, locations names and addresses urls for search tests.
@@ -122,7 +123,6 @@ async def jobs_search(
 
     tip: you can imagine it like identity matrix with not-random names on diagonal.
     """
-    request.param
     location_kwargs = [
         {"name": "dwh", "type": "yarn"},
         {"name": "my-cluster", "type": "yarn"},
@@ -191,9 +191,7 @@ async def jobs_search(
 
     jobs_by_name = {job.name: job for job in jobs_with_names}
     jobs_by_location = dict(zip([location.name for location in locations_with_names], jobs_with_location_names))
-    jobs_by_address = {
-        name: job for name, job in zip(addresses_url, [job for job in jobs_with_address_urls for _ in range(2)])
-    }
+    jobs_by_address = dict(zip(addresses_url, [job for job in jobs_with_address_urls for _ in range(2)]))
 
     yield jobs_by_name, jobs_by_location, jobs_by_address
 

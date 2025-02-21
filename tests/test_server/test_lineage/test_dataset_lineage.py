@@ -808,7 +808,7 @@ async def test_get_dataset_lineage_with_symlink(
     dataset_symlinks = [
         dataset_symlink
         for dataset_symlink in lineage.dataset_symlinks
-        if dataset_symlink.from_dataset_id == initial_dataset.id or dataset_symlink.to_dataset_id == initial_dataset.id
+        if initial_dataset.id in (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id)
     ]
     dataset_ids_from_symlink = {dataset_symlink.from_dataset_id for dataset_symlink in dataset_symlinks}
     dataset_ids_to_symlink = {dataset_symlink.to_dataset_id for dataset_symlink in dataset_symlinks}

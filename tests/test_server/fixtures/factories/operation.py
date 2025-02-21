@@ -1,7 +1,8 @@
 from collections.abc import AsyncGenerator
+from contextlib import AbstractAsyncContextManager
 from datetime import timedelta
 from random import choice, randint
-from typing import AsyncContextManager, Callable
+from typing import Callable
 
 import pytest
 import pytest_asyncio
@@ -59,7 +60,7 @@ async def new_operation(
 @pytest_asyncio.fixture(params=[{}])
 async def operation(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     run: Run,
 ) -> AsyncGenerator[Operation, None]:
     params = request.param
@@ -79,7 +80,7 @@ async def operation(
 @pytest_asyncio.fixture(params=[(10, {})])
 async def operations(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     runs: list[Run],
 ) -> AsyncGenerator[list[Operation], None]:
     size, params = request.param
@@ -87,7 +88,7 @@ async def operations(
 
     async with async_session_maker() as async_session:
         for index in range(size):
-            items.append(
+            items.append(  # noqa: PERF401
                 await create_operation(
                     async_session=async_session,
                     operation_kwargs={
@@ -109,7 +110,7 @@ async def operations(
 @pytest_asyncio.fixture(params=[(10, {})])
 async def operations_with_same_run(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     run: Run,
 ) -> AsyncGenerator[list[Operation], None]:
     size, params = request.param

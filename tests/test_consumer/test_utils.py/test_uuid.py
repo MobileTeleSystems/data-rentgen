@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 from data_rentgen.db.utils.uuid import (
     generate_incremental_uuid,
@@ -19,7 +19,7 @@ def test_generate_new_uuid_always_different():
 
 
 def test_generate_new_uuid_sorted_like_timestamp():
-    instant = datetime.now()
+    instant = datetime.now(tz=UTC)
     following = instant + timedelta(milliseconds=1)
 
     uuid1 = generate_new_uuid(instant)
@@ -45,27 +45,27 @@ def test_generate_static_uuid_different_input_different_result():
 
 
 def test_generate_incremental_uuid_is_uuidv7():
-    instant = datetime.now()
+    instant = datetime.now(tz=UTC)
     uuid = generate_incremental_uuid(instant, "test")
     assert uuid.version == 7
 
 
 def test_generate_incremental_uuid_same_input_same_result():
-    instant = datetime.now()
+    instant = datetime.now(tz=UTC)
     uuid1 = generate_incremental_uuid(instant, "test")
     uuid2 = generate_incremental_uuid(instant, "test")
     assert uuid1 == uuid2
 
 
 def test_generate_incremental_uuid_different_input_different_result():
-    current = datetime.now()
+    current = datetime.now(tz=UTC)
     uuid1 = generate_incremental_uuid(current, "test1")
     uuid2 = generate_incremental_uuid(current, "test2")
     assert uuid1 != uuid2
 
 
 def test_generate_incremental_uuid_sorted_like_timestamp():
-    current = datetime.now()
+    current = datetime.now(tz=UTC)
     following = current + timedelta(milliseconds=1)
     uuid1 = generate_incremental_uuid(current, "test")
     uuid2 = generate_incremental_uuid(following, "test")

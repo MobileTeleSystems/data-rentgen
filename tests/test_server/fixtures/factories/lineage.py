@@ -1,6 +1,7 @@
 from collections.abc import AsyncGenerator
-from datetime import datetime, timedelta
-from typing import AsyncContextManager, Callable
+from contextlib import AbstractAsyncContextManager
+from datetime import UTC, datetime, timedelta
+from typing import Callable
 
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,7 +22,7 @@ from tests.test_server.utils.lineage_result import LineageResult
 
 @pytest_asyncio.fixture()
 async def simple_lineage(
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     job: Job,
     user: User,
 ) -> AsyncGenerator[LineageResult, None]:
@@ -37,7 +38,7 @@ async def simple_lineage(
 
     lineage = LineageResult(jobs=[job])
     async with async_session_maker() as async_session:
-        created_at = datetime.now()
+        created_at = datetime.now(tz=UTC)
         for n in range(num_runs):
             run = await create_run(
                 async_session,
@@ -109,7 +110,7 @@ async def simple_lineage(
 
 @pytest_asyncio.fixture()
 async def three_days_lineage(
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     job: Job,
     user: User,
 ) -> AsyncGenerator[LineageResult, None]:
@@ -124,7 +125,7 @@ async def three_days_lineage(
 
     lineage = LineageResult()
     lineage.jobs.append(job)
-    created_at = datetime.now()
+    created_at = datetime.now(tz=UTC)
 
     async with async_session_maker() as async_session:
         for day in range(3):
@@ -197,7 +198,7 @@ async def three_days_lineage(
 
 @pytest_asyncio.fixture()
 async def lineage_with_depth(
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     user: User,
 ):
     # Three trees of J -> R -> O, connected via datasets:
@@ -207,7 +208,7 @@ async def lineage_with_depth(
 
     num_datasets = 4
     num_jobs = 3
-    created_at = datetime.now()
+    created_at = datetime.now(tz=UTC)
 
     lineage = LineageResult()
     async with async_session_maker() as async_session:
@@ -277,7 +278,7 @@ async def lineage_with_depth(
 
 @pytest_asyncio.fixture()
 async def cyclic_lineage(
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     user: User,
 ):
     # Two trees of J -> R -> O, forming a cycle:
@@ -286,7 +287,7 @@ async def cyclic_lineage(
 
     num_datasets = 2
     num_jobs = 2
-    created_at = datetime.now()
+    created_at = datetime.now(tz=UTC)
 
     lineage = LineageResult()
     async with async_session_maker() as async_session:
@@ -358,7 +359,7 @@ async def cyclic_lineage(
 
 @pytest_asyncio.fixture()
 async def duplicated_lineage(
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     user: User,
 ):
     # Two trees of J -> R -> O, interacting with the same dataset multiple times:
@@ -375,7 +376,7 @@ async def duplicated_lineage(
     num_jobs = 2
     runs_per_job = 2
     operations_per_run = 2
-    created_at = datetime.now()
+    created_at = datetime.now(tz=UTC)
 
     lineage = LineageResult()
     async with async_session_maker() as async_session:
@@ -458,7 +459,7 @@ async def duplicated_lineage(
 
 @pytest_asyncio.fixture()
 async def branchy_lineage(
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     user: User,
 ):
     # Three trees of J -> R -> O, connected via D3 and D6, but having other inputs & outputs:
@@ -478,7 +479,7 @@ async def branchy_lineage(
 
     num_datasets = 10
     num_jobs = 3
-    created_at = datetime.now()
+    created_at = datetime.now(tz=UTC)
 
     lineage = LineageResult()
     async with async_session_maker() as async_session:
@@ -593,7 +594,7 @@ async def branchy_lineage(
 
 @pytest_asyncio.fixture()
 async def lineage_with_symlinks(
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     user: User,
 ) -> AsyncGenerator[LineageResult, None]:
     # Three trees of J -> R -> O, connected to datasets via symlinks:
@@ -602,7 +603,7 @@ async def lineage_with_symlinks(
     # J3 -> R3 -> O3, D3 -> O2 -> D4S
 
     lineage = LineageResult()
-    created_at = datetime.now()
+    created_at = datetime.now(tz=UTC)
     num_datasets = 4
     num_jobs = 3
 

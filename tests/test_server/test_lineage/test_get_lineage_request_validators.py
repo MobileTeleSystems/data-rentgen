@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from http import HTTPStatus
 
 import pytest
@@ -60,7 +60,7 @@ async def test_get_lineage_no_filter(
 
 
 @pytest.mark.parametrize(
-    "entity_kind, start_node_id",
+    ["entity_kind", "start_node_id"],
     [
         ("operations", generate_new_uuid()),
         ("datasets", 1),
@@ -75,7 +75,7 @@ async def test_get_lineage_missing_id(
     test_client: AsyncClient,
     mocked_user: MockedUser,
 ):
-    since = datetime.now()
+    since = datetime.now(tz=UTC)
 
     response = await test_client.get(
         f"v1/{entity_kind}/lineage",
@@ -104,7 +104,7 @@ async def test_get_lineage_missing_id(
 
 
 @pytest.mark.parametrize(
-    "entity_kind, start_node_id",
+    ["entity_kind", "start_node_id"],
     [("datasets", generate_new_uuid()), ("jobs", generate_new_uuid())],
     ids=["datasets", "jobs"],
 )
@@ -146,7 +146,7 @@ async def test_get_lineage_start_node_id_int_type_validation(
 
 
 @pytest.mark.parametrize(
-    "entity_kind, start_node_id",
+    ["entity_kind", "start_node_id"],
     [("operations", 1), ("runs", 1)],
     ids=["operations", "runs"],
 )
