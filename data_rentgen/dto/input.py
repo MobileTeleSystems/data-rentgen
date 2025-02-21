@@ -34,7 +34,7 @@ class InputDTO:
 
     def merge(self, new: InputDTO) -> InputDTO:
         schema: SchemaDTO | None
-        if self.schema and new.schema:
+        if self.schema and new.schema:  # noqa: SIM108
             schema = self.schema.merge(new.schema)
         else:
             schema = new.schema or self.schema

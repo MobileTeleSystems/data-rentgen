@@ -1,8 +1,8 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
+from collections.abc import Sequence
 from enum import IntFlag
 from string import punctuation
-from typing import Sequence
 
 from sqlalchemy import ColumnElement, func
 from sqlalchemy.orm import InstrumentedAttribute
@@ -84,7 +84,7 @@ def words_with_supported_punctuation(query: str) -> list[str]:
     for part in converted.split():
         # delete parts containing only punctuation chars, like ./
         if not all(char in punctuation for char in part):
-            result.append(part)
+            result.append(part)  # noqa: PERF401
     return result
 
 

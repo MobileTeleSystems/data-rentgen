@@ -9,7 +9,7 @@ from data_rentgen.server.errors.schemas.not_found import NotFoundSchema
 
 __all__ = [
     "InvalidRequestSchema",
-    "NotFoundSchema",
-    "NotAuthorizedSchema",
     "NotAuthorizedRedirectSchema",
+    "NotAuthorizedSchema",
+    "NotFoundSchema",
 ]

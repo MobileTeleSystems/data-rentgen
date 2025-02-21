@@ -21,10 +21,9 @@ async def custom_openapi(request: Request) -> JSONResponse:
     root_path = request.scope.get("root_path", "").rstrip("/")
     server_urls = set(filter(None, (server_data.get("url") for server_data in app.servers)))
 
-    if root_path not in server_urls:
-        if root_path and app.root_path_in_servers:
-            app.servers.insert(0, {"url": root_path})
-            server_urls.add(root_path)
+    if root_path and app.root_path_in_servers and root_path not in server_urls:
+        app.servers.insert(0, {"url": root_path})
+        server_urls.add(root_path)
 
     return JSONResponse(app.openapi())
 
@@ -52,7 +51,7 @@ def custom_openapi_schema(app: FastAPI, settings: OpenAPISettings) -> dict:
     openapi_schema["info"]["x-logo"] = {
         "url": str(settings.logo.url),
         "altText": str(settings.logo.alt_text),
-        "backgroundColor": f"#{settings.logo.background_color}",  # noqa: WPS237
+        "backgroundColor": f"#{settings.logo.background_color}",
         "href": str(settings.logo.href),
     }
     app.openapi_schema = openapi_schema

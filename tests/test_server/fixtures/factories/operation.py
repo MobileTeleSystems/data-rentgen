@@ -1,16 +1,22 @@
-from collections.abc import AsyncGenerator
+from __future__ import annotations
+
 from datetime import timedelta
 from random import choice, randint
-from typing import AsyncContextManager, Callable
+from typing import TYPE_CHECKING, Callable
 
-import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Operation, OperationStatus, OperationType, Run
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
 from tests.test_server.fixtures.factories.base import random_datetime, random_string
 from tests.test_server.utils.delete import clean_db
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+    from contextlib import AbstractAsyncContextManager
+
+    import pytest
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def operation_factory(**kwargs):
@@ -59,7 +65,7 @@ async def new_operation(
 @pytest_asyncio.fixture(params=[{}])
 async def operation(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     run: Run,
 ) -> AsyncGenerator[Operation, None]:
     params = request.param
@@ -79,7 +85,7 @@ async def operation(
 @pytest_asyncio.fixture(params=[(10, {})])
 async def operations(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     runs: list[Run],
 ) -> AsyncGenerator[list[Operation], None]:
     size, params = request.param
@@ -87,7 +93,7 @@ async def operations(
 
     async with async_session_maker() as async_session:
         for index in range(size):
-            items.append(
+            items.append(  # noqa: PERF401
                 await create_operation(
                     async_session=async_session,
                     operation_kwargs={
@@ -109,7 +115,7 @@ async def operations(
 @pytest_asyncio.fixture(params=[(10, {})])
 async def operations_with_same_run(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     run: Run,
 ) -> AsyncGenerator[list[Operation], None]:
     size, params = request.param

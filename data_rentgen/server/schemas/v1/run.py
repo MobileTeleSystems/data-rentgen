@@ -1,5 +1,7 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
+
 from datetime import datetime
 from enum import IntEnum
 from uuid import UUID
@@ -163,19 +165,22 @@ class RunsQueryV1(PaginateQueryV1):
     def _check_until(cls, value: datetime | None, info: ValidationInfo) -> datetime | None:
         since = info.data.get("since")
         if since and value and since >= value:
-            raise ValueError("'since' should be less than 'until'")
+            msg = "'since' should be less than 'until'"
+            raise ValueError(msg)
         return value
 
     @model_validator(mode="after")
-    def _check_fields(self):  # noqa: WPS238
+    def _check_fields(self):
         if not any([self.run_id, self.job_id, self.parent_run_id, self.search_query]):
-            raise ValueError(
-                "input should contain either 'run_id', 'job_id', 'parent_run_id' or 'search_query' field",
-            )
+            msg = "input should contain either 'run_id', 'job_id', 'parent_run_id' or 'search_query' field"
+            raise ValueError(msg)
         if self.job_id and not self.since:
-            raise ValueError("'job_id' can be passed only with 'since'")
+            msg = "'job_id' can be passed only with 'since'"
+            raise ValueError(msg)
         if self.parent_run_id and not self.since:
-            raise ValueError("'parent_run_id' can be passed only with 'since'")
+            msg = "'parent_run_id' can be passed only with 'since'"
+            raise ValueError(msg)
         if self.search_query and not self.since:
-            raise ValueError("'search_query' can be passed only with 'since'")
+            msg = "'search_query' can be passed only with 'since'"
+            raise ValueError(msg)
         return self

@@ -32,7 +32,7 @@ def test_extractors_extract_dataset_column_relation_type_new_type():
     assert dataset_column_relation_type == DatasetColumnRelationTypeDTO.UNKNOWN
 
 
-@pytest.mark.parametrize("type", ("INDIRECT", "DIRECT"))
+@pytest.mark.parametrize("type", ["INDIRECT", "DIRECT"])
 def test_extractors_extract_dataset_column_relation_type_no_subtype(type):
     transformation = OpenLineageColumnLineageDatasetFacetFieldTransformation(
         type=type,
@@ -42,8 +42,8 @@ def test_extractors_extract_dataset_column_relation_type_no_subtype(type):
 
 
 @pytest.mark.parametrize(
-    ("type", "subtype", "expected_type"),
-    (
+    ["type", "subtype", "expected_type"],
+    [
         (
             "DIRECT",
             "TRANSFORMATION",
@@ -51,7 +51,7 @@ def test_extractors_extract_dataset_column_relation_type_no_subtype(type):
         ),
         ("DIRECT", "AGGREGATION", DatasetColumnRelationTypeDTO.AGGREGATION_MASKING),
         ("INDIRECT", "JOIN", DatasetColumnRelationTypeDTO.UNKNOWN),
-    ),
+    ],
 )
 def test_extractors_extract_dataset_column_relation_type_masking(
     type,
@@ -68,12 +68,12 @@ def test_extractors_extract_dataset_column_relation_type_masking(
 
 
 @pytest.mark.parametrize(
-    ("type", "subtype", "expected_type"),
-    (
+    ["type", "subtype", "expected_type"],
+    [
         ("DIRECT", "TRANSFORMATION", DatasetColumnRelationTypeDTO.TRANSFORMATION),
         ("INDIRECT", "JOIN", DatasetColumnRelationTypeDTO.JOIN),
         ("INDIRECT", "NEW_SUBTYPE", DatasetColumnRelationTypeDTO.UNKNOWN),
-    ),
+    ],
 )
 def test_extractors_extract_dataset_column_relation_type_without_masking(
     type,

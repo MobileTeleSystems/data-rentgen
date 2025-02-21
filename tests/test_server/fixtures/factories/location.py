@@ -1,15 +1,21 @@
-from collections.abc import AsyncGenerator
-from random import choice, randint
-from typing import AsyncContextManager, Callable
+from __future__ import annotations
 
-import pytest
+from random import choice, randint
+from typing import TYPE_CHECKING, Callable
+
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Location
 from tests.test_server.fixtures.factories.address import create_address
 from tests.test_server.fixtures.factories.base import random_string
 from tests.test_server.utils.delete import clean_db
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+    from contextlib import AbstractAsyncContextManager
+
+    import pytest
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def location_factory(**kwargs):
@@ -57,7 +63,7 @@ async def new_location(
 @pytest_asyncio.fixture(params=[{}])
 async def location(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[Location, None]:
     params = request.param
 
@@ -74,7 +80,7 @@ async def location(
 @pytest_asyncio.fixture(params=[(5, {})])
 async def locations(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[list[Location], None]:
     size, params = request.param
     async with async_session_maker() as async_session:
@@ -89,7 +95,7 @@ async def locations(
 
 @pytest_asyncio.fixture
 async def locations_search(
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
 ):
     """
     Fixture with explicit location name and address urls for search tests.

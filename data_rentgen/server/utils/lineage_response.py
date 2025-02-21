@@ -41,8 +41,8 @@ async def build_lineage_response(lineage: LineageServiceResult) -> LineageRespon
         nodes=LineageNodesResponseV1(
             jobs=jobs,
             datasets=datasets,
-            runs=runs,  # type: ignore[assignment]
-            operations=operations,  # type: ignore[assignment]
+            runs=runs,  # type: ignore[assignment, arg-type]
+            operations=operations,  # type: ignore[assignment, arg-type]
         ),
         relations=LineageRelationsResponseV1(
             parents=_get_run_parent_relations(lineage.runs) + _get_operation_parent_relations(lineage.operations),
@@ -92,22 +92,22 @@ def _get_symlink_relations(dataset_symlinks: dict[Any, DatasetSymlink]) -> list[
 
 def _get_input_relations(inputs: dict[Any, Input]) -> list[LineageInputRelationV1]:
     relations = []
-    for input in inputs.values():
-        if input.operation_id is not None:
-            to = LineageEntityV1(kind=LineageEntityKindV1.OPERATION, id=input.operation_id)
-        elif input.run_id is not None:
-            to = LineageEntityV1(kind=LineageEntityKindV1.RUN, id=input.run_id)
-        elif input.job_id is not None:
-            to = LineageEntityV1(kind=LineageEntityKindV1.JOB, id=str(input.job_id))
+    for input_ in inputs.values():
+        if input_.operation_id is not None:
+            to = LineageEntityV1(kind=LineageEntityKindV1.OPERATION, id=input_.operation_id)
+        elif input_.run_id is not None:
+            to = LineageEntityV1(kind=LineageEntityKindV1.RUN, id=input_.run_id)
+        elif input_.job_id is not None:
+            to = LineageEntityV1(kind=LineageEntityKindV1.JOB, id=str(input_.job_id))
 
         relation = LineageInputRelationV1(
-            from_=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(input.dataset_id)),
+            from_=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(input_.dataset_id)),
             to=to,
-            last_interaction_at=input.created_at,
-            num_bytes=input.num_bytes,
-            num_rows=input.num_rows,
-            num_files=input.num_files,
-            i_schema=LineageIORelationSchemaV1.model_validate(input.schema) if input.schema else None,
+            last_interaction_at=input_.created_at,
+            num_bytes=input_.num_bytes,
+            num_rows=input_.num_rows,
+            num_files=input_.num_files,
+            i_schema=LineageIORelationSchemaV1.model_validate(input_.schema) if input_.schema else None,
         )
         relations.append(relation)
 

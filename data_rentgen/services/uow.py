@@ -1,9 +1,10 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+from typing import Annotated
+
 from fastapi import Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing_extensions import Annotated
 
 from data_rentgen.db.repositories.column_lineage import ColumnLineageRepository
 from data_rentgen.db.repositories.dataset import DatasetRepository

@@ -13,7 +13,7 @@ def extract_output(
     dataset: OpenLineageOutputDataset,
 ) -> tuple[OutputDTO, list[DatasetSymlinkDTO]]:
     lifecycle_change = dataset.facets.lifecycleStateChange
-    if lifecycle_change:
+    if lifecycle_change:  # noqa: SIM108
         output_type = OutputTypeDTO(lifecycle_change.lifecycleStateChange)
     else:
         output_type = OutputTypeDTO.APPEND

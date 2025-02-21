@@ -36,9 +36,11 @@ class ConsumerSettings(BaseModel):
     @model_validator(mode="after")
     def _check_topics(self):
         if not self.topics_list and not self.topics_pattern:
-            raise ValueError("input should contain either 'topics_list' or 'topics_pattern' field, both are empty")
+            msg = "input should contain either 'topics_list' or 'topics_pattern' field, both are empty"
+            raise ValueError(msg)
         if self.topics_list and self.topics_pattern:
-            raise ValueError("input should contain either 'topics_list' or 'topics_pattern' field, both are set")
+            msg = "input should contain either 'topics_list' or 'topics_pattern' field, both are set"
+            raise ValueError(msg)
         return self
 
     group_id: str | None = Field(

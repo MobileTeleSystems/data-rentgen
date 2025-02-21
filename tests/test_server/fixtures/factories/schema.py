@@ -1,9 +1,13 @@
+from __future__ import annotations
+
 from random import randint
+from typing import TYPE_CHECKING
 from uuid import uuid4
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from data_rentgen.db.models import Schema
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def schema_factory(**kwargs) -> Schema:

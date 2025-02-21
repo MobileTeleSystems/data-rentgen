@@ -50,9 +50,8 @@ class KeycloakAuthProvider(AuthProvider):
         login: str,
         password: str,
     ) -> dict[str, Any]:
-        raise NotImplementedError(
-            "Password grant is not supported by KeycloakAuthProvider.",
-        )
+        msg = "Password grant is not supported by KeycloakAuthProvider."
+        raise NotImplementedError(msg)
 
     async def get_token_authorization_code_grant(
         self,
@@ -65,7 +64,8 @@ class KeycloakAuthProvider(AuthProvider):
                 redirect_uri=self.settings.keycloak.redirect_uri,
             )
         except KeycloakOperationError as e:
-            raise AuthorizationError("Failed to get token") from e
+            msg = "Failed to get token"
+            raise AuthorizationError(msg) from e
 
     async def get_current_user(
         self,
@@ -95,7 +95,8 @@ class KeycloakAuthProvider(AuthProvider):
         # https://github.com/keycloak/keycloak/blob/3ca3a4ad349b4d457f6829eaf2ae05f1e01408be/core/src/main/java/org/keycloak/representations/IDToken.java
         login = token_info.get("preferred_username")  # type: ignore[union-attr]
         if not login:
-            raise AuthorizationError("Invalid token payload")
+            msg = "Invalid token payload"
+            raise AuthorizationError(msg)
         return await self._uow.user.get_or_create(UserDTO(name=login))  # type: ignore[arg-type]
 
     async def decode_token(self, access_token: str) -> dict[str, Any] | None:

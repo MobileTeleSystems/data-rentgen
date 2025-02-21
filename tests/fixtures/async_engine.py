@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import contextlib
-from collections.abc import AsyncGenerator
 from typing import TYPE_CHECKING
 
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import create_async_engine
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+
     from sqlalchemy.ext.asyncio import AsyncEngine
 
     from data_rentgen.db.settings import DatabaseSettings

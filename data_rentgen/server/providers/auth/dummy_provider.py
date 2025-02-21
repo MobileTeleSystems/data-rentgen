@@ -41,12 +41,13 @@ class DummyAuthProvider(AuthProvider):
 
     async def get_current_user(self, access_token: str | None, request: Request) -> User:
         if not access_token:
-            raise AuthorizationError("Missing auth credentials")
+            msg = "Missing auth credentials"
+            raise AuthorizationError(msg)
 
         user_id = self._get_user_id_from_token(access_token)
         user = await self._uow.user.read_by_id(user_id)
         if user is None:
-            raise EntityNotFoundError("User", "user_id", user_id)  # type: ignore[call-arg]
+            raise EntityNotFoundError("User", "user_id", user_id)  # type: ignore[call-arg]  # noqa: EM101
         return user
 
     async def get_token_password_grant(
@@ -55,7 +56,8 @@ class DummyAuthProvider(AuthProvider):
         password: str,
     ) -> dict[str, Any]:
         if not login:
-            raise AuthorizationError("Missing auth credentials")
+            msg = "Missing auth credentials"
+            raise AuthorizationError(msg)
 
         logger.info("Get/create user %r in database", login)
         async with self._uow:
@@ -74,7 +76,8 @@ class DummyAuthProvider(AuthProvider):
         self,
         code: str,
     ) -> dict[str, Any]:
-        raise NotImplementedError("Authorization code grant is not supported by DummyAuthProvider.")
+        msg = "Authorization code grant is not supported by DummyAuthProvider."
+        raise NotImplementedError(msg)
 
     def _generate_access_token(self, user_id: int) -> tuple[str, float]:
         expires_at = time() + self._settings.access_token.expire_seconds
@@ -98,4 +101,5 @@ class DummyAuthProvider(AuthProvider):
             )
             return int(payload["user_id"])
         except (KeyError, TypeError, ValueError) as e:
-            raise AuthorizationError("Invalid token") from e
+            msg = "Invalid token"
+            raise AuthorizationError(msg) from e

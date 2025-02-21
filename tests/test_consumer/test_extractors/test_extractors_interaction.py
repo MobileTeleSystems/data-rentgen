@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from unittest.mock import Mock
 
 import pytest
@@ -140,9 +142,7 @@ def test_extractors_extract_input(
         (OpenLineageDatasetLifecycleStateChange.CREATE, OutputTypeDTO.CREATE),
         (OpenLineageDatasetLifecycleStateChange.OVERWRITE, OutputTypeDTO.OVERWRITE),
         (OpenLineageDatasetLifecycleStateChange.ALTER, OutputTypeDTO.ALTER),
-        (OpenLineageDatasetLifecycleStateChange.CREATE, OutputTypeDTO.CREATE),
         (OpenLineageDatasetLifecycleStateChange.DROP, OutputTypeDTO.DROP),
-        (OpenLineageDatasetLifecycleStateChange.OVERWRITE, OutputTypeDTO.OVERWRITE),
         (OpenLineageDatasetLifecycleStateChange.RENAME, OutputTypeDTO.RENAME),
         (OpenLineageDatasetLifecycleStateChange.TRUNCATE, OutputTypeDTO.TRUNCATE),
     ],

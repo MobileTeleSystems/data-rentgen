@@ -1,5 +1,7 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
+
 from datetime import datetime
 from enum import Enum
 from typing import Literal
@@ -70,7 +72,8 @@ class BaseLineageQueryV1(BaseModel):
     def _check_until(cls, value: datetime | None, info: ValidationInfo) -> datetime | None:
         since = info.data.get("since")
         if since and value and since >= value:
-            raise ValueError("'since' should be less than 'until'")
+            msg = "'since' should be less than 'until'"
+            raise ValueError(msg)
         return value
 
 
@@ -116,7 +119,7 @@ class LineageIORelationSchemaFieldV1(BaseModel):
     name: str
     type: str | None = Field(default=None)
     description: str | None = Field(default=None)
-    fields: list["LineageIORelationSchemaFieldV1"] = Field(description="Nested fields", default_factory=list)
+    fields: list[LineageIORelationSchemaFieldV1] = Field(description="Nested fields", default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 

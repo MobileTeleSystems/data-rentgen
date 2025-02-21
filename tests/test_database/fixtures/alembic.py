@@ -4,7 +4,7 @@ import os
 import secrets
 from contextlib import suppress
 from pathlib import Path
-from typing import TYPE_CHECKING, Generator
+from typing import TYPE_CHECKING
 from urllib.parse import urlparse
 
 import pytest
@@ -17,6 +17,8 @@ from sqlalchemy_utils.functions import create_database, database_exists, drop_da
 from data_rentgen.db.models import Base
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+
     from sqlalchemy import MetaData
 
     from data_rentgen.db.settings import DatabaseSettings
@@ -32,7 +34,7 @@ def empty_db_url(db_settings: DatabaseSettings) -> Generator[str, None, None]:
 
     # updating original url with temp database name, and use it only for running migrations
     # sqlalchemy-utils does not support asyncio, so using sync action instead
-    new_url = original_url._replace(scheme="postgresql+psycopg2", path=new_db).geturl()  # noqa: WPS437
+    new_url = original_url._replace(scheme="postgresql+psycopg2", path=new_db).geturl()
 
     if not database_exists(new_url):
         create_database(new_url)
@@ -68,11 +70,11 @@ def do_run_migrations(
 ) -> None:
     script = ScriptDirectory.from_config(config)
 
-    def upgrade(rev, context):  # noqa: WPS430
-        return script._upgrade_revs(revision, rev)  # noqa: WPS437
+    def upgrade(rev, context):
+        return script._upgrade_revs(revision, rev)
 
-    def downgrade(rev, context):  # noqa: WPS430
-        return script._downgrade_revs(revision, rev)  # noqa: WPS437
+    def downgrade(rev, context):
+        return script._downgrade_revs(revision, rev)
 
     with EnvironmentContext(
         config,

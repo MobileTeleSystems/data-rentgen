@@ -63,23 +63,12 @@ repos:
     hooks:
       - id: add-trailing-comma
 
-  - repo: https://github.com/pycqa/autoflake
-    rev: v2.3.1
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.2
     hooks:
-      - id: autoflake
-        args: [--in-place]
-
-  - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 25.1.0
-    hooks:
-      - id: black
-
-  - repo: https://github.com/asottile/blacken-docs
-    rev: 1.19.1
-    hooks:
-      - id: blacken-docs
-        additional_dependencies:
-          - black==24.8.0
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
 
   - repo: https://github.com/pycqa/bandit
     rev: 1.8.3
@@ -90,12 +79,6 @@ repos:
           - -iii
           - -ll
         require_serial: true
-
-  - repo: https://github.com/pycqa/isort
-    rev: 6.0.0
-    hooks:
-      - id: isort
-        name: isort
 
   - repo: https://github.com/IamTheFij/docker-pre-commit
     rev: v3.0.1
@@ -128,14 +111,6 @@ repos:
 
   - repo: local
     hooks:
-      - id: flake8
-        name: flake8
-        entry: flake8
-        language: python
-        types: [python]
-        files: ^data_rentgen/.*$
-        pass_filenames: true
-
       - id: mypy
         name: mypy
         entry: mypy ./data_rentgen --config-file ./pyproject.toml
@@ -151,7 +126,6 @@ repos:
 
 ci:
   skip:
-    - flake8 # checked with Github Actions
     - mypy # checked with Github Actions
     - docker-compose-check # cannot run on pre-commit.ci
     - chmod # failing in pre-commit.ci

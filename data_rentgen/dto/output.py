@@ -52,7 +52,7 @@ class OutputDTO:
 
     def merge(self, new: OutputDTO) -> OutputDTO:
         schema: SchemaDTO | None
-        if self.schema and new.schema:
+        if self.schema and new.schema:  # noqa: SIM108
             schema = self.schema.merge(new.schema)
         else:
             schema = new.schema or self.schema

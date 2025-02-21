@@ -24,7 +24,7 @@ router = APIRouter(prefix="/jobs", tags=["Jobs"], responses=get_error_responses(
 async def paginate_jobs(
     query_args: Annotated[JobPaginateQueryV1, Depends()],
     job_service: Annotated[JobService, Depends()],
-    current_user: User = Depends(get_user()),
+    current_user: Annotated[User, Depends(get_user())],
 ) -> PageResponseV1[JobDetailedResponseV1]:
     pagination = await job_service.paginate(
         page=query_args.page,
@@ -39,7 +39,7 @@ async def paginate_jobs(
 async def get_jobs_lineage(
     query_args: Annotated[JobLineageQueryV1, Query()],
     lineage_service: Annotated[LineageService, Depends()],
-    current_user: User = Depends(get_user()),
+    current_user: Annotated[User, Depends(get_user())],
 ) -> LineageResponseV1:
     lineage = await lineage_service.get_lineage_by_jobs(
         start_node_ids=[query_args.start_node_id],  # type: ignore[list-item]

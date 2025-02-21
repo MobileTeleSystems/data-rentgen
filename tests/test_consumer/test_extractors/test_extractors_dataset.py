@@ -1,8 +1,6 @@
 import pytest
 
 from data_rentgen.consumer.extractors import (
-    connect_dataset_with_symlinks,
-    extract_dataset,
     extract_dataset_and_symlinks,
 )
 from data_rentgen.consumer.openlineage.dataset import OpenLineageDataset

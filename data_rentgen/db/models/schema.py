@@ -4,9 +4,8 @@ from __future__ import annotations
 
 from uuid import UUID
 
-from sqlalchemy import JSON
+from sqlalchemy import JSON, BigInteger
 from sqlalchemy import UUID as SQL_UUID
-from sqlalchemy import BigInteger
 from sqlalchemy.orm import Mapped, mapped_column
 
 from data_rentgen.db.models.base import Base

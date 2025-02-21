@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from typing import Sequence
+from collections.abc import Sequence
 
 from sqlalchemy import (
     ColumnElement,
@@ -96,7 +96,7 @@ class LocationRepository(Repository[Location]):
         query = select(Location).where(Location.id == location_id).options(selectinload(Location.addresses))
         location = await self._session.scalar(query)
         if not location:
-            raise EntityNotFoundError("Location", "id", location_id)
+            raise EntityNotFoundError("Location", "id", location_id)  # noqa: EM101
         location.external_id = external_id
         await self._session.flush([location])
         return location

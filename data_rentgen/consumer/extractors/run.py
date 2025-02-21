@@ -84,7 +84,7 @@ def enrich_run_identifiers(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
     return run
 
 
-def enrich_run_logs(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:  # noqa: WPS231
+def enrich_run_logs(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:  # noqa: C901, PLR0912
     spark_application_details = event.run.facets.spark_applicationDetails
     if spark_application_details:
         if spark_application_details.proxyUrl:
@@ -142,7 +142,7 @@ def enrich_run_logs(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:  # noqa:
     return run
 
 
-def get_airflow_2_3_plus_dag_run_url(  # noqa: WPS114
+def get_airflow_2_3_plus_dag_run_url(
     namespace: str,
     airflow_dag_run_facet: OpenLineageAirflowDagRunFacet,
 ) -> str:
@@ -153,7 +153,7 @@ def get_airflow_2_3_plus_dag_run_url(  # noqa: WPS114
     return f"{namespace}/dags/{dag_id}/grid?dag_run_id={dag_run_id}"
 
 
-def get_airflow_2_x_dag_run_url(  # noqa: WPS114
+def get_airflow_2_x_dag_run_url(
     namespace: str,
     airflow_dag_run_facet: OpenLineageAirflowDagRunFacet,
 ) -> str:
@@ -163,7 +163,7 @@ def get_airflow_2_x_dag_run_url(  # noqa: WPS114
     return f"{namespace}/graph?dag_id={dag_id}&execution_date={execution_date}"
 
 
-def get_airflow_2_9_plus_task_log_url(  # noqa: WPS114
+def get_airflow_2_9_plus_task_log_url(
     namespace: str,
     airflow_task_run_facet: OpenLineageAirflowTaskRunFacet,
 ) -> str:
@@ -178,7 +178,7 @@ def get_airflow_2_9_plus_task_log_url(  # noqa: WPS114
     return f"{namespace}/dags/{dag_id}/grid?tab=logs&dag_run_id={dag_run_id}&task_id={task_id}&map_index={map_index}"
 
 
-def get_airflow_2_x_task_log_url(  # noqa: WPS114
+def get_airflow_2_x_task_log_url(
     namespace: str,
     airflow_task_run_facet: OpenLineageAirflowTaskRunFacet,
 ) -> str:

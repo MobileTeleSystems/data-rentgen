@@ -1,8 +1,9 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 import textwrap
-from typing import Any, Dict
+from typing import Any
 
 from pydantic import AnyHttpUrl, BaseModel, Field
 
@@ -31,7 +32,7 @@ class SwaggerSettings(BaseModel):
         default="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/swagger-ui.css",
         description="URL for Swagger UI CSS",
     )
-    extra_parameters: Dict[str, Any] = Field(
+    extra_parameters: dict[str, Any] = Field(
         default_factory=dict,
         description=textwrap.dedent(
             """

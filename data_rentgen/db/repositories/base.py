@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from abc import ABC
+from collections.abc import Sequence
 from hashlib import sha1
-from typing import Any, Generic, Sequence, TypeVar
+from typing import Any, Generic, TypeVar
 
 from sqlalchemy import (
     ColumnElement,

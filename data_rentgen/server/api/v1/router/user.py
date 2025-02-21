@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 from logging import getLogger
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
 
@@ -21,7 +22,7 @@ router = APIRouter(
 
 @router.get("/me")
 async def check_auth(
-    current_user: User = Depends(get_user()),
+    current_user: Annotated[User, Depends(get_user())],
 ) -> UserResponseV1:
     logger.info("User check: %s", current_user.name)
     return UserResponseV1.model_validate(current_user)

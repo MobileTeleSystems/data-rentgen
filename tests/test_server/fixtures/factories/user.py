@@ -1,6 +1,7 @@
 from collections.abc import AsyncGenerator
+from contextlib import AbstractAsyncContextManager
 from random import randint
-from typing import AsyncContextManager, Callable
+from typing import Callable
 
 import pytest
 import pytest_asyncio
@@ -23,7 +24,7 @@ def user_factory(**kwargs):
 @pytest_asyncio.fixture(params=[{}])
 async def user(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[User, None]:
     params = request.param
     item = user_factory(**params)

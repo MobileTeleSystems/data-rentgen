@@ -7,7 +7,7 @@ from dataclasses import InitVar, dataclass, field
 from functools import cached_property
 from uuid import UUID
 
-from uuid6 import UUID as UUIDv6
+from uuid6 import UUID as UUIDv6  # noqa: N811
 
 from data_rentgen.db.utils.uuid import generate_static_uuid
 from data_rentgen.dto.dataset import DatasetDTO

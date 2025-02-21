@@ -272,7 +272,7 @@ async def test_runs_handler_spark(
         total_spent_relation.fingerprint,
     ]
     assert fingerpints[0] is not None
-    assert all([fingerprint == fingerpints[0] for fingerprint in fingerpints])
+    assert all(fingerprint == fingerpints[0] for fingerprint in fingerpints)
 
     # Second event(direct and indirect relations)
     customer_id_relation = dataset_column_relation[3]
@@ -303,4 +303,4 @@ async def test_runs_handler_spark(
         total_spent_relation.fingerprint,
     ]
     assert fingerpints[0] is not None
-    assert all([fingerprint == fingerpints[0] for fingerprint in fingerpints])
+    assert all(fingerprint == fingerpints[0] for fingerprint in fingerpints)

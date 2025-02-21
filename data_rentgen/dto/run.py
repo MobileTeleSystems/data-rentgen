@@ -56,7 +56,7 @@ class RunDTO:
             parent_run = new.parent_run or self.parent_run
 
         user: UserDTO | None
-        if new.user and self.user:
+        if new.user and self.user:  # noqa: SIM108
             user = self.user.merge(new.user)
         else:
             user = new.user or self.user

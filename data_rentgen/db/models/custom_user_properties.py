@@ -12,7 +12,7 @@ from data_rentgen.db.models.base import Base
 class CustomUserProperties(Base):
     __tablename__ = "custom_user_properties"
     __table_args__ = (
-        ExcludeConstraint(  # noqa: WPS317
+        ExcludeConstraint(
             ("user_id", "="),
             ("property_id", "="),
             ("during", "&&"),

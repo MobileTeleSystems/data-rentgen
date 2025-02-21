@@ -34,7 +34,8 @@ class KafkaSecuritySettings(BaseModel):
         if security_type is None:
             return value
         if value is None:
-            raise ValueError(f"User or password is required for security type {security_type!r}")
+            msg = f"User or password is required for security type {security_type!r}"
+            raise ValueError(msg)
         return value
 
 

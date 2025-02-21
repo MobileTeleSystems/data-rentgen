@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
-from fastapi import FastAPI
 
 from data_rentgen.server import application_factory
-from data_rentgen.server.settings import ServerApplicationSettings
+
+if TYPE_CHECKING:
+    from fastapi import FastAPI
+
+    from data_rentgen.server.settings import ServerApplicationSettings
 
 
 @pytest.fixture(scope="session")

@@ -19,14 +19,14 @@ if config.config_file_name is not None:
 
 if not config.get_main_option("sqlalchemy.url"):
     # read application settings only if sqlalchemy.url is not being passed via cli arguments
-    config.set_main_option("sqlalchemy.url", DatabaseSettings().url)
+    config.set_main_option("sqlalchemy.url", DatabaseSettings().url)  # type: ignore[call-arg]
 
 target_metadata = (Base.metadata,)
 
 PARTITION_PREFIXES = ["run_y", "operation_y", "input_y", "output_y", "column_lineage_y"]
 
 
-def include_all_except_partitions(object, name, type_, reflected, compare_to):
+def include_all_except_partitions(object_, name, type_, reflected, compare_to):
     if type_ == "table":
         for prefix in PARTITION_PREFIXES:
             if name.startswith(prefix):

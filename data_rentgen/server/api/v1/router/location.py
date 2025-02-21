@@ -26,7 +26,7 @@ router = APIRouter(
 async def paginate_locations(
     query_args: Annotated[LocationPaginateQueryV1, Depends()],
     location_service: Annotated[LocationService, Depends()],
-    current_user: User = Depends(get_user()),
+    current_user: Annotated[User, Depends(get_user())],
 ) -> PageResponseV1[LocationDetailedResponseV1]:
     pagination = await location_service.paginate(
         page=query_args.page,
@@ -46,7 +46,7 @@ async def update_location(
     location_id: int,
     location_data: UpdateLocationRequestV1,
     location_service: Annotated[LocationService, Depends()],
-    current_user: User = Depends(get_user()),
+    current_user: Annotated[User, Depends(get_user())],
 ) -> LocationDetailedResponseV1:
     location = await location_service.update_external_id(location_id, location_data.external_id)
     return LocationDetailedResponseV1.model_validate(location)

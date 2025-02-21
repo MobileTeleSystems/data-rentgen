@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import http
 import logging
+from typing import TYPE_CHECKING
 
 from asgi_correlation_id import correlation_id
 from fastapi import FastAPI, HTTPException, Request, Response
@@ -13,7 +14,9 @@ from pydantic import ValidationError
 from data_rentgen.exceptions import ApplicationError, AuthorizationError, RedirectError
 from data_rentgen.server.errors.base import APIErrorSchema, BaseErrorSchema
 from data_rentgen.server.errors.registration import get_response_for_exception
-from data_rentgen.server.settings.server import ServerSettings
+
+if TYPE_CHECKING:
+    from data_rentgen.server.settings.server import ServerSettings
 
 logger = logging.getLogger(__name__)
 

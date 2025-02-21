@@ -36,7 +36,7 @@ class ServerApplicationSettings(BaseSettings):
 
         # same as settings.server.debug = True
         DATA_RENTGEN__SERVER__DEBUG=True
-    """
+    """  # noqa: E501
 
     auth: AuthSettings = Field(
         default_factory=AuthSettings,

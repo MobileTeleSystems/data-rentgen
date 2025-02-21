@@ -1,11 +1,10 @@
-from collections.abc import AsyncGenerator
-from datetime import datetime, timedelta
-from random import choice, randint
-from typing import AsyncContextManager, Callable
+from __future__ import annotations
 
-import pytest
+from datetime import UTC, datetime, timedelta
+from random import choice, randint
+from typing import TYPE_CHECKING, Callable
+
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Job, Run, RunStartReason, RunStatus, User
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
@@ -13,6 +12,13 @@ from tests.test_server.fixtures.factories.base import random_datetime, random_st
 from tests.test_server.fixtures.factories.job import create_job
 from tests.test_server.fixtures.factories.location import create_location
 from tests.test_server.utils.delete import clean_db
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+    from contextlib import AbstractAsyncContextManager
+
+    import pytest
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def run_factory(**kwargs):
@@ -64,7 +70,7 @@ async def new_run(
 @pytest_asyncio.fixture(params=[{}])
 async def run(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     job: Job,
     user: User,
 ) -> AsyncGenerator[Run, None]:
@@ -83,12 +89,12 @@ async def run(
 @pytest_asyncio.fixture(params=[(10, {})])
 async def runs(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     user: User,
     jobs: list[Job],
 ) -> AsyncGenerator[list[Run], None]:
     size, params = request.param
-    started_at = datetime.now()
+    started_at = datetime.now(tz=UTC)
 
     async with async_session_maker() as async_session:
         items = [
@@ -115,12 +121,12 @@ async def runs(
 @pytest_asyncio.fixture(params=[(5, {})])
 async def runs_with_same_job(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     user: User,
     job: Job,
 ) -> AsyncGenerator[list[Run], None]:
     size, params = request.param
-    started_at = datetime.now()
+    started_at = datetime.now(tz=UTC)
 
     async with async_session_maker() as async_session:
         items = [
@@ -147,11 +153,11 @@ async def runs_with_same_job(
 @pytest_asyncio.fixture(params=[(5, {})])
 async def runs_with_same_parent(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     user: User,
 ) -> AsyncGenerator[list[Run], None]:
     size, params = request.param
-    started_at = datetime.now()
+    started_at = datetime.now(tz=UTC)
     parent_run_id = generate_new_uuid()
 
     async with async_session_maker() as async_session:
@@ -176,13 +182,11 @@ async def runs_with_same_parent(
         await clean_db(async_session)
 
 
-@pytest_asyncio.fixture(params=[{}])
+@pytest_asyncio.fixture()
 async def runs_search(
-    request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     user: User,
 ) -> AsyncGenerator[dict[str | None, Run], None]:
-    request.param
     job_kwargs = [
         {"name": "spark_application_name", "type": "SPARK_APPLICATION"},
         {"name": "airflow_dag_name", "type": "AIRFLOW_DAG"},
@@ -193,7 +197,7 @@ async def runs_search(
         {"external_id": "extract_task_0001"},
         {"external_id": "extract_task_0002"},
     ]
-    started_at = datetime.now()
+    started_at = datetime.now(tz=UTC)
     async with async_session_maker() as async_session:
         jobs = []
         for kwargs in job_kwargs:

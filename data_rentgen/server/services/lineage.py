@@ -73,7 +73,7 @@ class LineageService:
     def __init__(self, uow: Annotated[UnitOfWork, Depends()]):
         self._uow = uow
 
-    async def get_lineage_by_jobs(  # noqa: WPS217, WPS210
+    async def get_lineage_by_jobs(  # noqa: C901
         self,
         start_node_ids: list[int],
         direction: LineageDirectionV1,
@@ -120,14 +120,14 @@ class LineageService:
                 granularity=granularity,
             )
 
-        input_schema_ids = {input.schema_id for input in inputs if input.schema_id is not None}
+        input_schema_ids = {input_.schema_id for input_ in inputs if input_.schema_id is not None}
         output_schema_ids = {output.schema_id for output in outputs if output.schema_id is not None}
         schemas = await self._uow.schema.list_by_ids(sorted(input_schema_ids | output_schema_ids))
         schemas_by_id = {schema.id: schema for schema in schemas}
 
-        for input in inputs:
-            if input.schema_id is not None:
-                input.schema = schemas_by_id.get(input.schema_id)
+        for input_ in inputs:
+            if input_.schema_id is not None:
+                input_.schema = schemas_by_id.get(input_.schema_id)
         for output in outputs:
             if output.schema_id is not None:
                 output.schema = schemas_by_id.get(output.schema_id)
@@ -136,7 +136,7 @@ class LineageService:
 
         # Include only runs which have at least one input or output.
         # In case granularity == "JOB", all run_id are None.
-        input_run_ids = {input.run_id for input in inputs if input.run_id is not None}
+        input_run_ids = {input_.run_id for input_ in inputs if input_.run_id is not None}
         output_run_ids = {output.run_id for output in outputs if output.run_id is not None}
         run_ids = input_run_ids | output_run_ids - ids_to_skip.runs
         runs = await self._uow.run.list_by_ids(sorted(run_ids))
@@ -145,14 +145,16 @@ class LineageService:
         result = LineageServiceResult(
             jobs=jobs_by_id,
             runs=runs_by_id,
-            inputs={(input.dataset_id, input.job_id, input.run_id, input.operation_id): input for input in inputs},
+            inputs={
+                (input_.dataset_id, input_.job_id, input_.run_id, input_.operation_id): input_ for input_ in inputs
+            },
             outputs={
                 (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.type): output
                 for output in outputs
             },
         )
 
-        upstream_dataset_ids = {input.dataset_id for input in inputs} - ids_to_skip.datasets
+        upstream_dataset_ids = {input_.dataset_id for input_ in inputs} - ids_to_skip.datasets
         downstream_dataset_ids = {output.dataset_id for output in outputs} - ids_to_skip.datasets
         ids_to_skip = ids_to_skip.merge(IdsToSkip.from_result(result))
 
@@ -209,7 +211,7 @@ class LineageService:
             )
         return result
 
-    async def get_lineage_by_runs(  # noqa: WPS217, WPS210
+    async def get_lineage_by_runs(  # noqa: C901
         self,
         start_node_ids: list[UUID],
         direction: LineageDirectionV1,
@@ -256,14 +258,14 @@ class LineageService:
                 granularity=granularity,
             )
 
-        input_schema_ids = {input.schema_id for input in inputs if input.schema_id is not None}
+        input_schema_ids = {input_.schema_id for input_ in inputs if input_.schema_id is not None}
         output_schema_ids = {output.schema_id for output in outputs if output.schema_id is not None}
         schemas = await self._uow.schema.list_by_ids(sorted(input_schema_ids | output_schema_ids))
         schemas_by_id = {schema.id: schema for schema in schemas}
 
-        for input in inputs:
-            if input.schema_id is not None:
-                input.schema = schemas_by_id.get(input.schema_id)
+        for input_ in inputs:
+            if input_.schema_id is not None:
+                input_.schema = schemas_by_id.get(input_.schema_id)
         for output in outputs:
             if output.schema_id is not None:
                 output.schema = schemas_by_id.get(output.schema_id)
@@ -271,7 +273,7 @@ class LineageService:
         # Include only operations which have at least one input or output.
         # In case granularity == "RUN", all operation_id are None.
         ids_to_skip = ids_to_skip or IdsToSkip()
-        input_operation_ids = {input.operation_id for input in inputs if input.operation_id is not None}
+        input_operation_ids = {input_.operation_id for input_ in inputs if input_.operation_id is not None}
         output_operation_ids = {output.operation_id for output in outputs if output.operation_id is not None}
         operation_ids = input_operation_ids | output_operation_ids - ids_to_skip.operations
         operations = await self._uow.operation.list_by_ids(sorted(operation_ids))
@@ -284,14 +286,16 @@ class LineageService:
             jobs=jobs_by_id,
             runs=runs_by_id,
             operations=operations_by_id,
-            inputs={(input.dataset_id, input.job_id, input.run_id, input.operation_id): input for input in inputs},
+            inputs={
+                (input_.dataset_id, input_.job_id, input_.run_id, input_.operation_id): input_ for input_ in inputs
+            },
             outputs={
                 (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.type): output
                 for output in outputs
             },
         )
 
-        upstream_dataset_ids = {input.dataset_id for input in inputs} - ids_to_skip.datasets
+        upstream_dataset_ids = {input_.dataset_id for input_ in inputs} - ids_to_skip.datasets
         downstream_dataset_ids = {output.dataset_id for output in outputs} - ids_to_skip.datasets
         ids_to_skip = ids_to_skip.merge(IdsToSkip.from_result(result))
 
@@ -347,7 +351,7 @@ class LineageService:
             )
         return result
 
-    async def get_lineage_by_operations(  # noqa: WPS217, WPS210
+    async def get_lineage_by_operations(  # noqa: C901
         self,
         start_node_ids: list[UUID],
         direction: LineageDirectionV1,
@@ -395,14 +399,14 @@ class LineageService:
         if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
             inputs = await self._uow.input.list_by_operation_ids(operation_ids)
 
-        input_schema_ids = {input.schema_id for input in inputs if input.schema_id is not None}
+        input_schema_ids = {input_.schema_id for input_ in inputs if input_.schema_id is not None}
         output_schema_ids = {output.schema_id for output in outputs if output.schema_id is not None}
         schemas = await self._uow.schema.list_by_ids(sorted(input_schema_ids | output_schema_ids))
         schemas_by_id = {schema.id: schema for schema in schemas}
 
-        for input in inputs:
-            if input.schema_id is not None:
-                input.schema = schemas_by_id.get(input.schema_id)
+        for input_ in inputs:
+            if input_.schema_id is not None:
+                input_.schema = schemas_by_id.get(input_.schema_id)
         for output in outputs:
             if output.schema_id is not None:
                 output.schema = schemas_by_id.get(output.schema_id)
@@ -411,14 +415,16 @@ class LineageService:
             jobs=jobs_by_id,
             runs=runs_by_id,
             operations=operations_by_id,
-            inputs={(input.dataset_id, input.job_id, input.run_id, input.operation_id): input for input in inputs},
+            inputs={
+                (input_.dataset_id, input_.job_id, input_.run_id, input_.operation_id): input_ for input_ in inputs
+            },
             outputs={
                 (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.type): output
                 for output in outputs
             },
         )
 
-        upstream_dataset_ids = {input.dataset_id for input in inputs} - ids_to_skip.datasets
+        upstream_dataset_ids = {input_.dataset_id for input_ in inputs} - ids_to_skip.datasets
         downstream_dataset_ids = {output.dataset_id for output in outputs} - ids_to_skip.datasets
         ids_to_skip = ids_to_skip.merge(IdsToSkip.from_result(result))
 
@@ -477,7 +483,7 @@ class LineageService:
             )
         return result
 
-    async def get_lineage_by_datasets(  # noqa: WPS217
+    async def get_lineage_by_datasets(
         self,
         start_node_ids: list[int],
         direction: LineageDirectionV1,
@@ -554,7 +560,8 @@ class LineageService:
                     ids_to_skip=ids_to_skip,
                 )
             case _:
-                raise ValueError(f"Unknown granularity: {granularity}")
+                msg = f"Unknown granularity: {granularity}"
+                raise ValueError(msg)
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
@@ -614,14 +621,14 @@ class LineageService:
                 granularity="OPERATION",
             )
 
-        input_schema_ids = {input.schema_id for input in inputs if input.schema_id is not None}
+        input_schema_ids = {input_.schema_id for input_ in inputs if input_.schema_id is not None}
         output_schema_ids = {output.schema_id for output in outputs if output.schema_id is not None}
         schemas = await self._uow.schema.list_by_ids(sorted(input_schema_ids | output_schema_ids))
         schemas_by_id = {schema.id: schema for schema in schemas}
 
-        for input in inputs:
-            if input.schema_id is not None:
-                input.schema = schemas_by_id.get(input.schema_id)
+        for input_ in inputs:
+            if input_.schema_id is not None:
+                input_.schema = schemas_by_id.get(input_.schema_id)
         for output in outputs:
             if output.schema_id is not None:
                 output.schema = schemas_by_id.get(output.schema_id)
@@ -629,7 +636,9 @@ class LineageService:
         result = LineageServiceResult(
             datasets=datasets_by_id,
             dataset_symlinks=dataset_symlinks_by_id,
-            inputs={(input.dataset_id, input.job_id, input.run_id, input.operation_id): input for input in inputs},
+            inputs={
+                (input_.dataset_id, input_.job_id, input_.run_id, input_.operation_id): input_ for input_ in inputs
+            },
             outputs={
                 (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.type): output
                 for output in outputs
@@ -637,7 +646,7 @@ class LineageService:
         )
 
         ids_to_skip = ids_to_skip or IdsToSkip()
-        downstream_operation_ids = {input.operation_id for input in inputs} - ids_to_skip.operations
+        downstream_operation_ids = {input_.operation_id for input_ in inputs} - ids_to_skip.operations
         upstream_operation_ids = {output.operation_id for output in outputs} - ids_to_skip.operations
         ids_to_skip = ids_to_skip.merge(IdsToSkip.from_result(result))
 
@@ -707,14 +716,14 @@ class LineageService:
                 granularity="RUN",
             )
 
-        input_schema_ids = {input.schema_id for input in inputs if input.schema_id is not None}
+        input_schema_ids = {input_.schema_id for input_ in inputs if input_.schema_id is not None}
         output_schema_ids = {output.schema_id for output in outputs if output.schema_id is not None}
         schemas = await self._uow.schema.list_by_ids(sorted(input_schema_ids | output_schema_ids))
         schemas_by_id = {schema.id: schema for schema in schemas}
 
-        for input in inputs:
-            if input.schema_id is not None:
-                input.schema = schemas_by_id.get(input.schema_id)
+        for input_ in inputs:
+            if input_.schema_id is not None:
+                input_.schema = schemas_by_id.get(input_.schema_id)
         for output in outputs:
             if output.schema_id is not None:
                 output.schema = schemas_by_id.get(output.schema_id)
@@ -722,7 +731,9 @@ class LineageService:
         result = LineageServiceResult(
             datasets=datasets_by_id,
             dataset_symlinks=dataset_symlinks_by_id,
-            inputs={(input.dataset_id, input.job_id, input.run_id, input.operation_id): input for input in inputs},
+            inputs={
+                (input_.dataset_id, input_.job_id, input_.run_id, input_.operation_id): input_ for input_ in inputs
+            },
             outputs={
                 (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.type): output
                 for output in outputs
@@ -730,7 +741,7 @@ class LineageService:
         )
 
         ids_to_skip = ids_to_skip or IdsToSkip()
-        downstream_run_ids = {input.run_id for input in inputs} - ids_to_skip.runs
+        downstream_run_ids = {input_.run_id for input_ in inputs} - ids_to_skip.runs
         upstream_run_ids = {output.run_id for output in outputs} - ids_to_skip.runs
         ids_to_skip = ids_to_skip.merge(IdsToSkip.from_result(result))
 
@@ -798,14 +809,14 @@ class LineageService:
                 granularity="JOB",
             )
 
-        input_schema_ids = {input.schema_id for input in inputs if input.schema_id is not None}
+        input_schema_ids = {input_.schema_id for input_ in inputs if input_.schema_id is not None}
         output_schema_ids = {output.schema_id for output in outputs if output.schema_id is not None}
         schemas = await self._uow.schema.list_by_ids(sorted(input_schema_ids | output_schema_ids))
         schemas_by_id = {schema.id: schema for schema in schemas}
 
-        for input in inputs:
-            if input.schema_id is not None:
-                input.schema = schemas_by_id.get(input.schema_id)
+        for input_ in inputs:
+            if input_.schema_id is not None:
+                input_.schema = schemas_by_id.get(input_.schema_id)
         for output in outputs:
             if output.schema_id is not None:
                 output.schema = schemas_by_id.get(output.schema_id)
@@ -813,7 +824,9 @@ class LineageService:
         result = LineageServiceResult(
             datasets=datasets_by_id,
             dataset_symlinks=dataset_symlinks_by_id,
-            inputs={(input.dataset_id, input.job_id, input.run_id, input.operation_id): input for input in inputs},
+            inputs={
+                (input_.dataset_id, input_.job_id, input_.run_id, input_.operation_id): input_ for input_ in inputs
+            },
             outputs={
                 (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.type): output
                 for output in outputs
@@ -821,7 +834,7 @@ class LineageService:
         )
 
         ids_to_skip = ids_to_skip or IdsToSkip()
-        downstream_job_ids = {input.job_id for input in inputs} - ids_to_skip.jobs
+        downstream_job_ids = {input_.job_id for input_ in inputs} - ids_to_skip.jobs
         upstream_job_ids = {output.job_id for output in outputs} - ids_to_skip.jobs
         ids_to_skip = ids_to_skip.merge(IdsToSkip.from_result(result))
 

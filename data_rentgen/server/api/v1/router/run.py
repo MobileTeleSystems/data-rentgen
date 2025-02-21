@@ -24,7 +24,7 @@ router = APIRouter(prefix="/runs", tags=["Runs"], responses=get_error_responses(
 async def runs(
     query_args: Annotated[RunsQueryV1, Depends()],
     run_service: Annotated[RunService, Depends()],
-    current_user: User = Depends(get_user()),
+    current_user: Annotated[User, Depends(get_user())],
 ) -> PageResponseV1[RunDetailedResponseV1]:
     pagination = await run_service.paginate(
         page=query_args.page,
@@ -43,7 +43,7 @@ async def runs(
 async def get_runs_lineage(
     query_args: Annotated[RunLineageQueryV1, Query()],
     lineage_service: Annotated[LineageService, Depends()],
-    current_user: User = Depends(get_user()),
+    current_user: Annotated[User, Depends(get_user())],
 ) -> LineageResponseV1:
     lineage = await lineage_service.get_lineage_by_runs(
         start_node_ids=[query_args.start_node_id],  # type: ignore[list-item]

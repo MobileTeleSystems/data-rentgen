@@ -8,7 +8,7 @@ import asyncio
 import logging
 import sys
 from argparse import ArgumentParser
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from enum import Enum
 
 from dateutil.parser import isoparse
@@ -42,12 +42,12 @@ class Granularity(str, Enum):
     def __str__(self) -> str:
         return self.value
 
-    def round(self, input: date) -> date:
+    def round(self, input_: date) -> date:
         if self == Granularity.DAY:
-            return input
+            return input_
         if self == Granularity.MONTH:
-            return input.replace(day=1)
-        return input.replace(day=1, month=1)
+            return input_.replace(day=1)
+        return input_.replace(day=1, month=1)
 
     def to_range(self) -> relativedelta:
         if self == Granularity.DAY:
@@ -72,14 +72,15 @@ def get_parser() -> ArgumentParser:
     parser.add_argument(
         "--start",
         type=isoparse,
-        default=datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0),
+        default=datetime.now(tz=UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0),
         nargs="?",
         help="Start date for partitions, default is the first day of current month.",
     )
     parser.add_argument(
         "--end",
         type=isoparse,
-        default=datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0) + relativedelta(months=2),
+        default=datetime.now(tz=UTC).replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        + relativedelta(months=2),
         nargs="?",
         help="End date for partitions, default is the last day of next month.",
     )
@@ -97,13 +98,14 @@ def get_parser() -> ArgumentParser:
 def generate_partition_range(start: date, end: date, granularity: Granularity) -> list[tuple[date, date]]:
     parts = []
     current = start
-    next = current + granularity.to_range()
+    next_part = current + granularity.to_range()
     while current < end:
-        parts.append((current, next))
+        parts.append((current, next_part))
         current += granularity.to_range()
-        next = current + granularity.to_range()
+        next_part = current + granularity.to_range()
     if not parts:
-        raise ValueError("Data range is too small")
+        msg = "Data range is too small"
+        raise ValueError(msg)
 
     return parts
 
@@ -115,7 +117,7 @@ async def create_partition(start: date, end: date, granularity: Granularity, ses
     end_str = end.isoformat()
 
     for table in PARTITIONED_TABLES:
-        statement = f"CREATE TABLE IF NOT EXISTS {table}_{partition_name} PARTITION OF {table} FOR VALUES FROM ('{start_str}') TO ('{end_str}')"
+        statement = f"CREATE TABLE IF NOT EXISTS {table}_{partition_name} PARTITION OF {table} FOR VALUES FROM ('{start_str}') TO ('{end_str}')"  # noqa: E501
         logger.debug("Executing statement: %s", statement)
         await session.execute(text(statement))
 
@@ -131,11 +133,12 @@ async def main(args: list[str]) -> None:
 
     start, end = granularity.round(params.start.date()), granularity.round(params.end.date())
     if start > end:
-        raise ValueError("Start date must be less than end date.")
+        msg = "Start date must be less than end date."
+        raise ValueError(msg)
 
     logger.info("Creating partitions from %s to %s with %s granularity", start, end, granularity.value)
 
-    db_settings = DatabaseSettings()
+    db_settings = DatabaseSettings()  # type: ignore[call-arg]
     session_factory = create_session_factory(db_settings)
     async with session_factory() as session:
         for from_, to in generate_partition_range(start, end, granularity):

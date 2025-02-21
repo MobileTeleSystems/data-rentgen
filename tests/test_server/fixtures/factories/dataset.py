@@ -1,16 +1,22 @@
-from collections.abc import AsyncGenerator
-from random import randint
-from typing import AsyncContextManager, Callable
+from __future__ import annotations
 
-import pytest
+from random import randint
+from typing import TYPE_CHECKING, Callable
+
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Dataset
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
 from tests.test_server.fixtures.factories.base import random_string
 from tests.test_server.fixtures.factories.location import create_location
 from tests.test_server.utils.delete import clean_db
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+    from contextlib import AbstractAsyncContextManager
+
+    import pytest
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def dataset_factory(**kwargs):
@@ -71,7 +77,7 @@ async def new_dataset(
 @pytest_asyncio.fixture(params=[{}])
 async def dataset(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[Dataset, None]:
     params = request.param
 
@@ -90,7 +96,7 @@ async def dataset(
 @pytest_asyncio.fixture(params=[(10, {})])
 async def datasets(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[list[Dataset], None]:
     size, params = request.param
 
@@ -112,7 +118,7 @@ async def datasets(
 @pytest_asyncio.fixture(params=[(10, {})])
 async def datasets_with_symlinks(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[tuple[list[Dataset], list[DatasetSymlink]], None]:
     size, params = request.param
 
@@ -153,7 +159,7 @@ async def datasets_with_symlinks(
 @pytest_asyncio.fixture(params=[{}])
 async def datasets_search(
     request: pytest.FixtureRequest,
-    async_session_maker: Callable[[], AsyncContextManager[AsyncSession]],
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[tuple[dict[str, Dataset], dict[str, Dataset], dict[str, Dataset]], None]:
     """
     Fixture with explicit dataset, locations names and addresses urls for search tests.
@@ -182,7 +188,6 @@ async def datasets_search(
     Every location relate to two dataset and two addresses. 2-1-2
     tip: you can imagine it like identity matrix with not-random names on diagonal.
     """
-    request.param
     location_kwargs = [
         {"name": "postgres.location", "type": "postgres"},
         {"name": "postgres.history_location", "type": "postgres"},

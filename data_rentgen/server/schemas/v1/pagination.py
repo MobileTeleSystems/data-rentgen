@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from typing import Generic, List, TypeVar
+from __future__ import annotations
+
+from typing import Generic, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -26,7 +28,7 @@ class PaginateQueryV1(BaseModel):
     """Basic class with pagination query params."""
 
     page: int = Field(gt=0, default=1, description="Page number")
-    page_size: int = Field(gt=0, le=50, default=20, description="Number of items per page")  # noqa: WPS432
+    page_size: int = Field(gt=0, le=50, default=20, description="Number of items per page")
 
     model_config = ConfigDict(extra="forbid")
 
@@ -35,7 +37,7 @@ class PageResponseV1(BaseModel, Generic[T]):
     """Page response."""
 
     meta: PageMetaResponseV1 = Field(description="Page metadata")
-    items: List[T] = Field(description="Page content")
+    items: list[T] = Field(description="Page content")
 
     @classmethod
     def from_pagination(cls, pagination: PaginationDTO):

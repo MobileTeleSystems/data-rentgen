@@ -21,7 +21,6 @@ from data_rentgen.db.models.schema import Schema
 
 
 class OutputType(str, Enum):
-
     CREATE = "CREATE"
     ALTER = "ALTER"
     RENAME = "RENAME"

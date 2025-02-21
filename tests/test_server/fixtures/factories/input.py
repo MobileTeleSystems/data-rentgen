@@ -1,11 +1,16 @@
+from __future__ import annotations
+
 from random import randint
+from typing import TYPE_CHECKING
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Input
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def input_factory(**kwargs) -> Input:
