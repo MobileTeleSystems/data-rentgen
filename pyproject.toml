@@ -237,6 +237,7 @@ ignore = ["ARG", "ANN", "D", "COM812", "TD", "FIX002", "RUF005"]
 
 
 "tests/*" = ["S", "A", "E501", "FBT001", "PD901", "SIM300", "PLR0913", "PLR2004",  "SLF001", "RET504", "PLR0915"]
+"tests/test_server/fixtures/*" = ["INP001"]
 
 [tool.ruff.lint.flake8-pytest-style]
 parametrize-names-type = "list"
