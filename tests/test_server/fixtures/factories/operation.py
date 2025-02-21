@@ -1,17 +1,22 @@
-from collections.abc import AsyncGenerator
-from contextlib import AbstractAsyncContextManager
+from __future__ import annotations
+
 from datetime import timedelta
 from random import choice, randint
-from typing import Callable
+from typing import TYPE_CHECKING, Callable
 
-import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Operation, OperationStatus, OperationType, Run
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
 from tests.test_server.fixtures.factories.base import random_datetime, random_string
 from tests.test_server.utils.delete import clean_db
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+    from contextlib import AbstractAsyncContextManager
+
+    import pytest
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def operation_factory(**kwargs):

@@ -1,12 +1,16 @@
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
+from typing import TYPE_CHECKING
 
 import pytest_asyncio
 from faststream.kafka import KafkaBroker, TestKafkaBroker
 
 from data_rentgen.consumer import broker_factory
-from data_rentgen.consumer.settings import ConsumerApplicationSettings
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+
+    from data_rentgen.consumer.settings import ConsumerApplicationSettings
 
 
 @pytest_asyncio.fixture(scope="session")

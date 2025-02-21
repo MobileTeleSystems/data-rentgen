@@ -1,16 +1,21 @@
-from collections.abc import AsyncGenerator
-from contextlib import AbstractAsyncContextManager
-from random import choice, randint
-from typing import Callable
+from __future__ import annotations
 
-import pytest
+from random import choice, randint
+from typing import TYPE_CHECKING, Callable
+
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Location
 from tests.test_server.fixtures.factories.address import create_address
 from tests.test_server.fixtures.factories.base import random_string
 from tests.test_server.utils.delete import clean_db
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+    from contextlib import AbstractAsyncContextManager
+
+    import pytest
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def location_factory(**kwargs):

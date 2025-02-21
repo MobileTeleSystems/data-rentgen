@@ -1,9 +1,13 @@
-from random import randint
+from __future__ import annotations
 
-from sqlalchemy.ext.asyncio import AsyncSession
+from random import randint
+from typing import TYPE_CHECKING
 
 from data_rentgen.db.models import Address
 from tests.test_server.fixtures.factories.base import random_string
+
+if TYPE_CHECKING:
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def address_factory(**kwargs):

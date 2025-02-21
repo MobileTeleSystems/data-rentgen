@@ -236,7 +236,7 @@ ignore = ["ARG", "ANN", "D", "COM812", "TD", "FIX002", "RUF005"]
 "data_rentgen/logging/*" = ["A005"]
 
 
-"tests/*" = ["S", "A", "E501", "FA102",  "FBT001", "PD901", "SIM300", "PLR0913", "PLR2004", "INP001", "SLF001", "RET504", "TC001", "TC002", "TC003","PLR0915"]
+"tests/*" = ["S", "A", "E501", "FBT001", "PD901", "SIM300", "PLR0913", "PLR2004",  "SLF001", "RET504", "PLR0915"]
 
 [tool.ruff.lint.flake8-pytest-style]
 parametrize-names-type = "list"

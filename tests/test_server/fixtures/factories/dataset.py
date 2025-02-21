@@ -1,17 +1,22 @@
-from collections.abc import AsyncGenerator
-from contextlib import AbstractAsyncContextManager
-from random import randint
-from typing import Callable
+from __future__ import annotations
 
-import pytest
+from random import randint
+from typing import TYPE_CHECKING, Callable
+
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Dataset
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
 from tests.test_server.fixtures.factories.base import random_string
 from tests.test_server.fixtures.factories.location import create_location
 from tests.test_server.utils.delete import clean_db
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+    from contextlib import AbstractAsyncContextManager
+
+    import pytest
+    from sqlalchemy.ext.asyncio import AsyncSession
 
 
 def dataset_factory(**kwargs):

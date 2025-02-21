@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import secrets
-from collections.abc import Generator
 from contextlib import suppress
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -18,6 +17,8 @@ from sqlalchemy_utils.functions import create_database, database_exists, drop_da
 from data_rentgen.db.models import Base
 
 if TYPE_CHECKING:
+    from collections.abc import Generator
+
     from sqlalchemy import MetaData
 
     from data_rentgen.db.settings import DatabaseSettings
