@@ -82,7 +82,8 @@ def extract_dataset_and_symlinks(dataset: OpenLineageDataset) -> tuple[DatasetDT
         # TODO: add support for multiple TABLE symlinks
         if len(table_symlinks) > 1:
             logger.warning(
-                "Dataset has more than one TABLE symlink. Only the first one will be used for replacement. Symlink name: %s",  # noqa: E501
+                "Dataset has more than one TABLE symlink."
+                "Only the first one will be used for replacement. Symlink name: %s",
                 table_symlinks[0].name,
             )
         table_dataset_dto = extract_dataset(table_symlinks[0])
