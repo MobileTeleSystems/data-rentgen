@@ -394,8 +394,14 @@ async def test_get_job_lineage_with_granularity_run(
         "relations": {
             "parents": run_parents_to_json(runs),
             "symlinks": [],
-            "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
-            "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+            "inputs": [
+                *inputs_to_json(merge_io_by_jobs(inputs), granularity="JOB"),
+                *inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
+            ],
+            "outputs": [
+                *outputs_to_json(merge_io_by_jobs(outputs), granularity="JOB"),
+                *outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+            ],
             "direct_column_lineage": [],
             "indirect_column_lineage": [],
         },
@@ -569,8 +575,14 @@ async def test_get_job_lineage_with_depth_and_granularity_run(
         "relations": {
             "parents": run_parents_to_json(runs),
             "symlinks": [],
-            "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
-            "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+            "inputs": [
+                *inputs_to_json(merge_io_by_jobs(inputs), granularity="JOB"),
+                *inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
+            ],
+            "outputs": [
+                *outputs_to_json(merge_io_by_jobs(outputs), granularity="JOB"),
+                *outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+            ],
             "direct_column_lineage": [],
             "indirect_column_lineage": [],
         },
