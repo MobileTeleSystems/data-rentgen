@@ -71,6 +71,7 @@ class OutputRepository(Repository[Output]):
     async def list_by_operation_ids(
         self,
         operation_ids: Sequence[UUID],
+        granularity: Literal["JOB", "RUN", "OPERATION"],
     ) -> list[Output]:
         if not operation_ids:
             return []
@@ -86,14 +87,14 @@ class OutputRepository(Repository[Output]):
             Output.operation_id == any_(operation_ids),  # type: ignore[arg-type]
         ]
 
-        return await self._get_outputs(where, "OPERATION")
+        return await self._get_outputs(where, granularity)
 
     async def list_by_run_ids(
         self,
         run_ids: Sequence[UUID],
         since: datetime,
         until: datetime | None,
-        granularity: Literal["RUN", "OPERATION"],
+        granularity: Literal["JOB", "RUN", "OPERATION"],
     ) -> list[Output]:
         if not run_ids:
             return []
