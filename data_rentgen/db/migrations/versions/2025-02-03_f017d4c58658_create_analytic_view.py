@@ -57,7 +57,7 @@ def get_statement(base_table: str, depth: str, suffix: str) -> str:
                 , sum(num_files) as sum_files
                 FROM {base_table}
                 JOIN run r ON {base_table}.run_id = r.id
-                JOIN public.user u ON r.started_by_user_id = u.id
+                JOIN "user" u ON r.started_by_user_id = u.id
                 WHERE {base_table}.created_at >= now() - interval '1 {depth}'
                 GROUP BY {base_table}.dataset_id, u.id
             )
