@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Annotated, Literal
@@ -10,7 +11,9 @@ from fastapi import Depends
 from uuid6 import UUID
 
 from data_rentgen.db.models import (
+    ColumnLineage,
     Dataset,
+    DatasetColumnRelation,
     DatasetSymlink,
     Input,
     Job,
@@ -33,6 +36,8 @@ class LineageServiceResult:
     dataset_symlinks: dict[tuple[int, int], DatasetSymlink] = field(default_factory=dict)
     inputs: dict[tuple[int, int, UUID | None, UUID | None], Input] = field(default_factory=dict)
     outputs: dict[tuple[int, int, UUID | None, UUID | None, str | None], Output] = field(default_factory=dict)
+    column_lineage: dict[tuple[int, int], list[ColumnLineage]] = field(default_factory=dict)
+    column_relations: dict[UUID, list[DatasetColumnRelation]] = field(default_factory=dict)
 
     def merge(self, other: "LineageServiceResult") -> "LineageServiceResult":
         self.jobs.update(other.jobs)
@@ -73,7 +78,7 @@ class LineageService:
     def __init__(self, uow: Annotated[UnitOfWork, Depends()]):
         self._uow = uow
 
-    async def get_lineage_by_jobs(  # noqa: C901
+    async def get_lineage_by_jobs(  # noqa: C901, PLR0912, PLR0915
         self,
         start_node_ids: list[int],
         direction: LineageDirectionV1,
@@ -197,7 +202,22 @@ class LineageService:
                 (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
                 for dataset_symlink in dataset_symlinks
             }
-
+        column_lineage_dataset_relations = await self._uow.column_lineage.list_by_job_ids(
+            sorted(result.jobs.keys()),
+            since,
+            until,
+        )
+        fingerprints = []
+        result.column_lineage = defaultdict(list)
+        for dataset_relation in column_lineage_dataset_relations:
+            result.column_lineage[(dataset_relation.target_dataset_id, dataset_relation.source_dataset_id)].append(
+                dataset_relation,
+            )
+            fingerprints.append(dataset_relation.fingerprint)
+        column_relations = await self._uow.dataset_column_relation.list_column_relations_by_fingerprint(fingerprints)
+        result.column_relations = defaultdict(list)
+        for column_relation in column_relations:
+            result.column_relations[column_relation.fingerprint].append(column_relation)
         if logger.isEnabledFor(logging.INFO):
             logger.info(
                 "Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, %d inputs, %d outputs",
@@ -211,7 +231,7 @@ class LineageService:
             )
         return result
 
-    async def get_lineage_by_runs(  # noqa: C901
+    async def get_lineage_by_runs(  # noqa: C901, PLR0912, PLR0915
         self,
         start_node_ids: list[UUID],
         direction: LineageDirectionV1,
@@ -337,6 +357,22 @@ class LineageService:
                 (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
                 for dataset_symlink in dataset_symlinks
             }
+        column_lineage_dataset_relations = await self._uow.column_lineage.list_by_run_ids(
+            sorted(result.runs.keys()),
+            since,
+            until,
+        )
+        fingerprints = []
+        result.column_lineage = defaultdict(list)
+        for dataset_relation in column_lineage_dataset_relations:
+            result.column_lineage[(dataset_relation.target_dataset_id, dataset_relation.source_dataset_id)].append(
+                dataset_relation,
+            )
+            fingerprints.append(dataset_relation.fingerprint)
+        column_relations = await self._uow.dataset_column_relation.list_column_relations_by_fingerprint(fingerprints)
+        result.column_relations = defaultdict(list)
+        for column_relation in column_relations:
+            result.column_relations[column_relation.fingerprint].append(column_relation)
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
@@ -351,7 +387,7 @@ class LineageService:
             )
         return result
 
-    async def get_lineage_by_operations(  # noqa: C901
+    async def get_lineage_by_operations(  # noqa: C901, PLR0912, PLR0915
         self,
         start_node_ids: list[UUID],
         direction: LineageDirectionV1,
@@ -469,6 +505,22 @@ class LineageService:
                 (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
                 for dataset_symlink in dataset_symlinks
             }
+
+        column_lineage_dataset_relations = await self._uow.column_lineage.list_by_operation_ids(
+            sorted(result.operations.keys()),
+        )
+        fingerprints = []
+        result.column_lineage = defaultdict(list)
+        for dataset_relation in column_lineage_dataset_relations:
+            result.column_lineage[(dataset_relation.target_dataset_id, dataset_relation.source_dataset_id)].append(
+                dataset_relation,
+            )
+            fingerprints.append(dataset_relation.fingerprint)
+        column_relations = await self._uow.dataset_column_relation.list_column_relations_by_fingerprint(fingerprints)  # type: ignore[arg-type]
+        result.column_relations = defaultdict(list)
+
+        for column_relation in column_relations:
+            result.column_relations[column_relation.fingerprint].append(column_relation)
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(

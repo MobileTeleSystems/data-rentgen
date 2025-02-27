@@ -1,8 +1,11 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+from collections.abc import Sequence
+from datetime import datetime
 from uuid import UUID
 
+from sqlalchemy import any_, select
 from sqlalchemy.dialects.postgresql import insert
 
 from data_rentgen.db.models import ColumnLineage
@@ -55,3 +58,63 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
                 for item in items
             ],
         )
+
+    async def list_by_job_ids(
+        self,
+        job_ids: Sequence[int],
+        since: datetime,
+        until: datetime | None,
+    ):
+        if not job_ids:
+            return []
+
+        where = [
+            ColumnLineage.created_at >= since,
+            ColumnLineage.job_id == any_(job_ids),  # type: ignore[arg-type]
+        ]
+        if until:
+            where.append(ColumnLineage.created_at <= until)
+
+        query = select(ColumnLineage).where(*where)
+        result = await self._session.scalars(query)
+        return list(result.all())
+
+    async def list_by_run_ids(
+        self,
+        run_ids: Sequence[UUID],
+        since: datetime,
+        until: datetime | None,
+    ):
+        if not run_ids:
+            return []
+
+        where = [
+            ColumnLineage.created_at >= since,
+            ColumnLineage.run_id == any_(run_ids),  # type: ignore[arg-type]
+        ]
+        if until:
+            where.append(ColumnLineage.created_at <= until)
+        query = select(ColumnLineage).where(*where)
+        result = await self._session.scalars(query)
+        return list(result.all())
+
+    async def list_by_operation_ids(
+        self,
+        operation_ids: Sequence[UUID],
+    ) -> list[ColumnLineage]:
+        if not operation_ids:
+            return []
+
+        # Output created_at is always the same as operation's created_at
+        # do not use `tuple_(Output.created_at, Output.operation_id).in_(...),
+        # as this is too complex filter for Postgres to make an optimal query plan
+        min_created_at = extract_timestamp_from_uuid(min(operation_ids))
+        max_created_at = extract_timestamp_from_uuid(max(operation_ids))
+        where = [
+            ColumnLineage.created_at >= min_created_at,
+            ColumnLineage.created_at <= max_created_at,
+            ColumnLineage.operation_id == any_(operation_ids),  # type: ignore[arg-type]
+        ]
+        query = select(ColumnLineage).where(*where)
+        result = await self._session.scalars(query)
+        return list(result.all())

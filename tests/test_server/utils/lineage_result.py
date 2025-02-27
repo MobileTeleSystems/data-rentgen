@@ -1,7 +1,11 @@
 from dataclasses import dataclass, field
 
+from uuid6 import UUID
+
 from data_rentgen.db.models import (
+    ColumnLineage,
     Dataset,
+    DatasetColumnRelation,
     DatasetSymlink,
     Input,
     Job,
@@ -20,3 +24,7 @@ class LineageResult:
     inputs: list[Input] = field(default_factory=list)
     outputs: list[Output] = field(default_factory=list)
     dataset_symlinks: list[DatasetSymlink] = field(default_factory=list)
+    direct_column_lineage: list[ColumnLineage] = field(default_factory=list)
+    direct_column_relations: dict[UUID, dict[str, list[DatasetColumnRelation]]] = field(default_factory=dict)
+    indirect_column_lineage: list[ColumnLineage] = field(default_factory=list)
+    indirect_column_relations: dict[UUID, list[DatasetColumnRelation]] = field(default_factory=dict)

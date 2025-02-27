@@ -168,11 +168,76 @@ class LineageSymlinkRelationV1(BaseModel):
     type: str = Field(description="Type of relation between datasets", examples=["METASTORE", "WAREHOUSE"])
 
 
+class ColumnLineageInteractionTypeV1(Enum):
+    UNKNOWN = 1
+
+    # Direct
+    IDENTITY = 2
+    TRANSFORMATION = 4
+    TRANSFORMATION_MASKING = 8
+    AGGREGATION = 16
+    AGGREGATION_MASKING = 32
+
+    # Indirect
+    FILTER = 64
+    JOIN = 128
+    GROUP_BY = 256
+    SORT = 512
+    WINDOW = 1024
+    CONDITIONAL = 2048
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class LineageSourceColumnV1(BaseModel):
+    field: str = Field(description="Source column", examples=["my_col_1", "my_col_2"])
+    types: list[str] = Field(
+        description="Type of relation between source and target column",
+        examples=[
+            ColumnLineageInteractionTypeV1.UNKNOWN,
+            ColumnLineageInteractionTypeV1.TRANSFORMATION,
+            ColumnLineageInteractionTypeV1.JOIN,
+        ],
+    )
+    last_used_at: datetime = Field(
+        description="Last time when transformation was used at",
+        examples=["2008-09-15T15:53:00+05:00"],
+    )
+
+
+class LineageColumnRelationV1(BaseModel):
+    from_: LineageEntityV1 = Field(description="Dataset with source columns", serialization_alias="from")
+    to: LineageEntityV1 = Field(description="Dataset with target columns")
+
+
+class DirectLineageColumnRelationV1(LineageColumnRelationV1):
+    fields: dict[str, LineageSourceColumnV1] = Field(
+        description="Map of target and source columns with type of direct interaction",
+        default_factory=dict,
+    )
+
+
+class IndirectLineageColumnRelationV1(LineageColumnRelationV1):
+    fields: list[LineageSourceColumnV1] = Field(
+        description="List source columns with type of indirect interaction",
+        default_factory=list,
+    )
+
+
 class LineageRelationsResponseV1(BaseModel):
     parents: list[LineageParentRelationV1] = Field(description="Parent relations", default_factory=list)
     symlinks: list[LineageSymlinkRelationV1] = Field(description="Symlink relations", default_factory=list)
     inputs: list[LineageInputRelationV1] = Field(description="Input relations", default_factory=list)
     outputs: list[LineageOutputRelationV1] = Field(description="Input relations", default_factory=list)
+    direct_column_lineage: list[DirectLineageColumnRelationV1] = Field(
+        description="Direct column lineage relations",
+        default_factory=list,
+    )
+    indirect_column_lineage: list[IndirectLineageColumnRelationV1] = Field(
+        description="Indirect column lineage relations",
+        default_factory=list,
+    )
 
 
 class LineageNodesResponseV1(BaseModel):

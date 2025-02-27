@@ -93,6 +93,8 @@ async def test_get_lineage_missing_id(
             "symlinks": [],
             "inputs": [],
             "outputs": [],
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
         },
         "nodes": {
             "datasets": {},
