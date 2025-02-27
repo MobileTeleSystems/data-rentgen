@@ -67,10 +67,14 @@ async def test_get_operation_lineage_simple(
             "direct_column_lineage": direct_column_lineage_to_json(
                 lineage.direct_column_lineage,
                 lineage.direct_column_relations,
+                "OPERATION",
+                operation.id,
             ),
             "indirect_column_lineage": indirect_column_lineage_to_json(
                 lineage.indirect_column_lineage,
                 lineage.indirect_column_relations,
+                "OPERATION",
+                operation.id,
             ),
         },
         "nodes": {
@@ -125,10 +129,14 @@ async def test_get_run_lineage_simple(
             "direct_column_lineage": direct_column_lineage_to_json(
                 lineage.direct_column_lineage,
                 lineage.direct_column_relations,
+                "RUN",
+                run.id,
             ),
             "indirect_column_lineage": indirect_column_lineage_to_json(
                 lineage.indirect_column_lineage,
                 lineage.indirect_column_relations,
+                "RUN",
+                run.id,
             ),
         },
         "nodes": {
@@ -182,10 +190,14 @@ async def test_get_job_lineage_simple(
             "direct_column_lineage": direct_column_lineage_to_json(
                 lineage.direct_column_lineage,
                 lineage.direct_column_relations,
+                "JOB",
+                job.id,
             ),
             "indirect_column_lineage": indirect_column_lineage_to_json(
                 lineage.indirect_column_lineage,
                 lineage.indirect_column_relations,
+                "JOB",
+                job.id,
             ),
         },
         "nodes": {

@@ -1,23 +1,27 @@
-from datetime import datetime
-from typing import Literal
+from __future__ import annotations
 
-from uuid6 import UUID
+from typing import TYPE_CHECKING, Literal
 
-from data_rentgen.db.models import (
-    Address,
-    ColumnLineage,
-    Dataset,
-    DatasetColumnRelation,
-    DatasetSymlink,
-    Input,
-    Job,
-    Location,
-    Operation,
-    Output,
-    Run,
-    Schema,
-    User,
-)
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from uuid6 import UUID
+
+    from data_rentgen.db.models import (
+        Address,
+        ColumnLineage,
+        Dataset,
+        DatasetColumnRelation,
+        DatasetSymlink,
+        Input,
+        Job,
+        Location,
+        Operation,
+        Output,
+        Run,
+        Schema,
+        User,
+    )
 from data_rentgen.server.schemas.v1 import ColumnLineageInteractionTypeV1
 
 
@@ -262,7 +266,21 @@ def direct_column_lineage(
 def direct_column_lineage_to_json(
     dataset_relations: list[ColumnLineage],
     column_relations: dict[UUID, dict[str, list[DatasetColumnRelation]]],
+    granularity: Literal["OPERATION", "RUN", "JOB"],
+    start_id: int | UUID,
 ):
+    if granularity == "OPERATION":
+        dataset_relations = [
+            dataset_relation for dataset_relation in dataset_relations if dataset_relation.operation_id == start_id
+        ]
+    if granularity == "RUN":
+        dataset_relations = [
+            dataset_relation for dataset_relation in dataset_relations if dataset_relation.run_id == start_id
+        ]
+    if granularity == "JOB":
+        dataset_relations = [
+            dataset_relation for dataset_relation in dataset_relations if dataset_relation.job_id == start_id
+        ]
     return [direct_column_lineage(dataset_relation, column_relations) for dataset_relation in dataset_relations]
 
 
@@ -300,5 +318,19 @@ def indirect_column_lineage(
 def indirect_column_lineage_to_json(
     dataset_relations: list[ColumnLineage],
     column_relations: dict[UUID, list[DatasetColumnRelation]],
+    granularity: Literal["OPERATION", "RUN", "JOB"],
+    start_id: int | UUID,
 ):
+    if granularity == "OPERATION":
+        dataset_relations = [
+            dataset_relation for dataset_relation in dataset_relations if dataset_relation.operation_id == start_id
+        ]
+    if granularity == "RUN":
+        dataset_relations = [
+            dataset_relation for dataset_relation in dataset_relations if dataset_relation.run_id == start_id
+        ]
+    if granularity == "JOB":
+        dataset_relations = [
+            dataset_relation for dataset_relation in dataset_relations if dataset_relation.job_id == start_id
+        ]
     return [indirect_column_lineage(dataset_relation, column_relations) for dataset_relation in dataset_relations]
