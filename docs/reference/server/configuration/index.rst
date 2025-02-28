@@ -11,6 +11,7 @@ REST API server configuration
     logging
     monitoring
     cors
+    session
     static_files
     openapi
     debug

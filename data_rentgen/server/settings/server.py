@@ -66,5 +66,5 @@ class ServerSettings(BaseModel):
     )
     session: SessionSettings = Field(
         default_factory=SessionSettings,  # type: ignore[arg-type]
-        description=":ref:`Session settings <backend-configuration-server-session>`",
+        description=":ref:`Session settings <configuration-server-session>`",
     )

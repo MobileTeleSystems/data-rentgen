@@ -20,8 +20,6 @@ class SessionSettings(BaseModel):
     Examples
     --------
 
-    For development environment:
-
     .. code-block:: bash
 
         DATA_RENTGEN__SERVER__SESSION__SECRET_KEY=secret
@@ -30,13 +28,6 @@ class SessionSettings(BaseModel):
         DATA_RENTGEN__SERVER__SESSION__SAME_SITE=strict
         DATA_RENTGEN__SERVER__SESSION__HTTPS_ONLY=True
         DATA_RENTGEN__SERVER__SESSION__DOMAIN=example.com
-
-    For production environment:
-
-    .. code-block:: bash
-
-        DATA_RENTGEN__SERVER__SESSION__SECRET_KEY=secret
-        DATA_RENTGEN__SERVER__SESSION__HTTPS_ONLY=True
 
     """
 
