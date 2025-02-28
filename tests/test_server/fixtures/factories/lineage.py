@@ -748,3 +748,148 @@ async def branchy_lineage_with_column_lineage(
 
     async with async_session_maker() as async_session:
         await clean_db(async_session)
+
+
+@pytest_asyncio.fixture
+async def duplicated_lineage_with_column_lineage(
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
+    duplicated_lineage: LineageResult,
+) -> AsyncGenerator[AsyncSession, None]:
+    # At this fixture we add column lineage to check relation types aggregation on different levels.
+    # O0 will have two direct and indirect relations for same source-target columns.
+    # O1 will have same source-target column as O0 but new relation type.
+    # O2 will have same source-target column as O0 and O1 but new relation type.
+
+    # Two trees of J -> R -> O, interacting with the same dataset multiple times:
+    # J0 -> R0 -> O0, D0 -> O0 -> D1
+    # J0 -> R0 -> O1, D0 -> O1 -> D1
+    # J0 -> R1 -> O2, D0 -> O2 -> D1
+    # J0 -> R1 -> O3, D0 -> O3 -> D1
+    # J1 -> R2 -> O4, D0 -> O4 -> D1
+    # J1 -> R2 -> O5, D0 -> O5 -> D1
+    # J1 -> R3 -> O6, D0 -> O6 -> D1
+    # J1 -> R3 -> O7, D0 -> O7 -> D1
+
+    lineage = duplicated_lineage
+    async with async_session_maker() as async_session:
+        direct_column_relation = await create_column_relation(
+            async_session,
+            fingerprint=generate_static_uuid("fingerprint_identity"),
+            column_relation_kwargs={
+                "type": DatasetColumnRelationType.IDENTITY.value,
+                "source_column": "direct_source_column",
+                "target_column": "direct_target_column",
+            },
+        )
+        lineage.direct_column_relations.update(
+            {
+                generate_static_uuid("fingerprint_identity"): {
+                    direct_column_relation.target_column: [direct_column_relation],
+                },
+            },
+        )
+        column_lineage = await create_column_lineage(
+            async_session,
+            column_lineage_kwargs={
+                "created_at": lineage.operations[0].created_at,
+                "operation_id": lineage.operations[0].id,
+                "run_id": lineage.runs[0].id,
+                "job_id": lineage.jobs[0].id,
+                "source_dataset_id": lineage.datasets[0].id,
+                "target_dataset_id": lineage.datasets[1].id,
+                "fingerprint": generate_static_uuid("fingerprint_identity"),
+            },
+        )
+        lineage.direct_column_lineage.append(column_lineage)
+        direct_column_relation = await create_column_relation(
+            async_session,
+            fingerprint=generate_static_uuid("fingerprint_transformation"),
+            column_relation_kwargs={
+                "type": DatasetColumnRelationType.TRANSFORMATION.value,
+                "source_column": "direct_source_column",
+                "target_column": "direct_target_column",
+            },
+        )
+        lineage.direct_column_relations.update(
+            {
+                generate_static_uuid("fingerprint_transformation"): {
+                    direct_column_relation.target_column: [direct_column_relation],
+                },
+            },
+        )
+        column_lineage = await create_column_lineage(
+            async_session,
+            column_lineage_kwargs={
+                "created_at": lineage.operations[0].created_at,
+                "operation_id": lineage.operations[0].id,
+                "run_id": lineage.runs[0].id,
+                "job_id": lineage.jobs[0].id,
+                "source_dataset_id": lineage.datasets[0].id,
+                "target_dataset_id": lineage.datasets[1].id,
+                "fingerprint": generate_static_uuid("fingerprint_transformation"),
+            },
+        )
+        lineage.direct_column_lineage.append(column_lineage)
+        direct_column_relation = await create_column_relation(
+            async_session,
+            fingerprint=generate_static_uuid("fingerprint_transformation_masking"),
+            column_relation_kwargs={
+                "type": DatasetColumnRelationType.TRANSFORMATION_MASKING.value,
+                "source_column": "direct_source_column",
+                "target_column": "direct_target_column",
+            },
+        )
+        lineage.direct_column_relations.update(
+            {
+                generate_static_uuid("fingerprint_transformation_masking"): {
+                    direct_column_relation.target_column: [direct_column_relation],
+                },
+            },
+        )
+        column_lineage = await create_column_lineage(
+            async_session,
+            column_lineage_kwargs={
+                "created_at": lineage.operations[1].created_at,
+                "operation_id": lineage.operations[1].id,
+                "run_id": lineage.runs[0].id,
+                "job_id": lineage.jobs[0].id,
+                "source_dataset_id": lineage.datasets[0].id,
+                "target_dataset_id": lineage.datasets[1].id,
+                "fingerprint": generate_static_uuid("fingerprint_transformation_masking"),
+            },
+        )
+        lineage.direct_column_lineage.append(column_lineage)
+        direct_column_relation = await create_column_relation(
+            async_session,
+            fingerprint=generate_static_uuid("fingerprint_aggregation"),
+            column_relation_kwargs={
+                "type": DatasetColumnRelationType.AGGREGATION.value,
+                "source_column": "direct_source_column",
+                "target_column": "direct_target_column",
+            },
+        )
+        lineage.direct_column_relations.update(
+            {
+                generate_static_uuid("fingerprint_aggregation"): {
+                    direct_column_relation.target_column: [direct_column_relation],
+                },
+            },
+        )
+        column_lineage = await create_column_lineage(
+            async_session,
+            column_lineage_kwargs={
+                "created_at": lineage.operations[2].created_at,
+                "operation_id": lineage.operations[2].id,
+                "run_id": lineage.runs[1].id,
+                "job_id": lineage.jobs[0].id,
+                "source_dataset_id": lineage.datasets[0].id,
+                "target_dataset_id": lineage.datasets[1].id,
+                "fingerprint": generate_static_uuid("fingerprint_aggregation"),
+            },
+        )
+        lineage.direct_column_lineage.append(column_lineage)
+
+    yield lineage
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)

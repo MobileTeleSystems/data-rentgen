@@ -167,8 +167,9 @@ def _get_direct_column_lineage(column_lineage_by_source_target_id: dict[tuple, l
                         ],
                     ),
                 )
-        column_lineage_relation.fields = fields  # type: ignore[assignment]
-        relations.append(column_lineage_relation)
+        if fields:
+            column_lineage_relation.fields = fields  # type: ignore[assignment]
+            relations.append(column_lineage_relation)
     return relations
 
 
@@ -188,7 +189,7 @@ def _get_indirect_column_lineage(column_lineage_by_source_target_id: dict[tuple,
             for column_relation in column_relations
             if column_relation["target_column"] == ""
         ]
-
-        column_lineage_relation.fields = fields
-        relations.append(column_lineage_relation)
+        if fields:
+            column_lineage_relation.fields = fields
+            relations.append(column_lineage_relation)
     return relations
