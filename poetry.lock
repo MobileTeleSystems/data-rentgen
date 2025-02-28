@@ -289,31 +289,6 @@ files = [
 dev = ["freezegun (>=1.0,<2.0)", "pytest (>=6.0)", "pytest-cov"]
 
 [[package]]
-name = "bandit"
-version = "1.8.3"
-description = "Security oriented static analyser for python code."
-optional = false
-python-versions = ">=3.9"
-groups = ["dev"]
-files = [
-    {file = "bandit-1.8.3-py3-none-any.whl", hash = "sha256:28f04dc0d258e1dd0f99dee8eefa13d1cb5e3fde1a5ab0c523971f97b289bcd8"},
-    {file = "bandit-1.8.3.tar.gz", hash = "sha256:f5847beb654d309422985c36644649924e0ea4425c76dec2e89110b87506193a"},
-]
-
-[package.dependencies]
-colorama = {version = ">=0.3.9", markers = "platform_system == \"Windows\""}
-PyYAML = ">=5.3.1"
-rich = "*"
-stevedore = ">=1.20.0"
-
-[package.extras]
-baseline = ["GitPython (>=3.1.30)"]
-sarif = ["jschema-to-python (>=1.2.3)", "sarif-om (>=1.0.4)"]
-test = ["beautifulsoup4 (>=4.8.0)", "coverage (>=4.5.4)", "fixtures (>=3.0.0)", "flake8 (>=4.0.0)", "pylint (==1.9.4)", "stestr (>=2.5.0)", "testscenarios (>=0.5.0)", "testtools (>=2.3.0)"]
-toml = ["tomli (>=1.1.0)"]
-yaml = ["PyYAML"]
-
-[[package]]
 name = "beautifulsoup4"
 version = "4.12.3"
 description = "Screen-scraping library"
@@ -565,12 +540,12 @@ version = "0.4.6"
 description = "Cross-platform colored terminal text."
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
-groups = ["main", "dev", "docs", "test"]
+groups = ["main", "docs", "test"]
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
-markers = {main = "extra == \"server\" and platform_system == \"Windows\" or extra == \"consumer\" and platform_system == \"Windows\"", dev = "platform_system == \"Windows\"", docs = "platform_system == \"Windows\" or sys_platform == \"win32\"", test = "sys_platform == \"win32\""}
+markers = {main = "extra == \"server\" and platform_system == \"Windows\" or extra == \"consumer\" and platform_system == \"Windows\"", docs = "platform_system == \"Windows\" or sys_platform == \"win32\"", test = "sys_platform == \"win32\""}
 
 [[package]]
 name = "coloredlogs"
@@ -1384,14 +1359,14 @@ testing = ["pytest"]
 name = "markdown-it-py"
 version = "3.0.0"
 description = "Python port of markdown-it. Markdown parsing, done right!"
-optional = false
+optional = true
 python-versions = ">=3.8"
-groups = ["main", "dev"]
+groups = ["main"]
+markers = "extra == \"consumer\""
 files = [
     {file = "markdown-it-py-3.0.0.tar.gz", hash = "sha256:e3f60a94fa066dc52ec76661e37c851cb232d92f9886b15cb560aaada2df8feb"},
     {file = "markdown_it_py-3.0.0-py3-none-any.whl", hash = "sha256:355216845c60bd96232cd8d8c40e8f9765cc86f46880e43a8fd22dc1a1a8cab1"},
 ]
-markers = {main = "extra == \"consumer\""}
 
 [package.dependencies]
 mdurl = ">=0.1,<1.0"
@@ -1482,14 +1457,14 @@ markers = {main = "extra == \"server\" or extra == \"consumer\""}
 name = "mdurl"
 version = "0.1.2"
 description = "Markdown URL utilities"
-optional = false
+optional = true
 python-versions = ">=3.7"
-groups = ["main", "dev"]
+groups = ["main"]
+markers = "extra == \"consumer\""
 files = [
     {file = "mdurl-0.1.2-py3-none-any.whl", hash = "sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8"},
     {file = "mdurl-0.1.2.tar.gz", hash = "sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba"},
 ]
-markers = {main = "extra == \"consumer\""}
 
 [[package]]
 name = "mypy"
@@ -1615,18 +1590,6 @@ files = [
     {file = "packaging-24.2.tar.gz", hash = "sha256:c228a6dc5e932d346bc5739379109d49e8853dd8223571c7c5b55260edc0b97f"},
 ]
 markers = {main = "extra == \"server\" or extra == \"consumer\""}
-
-[[package]]
-name = "pbr"
-version = "6.1.0"
-description = "Python Build Reasonableness"
-optional = false
-python-versions = ">=2.6"
-groups = ["dev"]
-files = [
-    {file = "pbr-6.1.0-py2.py3-none-any.whl", hash = "sha256:a776ae228892d8013649c0aeccbb3d5f99ee15e005a4cbb7e61d55a067b28a2a"},
-    {file = "pbr-6.1.0.tar.gz", hash = "sha256:788183e382e3d1d7707db08978239965e8b9e4e5ed42669bf4758186734d5f24"},
-]
 
 [[package]]
 name = "platformdirs"
@@ -1948,7 +1911,7 @@ version = "2.19.1"
 description = "Pygments is a syntax highlighting package written in Python."
 optional = false
 python-versions = ">=3.8"
-groups = ["main", "dev", "docs"]
+groups = ["main", "docs"]
 files = [
     {file = "pygments-2.19.1-py3-none-any.whl", hash = "sha256:9ea1544ad55cecf4b8242fab6dd35a93bbce657034b0611ee383099054ab6d8c"},
     {file = "pygments-2.19.1.tar.gz", hash = "sha256:61c16d2a8576dc0649d9f39e089b5f02bcd27fba10d8fb4dcc28173f7a45151f"},
@@ -2286,14 +2249,14 @@ httpx = ">=0.25.0"
 name = "rich"
 version = "13.9.4"
 description = "Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal"
-optional = false
+optional = true
 python-versions = ">=3.8.0"
-groups = ["main", "dev"]
+groups = ["main"]
+markers = "extra == \"consumer\""
 files = [
     {file = "rich-13.9.4-py3-none-any.whl", hash = "sha256:6049d5e6ec054bf2779ab3358186963bac2ea89175919d699e378b99738c2a90"},
     {file = "rich-13.9.4.tar.gz", hash = "sha256:439594978a49a09530cff7ebc4b5c7103ef57baf48d5ea3184f21d9a2befa098"},
 ]
-markers = {main = "extra == \"consumer\""}
 
 [package.dependencies]
 markdown-it-py = ">=2.2.0"
@@ -2842,21 +2805,6 @@ prometheus-client = ">=0.12"
 starlette = ">=0.35"
 
 [[package]]
-name = "stevedore"
-version = "5.4.0"
-description = "Manage dynamic plugins for Python applications"
-optional = false
-python-versions = ">=3.9"
-groups = ["dev"]
-files = [
-    {file = "stevedore-5.4.0-py3-none-any.whl", hash = "sha256:b0be3c4748b3ea7b854b265dcb4caa891015e442416422be16f8b31756107857"},
-    {file = "stevedore-5.4.0.tar.gz", hash = "sha256:79e92235ecb828fe952b6b8b0c6c87863248631922c8e8e0fa5b17b232c4514d"},
-]
-
-[package.dependencies]
-pbr = ">=2.0.0"
-
-[[package]]
 name = "tabulate"
 version = "0.9.0"
 description = "Pretty-print tabular data"
@@ -3246,4 +3194,4 @@ server = ["alembic", "asgi-correlation-id", "coloredlogs", "fastapi", "greenlet"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "9775bec78c3273d1e98300fbe0b19041acc94be97e2885f5a70a762dc7a00398"
+content-hash = "23ca9358d30eac2a1642693e3e4975d03b01da2dc9ab491febeca315befd92cb"
