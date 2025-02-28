@@ -27,10 +27,10 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
 async def test_get_operation_lineage_simple(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    simple_lineage_with_column_lineage: LineageResult,
+    branchy_lineage_with_column_lineage: LineageResult,
     mocked_user: MockedUser,
 ):
-    lineage = simple_lineage_with_column_lineage
+    lineage = branchy_lineage_with_column_lineage
     operation = lineage.operations[0]
     run = next(run for run in lineage.runs if run.id == operation.run_id)
     job = next(job for job in lineage.jobs if job.id == run.job_id)
@@ -89,10 +89,10 @@ async def test_get_operation_lineage_simple(
 async def test_get_run_lineage_simple(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    simple_lineage_with_column_lineage: LineageResult,
+    branchy_lineage_with_column_lineage: LineageResult,
     mocked_user: MockedUser,
 ):
-    lineage = simple_lineage_with_column_lineage
+    lineage = branchy_lineage_with_column_lineage
     run = lineage.runs[0]
     job = next(job for job in lineage.jobs if job.id == run.job_id)
 
@@ -151,10 +151,10 @@ async def test_get_run_lineage_simple(
 async def test_get_job_lineage_simple(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    simple_lineage_with_column_lineage: LineageResult,
+    branchy_lineage_with_column_lineage: LineageResult,
     mocked_user: MockedUser,
 ):
-    lineage = simple_lineage_with_column_lineage
+    lineage = branchy_lineage_with_column_lineage
     job = lineage.jobs[0]
 
     inputs = [input for input in lineage.inputs if input.job_id == job.id]
