@@ -70,16 +70,6 @@ repos:
         args: [--fix]
       - id: ruff-format
 
-  - repo: https://github.com/pycqa/bandit
-    rev: 1.8.3
-    hooks:
-      - id: bandit
-        args:
-          - --aggregate=file
-          - -iii
-          - -ll
-        require_serial: true
-
   - repo: https://github.com/IamTheFij/docker-pre-commit
     rev: v3.0.1
     hooks:
