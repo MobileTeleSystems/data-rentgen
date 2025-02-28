@@ -186,9 +186,6 @@ class ColumnLineageInteractionTypeV1(Enum):
     WINDOW = 1024
     CONDITIONAL = 2048
 
-    def __str__(self) -> str:
-        return self.name
-
 
 class LineageSourceColumnV1(BaseModel):
     field: str = Field(description="Source column", examples=["my_col_1", "my_col_2"])

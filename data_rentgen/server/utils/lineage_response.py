@@ -1,12 +1,11 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+from collections import defaultdict
 from typing import Any
 
 from uuid6 import UUID
 
-from data_rentgen.db.models.column_lineage import ColumnLineage
-from data_rentgen.db.models.dataset_column_relation import DatasetColumnRelation
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink
 from data_rentgen.db.models.input import Input
 from data_rentgen.db.models.operation import Operation
@@ -55,14 +54,8 @@ async def build_lineage_response(lineage: LineageServiceResult) -> LineageRespon
             symlinks=_get_symlink_relations(lineage.dataset_symlinks),
             inputs=_get_input_relations(lineage.inputs),
             outputs=_get_output_relations(lineage.outputs),
-            direct_column_lineage=_get_direct_column_lineage_relations(
-                lineage.column_lineage,
-                lineage.column_relations,
-            ),
-            indirect_column_lineage=_get_indirect_column_lineage_relations(
-                lineage.column_lineage,
-                lineage.column_relations,
-            ),
+            direct_column_lineage=_get_direct_column_lineage(lineage.column_lineage),
+            indirect_column_lineage=_get_indirect_column_lineage(lineage.column_lineage),
         ),
     )
 
@@ -153,75 +146,49 @@ def _get_output_relations(outputs: dict[Any, Output]) -> list[LineageOutputRelat
     return sorted(relations, key=lambda x: (str(x.from_.id), str(x.to.id), x.type))
 
 
-def _get_direct_column_lineage_relations(
-    dataset_relations_by_target_source_ids: dict[tuple, list[ColumnLineage]],
-    column_relations_by_fingerpint: dict[UUID, list[DatasetColumnRelation]],
-) -> list[DirectLineageColumnRelationV1]:
+def _get_direct_column_lineage(column_lineage_by_source_target_id: dict[tuple, list[dict]]):
     relations = []
-    for (target_dataset_id, source_dataset_id), dataset_relations in dataset_relations_by_target_source_ids.items():
-        relation = DirectLineageColumnRelationV1(
+    for (source_dataset_id, target_dataset_id), column_relations in column_lineage_by_source_target_id.items():
+        column_lineage_relation = DirectLineageColumnRelationV1(
             from_=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(source_dataset_id)),
             to=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(target_dataset_id)),
         )
-        fingerprints = {
-            dataset_relation.fingerprint: dataset_relation.created_at for dataset_relation in dataset_relations
-        }
-        for fingerprint, last_used_at in fingerprints.items():
-            fields = {}  # type: ignore[var-annotated]
-            for column_relation in column_relations_by_fingerpint[fingerprint]:
-                if column_relation.type <= ColumnLineageInteractionTypeV1.AGGREGATION_MASKING.value:  # type: ignore[operator]
-                    target = fields.get(column_relation.target_column)
-                    if target:
-                        source = target.get(column_relation.source_column)
-                        if source:
-                            source.types.append(str(ColumnLineageInteractionTypeV1(column_relation.type)))
-                        else:
-                            target[column_relation.source_column] = LineageSourceColumnV1(
-                                field=column_relation.source_column,
-                                types=[str(ColumnLineageInteractionTypeV1(column_relation.type))],
-                                last_used_at=last_used_at,
-                            )
-                    else:
-                        fields[column_relation.target_column] = {
-                            column_relation.source_column: LineageSourceColumnV1(
-                                field=column_relation.source_column,
-                                types=[str(ColumnLineageInteractionTypeV1(column_relation.type))],
-                                last_used_at=last_used_at,
-                            ),
-                        }
-        if fields:
-            relation.fields = {target_column: list(value.values()) for target_column, value in fields.items()}  # type: ignore[misc]
-            relations.append(relation)
+        fields = defaultdict(list)
+        for column_relation in column_relations:
+            if column_relation["target_column"] != "":
+                fields[column_relation["target_column"]].append(
+                    LineageSourceColumnV1(
+                        field=column_relation["source_column"],
+                        last_used_at=column_relation["last_used_at"],
+                        types=[
+                            e.name
+                            for e in ColumnLineageInteractionTypeV1
+                            if e.value & column_relation["types_combined"]
+                        ],
+                    ),
+                )
+        column_lineage_relation.fields = fields  # type: ignore[assignment]
+        relations.append(column_lineage_relation)
     return relations
 
 
-def _get_indirect_column_lineage_relations(
-    dataset_relations_by_target_source_ids: dict[tuple, list[ColumnLineage]],
-    column_relations_by_fingerpint: dict[UUID, list[DatasetColumnRelation]],
-) -> list[IndirectLineageColumnRelationV1]:
+def _get_indirect_column_lineage(column_lineage_by_source_target_id: dict[tuple, list[dict]]):
     relations = []
-    for (target_dataset_id, source_dataset_id), dataset_relations in dataset_relations_by_target_source_ids.items():
-        relation = IndirectLineageColumnRelationV1(
+    for (source_dataset_id, target_dataset_id), column_relations in column_lineage_by_source_target_id.items():
+        column_lineage_relation = IndirectLineageColumnRelationV1(
             from_=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(source_dataset_id)),
             to=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(target_dataset_id)),
         )
-        fingerprints = {
-            dataset_relation.fingerprint: dataset_relation.created_at for dataset_relation in dataset_relations
-        }
-        for fingerprint, last_used_at in fingerprints.items():
-            fields = {}  # type: ignore[var-annotated]
-            for column_relation in column_relations_by_fingerpint[fingerprint]:
-                if column_relation.type > ColumnLineageInteractionTypeV1.AGGREGATION_MASKING.value:  # type: ignore[operator]
-                    source = fields.get(column_relation.source_column)
-                    if source:
-                        source.types.append(str(ColumnLineageInteractionTypeV1(column_relation.type)))
-                    else:
-                        fields[column_relation.source_column] = LineageSourceColumnV1(
-                            field=column_relation.source_column,
-                            types=[str(ColumnLineageInteractionTypeV1(column_relation.type))],
-                            last_used_at=last_used_at,
-                        )
-        if fields:
-            relation.fields = list(fields.values())
-            relations.append(relation)
+        fields = [
+            LineageSourceColumnV1(
+                field=column_relation["source_column"],
+                last_used_at=column_relation["last_used_at"],
+                types=[e.name for e in ColumnLineageInteractionTypeV1 if e.value & column_relation["types_combined"]],
+            )
+            for column_relation in column_relations
+            if column_relation["target_column"] == ""
+        ]
+
+        column_lineage_relation.fields = fields
+        relations.append(column_lineage_relation)
     return relations

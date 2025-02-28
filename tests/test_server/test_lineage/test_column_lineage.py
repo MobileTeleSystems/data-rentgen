@@ -24,7 +24,7 @@ from tests.test_server.utils.merge import merge_io_by_jobs, merge_io_by_runs
 pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
 
 
-async def test_get_operation_lineage_simple(
+async def test_get_column_lineage_by_operation(
     test_client: AsyncClient,
     async_session: AsyncSession,
     branchy_lineage_with_column_lineage: LineageResult,
@@ -86,7 +86,7 @@ async def test_get_operation_lineage_simple(
     }
 
 
-async def test_get_run_lineage_simple(
+async def test_get_column_lineage_by_run(
     test_client: AsyncClient,
     async_session: AsyncSession,
     branchy_lineage_with_column_lineage: LineageResult,
@@ -148,7 +148,7 @@ async def test_get_run_lineage_simple(
     }
 
 
-async def test_get_job_lineage_simple(
+async def test_get_column_lineage_by_job(
     test_client: AsyncClient,
     async_session: AsyncSession,
     branchy_lineage_with_column_lineage: LineageResult,

@@ -5,10 +5,10 @@ from collections.abc import Sequence
 from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import any_, select
+from sqlalchemy import ColumnElement, any_, func, select
 from sqlalchemy.dialects.postgresql import insert
 
-from data_rentgen.db.models import ColumnLineage
+from data_rentgen.db.models import ColumnLineage, DatasetColumnRelation
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.uuid import (
     extract_timestamp_from_uuid,
@@ -75,9 +75,7 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
         if until:
             where.append(ColumnLineage.created_at <= until)
 
-        query = select(ColumnLineage).where(*where)
-        result = await self._session.scalars(query)
-        return list(result.all())
+        return await self._get_column_lineage_with_column_relations(where)
 
     async def list_by_run_ids(
         self,
@@ -94,14 +92,12 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
         ]
         if until:
             where.append(ColumnLineage.created_at <= until)
-        query = select(ColumnLineage).where(*where)
-        result = await self._session.scalars(query)
-        return list(result.all())
+        return await self._get_column_lineage_with_column_relations(where)
 
     async def list_by_operation_ids(
         self,
         operation_ids: Sequence[UUID],
-    ) -> list[ColumnLineage]:
+    ):
         if not operation_ids:
             return []
 
@@ -115,6 +111,37 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
             ColumnLineage.created_at <= max_created_at,
             ColumnLineage.operation_id == any_(operation_ids),  # type: ignore[arg-type]
         ]
-        query = select(ColumnLineage).where(*where)
-        result = await self._session.scalars(query)
-        return list(result.all())
+        return await self._get_column_lineage_with_column_relations(where)
+
+    async def _get_column_lineage_with_column_relations(self, where: list[ColumnElement]):
+        query = (
+            select(
+                ColumnLineage.source_dataset_id,
+                ColumnLineage.target_dataset_id,
+                DatasetColumnRelation.source_column,
+                DatasetColumnRelation.target_column,
+                func.bit_or(DatasetColumnRelation.type).label("types_combined"),
+                func.max(ColumnLineage.created_at).label("last_used_at"),
+            )
+            .join(DatasetColumnRelation, ColumnLineage.fingerprint == DatasetColumnRelation.fingerprint)
+            .group_by(
+                ColumnLineage.source_dataset_id,
+                ColumnLineage.target_dataset_id,
+                DatasetColumnRelation.source_column,
+                DatasetColumnRelation.target_column,
+            )
+        )
+
+        query = query.where(*where)
+        result = await self._session.execute(query)
+        return [
+            {
+                "source_dataset_id": row.source_dataset_id,
+                "target_dataset_id": row.target_dataset_id,
+                "source_column": row.source_column,
+                "target_column": row.target_column,
+                "types_combined": row.types_combined,
+                "last_used_at": row.last_used_at,
+            }
+            for row in result.all()
+        ]

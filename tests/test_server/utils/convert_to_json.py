@@ -236,12 +236,12 @@ def direct_column_lineage_fields(column_relations: dict[str, list[DatasetColumnR
         for relation in relations:
             if relation_by_source_column.get(relation.source_column):
                 relation_by_source_column[relation.source_column]["types"].append(
-                    str(ColumnLineageInteractionTypeV1(relation.type)),
+                    ColumnLineageInteractionTypeV1(relation.type).name,
                 )
             else:
                 relation_by_source_column[relation.source_column] = {
                     "field": relation.source_column,
-                    "types": [str(ColumnLineageInteractionTypeV1(relation.type))],
+                    "types": [ColumnLineageInteractionTypeV1(relation.type).name],
                     "last_used_at": format_datetime(last_used_at),
                 }
         fields[target] = list(relation_by_source_column.values())
@@ -289,12 +289,12 @@ def indirect_column_lineage_fields(column_relations: list[DatasetColumnRelation]
     for relation in column_relations:
         if relation_by_source_column.get(relation.source_column):
             relation_by_source_column[relation.source_column]["types"].append(
-                str(ColumnLineageInteractionTypeV1(relation.type)),
+                ColumnLineageInteractionTypeV1(relation.type).name,
             )
         else:
             relation_by_source_column[relation.source_column] = {
                 "field": relation.source_column,
-                "types": [str(ColumnLineageInteractionTypeV1(relation.type))],
+                "types": [ColumnLineageInteractionTypeV1(relation.type).name],
                 "last_used_at": format_datetime(last_used_at),
             }
 
