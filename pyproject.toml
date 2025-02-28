@@ -142,9 +142,8 @@ numpydoc = "^1.8.0"
 sphinx = "^8.1.3"
 furo = "^2024.7.18"
 sphinx-copybutton = "^0.5.2"
-sphinxcontrib-towncrier = "^0.4.0a0"
-# TODO: remove upper limit after https://github.com/sphinx-contrib/sphinxcontrib-towncrier/issues/92
-towncrier = {version = ">=23.11,<24.7"}
+sphinxcontrib-towncrier = "^0.5.0a0"
+towncrier = "^24.8.0"
 sphinx-issues = "^5.0.0"
 sphinx-design = "^0.6.1"
 sphinx-favicon = "^1.0.1"

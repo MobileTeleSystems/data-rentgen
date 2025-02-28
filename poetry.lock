@@ -1256,25 +1256,6 @@ files = [
 ]
 
 [[package]]
-name = "incremental"
-version = "24.7.2"
-description = "A small library that versions your Python projects."
-optional = false
-python-versions = ">=3.8"
-groups = ["docs"]
-files = [
-    {file = "incremental-24.7.2-py3-none-any.whl", hash = "sha256:8cb2c3431530bec48ad70513931a760f446ad6c25e8333ca5d95e24b0ed7b8fe"},
-    {file = "incremental-24.7.2.tar.gz", hash = "sha256:fb4f1d47ee60efe87d4f6f0ebb5f70b9760db2b2574c59c8e8912be4ebd464c9"},
-]
-
-[package.dependencies]
-setuptools = ">=61.0"
-tomli = {version = "*", markers = "python_version < \"3.11\""}
-
-[package.extras]
-scripts = ["click (>=6.0)"]
-
-[[package]]
 name = "iniconfig"
 version = "2.0.0"
 description = "brain-dead simple config-ini parsing"
@@ -2272,7 +2253,7 @@ version = "75.8.0"
 description = "Easily download, build, install, upgrade, and uninstall Python packages"
 optional = false
 python-versions = ">=3.9"
-groups = ["docs", "test"]
+groups = ["test"]
 files = [
     {file = "setuptools-75.8.0-py3-none-any.whl", hash = "sha256:e3982f444617239225d675215d51f6ba05f845d4eec313da4418fdbb56fb27e3"},
     {file = "setuptools-75.8.0.tar.gz", hash = "sha256:c5afc8f407c626b8313a86e10311dd3f661c6cd9c09d4bf8c15c0e11f9f2b0e6"},
@@ -2626,19 +2607,19 @@ test = ["pytest"]
 
 [[package]]
 name = "sphinxcontrib-towncrier"
-version = "0.4.0a0"
+version = "0.5.0a0"
 description = "An RST directive for injecting a Towncrier-generated changelog draft containing fragments for the unreleased (next) project version"
 optional = false
-python-versions = ">=3.6"
+python-versions = ">=3.9"
 groups = ["docs"]
 files = [
-    {file = "sphinxcontrib-towncrier-0.4.0a0.tar.gz", hash = "sha256:d9b1513fc07781432dd3a0b2ca797cfe0e99e9b5bc5e5c8bf112d5d142afb6dc"},
-    {file = "sphinxcontrib_towncrier-0.4.0a0-py3-none-any.whl", hash = "sha256:ec734e3d0920e2ce26e99681119f398a9e1fc0aa6c2d7ed1f052f1219dcd4653"},
+    {file = "sphinxcontrib_towncrier-0.5.0a0-py3-none-any.whl", hash = "sha256:11d130c3ad5e4649821d543c4ea7ab64bbe78df4d859ef94f4298e7845dc0f59"},
+    {file = "sphinxcontrib_towncrier-0.5.0a0.tar.gz", hash = "sha256:294e69df6e275e7a86df7ea6a927cc7c28c2c370a884cd5c45de6ec989858f27"},
 ]
 
 [package.dependencies]
 sphinx = "*"
-towncrier = ">=19.2"
+towncrier = ">=23"
 
 [[package]]
 name = "sqlalchemy"
@@ -2864,24 +2845,23 @@ files = [
 
 [[package]]
 name = "towncrier"
-version = "23.11.0"
+version = "24.8.0"
 description = "Building newsfiles for your project."
 optional = false
 python-versions = ">=3.8"
 groups = ["docs"]
 files = [
-    {file = "towncrier-23.11.0-py3-none-any.whl", hash = "sha256:2e519ca619426d189e3c98c99558fe8be50c9ced13ea1fc20a4a353a95d2ded7"},
-    {file = "towncrier-23.11.0.tar.gz", hash = "sha256:13937c247e3f8ae20ac44d895cf5f96a60ad46cfdcc1671759530d7837d9ee5d"},
+    {file = "towncrier-24.8.0-py3-none-any.whl", hash = "sha256:9343209592b839209cdf28c339ba45792fbfe9775b5f9c177462fd693e127d8d"},
+    {file = "towncrier-24.8.0.tar.gz", hash = "sha256:013423ee7eed102b2f393c287d22d95f66f1a3ea10a4baa82d298001a7f18af3"},
 ]
 
 [package.dependencies]
 click = "*"
-incremental = "*"
 jinja2 = "*"
 tomli = {version = "*", markers = "python_version < \"3.11\""}
 
 [package.extras]
-dev = ["furo", "packaging", "sphinx (>=5)", "twisted"]
+dev = ["furo (>=2024.05.06)", "nox", "packaging", "sphinx (>=5)", "twisted"]
 
 [[package]]
 name = "typer"
@@ -3194,4 +3174,4 @@ server = ["alembic", "asgi-correlation-id", "coloredlogs", "fastapi", "greenlet"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "23ca9358d30eac2a1642693e3e4975d03b01da2dc9ab491febeca315befd92cb"
+content-hash = "2925c0ff0e6573d06204099921fe677793f40b8a725b8ced175083e0c92ae537"
