@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import Enum, IntEnum
 from typing import Literal
 from uuid import UUID
 
@@ -169,7 +169,7 @@ class LineageSymlinkRelationV1(BaseModel):
     type: str = Field(description="Type of relation between datasets", examples=["METASTORE", "WAREHOUSE"])
 
 
-class ColumnLineageInteractionTypeV1(Enum):
+class ColumnLineageInteractionTypeV1(IntEnum):
     UNKNOWN = 1
 
     # Direct
