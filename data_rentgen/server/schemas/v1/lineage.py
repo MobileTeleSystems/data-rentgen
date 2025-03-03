@@ -189,12 +189,19 @@ class ColumnLineageInteractionTypeV1(Enum):
 
 class LineageSourceColumnV1(BaseModel):
     field: str = Field(description="Source column", examples=["my_col_1", "my_col_2"])
-    types: list[str] = Field(
+    types: list[ColumnLineageInteractionTypeV1] = Field(
         description="Type of relation between source and target column",
         examples=[
-            ColumnLineageInteractionTypeV1.UNKNOWN,
-            ColumnLineageInteractionTypeV1.TRANSFORMATION,
-            ColumnLineageInteractionTypeV1.JOIN,
+            [
+                ColumnLineageInteractionTypeV1.UNKNOWN,
+            ],
+            [
+                ColumnLineageInteractionTypeV1.TRANSFORMATION,
+                ColumnLineageInteractionTypeV1.AGGREGATION,
+            ],
+            [
+                ColumnLineageInteractionTypeV1.JOIN,
+            ],
         ],
     )
     last_used_at: datetime = Field(
@@ -203,19 +210,18 @@ class LineageSourceColumnV1(BaseModel):
     )
 
 
-class LineageColumnRelationV1(BaseModel):
+class DirectLineageColumnRelationV1(BaseModel):
     from_: LineageEntityV1 = Field(description="Dataset with source columns", serialization_alias="from")
     to: LineageEntityV1 = Field(description="Dataset with target columns")
-
-
-class DirectLineageColumnRelationV1(LineageColumnRelationV1):
     fields: dict[str, LineageSourceColumnV1] = Field(
         description="Map of target and source columns with type of direct interaction",
         default_factory=dict,
     )
 
 
-class IndirectLineageColumnRelationV1(LineageColumnRelationV1):
+class IndirectLineageColumnRelationV1(BaseModel):
+    from_: LineageEntityV1 = Field(description="Dataset with source columns", serialization_alias="from")
+    to: LineageEntityV1 = Field(description="Dataset with target columns")
     fields: list[LineageSourceColumnV1] = Field(
         description="List source columns with type of indirect interaction",
         default_factory=list,
