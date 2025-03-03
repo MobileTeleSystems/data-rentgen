@@ -55,6 +55,7 @@ async def test_get_column_lineage_by_operation(
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(operation.id),
+            "column_lineage": True,
         },
     )
 
@@ -117,6 +118,7 @@ async def test_get_column_lineage_by_run(
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(run.id),
+            "column_lineage": True,
         },
     )
 
@@ -178,6 +180,7 @@ async def test_get_column_lineage_by_job(
         params={
             "since": since.isoformat(),
             "start_node_id": job.id,
+            "column_lineage": True,
         },
     )
 
@@ -240,6 +243,7 @@ async def test_get_column_lineage_by_operation_with_combined_transformations(
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(operation.id),
+            "column_lineage": True,
         },
     )
 
@@ -309,6 +313,7 @@ async def test_get_column_lineage_by_run_with_combined_transformations(
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(run.id),
+            "column_lineage": True,
         },
     )
 
@@ -378,6 +383,7 @@ async def test_get_column_lineage_by_job_with_combined_transformations(
         params={
             "since": since.isoformat(),
             "start_node_id": job.id,
+            "column_lineage": True,
         },
     )
 

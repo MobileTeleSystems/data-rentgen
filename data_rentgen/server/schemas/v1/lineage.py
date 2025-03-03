@@ -64,6 +64,7 @@ class BaseLineageQueryV1(BaseModel):
         description="Depth of the lineage",
         examples=[1, 3],
     )
+    column_lineage: bool = Field(default=False, description="Include or not column lineage into response")
 
     model_config = ConfigDict(extra="forbid")
 
@@ -189,7 +190,7 @@ class ColumnLineageInteractionTypeV1(Enum):
 
 class LineageSourceColumnV1(BaseModel):
     field: str = Field(description="Source column", examples=["my_col_1", "my_col_2"])
-    types: list[ColumnLineageInteractionTypeV1] = Field(
+    types: list[str] = Field(
         description="Type of relation between source and target column",
         examples=[
             [

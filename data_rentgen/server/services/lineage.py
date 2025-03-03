@@ -83,6 +83,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
+        column_lineage: bool,  # noqa: FBT001
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         if not start_node_ids:
@@ -172,6 +173,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -183,6 +185,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -199,16 +202,17 @@ class LineageService:
                 (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
                 for dataset_symlink in dataset_symlinks
             }
-        column_lineage = await self._uow.column_lineage.list_by_job_ids(
-            sorted(result.jobs.keys()),
-            since,
-            until,
-        )
-        result.column_lineage = defaultdict(list)
-        for relation in column_lineage:
-            result.column_lineage[(relation["source_dataset_id"], relation["target_dataset_id"])].append(
-                relation,
-            )
+            if column_lineage:
+                column_lineage_result = await self._uow.column_lineage.list_by_job_ids(
+                    sorted(result.jobs.keys()),
+                    since,
+                    until,
+                )
+                result.column_lineage = defaultdict(list)
+                for relation in column_lineage_result:
+                    result.column_lineage[(relation["source_dataset_id"], relation["target_dataset_id"])].append(
+                        relation,
+                    )
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
@@ -231,6 +235,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
+        column_lineage: bool,  # noqa: FBT001
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         if not start_node_ids:
@@ -323,6 +328,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -334,6 +340,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -349,16 +356,17 @@ class LineageService:
                 (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
                 for dataset_symlink in dataset_symlinks
             }
-        column_lineage = await self._uow.column_lineage.list_by_run_ids(
-            sorted(result.runs.keys()),
-            since,
-            until,
-        )
-        result.column_lineage = defaultdict(list)
-        for relation in column_lineage:
-            result.column_lineage[(relation["source_dataset_id"], relation["target_dataset_id"])].append(
-                relation,
-            )
+            if column_lineage:
+                column_lineage_result = await self._uow.column_lineage.list_by_run_ids(
+                    sorted(result.runs.keys()),
+                    since,
+                    until,
+                )
+                result.column_lineage = defaultdict(list)
+                for relation in column_lineage_result:
+                    result.column_lineage[(relation["source_dataset_id"], relation["target_dataset_id"])].append(
+                        relation,
+                    )
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
@@ -380,6 +388,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
+        column_lineage: bool,  # noqa: FBT001
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         if not start_node_ids:
@@ -462,6 +471,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -473,6 +483,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -491,13 +502,15 @@ class LineageService:
                 (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
                 for dataset_symlink in dataset_symlinks
             }
-
-        column_lineage = await self._uow.column_lineage.list_by_operation_ids(
-            sorted(result.operations.keys()),
-        )
-        result.column_lineage = defaultdict(list)
-        for relation in column_lineage:
-            result.column_lineage[(relation["source_dataset_id"], relation["target_dataset_id"])].append(relation)
+            if column_lineage:
+                column_lineage_result = await self._uow.column_lineage.list_by_operation_ids(
+                    sorted(result.operations.keys()),
+                )
+                result.column_lineage = defaultdict(list)
+                for relation in column_lineage_result:
+                    result.column_lineage[(relation["source_dataset_id"], relation["target_dataset_id"])].append(
+                        relation,
+                    )
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
@@ -520,6 +533,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
+        column_lineage: bool,  # noqa: FBT001
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         if not start_node_ids:
@@ -566,6 +580,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth,
+                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 )
             case "RUN":
@@ -576,6 +591,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth,
+                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 )
             case "JOB":
@@ -586,6 +602,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth,
+                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 )
             case _:
@@ -631,6 +648,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
+        column_lineage: bool,  # noqa: FBT001
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         inputs = []
@@ -690,6 +708,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -700,6 +719,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -715,6 +735,15 @@ class LineageService:
             job_ids = {run.job_id for run in runs}
             jobs = await self._uow.job.list_by_ids(sorted(job_ids - ids_to_skip.jobs))
             result.jobs = {job.id: job for job in jobs}
+            if column_lineage:
+                column_lineage_result = await self._uow.column_lineage.list_by_operation_ids(
+                    sorted(result.operations.keys()),
+                )
+                result.column_lineage = defaultdict(list)
+                for relation in column_lineage_result:
+                    result.column_lineage[(relation["source_dataset_id"], relation["target_dataset_id"])].append(
+                        relation,
+                    )
 
         return result
 
@@ -726,6 +755,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
+        column_lineage: bool,  # noqa: FBT001
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         inputs = []
@@ -786,6 +816,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -797,6 +828,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -808,6 +840,17 @@ class LineageService:
             job_ids = {run.job_id for run in runs}
             jobs = await self._uow.job.list_by_ids(sorted(job_ids - ids_to_skip.jobs))
             result.jobs = {job.id: job for job in jobs}
+            if column_lineage:
+                column_lineage_result = await self._uow.column_lineage.list_by_run_ids(
+                    sorted(result.runs.keys()),
+                    since,
+                    until,
+                )
+                result.column_lineage = defaultdict(list)
+                for relation in column_lineage_result:
+                    result.column_lineage[(relation["source_dataset_id"], relation["target_dataset_id"])].append(
+                        relation,
+                    )
 
         return result
 
@@ -819,6 +862,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
+        column_lineage: bool,  # noqa: FBT001
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         inputs = []
@@ -879,6 +923,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -890,6 +935,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -897,5 +943,16 @@ class LineageService:
             job_ids = sorted(downstream_job_ids | upstream_job_ids)
             jobs = await self._uow.job.list_by_ids(job_ids)
             result.jobs = {job.id: job for job in jobs}
+            if column_lineage:
+                column_lineage_result = await self._uow.column_lineage.list_by_job_ids(
+                    sorted(result.jobs.keys()),
+                    since,
+                    until,
+                )
+                result.column_lineage = defaultdict(list)
+                for relation in column_lineage_result:
+                    result.column_lineage[(relation["source_dataset_id"], relation["target_dataset_id"])].append(
+                        relation,
+                    )
 
         return result

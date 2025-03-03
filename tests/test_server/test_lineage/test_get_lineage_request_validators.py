@@ -32,14 +32,14 @@ async def test_get_lineage_no_filter(
                 {
                     "code": "missing",
                     "context": {},
-                    "input": {"depth": 1, "direction": "BOTH"},
+                    "input": {"depth": 1, "direction": "BOTH", "column_lineage": False},
                     "location": ["query", "since"],
                     "message": "Field required",
                 },
                 {
                     "code": "missing",
                     "context": {},
-                    "input": {"depth": 1, "direction": "BOTH"},
+                    "input": {"depth": 1, "direction": "BOTH", "column_lineage": False},
                     "location": ["query", "start_node_id"],
                     "message": "Field required",
                 },
