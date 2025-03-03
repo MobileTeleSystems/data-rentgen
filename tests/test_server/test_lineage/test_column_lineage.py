@@ -384,10 +384,10 @@ async def test_get_column_lineage_with_depth_by_dataset(
 async def test_get_column_lineage_with_depth_by_operation(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    lineage_with_depth: LineageResult,
+    lineage_with_depth_and_with_column_lineage: LineageResult,
     mocked_user: MockedUser,
 ):
-    lineage = lineage_with_depth
+    lineage = lineage_with_depth_and_with_column_lineage
     # Select only relations marked with *
     # J1 -*> R1 -*> O1, D1 -*> O1 -*> D2
     # J2 -*> R2 -*> O2, D2 -*> O2 -*> D3
@@ -458,6 +458,7 @@ async def test_get_column_lineage_with_depth_by_operation(
             "since": since.isoformat(),
             "start_node_id": str(first_level_operation.id),
             "depth": 3,
+            "column_lineage": True,
         },
     )
 
@@ -498,6 +499,34 @@ async def test_get_column_lineage_with_depth_by_operation(
                             },
                         ],
                     },
+                },
+            ],
+            "indirect_column_lineage": [
+                {
+                    "from": {"id": str(lineage.datasets[0].id), "kind": "DATASET"},
+                    "to": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                    "fields": [
+                        {
+                            "field": "indirect_source_column",
+                            "last_used_at": format_datetime(lineage.operations[0].created_at),
+                            "types": [
+                                "JOIN",
+                            ],
+                        },
+                    ],
+                },
+                {
+                    "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                    "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
+                    "fields": [
+                        {
+                            "field": "indirect_source_column",
+                            "last_used_at": format_datetime(lineage.operations[1].created_at),
+                            "types": [
+                                "JOIN",
+                            ],
+                        },
+                    ],
                 },
             ],
         },
@@ -659,10 +688,10 @@ async def test_get_column_lineage_with_depth_by_run(
 async def test_get_column_lineage_with_depth_by_job(
     test_client: AsyncClient,
     async_session: AsyncSession,
-    lineage_with_depth: LineageResult,
+    lineage_with_depth_and_with_column_lineage: LineageResult,
     mocked_user: MockedUser,
 ):
-    lineage = lineage_with_depth
+    lineage = lineage_with_depth_and_with_column_lineage
     # Select only relations marked with *
     # D1 -*> J1 -*> D2
     # D2 -*> J2 -*> D3
@@ -718,6 +747,7 @@ async def test_get_column_lineage_with_depth_by_job(
             "since": since.isoformat(),
             "start_node_id": job.id,
             "depth": 3,
+            "column_lineage": True,
         },
     )
 

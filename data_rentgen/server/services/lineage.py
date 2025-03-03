@@ -996,4 +996,5 @@ class LineageService:
             result.column_lineage[(relation["source_dataset_id"], relation["target_dataset_id"])].append(
                 relation,
             )
+
         return result
