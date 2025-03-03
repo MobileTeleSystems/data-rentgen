@@ -7,9 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from tests.fixtures.mocks import MockedUser
 from tests.test_server.utils.convert_to_json import (
     datasets_to_json,
-    direct_column_lineage_to_json,
     format_datetime,
-    indirect_column_lineage_to_json,
     inputs_to_json,
     jobs_to_json,
     operation_parents_to_json,
@@ -23,194 +21,6 @@ from tests.test_server.utils.lineage_result import LineageResult
 from tests.test_server.utils.merge import merge_io_by_jobs, merge_io_by_runs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
-
-
-async def test_get_column_lineage_by_operation(
-    test_client: AsyncClient,
-    async_session: AsyncSession,
-    branchy_lineage_with_column_lineage: LineageResult,
-    mocked_user: MockedUser,
-):
-    lineage = branchy_lineage_with_column_lineage
-    operation = lineage.operations[0]
-    run = next(run for run in lineage.runs if run.id == operation.run_id)
-    job = next(job for job in lineage.jobs if job.id == run.job_id)
-    inputs = [input for input in lineage.inputs if input.operation_id == operation.id]
-    assert inputs
-
-    outputs = [output for output in lineage.outputs if output.operation_id == operation.id]
-    assert outputs
-
-    dataset_ids = {input.dataset_id for input in inputs} | {output.dataset_id for output in outputs}
-    datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
-    assert datasets
-
-    [job] = await enrich_jobs([job], async_session)
-    [run] = await enrich_runs([run], async_session)
-    datasets = await enrich_datasets(datasets, async_session)
-
-    response = await test_client.get(
-        "v1/operations/lineage",
-        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
-        params={
-            "since": run.created_at.isoformat(),
-            "start_node_id": str(operation.id),
-            "column_lineage": True,
-        },
-    )
-
-    assert response.status_code == HTTPStatus.OK, response.json()
-    assert response.json() == {
-        "relations": {
-            "parents": run_parents_to_json([run]) + operation_parents_to_json([operation]),
-            "symlinks": [],
-            "inputs": inputs_to_json(inputs, granularity="OPERATION"),
-            "outputs": outputs_to_json(outputs, granularity="OPERATION"),
-            "direct_column_lineage": direct_column_lineage_to_json(
-                lineage.direct_column_lineage,
-                lineage.direct_column_relations,
-                "OPERATION",
-                operation.id,
-            ),
-            "indirect_column_lineage": indirect_column_lineage_to_json(
-                lineage.indirect_column_lineage,
-                lineage.indirect_column_relations,
-                "OPERATION",
-                operation.id,
-            ),
-        },
-        "nodes": {
-            "datasets": datasets_to_json(datasets),
-            "jobs": jobs_to_json([job]),
-            "runs": runs_to_json([run]),
-            "operations": operations_to_json([operation]),
-        },
-    }
-
-
-async def test_get_column_lineage_by_run(
-    test_client: AsyncClient,
-    async_session: AsyncSession,
-    branchy_lineage_with_column_lineage: LineageResult,
-    mocked_user: MockedUser,
-):
-    lineage = branchy_lineage_with_column_lineage
-    run = lineage.runs[0]
-    job = next(job for job in lineage.jobs if job.id == run.job_id)
-
-    inputs = [input for input in lineage.inputs if input.run_id == run.id]
-    assert inputs
-
-    outputs = [output for output in lineage.outputs if output.run_id == run.id]
-    assert outputs
-
-    dataset_ids = {input.dataset_id for input in inputs} | {output.dataset_id for output in outputs}
-    datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
-    assert datasets
-
-    [job] = await enrich_jobs([job], async_session)
-    [run] = await enrich_runs([run], async_session)
-    datasets = await enrich_datasets(datasets, async_session)
-
-    response = await test_client.get(
-        "v1/runs/lineage",
-        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
-        params={
-            "since": run.created_at.isoformat(),
-            "start_node_id": str(run.id),
-            "column_lineage": True,
-        },
-    )
-
-    assert response.status_code == HTTPStatus.OK, response.json()
-    assert response.json() == {
-        "relations": {
-            "parents": run_parents_to_json([run]),
-            "symlinks": [],
-            "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
-            "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
-            "direct_column_lineage": direct_column_lineage_to_json(
-                lineage.direct_column_lineage,
-                lineage.direct_column_relations,
-                "RUN",
-                run.id,
-            ),
-            "indirect_column_lineage": indirect_column_lineage_to_json(
-                lineage.indirect_column_lineage,
-                lineage.indirect_column_relations,
-                "RUN",
-                run.id,
-            ),
-        },
-        "nodes": {
-            "datasets": datasets_to_json(datasets),
-            "jobs": jobs_to_json([job]),
-            "runs": runs_to_json([run]),
-            "operations": {},
-        },
-    }
-
-
-async def test_get_column_lineage_by_job(
-    test_client: AsyncClient,
-    async_session: AsyncSession,
-    branchy_lineage_with_column_lineage: LineageResult,
-    mocked_user: MockedUser,
-):
-    lineage = branchy_lineage_with_column_lineage
-    job = lineage.jobs[0]
-
-    inputs = [input for input in lineage.inputs if input.job_id == job.id]
-    assert inputs
-
-    outputs = [output for output in lineage.outputs if output.job_id == job.id]
-    assert outputs
-
-    dataset_ids = {input.dataset_id for input in inputs} | {output.dataset_id for output in outputs}
-    datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
-    assert datasets
-
-    [job] = await enrich_jobs([job], async_session)
-    datasets = await enrich_datasets(datasets, async_session)
-    since = min(run.created_at for run in lineage.runs)
-
-    response = await test_client.get(
-        "v1/jobs/lineage",
-        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
-        params={
-            "since": since.isoformat(),
-            "start_node_id": job.id,
-            "column_lineage": True,
-        },
-    )
-
-    assert response.status_code == HTTPStatus.OK, response.json()
-    assert response.json() == {
-        "relations": {
-            "parents": [],
-            "symlinks": [],
-            "inputs": inputs_to_json(merge_io_by_jobs(inputs), granularity="JOB"),
-            "outputs": outputs_to_json(merge_io_by_jobs(outputs), granularity="JOB"),
-            "direct_column_lineage": direct_column_lineage_to_json(
-                lineage.direct_column_lineage,
-                lineage.direct_column_relations,
-                "JOB",
-                job.id,
-            ),
-            "indirect_column_lineage": indirect_column_lineage_to_json(
-                lineage.indirect_column_lineage,
-                lineage.indirect_column_relations,
-                "JOB",
-                job.id,
-            ),
-        },
-        "nodes": {
-            "datasets": datasets_to_json(datasets),
-            "jobs": jobs_to_json([job]),
-            "runs": {},
-            "operations": {},
-        },
-    }
 
 
 async def test_get_column_lineage_by_operation_with_combined_transformations(
@@ -420,6 +230,298 @@ async def test_get_column_lineage_by_job_with_combined_transformations(
             "datasets": datasets_to_json(datasets),
             "jobs": jobs_to_json([job]),
             "runs": {},
+            "operations": {},
+        },
+    }
+
+
+async def test_get_column_lineage_with_depth_by_dataset(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_with_depth_and_with_column_lineage: LineageResult,
+    mocked_user: MockedUser,
+):
+    lineage = lineage_with_depth_and_with_column_lineage
+    # Go dataset -> runs[first level]
+    first_level_dataset = lineage.datasets[0]
+    first_level_inputs = [input for input in lineage.inputs if input.dataset_id == first_level_dataset.id]
+    first_level_outputs = [output for output in lineage.outputs if output.dataset_id == first_level_dataset.id]
+    first_level_input_run_ids = {input.run_id for input in first_level_inputs}
+    first_level_output_run_ids = {output.run_id for output in first_level_outputs}
+    first_level_run_ids = first_level_input_run_ids | first_level_output_run_ids
+    assert first_level_run_ids
+
+    # Go runs[first level] -> datasets[second level]
+    second_level_inputs = [input for input in lineage.inputs if input.run_id in first_level_output_run_ids]
+    second_level_outputs = [output for output in lineage.outputs if output.run_id in first_level_input_run_ids]
+    second_level_input_dataset_ids = {input.dataset_id for input in second_level_inputs}
+    second_level_output_dataset_ids = {output.dataset_id for output in second_level_outputs}
+    second_level_dataset_ids = second_level_input_dataset_ids | second_level_output_dataset_ids - {
+        first_level_dataset.id,
+    }
+    assert second_level_dataset_ids
+
+    # Go datasets[second level] -> runs[third level]
+    # There are more levels in this graph, but we stop here
+    third_level_inputs = [input for input in lineage.inputs if input.dataset_id in second_level_output_dataset_ids]
+    third_level_outputs = [output for output in lineage.outputs if output.dataset_id in second_level_input_dataset_ids]
+    third_level_input_run_ids = {input.run_id for input in third_level_inputs}
+    third_level_output_run_ids = {output.run_id for output in third_level_outputs}
+    third_level_run_ids = third_level_input_run_ids | third_level_output_run_ids - first_level_run_ids
+    assert third_level_run_ids
+
+    inputs = first_level_inputs + second_level_inputs + third_level_inputs
+    assert inputs
+
+    outputs = first_level_outputs + second_level_outputs + third_level_outputs
+    assert outputs
+
+    dataset_ids = {first_level_dataset.id} | second_level_dataset_ids
+    datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
+    assert datasets
+
+    run_ids = first_level_run_ids | third_level_run_ids
+    runs = [run for run in lineage.runs if run.id in run_ids]
+    assert runs
+
+    job_ids = {run.job_id for run in runs}
+    jobs = [job for job in lineage.jobs if job.id in job_ids]
+    assert jobs
+
+    jobs = await enrich_jobs(jobs, async_session)
+    runs = await enrich_runs(runs, async_session)
+    datasets = await enrich_datasets(datasets, async_session)
+    since = min(run.created_at for run in runs)
+
+    response = await test_client.get(
+        "v1/datasets/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "start_node_id": first_level_dataset.id,
+            "depth": 3,
+            "column_lineage": True,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": {
+            "parents": run_parents_to_json(runs),
+            "symlinks": [],
+            "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
+            "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+            "direct_column_lineage": [
+                {
+                    "from": {"id": str(lineage.datasets[0].id), "kind": "DATASET"},
+                    "to": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                    "fields": {
+                        "direct_target_column": [
+                            {
+                                "field": "direct_source_column",
+                                "last_used_at": format_datetime(lineage.operations[0].created_at),
+                                "types": [
+                                    "AGGREGATION",
+                                ],
+                            },
+                        ],
+                    },
+                },
+                {
+                    "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                    "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
+                    "fields": {
+                        "direct_target_column": [
+                            {
+                                "field": "direct_source_column",
+                                "last_used_at": format_datetime(lineage.operations[1].created_at),
+                                "types": [
+                                    "AGGREGATION",
+                                ],
+                            },
+                        ],
+                    },
+                },
+            ],
+            "indirect_column_lineage": [
+                {
+                    "from": {"id": str(lineage.datasets[0].id), "kind": "DATASET"},
+                    "to": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                    "fields": [
+                        {
+                            "field": "indirect_source_column",
+                            "last_used_at": format_datetime(lineage.operations[0].created_at),
+                            "types": [
+                                "JOIN",
+                            ],
+                        },
+                    ],
+                },
+                {
+                    "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                    "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
+                    "fields": [
+                        {
+                            "field": "indirect_source_column",
+                            "last_used_at": format_datetime(lineage.operations[1].created_at),
+                            "types": [
+                                "JOIN",
+                            ],
+                        },
+                    ],
+                },
+            ],
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json(jobs),
+            "runs": runs_to_json(runs),
+            "operations": {},
+        },
+    }
+
+
+async def test_get_run_lineage_with_depth(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_with_depth_and_with_column_lineage: LineageResult,
+    mocked_user: MockedUser,
+):
+    lineage = lineage_with_depth_and_with_column_lineage
+
+    first_level_run = lineage.runs[0]
+
+    # Go runs[first level] -> datasets[second level]
+    first_level_inputs = [input for input in lineage.inputs if input.run_id == first_level_run.id]
+    first_level_outputs = [output for output in lineage.outputs if output.run_id == first_level_run.id]
+    first_level_input_dataset_ids = {input.dataset_id for input in first_level_inputs}
+    first_level_output_dataset_ids = {output.dataset_id for output in first_level_outputs}
+    first_level_dataset_ids = first_level_input_dataset_ids | first_level_output_dataset_ids
+    first_level_datasets = [dataset for dataset in lineage.datasets if dataset.id in first_level_dataset_ids]
+    assert first_level_datasets
+
+    # Go datasets[second level] -> runs[second level]
+    second_level_inputs = [input for input in lineage.inputs if input.dataset_id in first_level_output_dataset_ids]
+    second_level_outputs = [output for output in lineage.outputs if output.dataset_id in first_level_input_dataset_ids]
+    second_level_input_run_ids = {input.run_id for input in second_level_inputs}
+    second_level_output_run_ids = {output.run_id for output in second_level_outputs}
+    second_level_run_ids = second_level_input_run_ids | second_level_output_run_ids - {first_level_run.id}
+    assert second_level_run_ids
+
+    # Go runs[second level] -> datasets[third level]
+    # There are more levels in this graph, but we stop here
+    third_level_inputs = [input for input in lineage.inputs if input.run_id in second_level_output_run_ids]
+    third_level_outputs = [output for output in lineage.outputs if output.run_id in second_level_input_run_ids]
+    third_level_input_dataset_ids = {input.dataset_id for input in third_level_inputs}
+    third_level_output_dataset_ids = {output.dataset_id for output in third_level_outputs}
+    third_level_dataset_ids = third_level_input_dataset_ids | third_level_output_dataset_ids - first_level_dataset_ids
+    assert third_level_dataset_ids
+
+    inputs = first_level_inputs + second_level_inputs + third_level_inputs
+    assert inputs
+
+    outputs = first_level_outputs + second_level_outputs + third_level_outputs
+    assert outputs
+
+    dataset_ids = first_level_dataset_ids | third_level_dataset_ids
+    datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
+    assert datasets
+
+    run_ids = {first_level_run.id} | second_level_run_ids
+    runs = [run for run in lineage.runs if run.id in run_ids]
+    assert runs
+
+    job_ids = {run.job_id for run in runs}
+    jobs = [job for job in lineage.jobs if job.id in job_ids]
+    assert jobs
+
+    jobs = await enrich_jobs(jobs, async_session)
+    runs = await enrich_runs(runs, async_session)
+    datasets = await enrich_datasets(datasets, async_session)
+
+    response = await test_client.get(
+        "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": first_level_run.created_at.isoformat(),
+            "start_node_id": str(first_level_run.id),
+            "depth": 3,
+            "column_lineage": True,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": {
+            "parents": run_parents_to_json(runs),
+            "symlinks": [],
+            "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
+            "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+            "direct_column_lineage": [
+                {
+                    "from": {"id": str(lineage.datasets[0].id), "kind": "DATASET"},
+                    "to": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                    "fields": {
+                        "direct_target_column": [
+                            {
+                                "field": "direct_source_column",
+                                "last_used_at": format_datetime(lineage.operations[0].created_at),
+                                "types": [
+                                    "AGGREGATION",
+                                ],
+                            },
+                        ],
+                    },
+                },
+                {
+                    "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                    "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
+                    "fields": {
+                        "direct_target_column": [
+                            {
+                                "field": "direct_source_column",
+                                "last_used_at": format_datetime(lineage.operations[1].created_at),
+                                "types": [
+                                    "AGGREGATION",
+                                ],
+                            },
+                        ],
+                    },
+                },
+            ],
+            "indirect_column_lineage": [
+                {
+                    "from": {"id": str(lineage.datasets[0].id), "kind": "DATASET"},
+                    "to": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                    "fields": [
+                        {
+                            "field": "indirect_source_column",
+                            "last_used_at": format_datetime(lineage.operations[0].created_at),
+                            "types": [
+                                "JOIN",
+                            ],
+                        },
+                    ],
+                },
+                {
+                    "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                    "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
+                    "fields": [
+                        {
+                            "field": "indirect_source_column",
+                            "last_used_at": format_datetime(lineage.operations[1].created_at),
+                            "types": [
+                                "JOIN",
+                            ],
+                        },
+                    ],
+                },
+            ],
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json(jobs),
+            "runs": runs_to_json(runs),
             "operations": {},
         },
     }

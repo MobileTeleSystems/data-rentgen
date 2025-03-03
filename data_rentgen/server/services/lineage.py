@@ -44,6 +44,7 @@ class LineageServiceResult:
         self.dataset_symlinks.update(other.dataset_symlinks)
         self.inputs.update(other.inputs)
         self.outputs.update(other.outputs)
+        self.column_lineage.update(other.column_lineage)
         return self
 
 
@@ -202,17 +203,10 @@ class LineageService:
                 (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
                 for dataset_symlink in dataset_symlinks
             }
-            if column_lineage:
-                column_lineage_result = await self._uow.column_lineage.list_by_job_ids(
-                    sorted(result.jobs.keys()),
-                    since,
-                    until,
-                )
-                result.column_lineage = defaultdict(list)
-                for relation in column_lineage_result:
-                    result.column_lineage[(relation["source_dataset_id"], relation["target_dataset_id"])].append(
-                        relation,
-                    )
+        if column_lineage:
+            result.merge(
+                await self._get_column_lineage(current_result=result, since=since, until=until, granularity="JOB"),
+            )
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
@@ -356,17 +350,10 @@ class LineageService:
                 (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
                 for dataset_symlink in dataset_symlinks
             }
-            if column_lineage:
-                column_lineage_result = await self._uow.column_lineage.list_by_run_ids(
-                    sorted(result.runs.keys()),
-                    since,
-                    until,
-                )
-                result.column_lineage = defaultdict(list)
-                for relation in column_lineage_result:
-                    result.column_lineage[(relation["source_dataset_id"], relation["target_dataset_id"])].append(
-                        relation,
-                    )
+        if column_lineage:
+            result.merge(
+                await self._get_column_lineage(current_result=result, since=since, until=until, granularity="RUN"),
+            )
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
@@ -502,15 +489,15 @@ class LineageService:
                 (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
                 for dataset_symlink in dataset_symlinks
             }
-            if column_lineage:
-                column_lineage_result = await self._uow.column_lineage.list_by_operation_ids(
-                    sorted(result.operations.keys()),
-                )
-                result.column_lineage = defaultdict(list)
-                for relation in column_lineage_result:
-                    result.column_lineage[(relation["source_dataset_id"], relation["target_dataset_id"])].append(
-                        relation,
-                    )
+        if column_lineage:
+            result.merge(
+                await self._get_column_lineage(
+                    current_result=result,
+                    since=since,
+                    until=until,
+                    granularity="OPERATION",
+                ),
+            )
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
@@ -525,7 +512,7 @@ class LineageService:
             )
         return result
 
-    async def get_lineage_by_datasets(
+    async def get_lineage_by_datasets(  # noqa: C901
         self,
         start_node_ids: list[int],
         direction: LineageDirectionV1,
@@ -583,6 +570,16 @@ class LineageService:
                     column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 )
+                if column_lineage:
+                    result.merge(
+                        await self._get_column_lineage(
+                            current_result=result,
+                            since=since,
+                            until=until,
+                            granularity="OPERATION",
+                        ),
+                    )
+
             case "RUN":
                 result = await self._dataset_lineage_with_run_granularity(
                     datasets_by_id=datasets_by_id,
@@ -594,6 +591,15 @@ class LineageService:
                     column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 )
+                if column_lineage:
+                    result.merge(
+                        await self._get_column_lineage(
+                            current_result=result,
+                            since=since,
+                            until=until,
+                            granularity="RUN",
+                        ),
+                    )
             case "JOB":
                 result = await self._dataset_lineage_with_job_granularity(
                     datasets_by_id=datasets_by_id,
@@ -605,6 +611,15 @@ class LineageService:
                     column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 )
+                if column_lineage:
+                    result.merge(
+                        await self._get_column_lineage(
+                            current_result=result,
+                            since=since,
+                            until=until,
+                            granularity="JOB",
+                        ),
+                    )
             case _:
                 msg = f"Unknown granularity: {granularity}"
                 raise ValueError(msg)
@@ -736,14 +751,14 @@ class LineageService:
             jobs = await self._uow.job.list_by_ids(sorted(job_ids - ids_to_skip.jobs))
             result.jobs = {job.id: job for job in jobs}
             if column_lineage:
-                column_lineage_result = await self._uow.column_lineage.list_by_operation_ids(
-                    sorted(result.operations.keys()),
+                result.merge(
+                    await self._get_column_lineage(
+                        current_result=result,
+                        since=since,
+                        until=until,
+                        granularity="OPERATION",
+                    ),
                 )
-                result.column_lineage = defaultdict(list)
-                for relation in column_lineage_result:
-                    result.column_lineage[(relation["source_dataset_id"], relation["target_dataset_id"])].append(
-                        relation,
-                    )
 
         return result
 
@@ -841,16 +856,9 @@ class LineageService:
             jobs = await self._uow.job.list_by_ids(sorted(job_ids - ids_to_skip.jobs))
             result.jobs = {job.id: job for job in jobs}
             if column_lineage:
-                column_lineage_result = await self._uow.column_lineage.list_by_run_ids(
-                    sorted(result.runs.keys()),
-                    since,
-                    until,
+                result.merge(
+                    await self._get_column_lineage(current_result=result, since=since, until=until, granularity="RUN"),
                 )
-                result.column_lineage = defaultdict(list)
-                for relation in column_lineage_result:
-                    result.column_lineage[(relation["source_dataset_id"], relation["target_dataset_id"])].append(
-                        relation,
-                    )
 
         return result
 
@@ -944,15 +952,48 @@ class LineageService:
             jobs = await self._uow.job.list_by_ids(job_ids)
             result.jobs = {job.id: job for job in jobs}
             if column_lineage:
-                column_lineage_result = await self._uow.column_lineage.list_by_job_ids(
-                    sorted(result.jobs.keys()),
+                result.merge(
+                    await self._get_column_lineage(current_result=result, since=since, until=until, granularity="JOB"),
+                )
+
+        return result
+
+    async def _get_column_lineage(
+        self,
+        current_result: LineageServiceResult,
+        since: datetime,
+        until: datetime | None,
+        granularity: Literal["OPERATION", "RUN", "JOB"],
+    ) -> LineageServiceResult:
+        """
+        'granularity' argument of this function not the same as granularity in api request.
+        Here it's used for aggregation entity
+        """
+        result = LineageServiceResult()
+        result.column_lineage = defaultdict(list)
+        match granularity:
+            case "OPERATION":
+                column_lineage_result = await self._uow.column_lineage.list_by_operation_ids(
+                    sorted(current_result.operations.keys()),
+                )
+            case "RUN":
+                column_lineage_result = await self._uow.column_lineage.list_by_run_ids(
+                    sorted(current_result.runs.keys()),
                     since,
                     until,
                 )
-                result.column_lineage = defaultdict(list)
-                for relation in column_lineage_result:
-                    result.column_lineage[(relation["source_dataset_id"], relation["target_dataset_id"])].append(
-                        relation,
-                    )
+            case "JOB":
+                column_lineage_result = await self._uow.column_lineage.list_by_job_ids(
+                    sorted(current_result.jobs.keys()),
+                    since,
+                    until,
+                )
+            case _:
+                msg = f"Unknown granularity for column lineage: {granularity}"
+                raise ValueError(msg)
 
+        for relation in column_lineage_result:
+            result.column_lineage[(relation["source_dataset_id"], relation["target_dataset_id"])].append(
+                relation,
+            )
         return result

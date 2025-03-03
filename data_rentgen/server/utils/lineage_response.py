@@ -161,14 +161,16 @@ def _get_direct_column_lineage(column_lineage_by_source_target_id: dict[tuple, l
                         field=column_relation["source_column"],
                         last_used_at=column_relation["last_used_at"],
                         types=[
-                            e for e in ColumnLineageInteractionTypeV1 if e.value & column_relation["types_combined"]
+                            type_
+                            for type_ in ColumnLineageInteractionTypeV1
+                            if type_.value & column_relation["types_combined"]
                         ],
                     ),
                 )
         if fields:
             column_lineage_relation.fields = fields  # type: ignore[assignment]
             relations.append(column_lineage_relation)
-    return relations
+    return sorted(relations, key=lambda x: (str(x.from_.id), str(x.to.id)))
 
 
 def _get_indirect_column_lineage(column_lineage_by_source_target_id: dict[tuple, list[dict]]):
@@ -182,7 +184,9 @@ def _get_indirect_column_lineage(column_lineage_by_source_target_id: dict[tuple,
             LineageSourceColumnV1(
                 field=column_relation["source_column"],
                 last_used_at=column_relation["last_used_at"],
-                types=[e for e in ColumnLineageInteractionTypeV1 if e.value & column_relation["types_combined"]],
+                types=[
+                    type_ for type_ in ColumnLineageInteractionTypeV1 if type_.value & column_relation["types_combined"]
+                ],
             )
             for column_relation in column_relations
             if column_relation["target_column"] == ""
@@ -190,4 +194,4 @@ def _get_indirect_column_lineage(column_lineage_by_source_target_id: dict[tuple,
         if fields:
             column_lineage_relation.fields = fields
             relations.append(column_lineage_relation)
-    return relations
+    return sorted(relations, key=lambda x: (str(x.from_.id), str(x.to.id)))
