@@ -7,7 +7,7 @@ from enum import Enum
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_serializer, field_validator
 
 from data_rentgen.server.schemas.v1.dataset import DatasetResponseV1
 from data_rentgen.server.schemas.v1.job import JobResponseV1
@@ -187,10 +187,13 @@ class ColumnLineageInteractionTypeV1(Enum):
     WINDOW = 1024
     CONDITIONAL = 2048
 
+    def __str__(self) -> str:
+        return self.name
+
 
 class LineageSourceColumnV1(BaseModel):
     field: str = Field(description="Source column", examples=["my_col_1", "my_col_2"])
-    types: list[str] = Field(
+    types: list[ColumnLineageInteractionTypeV1] = Field(
         description="Type of relation between source and target column",
         examples=[
             [
@@ -209,6 +212,10 @@ class LineageSourceColumnV1(BaseModel):
         description="Last time when transformation was used at",
         examples=["2008-09-15T15:53:00+05:00"],
     )
+
+    @field_serializer("types")
+    def serialize_types(self, types: list[ColumnLineageInteractionTypeV1], _info):
+        return [type_.name for type_ in types]
 
 
 class DirectLineageColumnRelationV1(BaseModel):

@@ -161,9 +161,7 @@ def _get_direct_column_lineage(column_lineage_by_source_target_id: dict[tuple, l
                         field=column_relation["source_column"],
                         last_used_at=column_relation["last_used_at"],
                         types=[
-                            e.name  # type: ignore[misc]
-                            for e in ColumnLineageInteractionTypeV1
-                            if e.value & column_relation["types_combined"]
+                            e for e in ColumnLineageInteractionTypeV1 if e.value & column_relation["types_combined"]
                         ],
                     ),
                 )
@@ -184,7 +182,7 @@ def _get_indirect_column_lineage(column_lineage_by_source_target_id: dict[tuple,
             LineageSourceColumnV1(
                 field=column_relation["source_column"],
                 last_used_at=column_relation["last_used_at"],
-                types=[e.name for e in ColumnLineageInteractionTypeV1 if e.value & column_relation["types_combined"]],  # type: ignore[misc]
+                types=[e for e in ColumnLineageInteractionTypeV1 if e.value & column_relation["types_combined"]],
             )
             for column_relation in column_relations
             if column_relation["target_column"] == ""
