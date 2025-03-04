@@ -23,7 +23,7 @@ from tests.test_server.utils.merge import merge_io_by_jobs, merge_io_by_runs
 pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
 
 
-async def test_get_column_lineage_by_dataset_with_combined_transformations(
+async def test_get_column_lineage_by_dataset(
     test_client: AsyncClient,
     async_session: AsyncSession,
     duplicated_lineage_with_column_lineage: LineageResult,
@@ -137,7 +137,22 @@ async def test_get_column_lineage_by_operation_with_combined_transformations(
                     },
                 },
             ],
-            "indirect_column_lineage": [],
+            "indirect_column_lineage": [
+                {
+                    "from": {"id": str(datasets[0].id), "kind": "DATASET"},
+                    "to": {"id": str(datasets[1].id), "kind": "DATASET"},
+                    "fields": [
+                        {
+                            "field": "indirect_source_column",
+                            "last_used_at": format_datetime(lineage.operations[0].created_at),
+                            "types": [
+                                "FILTER",
+                                "JOIN",
+                            ],
+                        },
+                    ],
+                },
+            ],
         },
         "nodes": {
             "datasets": datasets_to_json(datasets),
@@ -208,7 +223,23 @@ async def test_get_column_lineage_by_run_with_combined_transformations(
                     },
                 },
             ],
-            "indirect_column_lineage": [],
+            "indirect_column_lineage": [
+                {
+                    "from": {"id": str(datasets[0].id), "kind": "DATASET"},
+                    "to": {"id": str(datasets[1].id), "kind": "DATASET"},
+                    "fields": [
+                        {
+                            "field": "indirect_source_column",
+                            "last_used_at": format_datetime(lineage.operations[0].created_at),
+                            "types": [
+                                "FILTER",
+                                "JOIN",
+                                "GROUP_BY",
+                            ],
+                        },
+                    ],
+                },
+            ],
         },
         "nodes": {
             "datasets": datasets_to_json(datasets),
@@ -279,7 +310,24 @@ async def test_get_column_lineage_by_job_with_combined_transformations(
                     },
                 },
             ],
-            "indirect_column_lineage": [],
+            "indirect_column_lineage": [
+                {
+                    "from": {"id": str(datasets[0].id), "kind": "DATASET"},
+                    "to": {"id": str(datasets[1].id), "kind": "DATASET"},
+                    "fields": [
+                        {
+                            "field": "indirect_source_column",
+                            "last_used_at": format_datetime(lineage.operations[0].created_at),
+                            "types": [
+                                "FILTER",
+                                "JOIN",
+                                "GROUP_BY",
+                                "SORT",
+                            ],
+                        },
+                    ],
+                },
+            ],
         },
         "nodes": {
             "datasets": datasets_to_json(datasets),
@@ -290,7 +338,7 @@ async def test_get_column_lineage_by_job_with_combined_transformations(
     }
 
 
-async def test_get_column_lineage_with_depth_by_dataset(
+async def test_get_column_lineage_by_dataset_with_depth(
     test_client: AsyncClient,
     async_session: AsyncSession,
     lineage_with_depth_and_with_column_lineage: LineageResult,
@@ -408,7 +456,7 @@ async def test_get_column_lineage_with_depth_by_dataset(
     }
 
 
-async def test_get_column_lineage_with_depth_by_operation(
+async def test_get_column_lineage_by_operation_with_depth(
     test_client: AsyncClient,
     async_session: AsyncSession,
     lineage_with_depth_and_with_column_lineage: LineageResult,
@@ -566,7 +614,7 @@ async def test_get_column_lineage_with_depth_by_operation(
     }
 
 
-async def test_get_column_lineage_with_depth_by_run(
+async def test_get_column_lineage_by_run_with_depth(
     test_client: AsyncClient,
     async_session: AsyncSession,
     lineage_with_depth_and_with_column_lineage: LineageResult,
@@ -712,7 +760,7 @@ async def test_get_column_lineage_with_depth_by_run(
     }
 
 
-async def test_get_column_lineage_with_depth_by_job(
+async def test_get_column_lineage_by_job_with_depth(
     test_client: AsyncClient,
     async_session: AsyncSession,
     lineage_with_depth_and_with_column_lineage: LineageResult,

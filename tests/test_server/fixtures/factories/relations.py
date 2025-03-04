@@ -32,10 +32,8 @@ async def create_column_relation(
     fingerprint: UUID,
     column_relation_kwargs: dict | None = None,
 ) -> DatasetColumnRelation:
-    if column_relation_kwargs:
-        column_relation_kwargs.update({"fingerprint": fingerprint})
-    else:
-        column_relation_kwargs = {"fingerprint": fingerprint}
+    column_relation_kwargs = column_relation_kwargs or {}
+    column_relation_kwargs["fingerprint"] = fingerprint
 
     column_relation = column_relation_factory(**column_relation_kwargs)
     del column_relation.id
@@ -52,8 +50,8 @@ def column_lineage_factory(**kwargs) -> ColumnLineage:
     data = {
         "id": column_lineage_id,
         "created_at": extract_timestamp_from_uuid(column_lineage_id),
-        "operation_id": generate_new_uuid(),
-        "run_id": generate_new_uuid(),
+        "operation_id": generate_new_uuid(created_at),
+        "run_id": generate_new_uuid(created_at),
         "job_id": randint(0, 10000000),
         "source_dataset_id": randint(0, 10000000),
         "target_dataset_id": randint(0, 10000000),

@@ -156,7 +156,7 @@ def _get_direct_column_lineage(column_lineage_by_source_target_id: dict[tuple, l
         )
         fields = defaultdict(list)
         for column_relation in column_relations:
-            if column_relation.target_column != "":
+            if column_relation.target_column:
                 fields[column_relation.target_column].append(
                     LineageSourceColumnV1(
                         field=column_relation.source_column,
@@ -190,7 +190,7 @@ def _get_indirect_column_lineage(column_lineage_by_source_target_id: dict[tuple,
                 ],
             )
             for column_relation in column_relations
-            if column_relation.target_column == ""
+            if column_relation.target_column is None
         ]
         if fields:
             column_lineage_relation.fields = fields

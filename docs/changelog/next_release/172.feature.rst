@@ -104,27 +104,27 @@ to:
                             {
                                 "field": "direct_source_column_1",
                                 "last_used_at": "2008-09-15T15:53:00+05:00",
-                                    "types": [
-                                        "TRANSFORMATION_MASKING",
-                                        "AGGREGATION",
-                                    ],
+                                "types": [
+                                    "TRANSFORMATION_MASKING",
+                                    "AGGREGATION",
+                                ],
                             },
                             {
                                 "field": "direct_source_column_2",
                                 "last_used_at": "2008-09-15T15:53:00+05:00",
-                                    "types": [
-                                        "AGGREGATION",
-                                    ],
+                                "types": [
+                                    "AGGREGATION",
+                                ],
                             },
                         ],
                         "target_column_2": [
                             {
                                 "field": "direct_source_column_1",
                                 "last_used_at": "2008-09-15T15:53:00+05:00",
-                                    "types": [
-                                        "TRANSFORMATION_MASKING",
-                                        "AGGREGATION",
-                                    ],
+                                "types": [
+                                    "TRANSFORMATION_MASKING",
+                                    "AGGREGATION",
+                                ],
                             },
                         ]
                     },

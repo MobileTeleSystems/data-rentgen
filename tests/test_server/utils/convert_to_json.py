@@ -5,13 +5,9 @@ from typing import TYPE_CHECKING, Literal
 if TYPE_CHECKING:
     from datetime import datetime
 
-    from uuid6 import UUID
-
     from data_rentgen.db.models import (
         Address,
-        ColumnLineage,
         Dataset,
-        DatasetColumnRelation,
         DatasetSymlink,
         Input,
         Job,
@@ -22,7 +18,6 @@ if TYPE_CHECKING:
         Schema,
         User,
     )
-from data_rentgen.server.schemas.v1 import ColumnLineageInteractionTypeV1
 
 
 def format_datetime(value: datetime):
@@ -227,110 +222,3 @@ def operation_to_json(operation: Operation):
 
 def operations_to_json(operations: list[Operation]):
     return {str(operation.id): operation_to_json(operation) for operation in operations}
-
-
-def direct_column_lineage_fields(column_relations: dict[str, list[DatasetColumnRelation]], last_used_at: str):
-    fields = {}
-    for target, relations in column_relations.items():
-        relation_by_source_column = {}
-        for relation in relations:
-            if relation_by_source_column.get(relation.source_column):
-                relation_by_source_column[relation.source_column]["types"].append(
-                    ColumnLineageInteractionTypeV1(relation.type).name,
-                )
-            else:
-                relation_by_source_column[relation.source_column] = {
-                    "field": relation.source_column,
-                    "types": [ColumnLineageInteractionTypeV1(relation.type).name],
-                    "last_used_at": format_datetime(last_used_at),
-                }
-        fields[target] = list(relation_by_source_column.values())
-
-    return fields
-
-
-def direct_column_lineage(
-    dataset_relation: ColumnLineage,
-    column_relations: dict[UUID, dict[str, list[DatasetColumnRelation]]],
-):
-    return {
-        "from": {"kind": "DATASET", "id": str(dataset_relation.source_dataset_id)},
-        "to": {"kind": "DATASET", "id": str(dataset_relation.target_dataset_id)},
-        "fields": direct_column_lineage_fields(
-            column_relations[dataset_relation.fingerprint],
-            dataset_relation.created_at,
-        ),
-    }
-
-
-def direct_column_lineage_to_json(
-    dataset_relations: list[ColumnLineage],
-    column_relations: dict[UUID, dict[str, list[DatasetColumnRelation]]],
-    granularity: Literal["OPERATION", "RUN", "JOB"],
-    start_id: int | UUID,
-):
-    if granularity == "OPERATION":
-        dataset_relations = [
-            dataset_relation for dataset_relation in dataset_relations if dataset_relation.operation_id == start_id
-        ]
-    if granularity == "RUN":
-        dataset_relations = [
-            dataset_relation for dataset_relation in dataset_relations if dataset_relation.run_id == start_id
-        ]
-    if granularity == "JOB":
-        dataset_relations = [
-            dataset_relation for dataset_relation in dataset_relations if dataset_relation.job_id == start_id
-        ]
-    return [direct_column_lineage(dataset_relation, column_relations) for dataset_relation in dataset_relations]
-
-
-def indirect_column_lineage_fields(column_relations: list[DatasetColumnRelation], last_used_at: str):
-    relation_by_source_column = {}
-    for relation in column_relations:
-        if relation_by_source_column.get(relation.source_column):
-            relation_by_source_column[relation.source_column]["types"].append(
-                ColumnLineageInteractionTypeV1(relation.type).name,
-            )
-        else:
-            relation_by_source_column[relation.source_column] = {
-                "field": relation.source_column,
-                "types": [ColumnLineageInteractionTypeV1(relation.type).name],
-                "last_used_at": format_datetime(last_used_at),
-            }
-
-    return list(relation_by_source_column.values())
-
-
-def indirect_column_lineage(
-    dataset_relation: ColumnLineage,
-    column_relations: dict[UUID, list[DatasetColumnRelation]],
-):
-    return {
-        "from": {"kind": "DATASET", "id": str(dataset_relation.source_dataset_id)},
-        "to": {"kind": "DATASET", "id": str(dataset_relation.target_dataset_id)},
-        "fields": indirect_column_lineage_fields(
-            column_relations[dataset_relation.fingerprint],
-            dataset_relation.created_at,
-        ),
-    }
-
-
-def indirect_column_lineage_to_json(
-    dataset_relations: list[ColumnLineage],
-    column_relations: dict[UUID, list[DatasetColumnRelation]],
-    granularity: Literal["OPERATION", "RUN", "JOB"],
-    start_id: int | UUID,
-):
-    if granularity == "OPERATION":
-        dataset_relations = [
-            dataset_relation for dataset_relation in dataset_relations if dataset_relation.operation_id == start_id
-        ]
-    if granularity == "RUN":
-        dataset_relations = [
-            dataset_relation for dataset_relation in dataset_relations if dataset_relation.run_id == start_id
-        ]
-    if granularity == "JOB":
-        dataset_relations = [
-            dataset_relation for dataset_relation in dataset_relations if dataset_relation.job_id == start_id
-        ]
-    return [indirect_column_lineage(dataset_relation, column_relations) for dataset_relation in dataset_relations]

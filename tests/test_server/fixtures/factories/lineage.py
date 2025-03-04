@@ -697,9 +697,9 @@ async def duplicated_lineage_with_column_lineage(
     duplicated_lineage: LineageResult,
 ) -> AsyncGenerator[AsyncSession, None]:
     # At this fixture we add column lineage to check relation types aggregation on different levels.
-    # O0 will have two direct and indirect relations for same source-target columns.
-    # O1 will have same source-target column as O0 but new relation type.
-    # O2 will have same source-target column as O0 and O1 but new relation type.
+    # O0 will have two direct and indirect (IDENTITY, TRANSFORMATION and FILTER, JOIN) relations for same source-target columns.
+    # O1 will have same source-target column as O0 but another relations type(TRANSFORMATION_MASKING and GROUP_BY).
+    # O2 will have same source-target column as O0 and O1 but another relations type(AGGREGATION and SORT).
 
     # Two trees of J -> R -> O, interacting with the same dataset multiple times:
     # J0 -> R0 -> O0, D0 -> O0 -> D1
@@ -711,22 +711,33 @@ async def duplicated_lineage_with_column_lineage(
     # J1 -> R3 -> O6, D0 -> O6 -> D1
     # J1 -> R3 -> O7, D0 -> O7 -> D1
     operation_relations_matrix = (
-        (0, 0, DatasetColumnRelationType.IDENTITY),
-        (0, 0, DatasetColumnRelationType.TRANSFORMATION),
-        (1, 0, DatasetColumnRelationType.TRANSFORMATION_MASKING),
-        (2, 1, DatasetColumnRelationType.AGGREGATION),
+        (0, 0, DatasetColumnRelationType.IDENTITY, DatasetColumnRelationType.FILTER),
+        (0, 0, DatasetColumnRelationType.TRANSFORMATION, DatasetColumnRelationType.JOIN),
+        (1, 0, DatasetColumnRelationType.TRANSFORMATION_MASKING, DatasetColumnRelationType.GROUP_BY),
+        (2, 1, DatasetColumnRelationType.AGGREGATION, DatasetColumnRelationType.SORT),
     )
 
     lineage = duplicated_lineage
     async with async_session_maker() as async_session:
-        for operation, run, type in operation_relations_matrix:
+        for operation, run, direct_type, indirect_type in operation_relations_matrix:
+            # Direct
             await create_column_relation(
                 async_session,
-                fingerprint=generate_static_uuid(type.name),
+                fingerprint=generate_static_uuid(direct_type.name + indirect_type.name),
                 column_relation_kwargs={
-                    "type": type.value,
+                    "type": direct_type.value,
                     "source_column": "direct_source_column",
                     "target_column": "direct_target_column",
+                },
+            )
+            # Indirect
+            await create_column_relation(
+                async_session,
+                fingerprint=generate_static_uuid(direct_type.name + indirect_type.name),
+                column_relation_kwargs={
+                    "type": indirect_type.value,
+                    "source_column": "indirect_source_column",
+                    "target_column": None,
                 },
             )
             await create_column_lineage(
@@ -738,7 +749,7 @@ async def duplicated_lineage_with_column_lineage(
                     "job_id": lineage.jobs[0].id,
                     "source_dataset_id": lineage.datasets[0].id,
                     "target_dataset_id": lineage.datasets[1].id,
-                    "fingerprint": generate_static_uuid(type.name),
+                    "fingerprint": generate_static_uuid(direct_type.name + indirect_type.name),
                 },
             )
 
@@ -782,7 +793,7 @@ async def lineage_with_depth_and_with_column_lineage(
                 column_relation_kwargs={
                     "type": DatasetColumnRelationType.JOIN.value,
                     "source_column": "indirect_source_column",
-                    "target_column": "",
+                    "target_column": None,
                 },
             )
 
