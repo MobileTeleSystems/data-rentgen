@@ -23,12 +23,16 @@ from tests.test_server.utils.merge import merge_io_by_jobs, merge_io_by_runs
 pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
 
 
-async def test_get_column_lineage_by_dataset(
+async def test_get_column_lineage_by_dataset_empty_column_lineage(
     test_client: AsyncClient,
     async_session: AsyncSession,
     duplicated_lineage_with_column_lineage: LineageResult,
     mocked_user: MockedUser,
 ):
+    """
+    For dataset lineage with default depth = 1 response include only one dataset, so column lineage doesn't have sense.
+    And direct_column_lineage and indirect_column_lineage should be empty.
+    """
     lineage = duplicated_lineage_with_column_lineage
     dataset = lineage.datasets[0]
 

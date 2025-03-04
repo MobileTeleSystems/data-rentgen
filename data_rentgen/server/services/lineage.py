@@ -203,7 +203,7 @@ class LineageService:
                 for dataset_symlink in dataset_symlinks
             }
         if include_column_lineage:
-            result.merge(
+            result.column_lineage.update(
                 await self._get_column_lineage(current_result=result, since=since, until=until, granularity="JOB"),
             )
 
@@ -348,7 +348,7 @@ class LineageService:
                 for dataset_symlink in dataset_symlinks
             }
         if include_column_lineage:
-            result.merge(
+            result.column_lineage.update(
                 await self._get_column_lineage(current_result=result, since=since, until=until, granularity="RUN"),
             )
 
@@ -485,7 +485,7 @@ class LineageService:
                 for dataset_symlink in dataset_symlinks
             }
         if include_column_lineage:
-            result.merge(
+            result.column_lineage.update(
                 await self._get_column_lineage(
                     current_result=result,
                     since=since,
@@ -566,7 +566,7 @@ class LineageService:
                     ids_to_skip=ids_to_skip,
                 )
                 if include_column_lineage:
-                    result.merge(
+                    result.column_lineage.update(
                         await self._get_column_lineage(
                             current_result=result,
                             since=since,
@@ -587,7 +587,7 @@ class LineageService:
                     ids_to_skip=ids_to_skip,
                 )
                 if include_column_lineage:
-                    result.merge(
+                    result.column_lineage.update(
                         await self._get_column_lineage(
                             current_result=result,
                             since=since,
@@ -607,7 +607,7 @@ class LineageService:
                     ids_to_skip=ids_to_skip,
                 )
                 if include_column_lineage:
-                    result.merge(
+                    result.column_lineage.update(
                         await self._get_column_lineage(
                             current_result=result,
                             since=since,
@@ -936,13 +936,12 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         granularity: Literal["OPERATION", "RUN", "JOB"],
-    ) -> LineageServiceResult:
+    ) -> dict[tuple[int, int], list[ColumnLineageRow]]:
         """
         'granularity' argument of this function not the same as granularity in api request.
         Here it's used for aggregation entity
         """
-        result = LineageServiceResult()
-        result.column_lineage = defaultdict(list)
+        result: dict[tuple[int, int], list[ColumnLineageRow]] = defaultdict(list)
         if not current_result.inputs or not current_result.outputs:
             return result
         match granularity:
@@ -973,7 +972,7 @@ class LineageService:
                 raise ValueError(msg)
 
         for relation in column_lineage_result:
-            result.column_lineage[(relation.source_dataset_id, relation.target_dataset_id)].append(
+            result[(relation.source_dataset_id, relation.target_dataset_id)].append(
                 relation,
             )
 
