@@ -23,6 +23,61 @@ from tests.test_server.utils.merge import merge_io_by_jobs, merge_io_by_runs
 pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
 
 
+async def test_get_column_lineage_by_dataset_with_combined_transformations(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    duplicated_lineage_with_column_lineage: LineageResult,
+    mocked_user: MockedUser,
+):
+    lineage = duplicated_lineage_with_column_lineage
+    dataset = lineage.datasets[0]
+
+    inputs = [input for input in lineage.inputs if input.dataset_id == dataset.id]
+    outputs = [output for output in lineage.outputs if output.dataset_id == dataset.id]
+
+    run_ids = {input.run_id for input in inputs} | {output.run_id for output in outputs}
+    runs = [run for run in lineage.runs if run.id in run_ids]
+    assert runs
+
+    job_ids = {run.job_id for run in runs}
+    jobs = [job for job in lineage.jobs if job.id in job_ids]
+    assert jobs
+
+    jobs = await enrich_jobs(jobs, async_session)
+    runs = await enrich_runs(runs, async_session)
+    [dataset] = await enrich_datasets([dataset], async_session)
+
+    since = min(run.created_at for run in runs)
+
+    response = await test_client.get(
+        "v1/datasets/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since,
+            "start_node_id": dataset.id,
+            "include_column_lineage": True,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": {
+            "parents": run_parents_to_json(runs),
+            "symlinks": [],
+            "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
+            "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
+        },
+        "nodes": {
+            "datasets": datasets_to_json([dataset]),
+            "jobs": jobs_to_json(jobs),
+            "runs": runs_to_json(runs),
+            "operations": {},
+        },
+    }
+
+
 async def test_get_column_lineage_by_operation_with_combined_transformations(
     test_client: AsyncClient,
     async_session: AsyncSession,
@@ -31,8 +86,8 @@ async def test_get_column_lineage_by_operation_with_combined_transformations(
 ):
     lineage = duplicated_lineage_with_column_lineage
     operation = lineage.operations[0]
-    run = next(run for run in lineage.runs if run.id == operation.run_id)
-    job = next(job for job in lineage.jobs if job.id == run.job_id)
+    run = lineage.runs[0]
+    job = lineage.jobs[0]
     inputs = [input for input in lineage.inputs if input.operation_id == operation.id]
     assert inputs
 
@@ -53,7 +108,7 @@ async def test_get_column_lineage_by_operation_with_combined_transformations(
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(operation.id),
-            "column_lineage": True,
+            "include_column_lineage": True,
         },
     )
 
@@ -101,7 +156,7 @@ async def test_get_column_lineage_by_run_with_combined_transformations(
 ):
     lineage = duplicated_lineage_with_column_lineage
     run = lineage.runs[0]
-    job = next(job for job in lineage.jobs if job.id == run.job_id)
+    job = lineage.jobs[0]
 
     inputs = [input for input in lineage.inputs if input.run_id == run.id]
     assert inputs
@@ -123,7 +178,7 @@ async def test_get_column_lineage_by_run_with_combined_transformations(
         params={
             "since": run.created_at.isoformat(),
             "start_node_id": str(run.id),
-            "column_lineage": True,
+            "include_column_lineage": True,
         },
     )
 
@@ -193,7 +248,7 @@ async def test_get_column_lineage_by_job_with_combined_transformations(
         params={
             "since": since.isoformat(),
             "start_node_id": job.id,
-            "column_lineage": True,
+            "include_column_lineage": True,
         },
     )
 
@@ -300,7 +355,7 @@ async def test_get_column_lineage_with_depth_by_dataset(
             "since": since.isoformat(),
             "start_node_id": first_level_dataset.id,
             "depth": 3,
-            "column_lineage": True,
+            "include_column_lineage": True,
         },
     )
 
@@ -327,21 +382,6 @@ async def test_get_column_lineage_with_depth_by_dataset(
                         ],
                     },
                 },
-                {
-                    "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
-                    "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
-                    "fields": {
-                        "direct_target_column": [
-                            {
-                                "field": "direct_source_column",
-                                "last_used_at": format_datetime(lineage.operations[1].created_at),
-                                "types": [
-                                    "AGGREGATION",
-                                ],
-                            },
-                        ],
-                    },
-                },
             ],
             "indirect_column_lineage": [
                 {
@@ -351,19 +391,6 @@ async def test_get_column_lineage_with_depth_by_dataset(
                         {
                             "field": "indirect_source_column",
                             "last_used_at": format_datetime(lineage.operations[0].created_at),
-                            "types": [
-                                "JOIN",
-                            ],
-                        },
-                    ],
-                },
-                {
-                    "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
-                    "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
-                    "fields": [
-                        {
-                            "field": "indirect_source_column",
-                            "last_used_at": format_datetime(lineage.operations[1].created_at),
                             "types": [
                                 "JOIN",
                             ],
@@ -458,7 +485,7 @@ async def test_get_column_lineage_with_depth_by_operation(
             "since": since.isoformat(),
             "start_node_id": str(first_level_operation.id),
             "depth": 3,
-            "column_lineage": True,
+            "include_column_lineage": True,
         },
     )
 
@@ -604,7 +631,7 @@ async def test_get_column_lineage_with_depth_by_run(
             "since": first_level_run.created_at.isoformat(),
             "start_node_id": str(first_level_run.id),
             "depth": 3,
-            "column_lineage": True,
+            "include_column_lineage": True,
         },
     )
 
@@ -747,7 +774,7 @@ async def test_get_column_lineage_with_depth_by_job(
             "since": since.isoformat(),
             "start_node_id": job.id,
             "depth": 3,
-            "column_lineage": True,
+            "include_column_lineage": True,
         },
     )
 

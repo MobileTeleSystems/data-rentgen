@@ -48,7 +48,7 @@ async def get_jobs_lineage(
         since=query_args.since,
         until=query_args.until,
         depth=query_args.depth,
-        column_lineage=query_args.column_lineage,
+        include_column_lineage=query_args.include_column_lineage,
     )
 
     return await build_lineage_response(lineage)

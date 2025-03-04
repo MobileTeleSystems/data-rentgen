@@ -3,6 +3,7 @@
 
 from collections.abc import Sequence
 from datetime import datetime
+from typing import NamedTuple
 from uuid import UUID
 
 from sqlalchemy import ColumnElement, any_, func, select
@@ -15,6 +16,15 @@ from data_rentgen.db.utils.uuid import (
     generate_incremental_uuid,
 )
 from data_rentgen.dto import ColumnLineageDTO
+
+
+class ColumnLineageRow(NamedTuple):
+    source_dataset_id: str
+    target_dataset_id: int
+    source_column: str
+    target_column: str
+    types_combined: int
+    last_used_at: datetime
 
 
 class ColumnLineageRepository(Repository[ColumnLineage]):
@@ -64,6 +74,8 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
         job_ids: Sequence[int],
         since: datetime,
         until: datetime | None,
+        source_ids: Sequence[int],
+        target_ids: Sequence[int],
     ):
         if not job_ids:
             return []
@@ -71,6 +83,8 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
         where = [
             ColumnLineage.created_at >= since,
             ColumnLineage.job_id == any_(job_ids),  # type: ignore[arg-type]
+            ColumnLineage.source_dataset_id == any_(source_ids),  # type: ignore[arg-type]
+            ColumnLineage.target_dataset_id == any_(target_ids),  # type: ignore[arg-type]
         ]
         if until:
             where.append(ColumnLineage.created_at <= until)
@@ -82,6 +96,8 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
         run_ids: Sequence[UUID],
         since: datetime,
         until: datetime | None,
+        source_ids: Sequence[int],
+        target_ids: Sequence[int],
     ):
         if not run_ids:
             return []
@@ -89,6 +105,8 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
         where = [
             ColumnLineage.created_at >= since,
             ColumnLineage.run_id == any_(run_ids),  # type: ignore[arg-type]
+            ColumnLineage.source_dataset_id == any_(source_ids),  # type: ignore[arg-type]
+            ColumnLineage.target_dataset_id == any_(target_ids),  # type: ignore[arg-type]
         ]
         if until:
             where.append(ColumnLineage.created_at <= until)
@@ -97,6 +115,8 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
     async def list_by_operation_ids(
         self,
         operation_ids: Sequence[UUID],
+        source_ids: Sequence[int],
+        target_ids: Sequence[int],
     ):
         if not operation_ids:
             return []
@@ -110,6 +130,8 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
             ColumnLineage.created_at >= min_created_at,
             ColumnLineage.created_at <= max_created_at,
             ColumnLineage.operation_id == any_(operation_ids),  # type: ignore[arg-type]
+            ColumnLineage.source_dataset_id == any_(source_ids),  # type: ignore[arg-type]
+            ColumnLineage.target_dataset_id == any_(target_ids),  # type: ignore[arg-type]
         ]
         return await self._get_column_lineage_with_column_relations(where)
 
@@ -135,13 +157,13 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
         query = query.where(*where)
         result = await self._session.execute(query)
         return [
-            {
-                "source_dataset_id": row.source_dataset_id,
-                "target_dataset_id": row.target_dataset_id,
-                "source_column": row.source_column,
-                "target_column": row.target_column,
-                "types_combined": row.types_combined,
-                "last_used_at": row.last_used_at,
-            }
+            ColumnLineageRow(
+                source_dataset_id=row.source_dataset_id,
+                target_dataset_id=row.target_dataset_id,
+                source_column=row.source_column,
+                target_column=row.target_column,
+                types_combined=row.types_combined,
+                last_used_at=row.last_used_at,
+            )
             for row in result.all()
         ]

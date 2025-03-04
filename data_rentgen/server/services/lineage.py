@@ -19,6 +19,7 @@ from data_rentgen.db.models import (
     Output,
     Run,
 )
+from data_rentgen.db.repositories.column_lineage import ColumnLineageRow
 from data_rentgen.server.schemas.v1.lineage import LineageDirectionV1
 from data_rentgen.services.uow import UnitOfWork
 
@@ -34,7 +35,7 @@ class LineageServiceResult:
     dataset_symlinks: dict[tuple[int, int], DatasetSymlink] = field(default_factory=dict)
     inputs: dict[tuple[int, int, UUID | None, UUID | None], Input] = field(default_factory=dict)
     outputs: dict[tuple[int, int, UUID | None, UUID | None, str | None], Output] = field(default_factory=dict)
-    column_lineage: dict[tuple[int, int], list[dict]] = field(default_factory=dict)
+    column_lineage: dict[tuple[int, int], list[ColumnLineageRow]] = field(default_factory=dict)
 
     def merge(self, other: "LineageServiceResult") -> "LineageServiceResult":
         self.jobs.update(other.jobs)
@@ -84,7 +85,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
-        column_lineage: bool,  # noqa: FBT001
+        include_column_lineage: bool = False,  # noqa: FBT001, FBT002
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         if not start_node_ids:
@@ -174,7 +175,6 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
-                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -186,7 +186,6 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
-                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -203,7 +202,7 @@ class LineageService:
                 (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
                 for dataset_symlink in dataset_symlinks
             }
-        if column_lineage:
+        if include_column_lineage:
             result.merge(
                 await self._get_column_lineage(current_result=result, since=since, until=until, granularity="JOB"),
             )
@@ -229,7 +228,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
-        column_lineage: bool,  # noqa: FBT001
+        include_column_lineage: bool = False,  # noqa: FBT001, FBT002
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         if not start_node_ids:
@@ -322,7 +321,6 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
-                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -334,7 +332,6 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
-                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -350,7 +347,7 @@ class LineageService:
                 (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
                 for dataset_symlink in dataset_symlinks
             }
-        if column_lineage:
+        if include_column_lineage:
             result.merge(
                 await self._get_column_lineage(current_result=result, since=since, until=until, granularity="RUN"),
             )
@@ -375,7 +372,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
-        column_lineage: bool,  # noqa: FBT001
+        include_column_lineage: bool = False,  # noqa: FBT001, FBT002
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         if not start_node_ids:
@@ -458,7 +455,6 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
-                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -470,7 +466,6 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
-                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -489,7 +484,7 @@ class LineageService:
                 (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
                 for dataset_symlink in dataset_symlinks
             }
-        if column_lineage:
+        if include_column_lineage:
             result.merge(
                 await self._get_column_lineage(
                     current_result=result,
@@ -520,7 +515,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
-        column_lineage: bool,  # noqa: FBT001
+        include_column_lineage: bool = False,  # noqa: FBT001, FBT002
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         if not start_node_ids:
@@ -567,10 +562,10 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth,
-                    column_lineage=column_lineage,
+                    include_column_lineage=include_column_lineage,
                     ids_to_skip=ids_to_skip,
                 )
-                if column_lineage:
+                if include_column_lineage:
                     result.merge(
                         await self._get_column_lineage(
                             current_result=result,
@@ -588,10 +583,10 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth,
-                    column_lineage=column_lineage,
+                    include_column_lineage=include_column_lineage,
                     ids_to_skip=ids_to_skip,
                 )
-                if column_lineage:
+                if include_column_lineage:
                     result.merge(
                         await self._get_column_lineage(
                             current_result=result,
@@ -608,10 +603,10 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth,
-                    column_lineage=column_lineage,
+                    include_column_lineage=include_column_lineage,
                     ids_to_skip=ids_to_skip,
                 )
-                if column_lineage:
+                if include_column_lineage:
                     result.merge(
                         await self._get_column_lineage(
                             current_result=result,
@@ -663,7 +658,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
-        column_lineage: bool,  # noqa: FBT001
+        include_column_lineage: bool,  # noqa: FBT001
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         inputs = []
@@ -723,7 +718,6 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
-                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -734,7 +728,6 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
-                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -750,15 +743,6 @@ class LineageService:
             job_ids = {run.job_id for run in runs}
             jobs = await self._uow.job.list_by_ids(sorted(job_ids - ids_to_skip.jobs))
             result.jobs = {job.id: job for job in jobs}
-            if column_lineage:
-                result.merge(
-                    await self._get_column_lineage(
-                        current_result=result,
-                        since=since,
-                        until=until,
-                        granularity="OPERATION",
-                    ),
-                )
 
         return result
 
@@ -770,7 +754,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
-        column_lineage: bool,  # noqa: FBT001
+        include_column_lineage: bool,  # noqa: FBT001
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         inputs = []
@@ -831,7 +815,6 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
-                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -843,7 +826,6 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
-                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -855,10 +837,6 @@ class LineageService:
             job_ids = {run.job_id for run in runs}
             jobs = await self._uow.job.list_by_ids(sorted(job_ids - ids_to_skip.jobs))
             result.jobs = {job.id: job for job in jobs}
-            if column_lineage:
-                result.merge(
-                    await self._get_column_lineage(current_result=result, since=since, until=until, granularity="RUN"),
-                )
 
         return result
 
@@ -870,7 +848,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
-        column_lineage: bool,  # noqa: FBT001
+        include_column_lineage: bool,  # noqa: FBT001
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         inputs = []
@@ -931,7 +909,6 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
-                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -943,7 +920,6 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
-                    column_lineage=column_lineage,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -951,10 +927,6 @@ class LineageService:
             job_ids = sorted(downstream_job_ids | upstream_job_ids)
             jobs = await self._uow.job.list_by_ids(job_ids)
             result.jobs = {job.id: job for job in jobs}
-            if column_lineage:
-                result.merge(
-                    await self._get_column_lineage(current_result=result, since=since, until=until, granularity="JOB"),
-                )
 
         return result
 
@@ -971,29 +943,37 @@ class LineageService:
         """
         result = LineageServiceResult()
         result.column_lineage = defaultdict(list)
+        if not current_result.inputs or not current_result.outputs:
+            return result
         match granularity:
             case "OPERATION":
                 column_lineage_result = await self._uow.column_lineage.list_by_operation_ids(
-                    sorted(current_result.operations.keys()),
+                    operation_ids=sorted(current_result.operations.keys()),
+                    source_ids=[input_.dataset_id for input_ in current_result.inputs.values()],
+                    target_ids=[output.dataset_id for output in current_result.outputs.values()],
                 )
             case "RUN":
                 column_lineage_result = await self._uow.column_lineage.list_by_run_ids(
-                    sorted(current_result.runs.keys()),
-                    since,
-                    until,
+                    run_ids=sorted(current_result.runs.keys()),
+                    since=since,
+                    until=until,
+                    source_ids=[input_.dataset_id for input_ in current_result.inputs.values()],
+                    target_ids=[output.dataset_id for output in current_result.outputs.values()],
                 )
             case "JOB":
                 column_lineage_result = await self._uow.column_lineage.list_by_job_ids(
-                    sorted(current_result.jobs.keys()),
-                    since,
-                    until,
+                    job_ids=sorted(current_result.jobs.keys()),
+                    since=since,
+                    until=until,
+                    source_ids=[input_.dataset_id for input_ in current_result.inputs.values()],
+                    target_ids=[output.dataset_id for output in current_result.outputs.values()],
                 )
             case _:
                 msg = f"Unknown granularity for column lineage: {granularity}"
                 raise ValueError(msg)
 
         for relation in column_lineage_result:
-            result.column_lineage[(relation["source_dataset_id"], relation["target_dataset_id"])].append(
+            result.column_lineage[(relation.source_dataset_id, relation.target_dataset_id)].append(
                 relation,
             )
 

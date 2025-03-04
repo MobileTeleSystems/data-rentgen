@@ -11,6 +11,7 @@ from data_rentgen.db.models.input import Input
 from data_rentgen.db.models.operation import Operation
 from data_rentgen.db.models.output import Output
 from data_rentgen.db.models.run import Run
+from data_rentgen.db.repositories.column_lineage import ColumnLineageRow
 from data_rentgen.server.schemas.v1 import (
     ColumnLineageInteractionTypeV1,
     DatasetResponseV1,
@@ -146,7 +147,7 @@ def _get_output_relations(outputs: dict[Any, Output]) -> list[LineageOutputRelat
     return sorted(relations, key=lambda x: (str(x.from_.id), str(x.to.id), x.type))
 
 
-def _get_direct_column_lineage(column_lineage_by_source_target_id: dict[tuple, list[dict]]):
+def _get_direct_column_lineage(column_lineage_by_source_target_id: dict[tuple, list[ColumnLineageRow]]):
     relations = []
     for (source_dataset_id, target_dataset_id), column_relations in column_lineage_by_source_target_id.items():
         column_lineage_relation = DirectLineageColumnRelationV1(
@@ -155,15 +156,15 @@ def _get_direct_column_lineage(column_lineage_by_source_target_id: dict[tuple, l
         )
         fields = defaultdict(list)
         for column_relation in column_relations:
-            if column_relation["target_column"] != "":
-                fields[column_relation["target_column"]].append(
+            if column_relation.target_column != "":
+                fields[column_relation.target_column].append(
                     LineageSourceColumnV1(
-                        field=column_relation["source_column"],
-                        last_used_at=column_relation["last_used_at"],
+                        field=column_relation.source_column,
+                        last_used_at=column_relation.last_used_at,
                         types=[
                             type_
                             for type_ in ColumnLineageInteractionTypeV1
-                            if type_.value & column_relation["types_combined"]
+                            if type_.value & column_relation.types_combined
                         ],
                     ),
                 )
@@ -173,7 +174,7 @@ def _get_direct_column_lineage(column_lineage_by_source_target_id: dict[tuple, l
     return sorted(relations, key=lambda x: (str(x.from_.id), str(x.to.id)))
 
 
-def _get_indirect_column_lineage(column_lineage_by_source_target_id: dict[tuple, list[dict]]):
+def _get_indirect_column_lineage(column_lineage_by_source_target_id: dict[tuple, list[ColumnLineageRow]]):
     relations = []
     for (source_dataset_id, target_dataset_id), column_relations in column_lineage_by_source_target_id.items():
         column_lineage_relation = IndirectLineageColumnRelationV1(
@@ -182,14 +183,14 @@ def _get_indirect_column_lineage(column_lineage_by_source_target_id: dict[tuple,
         )
         fields = [
             LineageSourceColumnV1(
-                field=column_relation["source_column"],
-                last_used_at=column_relation["last_used_at"],
+                field=column_relation.source_column,
+                last_used_at=column_relation.last_used_at,
                 types=[
-                    type_ for type_ in ColumnLineageInteractionTypeV1 if type_.value & column_relation["types_combined"]
+                    type_ for type_ in ColumnLineageInteractionTypeV1 if type_.value & column_relation.types_combined
                 ],
             )
             for column_relation in column_relations
-            if column_relation["target_column"] == ""
+            if column_relation.target_column == ""
         ]
         if fields:
             column_lineage_relation.fields = fields

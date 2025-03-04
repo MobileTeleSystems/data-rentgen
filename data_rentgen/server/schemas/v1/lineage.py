@@ -64,7 +64,7 @@ class BaseLineageQueryV1(BaseModel):
         description="Depth of the lineage",
         examples=[1, 3],
     )
-    column_lineage: bool = Field(default=False, description="Include or not column lineage into response")
+    include_column_lineage: bool = Field(default=False, description="Include or not column lineage into response")
 
     model_config = ConfigDict(extra="forbid")
 
