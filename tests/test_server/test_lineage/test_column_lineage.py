@@ -23,7 +23,7 @@ from tests.test_server.utils.merge import merge_io_by_jobs, merge_io_by_runs
 pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
 
 
-async def test_get_column_lineage_by_dataset_empty_column_lineage(
+async def test_dataset_lineage_with_empty_column_lineage(
     test_client: AsyncClient,
     async_session: AsyncSession,
     duplicated_lineage_with_column_lineage: LineageResult,
@@ -82,7 +82,7 @@ async def test_get_column_lineage_by_dataset_empty_column_lineage(
     }
 
 
-async def test_get_column_lineage_by_operation_with_combined_transformations(
+async def test_operation_lineage_include_columns_with_combined_transformations(
     test_client: AsyncClient,
     async_session: AsyncSession,
     duplicated_lineage_with_column_lineage: LineageResult,
@@ -167,7 +167,7 @@ async def test_get_column_lineage_by_operation_with_combined_transformations(
     }
 
 
-async def test_get_column_lineage_by_run_with_combined_transformations(
+async def test_run_lineage_include_columns_with_combined_transformations(
     test_client: AsyncClient,
     async_session: AsyncSession,
     duplicated_lineage_with_column_lineage: LineageResult,
@@ -254,7 +254,7 @@ async def test_get_column_lineage_by_run_with_combined_transformations(
     }
 
 
-async def test_get_column_lineage_by_job_with_combined_transformations(
+async def test_job_lineage_include_columns_with_combined_transformations(
     test_client: AsyncClient,
     async_session: AsyncSession,
     duplicated_lineage_with_column_lineage: LineageResult,
@@ -342,7 +342,7 @@ async def test_get_column_lineage_by_job_with_combined_transformations(
     }
 
 
-async def test_get_column_lineage_by_dataset_with_depth(
+async def test_dataset_lineage_include_columns_with_depth(
     test_client: AsyncClient,
     async_session: AsyncSession,
     lineage_with_depth_and_with_column_lineage: LineageResult,
@@ -460,7 +460,7 @@ async def test_get_column_lineage_by_dataset_with_depth(
     }
 
 
-async def test_get_column_lineage_by_operation_with_depth(
+async def test_operation_lineage_include_columns_with_depth(
     test_client: AsyncClient,
     async_session: AsyncSession,
     lineage_with_depth_and_with_column_lineage: LineageResult,
@@ -618,7 +618,7 @@ async def test_get_column_lineage_by_operation_with_depth(
     }
 
 
-async def test_get_column_lineage_by_run_with_depth(
+async def test_run_lineage_include_columns_with_depth(
     test_client: AsyncClient,
     async_session: AsyncSession,
     lineage_with_depth_and_with_column_lineage: LineageResult,
@@ -764,7 +764,7 @@ async def test_get_column_lineage_by_run_with_depth(
     }
 
 
-async def test_get_column_lineage_by_job_with_depth(
+async def test_job_lineage_include_columns_with_depth(
     test_client: AsyncClient,
     async_session: AsyncSession,
     lineage_with_depth_and_with_column_lineage: LineageResult,
