@@ -29,6 +29,8 @@ OpenLineageDatasetLike = (
 METASTORE = DatasetSymlinkTypeDTO.METASTORE
 WAREHOUSE = DatasetSymlinkTypeDTO.WAREHOUSE
 
+PATTERN: re.Pattern = re.compile("^(.*?)/[^/=]+=")
+
 
 def connect_dataset_with_symlinks(
     dataset: DatasetDTO,
@@ -57,7 +59,7 @@ def connect_dataset_with_symlinks(
 
 
 def extract_dataset(dataset: OpenLineageDatasetLike) -> DatasetDTO:
-    long_name = re.match("^(.*?)/[^/=]+=", dataset.name)
+    long_name = PATTERN.match(dataset.name)
     name = long_name.group(1) if long_name else dataset.name
     return DatasetDTO(
         name=name,

@@ -1,15 +1,38 @@
-import pytest
+from datetime import datetime, timezone
 
-from data_rentgen.consumer.extractors import (
-    extract_dataset_and_symlinks,
+import pytest
+from uuid6 import UUID
+
+from data_rentgen.consumer.extractors import extract_batch, extract_dataset_and_symlinks
+from data_rentgen.consumer.openlineage.dataset import (
+    OpenLineageDataset,
+    OpenLineageOutputDataset,
 )
-from data_rentgen.consumer.openlineage.dataset import OpenLineageDataset
 from data_rentgen.consumer.openlineage.dataset_facets import (
     OpenLineageDatasetFacets,
     OpenLineageStorageDatasetFacet,
     OpenLineageSymlinkIdentifier,
     OpenLineageSymlinksDatasetFacet,
     OpenLineageSymlinkType,
+)
+from data_rentgen.consumer.openlineage.job import OpenLineageJob
+from data_rentgen.consumer.openlineage.job_facets import (
+    OpenLineageJobFacets,
+    OpenLineageJobIntegrationType,
+    OpenLineageJobProcessingType,
+    OpenLineageJobType,
+    OpenLineageJobTypeJobFacet,
+)
+from data_rentgen.consumer.openlineage.run import OpenLineageRun
+from data_rentgen.consumer.openlineage.run_event import (
+    OpenLineageRunEvent,
+    OpenLineageRunEventType,
+)
+from data_rentgen.consumer.openlineage.run_facets import (
+    OpenLineageParentJob,
+    OpenLineageParentRun,
+    OpenLineageParentRunFacet,
+    OpenLineageRunFacets,
 )
 from data_rentgen.dto import (
     DatasetDTO,
@@ -55,6 +78,64 @@ def test_extractors_extract_dataset_hdfs_with_patition():
         name="/user/hive/warehouse/mydb.db/mytable",
     )
     assert symlinks == []
+
+
+def test_extractors_extract_batch_dataset_hdfs():
+    """
+    There is two datasets name in event. They should be union into one, excluding partition.
+    """
+    event_time = datetime(2024, 7, 5, 9, 7, 9, 849000, tzinfo=timezone.utc)
+    run_id = UUID("01908224-8410-79a2-8de6-a769ad6944c9")
+    operation_id = UUID("01908225-1fd7-746b-910c-70d24f2898b1")
+    event = OpenLineageRunEvent(
+        eventType=OpenLineageRunEventType.RUNNING,
+        eventTime=event_time,
+        job=OpenLineageJob(
+            namespace="local://some.host.com",
+            name="mysession.execute_some_command",
+            facets=OpenLineageJobFacets(
+                jobType=OpenLineageJobTypeJobFacet(
+                    jobType=OpenLineageJobType.JOB,
+                    processingType=OpenLineageJobProcessingType.BATCH,
+                    integration=OpenLineageJobIntegrationType.SPARK,
+                ),
+            ),
+        ),
+        run=OpenLineageRun(
+            runId=operation_id,
+            facets=OpenLineageRunFacets(
+                parent=OpenLineageParentRunFacet(
+                    job=OpenLineageParentJob(
+                        namespace="local://some.host.com",
+                        name="mysession",
+                    ),
+                    run=OpenLineageParentRun(
+                        runId=run_id,
+                    ),
+                ),
+            ),
+        ),
+        outputs=[
+            OpenLineageOutputDataset(
+                namespace="hdfs://test-hadoop:9820",
+                name="/user/hive/warehouse/mydb.db/mytable/business_dt=2025-01-01/reg_id=99/part_dt=2025-01-01",
+            ),
+            OpenLineageOutputDataset(
+                namespace="hdfs://test-hadoop:9820",
+                name="/user/hive/warehouse/mydb.db/mytable/business_dt=2025-02-01/reg_id=99/part_dt=2025-01-01",
+            ),
+        ],
+    )
+
+    extracted = extract_batch([event])
+    assert extracted.datasets() == [
+        DatasetDTO(
+            location=LocationDTO(type="hdfs", name="test-hadoop:9820", addresses={"hdfs://test-hadoop:9820"}, id=None),
+            name="/user/hive/warehouse/mydb.db/mytable",
+            format=None,
+            id=None,
+        ),
+    ]
 
 
 def test_extractors_extract_dataset_hdfs_with_table_symlink():
