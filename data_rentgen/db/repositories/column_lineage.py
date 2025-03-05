@@ -19,7 +19,7 @@ from data_rentgen.dto import ColumnLineageDTO
 
 
 class ColumnLineageRow(NamedTuple):
-    source_dataset_id: str
+    source_dataset_id: int
     target_dataset_id: int
     source_column: str
     target_column: str
