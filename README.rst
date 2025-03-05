@@ -41,16 +41,17 @@ Goals
 * Collect lineage events produced by OpenLineage clients & integrations (Spark, Airflow).
 * Support consuming large amounts of lineage events, by using Kafka as event buffer and storing data in tables partitioned by event timestamp.
 * Store operation-grained events (instead of job grained `Marquez <https://marquezproject.ai/>`_), for better detalization.
-* Provide API for building run ↔ dataset lineage, as well as parent run → children run lineage.
-* Ability to build lineage graph with specific time boundaries (unlike Marquez there lineage is build only for last job run).
-* Ability to build lineage graph with different granularity. e.g. merge all individual Spark operations into Spark applicationId or Spark applicationName.
+* Provide API for fetching run ↔ dataset lineage.
+* Allow building lineage graph with specific time boundaries (unlike Marquez there lineage is build only for last job run).
+* Allow building lineage graph with different granularity. e.g. merge all individual Spark operations into Spark applicationId or Spark applicationName.
+* Include column-level lineage into lineage graph.
 
 Non-goals
 ---------
 
 * This is **not** a Data Catalog. Use `Datahub <https://datahubproject.io/>`_ or `OpenMetadata <https://open-metadata.org/>`_ instead.
 * Static Data Lineage like view → table is not supported.
-* Currently column-level lineage is collected by OpenLineage, but not yet consumed by Data.Rentgen.
+* Job/run/operation are always a part of lineage graph. Hiding them to produce dataset → dataset lineage is not supported for now.
 
 .. documentation
 
