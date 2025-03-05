@@ -48,6 +48,6 @@ async def get_datasets_lineage(
         since=query_args.since,
         until=query_args.until,
         depth=query_args.depth,
+        include_column_lineage=query_args.include_column_lineage,
     )
-
     return await build_lineage_response(lineage)

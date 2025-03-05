@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Annotated, Literal
@@ -18,6 +19,7 @@ from data_rentgen.db.models import (
     Output,
     Run,
 )
+from data_rentgen.db.repositories.column_lineage import ColumnLineageRow
 from data_rentgen.server.schemas.v1.lineage import LineageDirectionV1
 from data_rentgen.services.uow import UnitOfWork
 
@@ -33,6 +35,7 @@ class LineageServiceResult:
     dataset_symlinks: dict[tuple[int, int], DatasetSymlink] = field(default_factory=dict)
     inputs: dict[tuple[int, int, UUID | None, UUID | None], Input] = field(default_factory=dict)
     outputs: dict[tuple[int, int, UUID | None, UUID | None, str | None], Output] = field(default_factory=dict)
+    column_lineage: dict[tuple[int, int], list[ColumnLineageRow]] = field(default_factory=dict)
 
     def merge(self, other: "LineageServiceResult") -> "LineageServiceResult":
         self.jobs.update(other.jobs)
@@ -42,6 +45,7 @@ class LineageServiceResult:
         self.dataset_symlinks.update(other.dataset_symlinks)
         self.inputs.update(other.inputs)
         self.outputs.update(other.outputs)
+        self.column_lineage.update(other.column_lineage)
         return self
 
 
@@ -73,7 +77,7 @@ class LineageService:
     def __init__(self, uow: Annotated[UnitOfWork, Depends()]):
         self._uow = uow
 
-    async def get_lineage_by_jobs(  # noqa: C901
+    async def get_lineage_by_jobs(  # noqa: C901, PLR0912
         self,
         start_node_ids: list[int],
         direction: LineageDirectionV1,
@@ -81,6 +85,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
+        include_column_lineage: bool = False,  # noqa: FBT001, FBT002
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         if not start_node_ids:
@@ -197,6 +202,10 @@ class LineageService:
                 (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
                 for dataset_symlink in dataset_symlinks
             }
+        if include_column_lineage:
+            result.column_lineage.update(
+                await self._get_column_lineage(current_result=result, since=since, until=until, granularity="JOB"),
+            )
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
@@ -211,7 +220,7 @@ class LineageService:
             )
         return result
 
-    async def get_lineage_by_runs(  # noqa: C901
+    async def get_lineage_by_runs(  # noqa: C901, PLR0912
         self,
         start_node_ids: list[UUID],
         direction: LineageDirectionV1,
@@ -219,6 +228,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
+        include_column_lineage: bool = False,  # noqa: FBT001, FBT002
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         if not start_node_ids:
@@ -337,6 +347,10 @@ class LineageService:
                 (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
                 for dataset_symlink in dataset_symlinks
             }
+        if include_column_lineage:
+            result.column_lineage.update(
+                await self._get_column_lineage(current_result=result, since=since, until=until, granularity="RUN"),
+            )
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
@@ -351,13 +365,14 @@ class LineageService:
             )
         return result
 
-    async def get_lineage_by_operations(  # noqa: C901
+    async def get_lineage_by_operations(  # noqa: C901, PLR0912
         self,
         start_node_ids: list[UUID],
         direction: LineageDirectionV1,
         since: datetime,
         until: datetime | None,
         depth: int,
+        include_column_lineage: bool = False,  # noqa: FBT001, FBT002
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         if not start_node_ids:
@@ -469,6 +484,15 @@ class LineageService:
                 (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
                 for dataset_symlink in dataset_symlinks
             }
+        if include_column_lineage:
+            result.column_lineage.update(
+                await self._get_column_lineage(
+                    current_result=result,
+                    since=since,
+                    until=until,
+                    granularity="OPERATION",
+                ),
+            )
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
@@ -483,7 +507,7 @@ class LineageService:
             )
         return result
 
-    async def get_lineage_by_datasets(
+    async def get_lineage_by_datasets(  # noqa: C901
         self,
         start_node_ids: list[int],
         direction: LineageDirectionV1,
@@ -491,6 +515,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
+        include_column_lineage: bool = False,  # noqa: FBT001, FBT002
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         if not start_node_ids:
@@ -537,8 +562,19 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth,
+                    include_column_lineage=include_column_lineage,
                     ids_to_skip=ids_to_skip,
                 )
+                if include_column_lineage:
+                    result.column_lineage.update(
+                        await self._get_column_lineage(
+                            current_result=result,
+                            since=since,
+                            until=until,
+                            granularity="OPERATION",
+                        ),
+                    )
+
             case "RUN":
                 result = await self._dataset_lineage_with_run_granularity(
                     datasets_by_id=datasets_by_id,
@@ -547,8 +583,18 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth,
+                    include_column_lineage=include_column_lineage,
                     ids_to_skip=ids_to_skip,
                 )
+                if include_column_lineage:
+                    result.column_lineage.update(
+                        await self._get_column_lineage(
+                            current_result=result,
+                            since=since,
+                            until=until,
+                            granularity="RUN",
+                        ),
+                    )
             case "JOB":
                 result = await self._dataset_lineage_with_job_granularity(
                     datasets_by_id=datasets_by_id,
@@ -557,8 +603,18 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth,
+                    include_column_lineage=include_column_lineage,
                     ids_to_skip=ids_to_skip,
                 )
+                if include_column_lineage:
+                    result.column_lineage.update(
+                        await self._get_column_lineage(
+                            current_result=result,
+                            since=since,
+                            until=until,
+                            granularity="JOB",
+                        ),
+                    )
             case _:
                 msg = f"Unknown granularity: {granularity}"
                 raise ValueError(msg)
@@ -602,6 +658,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
+        include_column_lineage: bool,  # noqa: FBT001
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         inputs = []
@@ -697,6 +754,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
+        include_column_lineage: bool,  # noqa: FBT001
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         inputs = []
@@ -790,6 +848,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
+        include_column_lineage: bool,  # noqa: FBT001
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         inputs = []
@@ -868,5 +927,54 @@ class LineageService:
             job_ids = sorted(downstream_job_ids | upstream_job_ids)
             jobs = await self._uow.job.list_by_ids(job_ids)
             result.jobs = {job.id: job for job in jobs}
+
+        return result
+
+    async def _get_column_lineage(
+        self,
+        current_result: LineageServiceResult,
+        since: datetime,
+        until: datetime | None,
+        granularity: Literal["OPERATION", "RUN", "JOB"],
+    ) -> dict[tuple[int, int], list[ColumnLineageRow]]:
+        """
+        'granularity' argument of this function not the same as granularity in api request.
+        Here it's used for aggregation entity
+        """
+        result: dict[tuple[int, int], list[ColumnLineageRow]] = defaultdict(list)
+        if not current_result.inputs or not current_result.outputs:
+            return result
+        match granularity:
+            case "OPERATION":
+                column_lineage_result = await self._uow.column_lineage.list_by_operation_ids(
+                    operation_ids=sorted(current_result.operations.keys()),
+                    # return column lineage only for datasets included into response
+                    source_ids=[input_.dataset_id for input_ in current_result.inputs.values()],
+                    target_ids=[output.dataset_id for output in current_result.outputs.values()],
+                )
+            case "RUN":
+                column_lineage_result = await self._uow.column_lineage.list_by_run_ids(
+                    run_ids=sorted(current_result.runs.keys()),
+                    since=since,
+                    until=until,
+                    source_ids=[input_.dataset_id for input_ in current_result.inputs.values()],
+                    target_ids=[output.dataset_id for output in current_result.outputs.values()],
+                )
+            case "JOB":
+                column_lineage_result = await self._uow.column_lineage.list_by_job_ids(
+                    job_ids=sorted(current_result.jobs.keys()),
+                    since=since,
+                    until=until,
+                    source_ids=[input_.dataset_id for input_ in current_result.inputs.values()],
+                    target_ids=[output.dataset_id for output in current_result.outputs.values()],
+                )
+            case _:
+                msg = f"Unknown granularity for column lineage: {granularity}"
+                raise ValueError(msg)
+
+        for relation in column_lineage_result:
+            result[(relation.source_dataset_id, relation.target_dataset_id)].append(
+                relation,
+            )
 
         return result

@@ -12,7 +12,10 @@ from data_rentgen.server.schemas.v1.job import (
     JobResponseV1,
 )
 from data_rentgen.server.schemas.v1.lineage import (
+    ColumnLineageInteractionTypeV1,
     DatasetLineageQueryV1,
+    DirectLineageColumnRelationV1,
+    IndirectLineageColumnRelationV1,
     JobLineageQueryV1,
     LineageDirectionV1,
     LineageEntityKindV1,
@@ -25,6 +28,7 @@ from data_rentgen.server.schemas.v1.lineage import (
     LineageParentRelationV1,
     LineageRelationsResponseV1,
     LineageResponseV1,
+    LineageSourceColumnV1,
     LineageSymlinkRelationV1,
     OperationLineageQueryV1,
     RunLineageQueryV1,
@@ -59,10 +63,13 @@ from data_rentgen.server.schemas.v1.user import UserResponseV1
 
 __all__ = [
     "AddressResponseV1",
+    "ColumnLineageInteractionTypeV1",
     "DatasetDetailedResponseV1",
     "DatasetLineageQueryV1",
     "DatasetPaginateQueryV1",
     "DatasetResponseV1",
+    "DirectLineageColumnRelationV1",
+    "IndirectLineageColumnRelationV1",
     "JobDetailedResponseV1",
     "JobLineageQueryV1",
     "JobPaginateQueryV1",
@@ -78,6 +85,7 @@ __all__ = [
     "LineageParentRelationV1",
     "LineageRelationsResponseV1",
     "LineageResponseV1",
+    "LineageSourceColumnV1",
     "LineageSymlinkRelationV1",
     "LocationDetailedResponseV1",
     "LocationPaginateQueryV1",

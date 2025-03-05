@@ -62,6 +62,8 @@ async def test_get_dataset_lineage_no_relations(
             "symlinks": [],
             "inputs": [],
             "outputs": [],
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
         },
         "nodes": {
             "datasets": datasets_to_json([dataset]),
@@ -117,6 +119,8 @@ async def test_get_dataset_lineage_with_granularity_run(
             "symlinks": [],
             "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
             "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
         },
         "nodes": {
             "datasets": datasets_to_json([dataset]),
@@ -168,6 +172,8 @@ async def test_get_dataset_lineage_with_granularity_job(
             "symlinks": [],
             "inputs": inputs_to_json(merge_io_by_jobs(inputs), granularity="JOB"),
             "outputs": outputs_to_json(merge_io_by_jobs(outputs), granularity="JOB"),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
         },
         "nodes": {
             "datasets": datasets_to_json([dataset]),
@@ -228,6 +234,8 @@ async def test_get_dataset_lineage_with_granularity_operation(
             "symlinks": [],
             "inputs": inputs_to_json(inputs, granularity="OPERATION"),
             "outputs": outputs_to_json(outputs, granularity="OPERATION"),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
         },
         "nodes": {
             "datasets": datasets_to_json([dataset]),
@@ -280,6 +288,8 @@ async def test_get_dataset_lineage_with_direction_downstream(
             "symlinks": [],
             "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
             "outputs": [],
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
         },
         "nodes": {
             "datasets": datasets_to_json([dataset]),
@@ -333,6 +343,8 @@ async def test_get_dataset_lineage_with_direction_upstream(
             "symlinks": [],
             "inputs": [],
             "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
         },
         "nodes": {
             "datasets": datasets_to_json([dataset]),
@@ -394,6 +406,8 @@ async def test_get_dataset_lineage_with_until(
             "symlinks": [],
             "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
             "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
         },
         "nodes": {
             "datasets": datasets_to_json([dataset]),
@@ -484,6 +498,8 @@ async def test_get_dataset_lineage_with_depth(
             "symlinks": [],
             "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
             "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
         },
         "nodes": {
             "datasets": datasets_to_json(datasets),
@@ -567,6 +583,8 @@ async def test_get_dataset_lineage_with_depth_and_granularity_job(
             "symlinks": [],
             "inputs": inputs_to_json(merge_io_by_jobs(inputs), granularity="JOB"),
             "outputs": outputs_to_json(merge_io_by_jobs(outputs), granularity="JOB"),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
         },
         "nodes": {
             "datasets": datasets_to_json(datasets),
@@ -663,6 +681,8 @@ async def test_get_dataset_lineage_with_depth_and_granularity_operation(
             "symlinks": [],
             "inputs": inputs_to_json(inputs, granularity="OPERATION"),
             "outputs": outputs_to_json(outputs, granularity="OPERATION"),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
         },
         "nodes": {
             "datasets": datasets_to_json(datasets),
@@ -709,6 +729,8 @@ async def test_get_dataset_lineage_with_depth_ignore_cycles(
             "symlinks": [],
             "inputs": inputs_to_json(merge_io_by_runs(lineage.inputs), granularity="RUN"),
             "outputs": outputs_to_json(merge_io_by_runs(lineage.outputs), granularity="RUN"),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
         },
         "nodes": {
             "datasets": datasets_to_json(datasets),
@@ -785,6 +807,8 @@ async def test_get_dataset_lineage_with_depth_ignore_unrelated_datasets(
             "symlinks": [],
             "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
             "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
         },
         "nodes": {
             "datasets": datasets_to_json(datasets),
@@ -856,6 +880,8 @@ async def test_get_dataset_lineage_with_symlink(
             "symlinks": symlinks_to_json(dataset_symlinks),
             "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
             "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
         },
         "nodes": {
             "datasets": datasets_to_json(datasets),
@@ -929,6 +955,8 @@ async def test_get_dataset_lineage_unmergeable_schema_and_output_type(
             "symlinks": [],
             "inputs": inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
             "outputs": outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
         },
         "nodes": {
             "datasets": datasets_to_json([dataset]),
@@ -1017,6 +1045,8 @@ async def test_get_dataset_lineage_empty_io_stats_and_schema(
             "symlinks": [],
             "inputs": inputs_to_json(merged_inputs, granularity="RUN"),
             "outputs": outputs_to_json(merged_outputs, granularity="RUN"),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
         },
         "nodes": {
             "datasets": datasets_to_json([dataset]),

@@ -1,6 +1,7 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+from collections import defaultdict
 from typing import Any
 
 from uuid6 import UUID
@@ -10,8 +11,12 @@ from data_rentgen.db.models.input import Input
 from data_rentgen.db.models.operation import Operation
 from data_rentgen.db.models.output import Output
 from data_rentgen.db.models.run import Run
+from data_rentgen.db.repositories.column_lineage import ColumnLineageRow
 from data_rentgen.server.schemas.v1 import (
+    ColumnLineageInteractionTypeV1,
     DatasetResponseV1,
+    DirectLineageColumnRelationV1,
+    IndirectLineageColumnRelationV1,
     JobResponseV1,
     LineageEntityKindV1,
     LineageEntityV1,
@@ -20,6 +25,7 @@ from data_rentgen.server.schemas.v1 import (
     LineageOutputRelationV1,
     LineageParentRelationV1,
     LineageResponseV1,
+    LineageSourceColumnV1,
     LineageSymlinkRelationV1,
     OperationResponseV1,
     RunResponseV1,
@@ -49,6 +55,8 @@ async def build_lineage_response(lineage: LineageServiceResult) -> LineageRespon
             symlinks=_get_symlink_relations(lineage.dataset_symlinks),
             inputs=_get_input_relations(lineage.inputs),
             outputs=_get_output_relations(lineage.outputs),
+            direct_column_lineage=_get_direct_column_lineage(lineage.column_lineage),
+            indirect_column_lineage=_get_indirect_column_lineage(lineage.column_lineage),
         ),
     )
 
@@ -137,3 +145,54 @@ def _get_output_relations(outputs: dict[Any, Output]) -> list[LineageOutputRelat
         relations.append(relation)
 
     return sorted(relations, key=lambda x: (str(x.from_.id), str(x.to.id), x.type))
+
+
+def _get_direct_column_lineage(column_lineage_by_source_target_id: dict[tuple, list[ColumnLineageRow]]):
+    relations = []
+    for (source_dataset_id, target_dataset_id), column_relations in column_lineage_by_source_target_id.items():
+        column_lineage_relation = DirectLineageColumnRelationV1(
+            from_=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(source_dataset_id)),
+            to=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(target_dataset_id)),
+        )
+        fields = defaultdict(list)
+        for column_relation in column_relations:
+            if column_relation.target_column:
+                fields[column_relation.target_column].append(
+                    LineageSourceColumnV1(
+                        field=column_relation.source_column,
+                        last_used_at=column_relation.last_used_at,
+                        types=[
+                            type_
+                            for type_ in ColumnLineageInteractionTypeV1
+                            if type_.value & column_relation.types_combined
+                        ],
+                    ),
+                )
+        if fields:
+            column_lineage_relation.fields = fields  # type: ignore[assignment]
+            relations.append(column_lineage_relation)
+    return sorted(relations, key=lambda x: (str(x.from_.id), str(x.to.id)))
+
+
+def _get_indirect_column_lineage(column_lineage_by_source_target_id: dict[tuple, list[ColumnLineageRow]]):
+    relations = []
+    for (source_dataset_id, target_dataset_id), column_relations in column_lineage_by_source_target_id.items():
+        column_lineage_relation = IndirectLineageColumnRelationV1(
+            from_=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(source_dataset_id)),
+            to=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(target_dataset_id)),
+        )
+        fields = [
+            LineageSourceColumnV1(
+                field=column_relation.source_column,
+                last_used_at=column_relation.last_used_at,
+                types=[
+                    type_ for type_ in ColumnLineageInteractionTypeV1 if type_.value & column_relation.types_combined
+                ],
+            )
+            for column_relation in column_relations
+            if column_relation.target_column is None
+        ]
+        if fields:
+            column_lineage_relation.fields = fields
+            relations.append(column_lineage_relation)
+    return sorted(relations, key=lambda x: (str(x.from_.id), str(x.to.id)))

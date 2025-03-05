@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import Enum, IntEnum
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_serializer, field_validator
 
 from data_rentgen.server.schemas.v1.dataset import DatasetResponseV1
 from data_rentgen.server.schemas.v1.job import JobResponseV1
@@ -64,6 +64,7 @@ class BaseLineageQueryV1(BaseModel):
         description="Depth of the lineage",
         examples=[1, 3],
     )
+    include_column_lineage: bool = Field(default=False, description="Include or not column lineage into response")
 
     model_config = ConfigDict(extra="forbid")
 
@@ -168,11 +169,86 @@ class LineageSymlinkRelationV1(BaseModel):
     type: str = Field(description="Type of relation between datasets", examples=["METASTORE", "WAREHOUSE"])
 
 
+class ColumnLineageInteractionTypeV1(IntEnum):
+    UNKNOWN = 1
+
+    # Direct
+    IDENTITY = 2
+    TRANSFORMATION = 4
+    TRANSFORMATION_MASKING = 8
+    AGGREGATION = 16
+    AGGREGATION_MASKING = 32
+
+    # Indirect
+    FILTER = 64
+    JOIN = 128
+    GROUP_BY = 256
+    SORT = 512
+    WINDOW = 1024
+    CONDITIONAL = 2048
+
+    def __str__(self) -> str:
+        return self.name
+
+
+class LineageSourceColumnV1(BaseModel):
+    field: str = Field(description="Source column", examples=["my_col_1", "my_col_2"])
+    types: list[ColumnLineageInteractionTypeV1] = Field(
+        description="Type of relation between source and target column",
+        examples=[
+            [
+                ColumnLineageInteractionTypeV1.UNKNOWN,
+            ],
+            [
+                ColumnLineageInteractionTypeV1.TRANSFORMATION,
+                ColumnLineageInteractionTypeV1.AGGREGATION,
+            ],
+            [
+                ColumnLineageInteractionTypeV1.JOIN,
+            ],
+        ],
+    )
+    last_used_at: datetime = Field(
+        description="Last time when transformation was used at",
+        examples=["2008-09-15T15:53:00+05:00"],
+    )
+
+    @field_serializer("types")
+    def serialize_types(self, types: list[ColumnLineageInteractionTypeV1], _info):
+        return [type_.name for type_ in types]
+
+
+class DirectLineageColumnRelationV1(BaseModel):
+    from_: LineageEntityV1 = Field(description="Dataset with source columns", serialization_alias="from")
+    to: LineageEntityV1 = Field(description="Dataset with target columns")
+    fields: dict[str, LineageSourceColumnV1] = Field(
+        description="Map of target and source columns with type of direct interaction",
+        default_factory=dict,
+    )
+
+
+class IndirectLineageColumnRelationV1(BaseModel):
+    from_: LineageEntityV1 = Field(description="Dataset with source columns", serialization_alias="from")
+    to: LineageEntityV1 = Field(description="Dataset with target columns")
+    fields: list[LineageSourceColumnV1] = Field(
+        description="List source columns with type of indirect interaction",
+        default_factory=list,
+    )
+
+
 class LineageRelationsResponseV1(BaseModel):
     parents: list[LineageParentRelationV1] = Field(description="Parent relations", default_factory=list)
     symlinks: list[LineageSymlinkRelationV1] = Field(description="Symlink relations", default_factory=list)
     inputs: list[LineageInputRelationV1] = Field(description="Input relations", default_factory=list)
     outputs: list[LineageOutputRelationV1] = Field(description="Input relations", default_factory=list)
+    direct_column_lineage: list[DirectLineageColumnRelationV1] = Field(
+        description="Direct column lineage relations",
+        default_factory=list,
+    )
+    indirect_column_lineage: list[IndirectLineageColumnRelationV1] = Field(
+        description="Indirect column lineage relations",
+        default_factory=list,
+    )
 
 
 class LineageNodesResponseV1(BaseModel):

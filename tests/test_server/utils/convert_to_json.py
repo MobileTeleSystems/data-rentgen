@@ -1,19 +1,23 @@
-from datetime import datetime
-from typing import Literal
+from __future__ import annotations
 
-from data_rentgen.db.models import (
-    Address,
-    Dataset,
-    DatasetSymlink,
-    Input,
-    Job,
-    Location,
-    Operation,
-    Output,
-    Run,
-    Schema,
-    User,
-)
+from typing import TYPE_CHECKING, Literal
+
+if TYPE_CHECKING:
+    from datetime import datetime
+
+    from data_rentgen.db.models import (
+        Address,
+        Dataset,
+        DatasetSymlink,
+        Input,
+        Job,
+        Location,
+        Operation,
+        Output,
+        Run,
+        Schema,
+        User,
+    )
 
 
 def format_datetime(value: datetime):
