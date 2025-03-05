@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+import re
 from urllib.parse import urlparse
 
 from data_rentgen.consumer.openlineage.dataset import OpenLineageDataset
@@ -27,6 +28,8 @@ OpenLineageDatasetLike = (
 )
 METASTORE = DatasetSymlinkTypeDTO.METASTORE
 WAREHOUSE = DatasetSymlinkTypeDTO.WAREHOUSE
+
+PARTITION_PATH_PATTERN: re.Pattern = re.compile("^(.*?)/[^/=]+=")
 
 
 def connect_dataset_with_symlinks(
@@ -56,8 +59,10 @@ def connect_dataset_with_symlinks(
 
 
 def extract_dataset(dataset: OpenLineageDatasetLike) -> DatasetDTO:
+    name_with_partitions = PARTITION_PATH_PATTERN.match(dataset.name)
+    name = name_with_partitions.group(1) if name_with_partitions else dataset.name
     return DatasetDTO(
-        name=dataset.name,
+        name=name,
         location=extract_dataset_location(dataset),
         format=extract_dataset_format(dataset),
     )

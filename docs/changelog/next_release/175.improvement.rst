@@ -1,0 +1,13 @@
+Add dataset name parsing for removing partition-like part from name.
+
+Before:
+
+Two different datasets
+``name="/app/warehouse/somedb.db/sometable/business_dt=2025-01-01/reg_id=99``
+``name="/app/warehouse/somedb.db/sometable/business_dt=2025-02-01/reg_id=99``
+
+Now:
+
+Two partitions union in one dataset
+``name="/app/warehouse/somedb.db/sometable``
+

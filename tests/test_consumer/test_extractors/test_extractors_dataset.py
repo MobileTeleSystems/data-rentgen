@@ -1,9 +1,9 @@
 import pytest
 
-from data_rentgen.consumer.extractors import (
-    extract_dataset_and_symlinks,
+from data_rentgen.consumer.extractors import extract_dataset_and_symlinks
+from data_rentgen.consumer.openlineage.dataset import (
+    OpenLineageDataset,
 )
-from data_rentgen.consumer.openlineage.dataset import OpenLineageDataset
 from data_rentgen.consumer.openlineage.dataset_facets import (
     OpenLineageDatasetFacets,
     OpenLineageStorageDatasetFacet,
@@ -23,6 +23,25 @@ def test_extractors_extract_dataset_hdfs():
     dataset = OpenLineageDataset(
         namespace="hdfs://test-hadoop:9820",
         name="/user/hive/warehouse/mydb.db/mytable",
+    )
+
+    dataset, symlinks = extract_dataset_and_symlinks(dataset)
+
+    assert dataset == DatasetDTO(
+        location=LocationDTO(
+            type="hdfs",
+            name="test-hadoop:9820",
+            addresses={"hdfs://test-hadoop:9820"},
+        ),
+        name="/user/hive/warehouse/mydb.db/mytable",
+    )
+    assert symlinks == []
+
+
+def test_extractors_extract_dataset_hdfs_with_patition():
+    dataset = OpenLineageDataset(
+        namespace="hdfs://test-hadoop:9820",
+        name="/user/hive/warehouse/mydb.db/mytable/business_dt=2025-01-01/reg_id=99/part_dt=2025-01-01",
     )
 
     dataset, symlinks = extract_dataset_and_symlinks(dataset)
