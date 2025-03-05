@@ -60,10 +60,6 @@ Setup
           )
           .config("spark.openlineage.transport.properties.compression.type", "zstd")
           # few other important options
-          .config(
-              "spark.openlineage.dataset.removePath.pattern",
-              r"(.*?)(?<remove>(?:\/[^\/=]+=[^\/=]+)+)",
-          )
           .config("spark.openlineage.jobName.appendDatasetName", "false")
           .config("spark.openlineage.columnLineage.datasetLineageEnabled", "true")
           .getOrCreate()

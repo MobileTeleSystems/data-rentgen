@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 import logging
+import re
 from urllib.parse import urlparse
 
 from data_rentgen.consumer.openlineage.dataset import OpenLineageDataset
@@ -56,8 +57,10 @@ def connect_dataset_with_symlinks(
 
 
 def extract_dataset(dataset: OpenLineageDatasetLike) -> DatasetDTO:
+    long_name = re.match("^(.*?)/[^/=]+=", dataset.name)
+    name = long_name.group(1) if long_name else dataset.name
     return DatasetDTO(
-        name=dataset.name,
+        name=name,
         location=extract_dataset_location(dataset),
         format=extract_dataset_format(dataset),
     )
