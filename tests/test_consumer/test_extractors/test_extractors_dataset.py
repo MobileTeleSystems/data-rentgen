@@ -80,7 +80,7 @@ def test_extractors_extract_dataset_hdfs_with_patition():
     assert symlinks == []
 
 
-def test_extractors_extract_batch_dataset_hdfs():
+def test_extract_batch_hdfs_strip_partitions():
     """
     There is two datasets name in event. They should be union into one, excluding partition.
     """

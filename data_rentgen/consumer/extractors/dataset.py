@@ -29,7 +29,7 @@ OpenLineageDatasetLike = (
 METASTORE = DatasetSymlinkTypeDTO.METASTORE
 WAREHOUSE = DatasetSymlinkTypeDTO.WAREHOUSE
 
-PATTERN: re.Pattern = re.compile("^(.*?)/[^/=]+=")
+PARTITION_PATH_PATTERN: re.Pattern = re.compile("^(.*?)/[^/=]+=")
 
 
 def connect_dataset_with_symlinks(
@@ -59,8 +59,8 @@ def connect_dataset_with_symlinks(
 
 
 def extract_dataset(dataset: OpenLineageDatasetLike) -> DatasetDTO:
-    long_name = PATTERN.match(dataset.name)
-    name = long_name.group(1) if long_name else dataset.name
+    name_with_partitions = PARTITION_PATH_PATTERN.match(dataset.name)
+    name = name_with_partitions.group(1) if name_with_partitions else dataset.name
     return DatasetDTO(
         name=name,
         location=extract_dataset_location(dataset),
