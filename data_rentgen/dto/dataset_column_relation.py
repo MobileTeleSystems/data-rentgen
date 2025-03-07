@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import IntFlag
-from functools import cached_property
 
 from uuid6 import UUID
 
@@ -40,7 +39,7 @@ class DatasetColumnRelationDTO:
     fingerprint: UUID | None = None
     # description is always "", see io.openlineage.spark.agent.lifecycle.plan.column.TransformationInfo
 
-    @cached_property
+    @property
     def unique_key(self) -> tuple:
         return (
             self.source_column,

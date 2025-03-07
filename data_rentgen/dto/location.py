@@ -17,6 +17,10 @@ class LocationDTO:
         return (self.type, self.name)
 
     def merge(self, new: LocationDTO) -> LocationDTO:
+        if new.id is None and self.addresses == new.addresses:
+            # locations aren't changed that much, reuse them if possible
+            return self
+
         return LocationDTO(
             type=self.type,
             name=self.name,

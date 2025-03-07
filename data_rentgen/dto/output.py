@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from functools import cached_property
 
 from uuid6 import UUID
 
@@ -41,7 +40,7 @@ class OutputDTO:
     # id is generated using other ids combination
     id: UUID | None = None
 
-    @cached_property
+    @property
     def unique_key(self) -> tuple:
         return (
             self.operation.unique_key,

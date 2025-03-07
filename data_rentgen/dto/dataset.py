@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from functools import cached_property
 
 from data_rentgen.dto.location import LocationDTO
 
@@ -16,11 +15,15 @@ class DatasetDTO:
     format: str | None = None
     id: int | None = field(default=None, compare=False)
 
-    @cached_property
+    @property
     def unique_key(self) -> tuple:
         return (self.location.unique_key, self.name)
 
     def merge(self, new: DatasetDTO) -> DatasetDTO:
+        if self.location is new.location and new.id is None and new.format == self.format:
+            # datasets aren't changed that much, reuse them if possible
+            return self
+
         return DatasetDTO(
             location=self.location.merge(new.location),
             name=self.name,

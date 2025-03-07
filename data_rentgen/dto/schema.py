@@ -15,9 +15,13 @@ class SchemaDTO:
 
     @cached_property
     def unique_key(self) -> tuple:
+        # expensive operation, calculate it only once
         return (json.dumps(self.fields, sort_keys=True),)
 
     def merge(self, new: SchemaDTO) -> SchemaDTO:
+        if new.id is None:
+            return self
+
         return SchemaDTO(
             fields=self.fields,
             id=new.id or self.id,

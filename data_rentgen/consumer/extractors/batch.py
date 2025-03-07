@@ -90,71 +90,73 @@ class BatchExtractionResult:
         )
 
     @staticmethod
-    def _add(context: dict[tuple, T], new_item: T) -> dict[tuple, T]:
+    def _add(context: dict[tuple, T], new_item: T) -> T:
         key = new_item.unique_key
         if key in context:
             old_item = context[key]
             if old_item is new_item:
-                return context
+                return old_item
 
-            context[key] = old_item.merge(new_item)
-        else:
-            context[key] = new_item
-        return context
+            merged_item = old_item.merge(new_item)
+            context[key] = merged_item
+            return merged_item
+
+        context[key] = new_item
+        return new_item
 
     def add_location(self, location: LocationDTO):
-        self._add(self._locations, location)
+        return self._add(self._locations, location)
 
     def add_dataset(self, dataset: DatasetDTO):
-        self._add(self._datasets, dataset)
-        self.add_location(dataset.location)
+        dataset.location = self.add_location(dataset.location)
+        return self._add(self._datasets, dataset)
 
     def add_dataset_symlink(self, dataset_symlink: DatasetSymlinkDTO):
-        self._add(self._dataset_symlinks, dataset_symlink)
-        self.add_dataset(dataset_symlink.from_dataset)
-        self.add_dataset(dataset_symlink.to_dataset)
+        dataset_symlink.from_dataset = self.add_dataset(dataset_symlink.from_dataset)
+        dataset_symlink.to_dataset = self.add_dataset(dataset_symlink.to_dataset)
+        return self._add(self._dataset_symlinks, dataset_symlink)
 
     def add_job(self, job: JobDTO):
-        self._add(self._jobs, job)
-        self.add_location(job.location)
+        job.location = self.add_location(job.location)
+        return self._add(self._jobs, job)
 
     def add_run(self, run: RunDTO):
-        self._add(self._runs, run)
-        self.add_job(run.job)
+        run.job = self.add_job(run.job)
         if run.parent_run:
-            self.add_run(run.parent_run)
+            run.parent_run = self.add_run(run.parent_run)
         if run.user:
-            self.add_user(run.user)
+            run.user = self.add_user(run.user)
+        return self._add(self._runs, run)
 
     def add_operation(self, operation: OperationDTO):
-        self._add(self._operations, operation)
-        self.add_run(operation.run)
+        operation.run = self.add_run(operation.run)
+        return self._add(self._operations, operation)
 
     def add_input(self, input_: InputDTO):
-        self._add(self._inputs, input_)
-        self.add_operation(input_.operation)
-        self.add_dataset(input_.dataset)
+        input_.operation = self.add_operation(input_.operation)
+        input_.dataset = self.add_dataset(input_.dataset)
         if input_.schema:
-            self.add_schema(input_.schema)
+            input_.schema = self.add_schema(input_.schema)
+        return self._add(self._inputs, input_)
 
     def add_output(self, output: OutputDTO):
-        self._add(self._outputs, output)
-        self.add_operation(output.operation)
-        self.add_dataset(output.dataset)
+        output.operation = self.add_operation(output.operation)
+        output.dataset = self.add_dataset(output.dataset)
         if output.schema:
-            self.add_schema(output.schema)
+            output.schema = self.add_schema(output.schema)
+        return self._add(self._outputs, output)
 
     def add_column_lineage(self, lineage: ColumnLineageDTO):
-        self._add(self._column_lineage, lineage)
-        self.add_dataset(lineage.source_dataset)
-        self.add_dataset(lineage.target_dataset)
-        self.add_operation(lineage.operation)
+        lineage.source_dataset = self.add_dataset(lineage.source_dataset)
+        lineage.target_dataset = self.add_dataset(lineage.target_dataset)
+        lineage.operation = self.add_operation(lineage.operation)
+        return self._add(self._column_lineage, lineage)
 
     def add_schema(self, schema: SchemaDTO):
-        self._add(self._schemas, schema)
+        return self._add(self._schemas, schema)
 
     def add_user(self, user: UserDTO):
-        self._add(self._users, user)
+        return self._add(self._users, user)
 
     def get_location(self, location_key: tuple) -> LocationDTO:
         return self._locations[location_key]
