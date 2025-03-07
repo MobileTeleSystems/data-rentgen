@@ -41,7 +41,7 @@ class ColumnLineageDTO:
 
     @cached_property
     def fingerprint(self) -> UUID:
-        id_components = [(*item.unique_key, item.type) for item in self.column_relations]
+        id_components = sorted((*item.unique_key, item.type) for item in self.column_relations)
         str_components = [".".join(map(str, item)) for item in id_components]
         return generate_static_uuid(",".join(str_components))
 
