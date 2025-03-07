@@ -5,7 +5,7 @@ from urllib.parse import quote
 
 from packaging.version import Version
 
-from data_rentgen.consumer.extractors.job import extract_job
+from data_rentgen.consumer.extractors.job import extract_job, extract_parent_job
 from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEvent,
     OpenLineageRunEventType,
@@ -20,17 +20,20 @@ from data_rentgen.dto import RunDTO, RunStartReasonDTO, RunStatusDTO
 from data_rentgen.dto.user import UserDTO
 
 
-def extract_run_minimal(
-    facet: OpenLineageRunEvent | OpenLineageParentRunFacet,
+def extract_parent_run(
+    facet: OpenLineageParentRunFacet,
 ) -> RunDTO:
     return RunDTO(
         id=facet.run.runId,  # type: ignore [arg-type]
-        job=extract_job(facet.job),
+        job=extract_parent_job(facet.job),
     )
 
 
 def extract_run(event: OpenLineageRunEvent) -> RunDTO:
-    run = extract_run_minimal(event)
+    run = RunDTO(
+        id=event.run.runId,  # type: ignore [arg-type]
+        job=extract_job(event.job),
+    )
     enrich_run_parent(run, event)
     enrich_run_status(run, event)
     enrich_run_start_reason(run, event)
@@ -42,7 +45,7 @@ def extract_run(event: OpenLineageRunEvent) -> RunDTO:
 
 def enrich_run_parent(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
     if event.run.facets.parent:
-        run.parent_run = extract_run_minimal(event.run.facets.parent)
+        run.parent_run = extract_parent_run(event.run.facets.parent)
     return run
 
 

@@ -8,7 +8,14 @@ from data_rentgen.consumer.openlineage.run_facets import OpenLineageParentJob
 from data_rentgen.dto import JobDTO, JobTypeDTO, LocationDTO
 
 
-def extract_job(job: OpenLineageJob | OpenLineageParentJob) -> JobDTO:
+def extract_parent_job(job: OpenLineageParentJob) -> JobDTO:
+    return JobDTO(
+        name=job.name,
+        location=extract_job_location(job),
+    )
+
+
+def extract_job(job: OpenLineageJob) -> JobDTO:
     return JobDTO(
         name=job.name,
         location=extract_job_location(job),
@@ -27,8 +34,8 @@ def extract_job_location(job: OpenLineageJob | OpenLineageParentJob) -> Location
     )
 
 
-def extract_job_type(job: OpenLineageJob | OpenLineageParentJob) -> JobTypeDTO | None:
-    if isinstance(job, OpenLineageJob) and job.facets.jobType:
+def extract_job_type(job: OpenLineageJob) -> JobTypeDTO | None:
+    if job.facets.jobType:
         job_type = job.facets.jobType.jobType
         integration_type = job.facets.jobType.integration
         return JobTypeDTO(f"{integration_type}_{job_type}")

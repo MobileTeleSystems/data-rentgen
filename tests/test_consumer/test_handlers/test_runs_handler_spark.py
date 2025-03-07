@@ -227,7 +227,7 @@ async def test_runs_handler_spark(
     assert first_event_column_lineage.operation_id == job_operation.id
     assert first_event_column_lineage.run_id == application_run.id
     assert first_event_column_lineage.job_id == application_run.job_id
-    assert first_event_column_lineage.source_dataset_id == hdfs_warehouse.id
+    assert first_event_column_lineage.source_dataset_id == hive_table.id
     assert first_event_column_lineage.target_dataset_id == clickhouse_table.id
 
     second_event_column_lineage = column_lineage[1]
@@ -235,7 +235,7 @@ async def test_runs_handler_spark(
     assert second_event_column_lineage.operation_id == job_operation.id
     assert second_event_column_lineage.run_id == application_run.id
     assert second_event_column_lineage.job_id == application_run.job_id
-    assert second_event_column_lineage.source_dataset_id == hdfs_warehouse.id
+    assert second_event_column_lineage.source_dataset_id == hive_table.id
     assert second_event_column_lineage.target_dataset_id == clickhouse_table.id
 
     dataset_column_relation_query = select(DatasetColumnRelation).order_by(
