@@ -38,20 +38,32 @@ Data.Rentgen is a Data Motion Lineage service, compatible with `OpenLineage <htt
 Goals
 -----
 
-* Collect lineage events produced by OpenLineage clients & integrations (Spark, Airflow).
-* Support consuming large amounts of lineage events, by using Kafka as event buffer and storing data in tables partitioned by event timestamp.
-* Store operation-grained events (instead of job grained `Marquez <https://marquezproject.ai/>`_), for better detalization.
-* Provide API for fetching run ↔ dataset lineage.
-* Allow building lineage graph with specific time boundaries (unlike Marquez there lineage is build only for last job run).
-* Allow building lineage graph with different granularity. e.g. merge all individual Spark operations into Spark applicationId or Spark applicationName.
-* Include column-level lineage into lineage graph.
+* Collect lineage events produced by OpenLineage clients & integrations.
+* Store operation-grained events for better detalization (instead of job grained `Marquez <https://marquezproject.ai/>`_).
+* Provide API for fetching job/run ↔ dataset lineage, not dataset ↔ dataset lineage (like `Datahub <https://datahubproject.io/>`_ and `OpenMetadata <https://open-metadata.org/>`_).
+
+Features
+--------
+
+* Support consuming large amounts of lineage events, use Apache Kafka as event buffer.
+* Store data in tables partitioned by event timestamp, to speed up lineage graph resolution.
+* Lineage graph is build with user-specified time boundaries (unlike Marquez where lineage is build only for last job run).
+* Lineage graph can be build with different granularity. e.g. merge all individual Spark operations into Spark applicationId or Spark applicationName.
+* Column-level lineage support.
+* Authentication support.
 
 Non-goals
 ---------
 
-* This is **not** a Data Catalog. Use `Datahub <https://datahubproject.io/>`_ or `OpenMetadata <https://open-metadata.org/>`_ instead.
+* This is **not** a Data Catalog, DataRentgen doesn't track dataset schema change, owner and so on. Use Datahub or OpenMetadata instead.
 * Static Data Lineage like view → table is not supported.
-* Job/run/operation are always a part of lineage graph. Hiding them to produce dataset → dataset lineage is not supported for now.
+
+Limitations
+-----------
+
+* For now, only Apache Spark and Apache Airflow are supported as lineage event sources.
+  OpenLineage also supports Apache Flink, DBT, Trino and others. DataRentgen support may be added later.
+* Unlike Marquez, DataRentgen parses only limited set of facets send by OpenLineage, and doesn't store custom facets. This can be changed in future.
 
 .. documentation
 
