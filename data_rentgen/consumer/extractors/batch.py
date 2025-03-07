@@ -156,123 +156,133 @@ class BatchExtractionResult:
     def add_user(self, user: UserDTO):
         self._add(self._users, user)
 
-    def _get_location(self, location_key: tuple) -> LocationDTO:
+    def get_location(self, location_key: tuple) -> LocationDTO:
         return self._locations[location_key]
 
-    def _get_schema(self, schema_key: tuple) -> SchemaDTO:
+    def get_schema(self, schema_key: tuple) -> SchemaDTO:
         return self._schemas[schema_key]
 
-    def _get_user(self, user_key: tuple) -> UserDTO:
+    def get_user(self, user_key: tuple) -> UserDTO:
         return self._users[user_key]
 
-    def _get_dataset(self, dataset_key: tuple) -> DatasetDTO:
+    def get_dataset(self, dataset_key: tuple) -> DatasetDTO:
         dataset = self._datasets[dataset_key]
-        dataset.location = self._get_location(dataset.location.unique_key)
+        dataset.location = self.get_location(dataset.location.unique_key)
         return dataset
 
-    def _get_dataset_symlink(self, dataset_symlink_key: tuple) -> DatasetSymlinkDTO:
+    def get_dataset_symlink(self, dataset_symlink_key: tuple) -> DatasetSymlinkDTO:
         dataset_symlink = self._dataset_symlinks[dataset_symlink_key]
-        dataset_symlink.from_dataset = self._get_dataset(dataset_symlink.from_dataset.unique_key)
-        dataset_symlink.to_dataset = self._get_dataset(dataset_symlink.to_dataset.unique_key)
+        dataset_symlink.from_dataset = self.get_dataset(dataset_symlink.from_dataset.unique_key)
+        dataset_symlink.to_dataset = self.get_dataset(dataset_symlink.to_dataset.unique_key)
         return dataset_symlink
 
-    def _get_job(self, job_key: tuple) -> JobDTO:
+    def get_job(self, job_key: tuple) -> JobDTO:
         job = self._jobs[job_key]
-        job.location = self._get_location(job.location.unique_key)
+        job.location = self.get_location(job.location.unique_key)
         return job
 
-    def _get_run(self, run_key: tuple) -> RunDTO:
+    def get_run(self, run_key: tuple) -> RunDTO:
         run = self._runs[run_key]
-        run.job = self._get_job(run.job.unique_key)
+        run.job = self.get_job(run.job.unique_key)
         if run.parent_run:
-            run.parent_run = self._get_run(run.parent_run.unique_key)
+            run.parent_run = self.get_run(run.parent_run.unique_key)
         if run.user:
-            run.user = self._get_user(run.user.unique_key)
+            run.user = self.get_user(run.user.unique_key)
         return run
 
-    def _get_operation(self, operation_key: tuple) -> OperationDTO:
+    def get_operation(self, operation_key: tuple) -> OperationDTO:
         operation = self._operations[operation_key]
-        operation.run = self._get_run(operation.run.unique_key)
+        operation.run = self.get_run(operation.run.unique_key)
         return operation
 
-    def _get_input(self, input_key: tuple) -> InputDTO:
+    def get_input(self, input_key: tuple) -> InputDTO:
         input_ = self._inputs[input_key]
-        input_.operation = self._get_operation(input_.operation.unique_key)
-        input_.dataset = self._get_dataset(input_.dataset.unique_key)
+        input_.operation = self.get_operation(input_.operation.unique_key)
+        input_.dataset = self.get_dataset(input_.dataset.unique_key)
         if input_.schema:
-            input_.schema = self._get_schema(input_.schema.unique_key)
+            input_.schema = self.get_schema(input_.schema.unique_key)
         return input_
 
-    def _get_output(self, output_key: tuple) -> OutputDTO:
+    def get_output(self, output_key: tuple) -> OutputDTO:
         output = self._outputs[output_key]
-        output.operation = self._get_operation(output.operation.unique_key)
-        output.dataset = self._get_dataset(output.dataset.unique_key)
+        output.operation = self.get_operation(output.operation.unique_key)
+        output.dataset = self.get_dataset(output.dataset.unique_key)
         if output.schema:
-            output.schema = self._get_schema(output.schema.unique_key)
+            output.schema = self.get_schema(output.schema.unique_key)
         return output
 
-    def _get_column_lineage(self, output_key: tuple) -> ColumnLineageDTO:
+    def get_column_lineage(self, output_key: tuple) -> ColumnLineageDTO:
         lineage = self._column_lineage[output_key]
-        lineage.operation = self._get_operation(lineage.operation.unique_key)
-        lineage.source_dataset = self._get_dataset(lineage.source_dataset.unique_key)
-        lineage.target_dataset = self._get_dataset(lineage.target_dataset.unique_key)
+        lineage.operation = self.get_operation(lineage.operation.unique_key)
+        lineage.source_dataset = self.get_dataset(lineage.source_dataset.unique_key)
+        lineage.target_dataset = self.get_dataset(lineage.target_dataset.unique_key)
         return lineage
 
     def locations(self) -> list[LocationDTO]:
-        return list(map(self._get_location, self._locations))
+        return list(map(self.get_location, self._locations))
 
     def datasets(self) -> list[DatasetDTO]:
-        return list(map(self._get_dataset, self._datasets))
+        return list(map(self.get_dataset, self._datasets))
 
     def dataset_symlinks(self) -> list[DatasetSymlinkDTO]:
-        return list(map(self._get_dataset_symlink, self._dataset_symlinks))
+        return list(map(self.get_dataset_symlink, self._dataset_symlinks))
 
     def jobs(self) -> list[JobDTO]:
-        return list(map(self._get_job, self._jobs))
+        return list(map(self.get_job, self._jobs))
 
     def runs(self) -> list[RunDTO]:
-        return list(map(self._get_run, self._runs))
+        return list(map(self.get_run, self._runs))
 
     def operations(self) -> list[OperationDTO]:
-        return list(map(self._get_operation, self._operations))
+        return list(map(self.get_operation, self._operations))
 
     def inputs(self) -> list[InputDTO]:
-        return list(map(self._get_input, self._inputs))
+        return list(map(self.get_input, self._inputs))
 
     def outputs(self) -> list[OutputDTO]:
-        return list(map(self._get_output, self._outputs))
+        return list(map(self.get_output, self._outputs))
 
     def column_lineage(self) -> list[ColumnLineageDTO]:
-        return list(map(self._get_column_lineage, self._column_lineage))
+        return list(map(self.get_column_lineage, self._column_lineage))
 
     def schemas(self) -> list[SchemaDTO]:
-        return list(map(self._get_schema, self._schemas))
+        return list(map(self.get_schema, self._schemas))
 
     def users(self) -> list[UserDTO]:
-        return list(map(self._get_user, self._users))
+        return list(map(self.get_user, self._users))
 
 
 def extract_batch(events: list[OpenLineageRunEvent]) -> BatchExtractionResult:
     result = BatchExtractionResult()
+    dataset_cache: dict[tuple[str, str], DatasetDTO] = {}
 
     for event in events:
         if event.job.facets.jobType and event.job.facets.jobType.jobType == OpenLineageJobType.JOB:
             operation = extract_operation(event)
             result.add_operation(operation)
+
             for input_dataset in event.inputs:
-                input_, symlinks = extract_input(operation, input_dataset)
-                result.add_input(input_)
-                for symlink in symlinks:
-                    result.add_dataset_symlink(symlink)
+                input_dto, symlink_dtos = extract_input(operation, input_dataset)
+
+                result.add_input(input_dto)
+                dataset_dto_cache_key = (input_dataset.namespace, input_dataset.name)
+                dataset_cache[dataset_dto_cache_key] = result.get_dataset(input_dto.dataset.unique_key)
+
+                for symlink_dto in symlink_dtos:
+                    result.add_dataset_symlink(symlink_dto)
 
             for output_dataset in event.outputs:
-                output, symlinks = extract_output(operation, output_dataset)
-                result.add_output(output)
-                for symlink in symlinks:
-                    result.add_dataset_symlink(symlink)
+                output_dto, symlink_dtos = extract_output(operation, output_dataset)
+
+                result.add_output(output_dto)
+                dataset_dto_cache_key = (output_dataset.namespace, output_dataset.name)
+                dataset_cache[dataset_dto_cache_key] = result.get_dataset(output_dto.dataset.unique_key)
+
+                for symlink_dto in symlink_dtos:
+                    result.add_dataset_symlink(symlink_dto)
 
             for dataset in event.inputs + event.outputs:
-                column_lineage = extract_column_lineage(operation, dataset)
+                column_lineage = extract_column_lineage(operation, dataset, dataset_cache)
                 for item in column_lineage:
                     result.add_column_lineage(item)
 

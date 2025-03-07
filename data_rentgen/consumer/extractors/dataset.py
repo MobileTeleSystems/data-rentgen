@@ -58,14 +58,26 @@ def connect_dataset_with_symlinks(
     return sorted(result, key=lambda x: x.type)
 
 
-def extract_dataset(dataset: OpenLineageDatasetLike) -> DatasetDTO:
-    name_with_partitions = PARTITION_PATH_PATTERN.match(dataset.name)
-    name = name_with_partitions.group(1) if name_with_partitions else dataset.name
+def strip_partitions_from_path(name: str):
+    # convert /some/long/path/with=partition/another=abc to /some/long/path
+    if "=" not in name or "/" not in name:
+        return name
+
+    name_with_partitions = PARTITION_PATH_PATTERN.match(name)
+    return name_with_partitions.group(1) if name_with_partitions else name
+
+
+def extract_dataset_ref(dataset: OpenLineageDatasetLike) -> DatasetDTO:
     return DatasetDTO(
-        name=name,
+        name=strip_partitions_from_path(dataset.name),
         location=extract_dataset_location(dataset),
-        format=extract_dataset_format(dataset),
     )
+
+
+def extract_dataset(dataset: OpenLineageDataset) -> DatasetDTO:
+    dataset_dto = extract_dataset_ref(dataset)
+    dataset_dto.format = extract_dataset_format(dataset)
+    return dataset_dto
 
 
 def extract_dataset_and_symlinks(dataset: OpenLineageDataset) -> tuple[DatasetDTO, list[DatasetSymlinkDTO]]:
@@ -91,7 +103,7 @@ def extract_dataset_and_symlinks(dataset: OpenLineageDataset) -> tuple[DatasetDT
                 "Only the first one will be used for replacement. Symlink name: %s",
                 table_symlinks[0].name,
             )
-        table_dataset_dto = extract_dataset(table_symlinks[0])
+        table_dataset_dto = extract_dataset_ref(table_symlinks[0])
         return (
             table_dataset_dto,
             connect_dataset_with_symlinks(
@@ -103,7 +115,7 @@ def extract_dataset_and_symlinks(dataset: OpenLineageDataset) -> tuple[DatasetDT
 
     symlinks = []
     for symlink_identifier in dataset.facets.symlinks.identifiers:
-        symlink_dto = extract_dataset(symlink_identifier)
+        symlink_dto = extract_dataset_ref(symlink_identifier)
         symlinks.extend(
             connect_dataset_with_symlinks(
                 dataset_dto,
@@ -134,10 +146,7 @@ def extract_dataset_location(dataset: OpenLineageDatasetLike) -> LocationDTO:
     )
 
 
-def extract_dataset_format(dataset: OpenLineageDatasetLike) -> str | None:
-    if isinstance(dataset, (OpenLineageSymlinkIdentifier, OpenLineageColumnLineageDatasetFacetFieldRef)):
-        return None
-
+def extract_dataset_format(dataset: OpenLineageDataset) -> str | None:
     match dataset.facets.storage:
         case OpenLineageStorageDatasetFacet(storageLayer="default", fileFormat=file_format):
             # See https://github.com/OpenLineage/OpenLineage/issues/2770
