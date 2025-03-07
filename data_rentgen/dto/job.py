@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from functools import cached_property
 
 from data_rentgen.dto.location import LocationDTO
 
@@ -26,11 +25,15 @@ class JobDTO:
     type: JobTypeDTO | None = None
     id: int | None = field(default=None, compare=False)
 
-    @cached_property
+    @property
     def unique_key(self) -> tuple:
         return (self.location.unique_key, self.name)
 
     def merge(self, new: JobDTO) -> JobDTO:
+        if new.id is None and self.type == new.type:
+            # jobs aren't changed that much, reuse them if possible
+            return self
+
         return JobDTO(
             location=self.location.merge(new.location),
             name=self.name,

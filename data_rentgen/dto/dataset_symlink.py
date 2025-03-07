@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import Enum
-from functools import cached_property
 
 from data_rentgen.dto.dataset import DatasetDTO
 
@@ -25,7 +24,7 @@ class DatasetSymlinkDTO:
     type: DatasetSymlinkTypeDTO
     id: int | None = field(default=None, compare=False)
 
-    @cached_property
+    @property
     def unique_key(self) -> tuple:
         return (self.from_dataset.unique_key, self.to_dataset.unique_key, self.type)
 

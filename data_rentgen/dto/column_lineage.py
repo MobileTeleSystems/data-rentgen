@@ -31,7 +31,7 @@ class ColumnLineageDTO:
     def __post_init__(self, dataset_column_relations: list[DatasetColumnRelationDTO]):
         self._dataset_column_relations = merge_dataset_column_relations(dataset_column_relations)
 
-    @cached_property
+    @property
     def unique_key(self) -> tuple:
         return (self.operation.unique_key, self.source_dataset.unique_key, self.target_dataset.unique_key)
 
