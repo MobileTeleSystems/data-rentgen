@@ -130,10 +130,6 @@ def test_extractors_extract_legacy_indirect_column_lineage(
     extracted_hdfs_dataset,
     output_event_with_direct_and_legacy_indirect_column_lineage,
 ):
-    """
-    The output event contains Indirect column lineage in legacy format (inside 'fields', item).
-    This test check's that this data is not included in column lineage.
-    """
     operation = extracted_spark_operation
 
     column_lineage = extract_column_lineage(
@@ -153,9 +149,21 @@ def test_extractors_extract_legacy_indirect_column_lineage(
                     fingerprint=None,
                 ),
                 DatasetColumnRelationDTO(
+                    type=DatasetColumnRelationTypeDTO.JOIN,
+                    source_column="source_col_2",
+                    target_column=None,
+                    fingerprint=None,
+                ),
+                DatasetColumnRelationDTO(
                     type=DatasetColumnRelationTypeDTO.AGGREGATION,
                     source_column="source_col_3",
                     target_column="column_2",
+                    fingerprint=None,
+                ),
+                DatasetColumnRelationDTO(
+                    type=DatasetColumnRelationTypeDTO.WINDOW,
+                    source_column="source_col_4",
+                    target_column=None,
                     fingerprint=None,
                 ),
             ],
@@ -194,7 +202,7 @@ def test_extractors_extract_indirect_column_lineage(
                     fingerprint=None,
                 ),
                 DatasetColumnRelationDTO(
-                    type=DatasetColumnRelationTypeDTO.SORT,
+                    type=DatasetColumnRelationTypeDTO.JOIN | DatasetColumnRelationTypeDTO.SORT,
                     source_column="source_col_2",
                     target_column=None,
                     fingerprint=None,

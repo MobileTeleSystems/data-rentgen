@@ -47,6 +47,9 @@ class DatasetColumnRelationDTO:
         )
 
     def merge(self, new: DatasetColumnRelationDTO) -> DatasetColumnRelationDTO:
+        if new.fingerprint is None and new.type.value & self.type.value:
+            return self
+
         return DatasetColumnRelationDTO(
             source_column=self.source_column,
             target_column=self.target_column,

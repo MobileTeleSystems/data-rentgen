@@ -20,6 +20,8 @@ from data_rentgen.dto.operation import OperationDTO
 
 logger = logging.getLogger(__name__)
 
+TRANSFORMATION_TYPE_DIRECT = "DIRECT"
+
 TRANSFORMATION_SUBTYPE_MAP_MASKING = {
     "TRANSFORMATION": DatasetColumnRelationTypeDTO.TRANSFORMATION_MASKING,
     "AGGREGATION": DatasetColumnRelationTypeDTO.AGGREGATION_MASKING,
@@ -77,7 +79,7 @@ def extract_column_lineage(
     # Grouping column lineage by source+target dataset. This is unique combination within operation,
     # so we can use it to generate the same fingerprint for all dataset column relations
     datasets = {target_dataset_dto.unique_key: target_dataset_dto}
-    dataset_column_relations = defaultdict(list)
+    dataset_column_relations: dict[tuple, dict[tuple, DatasetColumnRelationDTO]] = defaultdict(dict)
 
     # direct lineage (source_column -> target_column)
     for field, raw_column_lineage in target_dataset.facets.columnLineage.fields.items():
@@ -85,21 +87,27 @@ def extract_column_lineage(
             source_dataset_dto = resolve_dataset_ref(input_field, dataset_cache)
             datasets[source_dataset_dto.unique_key] = source_dataset_dto
 
-            column_lineage_key = (source_dataset_dto.unique_key, target_dataset_dto.unique_key)
-            for transformation in input_field.transformations:
-                # OL integration for Spark before v1.23 (or with columnLineage.datasetLineageEnabled=false, which is still default)  # noqa: E501
-                # produced INDIRECT lineage for each combination source_column x target_column,
-                # which is amlost the cartesian join. It is VERY expensive to handle, just ignore.
-                # See https://github.com/OpenLineage/OpenLineage/pull/3097
-                if transformation.type == "INDIRECT":
-                    continue
+            dataset_relation_key = (source_dataset_dto.unique_key, target_dataset_dto.unique_key)
+            dataset_column_relation = dataset_column_relations[dataset_relation_key]
 
+            for transformation in input_field.transformations:
+                # OL integration for Spark before v1.23
+                # or with columnLineage.datasetLineageEnabled=false (which is still default)
+                # produces INDIRECT lineage for each combination source_column x target_column,
+                # which is almost a cartesian product.
+                # There are a lot of duplicates here, trying to avoid them by merging items immediately.
                 column_relation = DatasetColumnRelationDTO(
                     type=extract_dataset_column_relation_type(transformation),
                     source_column=input_field.field,
-                    target_column=field,
+                    target_column=field if transformation.type == TRANSFORMATION_TYPE_DIRECT else None,
                 )
-                dataset_column_relations[column_lineage_key].append(column_relation)
+                column_relation_key = column_relation.unique_key
+
+                existing_column_relation = dataset_column_relation.get(column_relation_key)
+                if existing_column_relation:
+                    dataset_column_relation[column_relation_key] = existing_column_relation.merge(column_relation)
+                else:
+                    dataset_column_relation[column_relation_key] = column_relation
 
     # indirect lineage (source_column -> target_dataset),
     # added to OL since v1.23 and send only when columnLineage.datasetLineageEnabled=true
@@ -107,13 +115,21 @@ def extract_column_lineage(
         source_dataset_dto = resolve_dataset_ref(input_field, dataset_cache)
         datasets[source_dataset_dto.unique_key] = source_dataset_dto
 
-        column_lineage_key = (source_dataset_dto.unique_key, target_dataset_dto.unique_key)
+        dataset_relation_key = (source_dataset_dto.unique_key, target_dataset_dto.unique_key)
+        dataset_column_relation = dataset_column_relations[dataset_relation_key]
+
         for transformation in input_field.transformations:
             column_relation = DatasetColumnRelationDTO(
                 type=extract_dataset_column_relation_type(transformation),
                 source_column=input_field.field,
             )
-            dataset_column_relations[column_lineage_key].append(column_relation)
+            column_relation_key = column_relation.unique_key
+
+            existing_column_relation = dataset_column_relation.get(column_relation_key)
+            if existing_column_relation:
+                dataset_column_relation[column_relation_key] = existing_column_relation.merge(column_relation)
+            else:
+                dataset_column_relation[column_relation_key] = column_relation
 
     # merge results into DTO objects
     return [
@@ -121,7 +137,7 @@ def extract_column_lineage(
             operation=operation,
             source_dataset=datasets[source_dataset_dto_key],
             target_dataset=datasets[target_dataset_dto_key],
-            dataset_column_relations=relations,
+            dataset_column_relations=list(relations.values()),
         )
         for (source_dataset_dto_key, target_dataset_dto_key), relations in dataset_column_relations.items()
         if dataset_column_relations
