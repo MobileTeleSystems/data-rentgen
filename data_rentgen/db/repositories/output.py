@@ -33,21 +33,22 @@ class OutputRepository(Repository[Output]):
         ]
         return generate_incremental_uuid(created_at, ".".join(id_components))
 
-    async def create_or_update_bulk(self, outputs: list[OutputDTO]) -> list[Output]:
+    async def create_or_update_bulk(self, outputs: list[OutputDTO]) -> None:
         if not outputs:
-            return []
+            return
 
         insert_statement = insert(Output)
+        new_row = insert_statement.excluded
         statement = insert_statement.on_conflict_do_update(
             index_elements=[Output.created_at, Output.id],
             set_={
-                "num_bytes": func.greatest(insert_statement.excluded.num_bytes, Output.num_bytes),
-                "num_rows": func.greatest(insert_statement.excluded.num_rows, Output.num_rows),
-                "num_files": func.greatest(insert_statement.excluded.num_files, Output.num_files),
+                "num_bytes": func.greatest(new_row.num_bytes, Output.num_bytes),
+                "num_rows": func.greatest(new_row.num_rows, Output.num_rows),
+                "num_files": func.greatest(new_row.num_files, Output.num_files),
             },
-        ).returning(Output)
+        )
 
-        result = await self._session.execute(
+        await self._session.execute(
             statement,
             [
                 {
@@ -66,7 +67,6 @@ class OutputRepository(Repository[Output]):
                 for output in outputs
             ],
         )
-        return list(result.scalars().all())
 
     async def list_by_operation_ids(
         self,

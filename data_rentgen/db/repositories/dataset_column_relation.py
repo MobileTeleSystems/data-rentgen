@@ -17,7 +17,7 @@ from data_rentgen.dto import ColumnLineageDTO
 
 
 class DatasetColumnRelationRepository(Repository[ColumnLineage]):
-    async def create_bulk_for_column_lineage(self, items: list[ColumnLineageDTO]):
+    async def create_bulk_for_column_lineage(self, items: list[ColumnLineageDTO]) -> None:
         if not items:
             return
 

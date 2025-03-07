@@ -15,9 +15,9 @@ from data_rentgen.dto import OperationDTO, PaginationDTO
 
 
 class OperationRepository(Repository[Operation]):
-    async def create_or_update_bulk(self, operations: list[OperationDTO]) -> list[Operation]:
+    async def create_or_update_bulk(self, operations: list[OperationDTO]) -> None:
         if not operations:
-            return []
+            return
 
         insert_statement = insert(Operation)
         statement = insert_statement.on_conflict_do_update(
@@ -32,9 +32,9 @@ class OperationRepository(Repository[Operation]):
                 "group": func.coalesce(insert_statement.excluded.group, Operation.group),
                 "position": func.coalesce(insert_statement.excluded.position, Operation.position),
             },
-        ).returning(Operation)
+        )
 
-        result = await self._session.execute(
+        await self._session.execute(
             statement,
             [
                 {
@@ -53,7 +53,6 @@ class OperationRepository(Repository[Operation]):
                 for operation in operations
             ],
         )
-        return list(result.scalars().all())
 
     async def paginate(
         self,
