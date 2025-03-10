@@ -1,8 +1,7 @@
 from datetime import datetime, timezone
+from uuid import UUID
 
 import pytest
-from packaging.version import Version
-from uuid6 import UUID
 
 from data_rentgen.consumer.extractors import extract_run
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
@@ -169,9 +168,9 @@ def test_extractors_extract_run_airflow_dag_2_3_plus():
             runId=run_id,
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
-                    version=Version("2.9.2"),
+                    version="2.9.2",
                     name=OpenLineageProcessingEngineName.AIRFLOW,
-                    openlineageAdapterVersion=Version("1.10.0"),
+                    openlineageAdapterVersion="1.10.0",
                 ),
                 airflowDagRun=OpenLineageAirflowDagRunFacet(
                     dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="airflow"),
@@ -232,9 +231,9 @@ def test_extractors_extract_run_airflow_dag_2_x():
             runId=run_id,
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
-                    version=Version("2.1.4"),
+                    version="2.1.4",
                     name=OpenLineageProcessingEngineName.AIRFLOW,
-                    openlineageAdapterVersion=Version("1.10.0"),
+                    openlineageAdapterVersion="1.10.0",
                 ),
                 airflowDagRun=OpenLineageAirflowDagRunFacet(
                     dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="airflow"),
@@ -295,9 +294,9 @@ def test_extractors_extract_run_airflow_task_with_ti_persistent_log_url():
             runId=run_id,
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
-                    version=Version("2.9.2"),
+                    version="2.9.2",
                     name=OpenLineageProcessingEngineName.AIRFLOW,
-                    openlineageAdapterVersion=Version("1.10.0"),
+                    openlineageAdapterVersion="1.10.0",
                 ),
                 airflow=OpenLineageAirflowTaskRunFacet(
                     dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="airflow"),
@@ -367,9 +366,9 @@ def test_extractors_extract_run_airflow_task_2_9_plus():
             runId=run_id,
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
-                    version=Version("2.9.2"),
+                    version="2.9.2",
                     name=OpenLineageProcessingEngineName.AIRFLOW,
-                    openlineageAdapterVersion=Version("1.9.0"),
+                    openlineageAdapterVersion="1.9.0",
                 ),
                 airflow=OpenLineageAirflowTaskRunFacet(
                     dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="airflow"),
@@ -500,9 +499,9 @@ def test_extractors_extract_run_airflow_dag_check_with_owner():
             runId=run_id,
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
-                    version=Version("2.1.4"),
+                    version="2.1.4",
                     name=OpenLineageProcessingEngineName.AIRFLOW,
-                    openlineageAdapterVersion=Version("1.10.0"),
+                    openlineageAdapterVersion="1.10.0",
                 ),
                 airflowDagRun=OpenLineageAirflowDagRunFacet(
                     dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="myuser"),
@@ -627,9 +626,9 @@ def test_extractors_extract_run_airflow_dag_without_owner():
             runId=run_id,
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
-                    version=Version("2.1.4"),
+                    version="2.1.4",
                     name=OpenLineageProcessingEngineName.AIRFLOW,
-                    openlineageAdapterVersion=Version("1.10.0"),
+                    openlineageAdapterVersion="1.10.0",
                 ),
                 airflowDagRun=OpenLineageAirflowDagRunFacet(
                     dag=OpenLineageAirflowDagInfo(dag_id="mydag"),

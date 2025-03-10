@@ -1,8 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from pydantic import Field
-
 from data_rentgen.consumer.openlineage.base import OpenLineageBase
 from data_rentgen.consumer.openlineage.dataset_facets.base import (
     OpenLineageDatasetFacet,
@@ -76,7 +74,7 @@ class OpenLineageDatasetFacets(OpenLineageBase):
     documentation: OpenLineageDocumentationDatasetFacet | None = None
     dataSource: OpenLineageDatasourceDatasetFacet | None = None
     lifecycleStateChange: OpenLineageLifecycleStateChangeDatasetFacet | None = None
-    datasetSchema: OpenLineageSchemaDatasetFacet | None = Field(default=None, alias="schema")
+    schema: OpenLineageSchemaDatasetFacet | None = None
     storage: OpenLineageStorageDatasetFacet | None = None
     symlinks: OpenLineageSymlinksDatasetFacet | None = None
     columnLineage: OpenLineageColumnLineageDatasetFacet | None = None

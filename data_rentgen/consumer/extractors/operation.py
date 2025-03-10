@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 from data_rentgen.consumer.extractors.run import extract_parent_run
+from data_rentgen.consumer.openlineage.job_facets.job_type import OpenLineageJobProcessingType
 from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEvent,
     OpenLineageRunEventType,
@@ -20,11 +21,15 @@ def extract_operation(event: OpenLineageRunEvent) -> OperationDTO:
         prefix = len(run.job.name) + 1
         operation_name = operation_name[prefix:]
 
+    operation_type = None
+    if event.job.facets.jobType and event.job.facets.jobType.processingType != OpenLineageJobProcessingType.NONE:
+        operation_type = OperationTypeDTO(event.job.facets.jobType.processingType)
+
     operation = OperationDTO(
         id=event.run.runId,  # type: ignore [arg-type]
         run=run,
         name=operation_name,
-        type=OperationTypeDTO(event.job.facets.jobType.processingType) if event.job.facets.jobType else None,
+        type=operation_type,
     )
     enrich_operation_status(operation, event)
     enrich_operation_description(operation, event)

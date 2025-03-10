@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from pydantic import Field
+from msgspec import field
 
 from data_rentgen.consumer.openlineage.base import OpenLineageBase
 from data_rentgen.consumer.openlineage.dataset_facets.base import (
@@ -30,7 +30,7 @@ class OpenLineageColumnLineageDatasetFacetFieldRef(OpenLineageBase):
 class OpenLineageColumnLineageDatasetFacetField(OpenLineageBase):
     """Dataset facet describing column lineage for specific field."""
 
-    inputFields: list[OpenLineageColumnLineageDatasetFacetFieldRef] = Field(default_factory=list)
+    inputFields: list[OpenLineageColumnLineageDatasetFacetFieldRef] = field(default_factory=list)
     transformationDescription: str | None = None
     transformationType: str | None = None
 
@@ -40,5 +40,5 @@ class OpenLineageColumnLineageDatasetFacet(OpenLineageDatasetFacet):
     See [InputStatisticsInputDatasetFacet](https://github.com/OpenLineage/OpenLineage/blob/main/spec/facets/ColumnLineageDatasetFacet.json).
     """
 
-    fields: dict[str, OpenLineageColumnLineageDatasetFacetField] = Field(default_factory=dict)
-    dataset: list[OpenLineageColumnLineageDatasetFacetFieldRef] = Field(default_factory=list)
+    fields: dict[str, OpenLineageColumnLineageDatasetFacetField] = field(default_factory=dict)
+    dataset: list[OpenLineageColumnLineageDatasetFacetFieldRef] = field(default_factory=list)

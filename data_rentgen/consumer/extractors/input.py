@@ -19,7 +19,7 @@ def extract_input(
         schema=extract_schema(dataset),
     )
     if dataset.inputFacets.inputStatistics:
-        result.num_rows = dataset.inputFacets.inputStatistics.rows
-        result.num_bytes = dataset.inputFacets.inputStatistics.bytes
-        result.num_files = dataset.inputFacets.inputStatistics.files
+        result.num_rows = dataset.inputFacets.inputStatistics.rowCount
+        result.num_bytes = dataset.inputFacets.inputStatistics.size
+        result.num_files = dataset.inputFacets.inputStatistics.fileCount
     return result, symlinks

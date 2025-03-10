@@ -1,8 +1,7 @@
 from datetime import datetime, timezone
+from uuid import UUID
 
-from packaging.version import Version
-from pydantic import TypeAdapter
-from uuid6 import UUID
+from msgspec import convert
 
 from data_rentgen.consumer.openlineage.dataset import (
     OpenLineageInputDataset,
@@ -49,8 +48,6 @@ from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageSparkDeployMode,
     OpenLineageSparkJobDetailsRunFacet,
 )
-
-RunEventAdapter = TypeAdapter(OpenLineageRunEvent)
 
 
 def test_run_event_spark_application_start():
@@ -112,7 +109,7 @@ def test_run_event_spark_application_start():
         "outputs": [],
     }
 
-    assert RunEventAdapter.validate_python(json) == OpenLineageRunEvent(
+    assert convert(json, type=OpenLineageRunEvent) == OpenLineageRunEvent(
         eventTime=datetime(2024, 7, 5, 9, 4, 48, 794900, tzinfo=timezone.utc),
         eventType=OpenLineageRunEventType.START,
         job=OpenLineageJob(
@@ -120,7 +117,7 @@ def test_run_event_spark_application_start():
             name="spark_session",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
+                    processingType=OpenLineageJobProcessingType.NONE,
                     integration=OpenLineageJobIntegrationType.SPARK,
                     jobType=OpenLineageJobType.APPLICATION,
                 ),
@@ -130,9 +127,9 @@ def test_run_event_spark_application_start():
             runId=UUID("01908224-8410-79a2-8de6-a769ad6944c9"),
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
-                    version=Version("3.4.3"),
+                    version="3.4.3",
                     name=OpenLineageProcessingEngineName.SPARK,
-                    openlineageAdapterVersion=Version("1.18.0"),
+                    openlineageAdapterVersion="1.18.0",
                 ),
                 spark_applicationDetails=OpenLineageSparkApplicationDetailsRunFacet(
                     master="local[*]",
@@ -198,7 +195,7 @@ def test_run_event_spark_application_stop():
         "outputs": [],
     }
 
-    assert RunEventAdapter.validate_python(json) == OpenLineageRunEvent(
+    assert convert(json, type=OpenLineageRunEvent) == OpenLineageRunEvent(
         eventTime=datetime(2024, 7, 5, 9, 7, 15, 646000, tzinfo=timezone.utc),
         eventType=OpenLineageRunEventType.COMPLETE,
         job=OpenLineageJob(
@@ -206,7 +203,7 @@ def test_run_event_spark_application_stop():
             name="spark_session",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
+                    processingType=OpenLineageJobProcessingType.NONE,
                     integration=OpenLineageJobIntegrationType.SPARK,
                     jobType=OpenLineageJobType.APPLICATION,
                 ),
@@ -216,9 +213,9 @@ def test_run_event_spark_application_stop():
             runId=UUID("01908224-8410-79a2-8de6-a769ad6944c9"),
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
-                    version=Version("3.4.3"),
+                    version="3.4.3",
                     name=OpenLineageProcessingEngineName.SPARK,
-                    openlineageAdapterVersion=Version("1.18.0"),
+                    openlineageAdapterVersion="1.18.0",
                 ),
             ),
         ),
@@ -431,7 +428,7 @@ def test_run_event_spark_job_running():
         ],
     }
 
-    assert RunEventAdapter.validate_python(json) == OpenLineageRunEvent(
+    assert convert(json, type=OpenLineageRunEvent) == OpenLineageRunEvent(
         eventTime=datetime(2024, 7, 5, 9, 7, 9, 849000, tzinfo=timezone.utc),
         eventType=OpenLineageRunEventType.RUNNING,
         job=OpenLineageJob(
@@ -458,9 +455,9 @@ def test_run_event_spark_job_running():
                     ),
                 ),
                 processing_engine=OpenLineageProcessingEngineRunFacet(
-                    version=Version("3.4.3"),
+                    version="3.4.3",
                     name=OpenLineageProcessingEngineName.SPARK,
-                    openlineageAdapterVersion=Version("1.18.0"),
+                    openlineageAdapterVersion="1.18.0",
                 ),
                 spark_jobDetails=OpenLineageSparkJobDetailsRunFacet(
                     jobId=3,

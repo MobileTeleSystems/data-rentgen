@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 
-from packaging.version import Version
-from pydantic import TypeAdapter
+from msgspec import convert
 from uuid6 import UUID
 
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
@@ -35,8 +34,6 @@ from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageProcessingEngineRunFacet,
     OpenLineageRunFacets,
 )
-
-RunEventAdapter = TypeAdapter(OpenLineageRunEvent)
 
 
 def test_run_event_airflow_dag_start():
@@ -126,7 +123,7 @@ def test_run_event_airflow_dag_start():
         "outputs": [],
     }
 
-    assert RunEventAdapter.validate_python(json) == OpenLineageRunEvent(
+    assert convert(json, type=OpenLineageRunEvent) == OpenLineageRunEvent(
         eventTime=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
         eventType=OpenLineageRunEventType.START,
         job=OpenLineageJob(
@@ -201,7 +198,7 @@ def test_run_event_airflow_dag_end():
         "outputs": [],
     }
 
-    assert RunEventAdapter.validate_python(json) == OpenLineageRunEvent(
+    assert convert(json, type=OpenLineageRunEvent) == OpenLineageRunEvent(
         eventTime=datetime(2024, 7, 5, 9, 8, 5, 691973, tzinfo=timezone.utc),
         eventType=OpenLineageRunEventType.COMPLETE,
         job=OpenLineageJob(
@@ -366,7 +363,7 @@ def test_run_event_airflow_task_start():
         "outputs": [],
     }
 
-    assert RunEventAdapter.validate_python(json) == OpenLineageRunEvent(
+    assert convert(json, type=OpenLineageRunEvent) == OpenLineageRunEvent(
         eventTime=datetime(2024, 7, 5, 9, 4, 20, 783845, tzinfo=timezone.utc),
         eventType=OpenLineageRunEventType.START,
         job=OpenLineageJob(
@@ -394,9 +391,9 @@ def test_run_event_airflow_task_start():
                     ),
                 ),
                 processing_engine=OpenLineageProcessingEngineRunFacet(
-                    version=Version("2.9.2"),
+                    version="2.9.2",
                     name=OpenLineageProcessingEngineName.AIRFLOW,
-                    openlineageAdapterVersion=Version("1.10.0"),
+                    openlineageAdapterVersion="1.10.0",
                 ),
                 airflow=OpenLineageAirflowTaskRunFacet(
                     dag=OpenLineageAirflowDagInfo(
@@ -495,7 +492,7 @@ def test_run_event_airflow_task_complete():
         "outputs": [],
     }
 
-    assert RunEventAdapter.validate_python(json) == OpenLineageRunEvent(
+    assert convert(json, type=OpenLineageRunEvent) == OpenLineageRunEvent(
         eventTime=datetime(2024, 7, 5, 9, 7, 37, 858423, tzinfo=timezone.utc),
         eventType=OpenLineageRunEventType.COMPLETE,
         job=OpenLineageJob(

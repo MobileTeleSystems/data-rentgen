@@ -230,7 +230,6 @@ def extracted_postgres_input(
 @pytest.fixture
 def extracted_hive_output(
     extracted_spark_operation: OperationDTO,
-    extracted_hdfs_dataset: DatasetDTO,
     extracted_hive_dataset: DatasetDTO,
     extracted_dataset_schema: SchemaDTO,
 ) -> OutputDTO:

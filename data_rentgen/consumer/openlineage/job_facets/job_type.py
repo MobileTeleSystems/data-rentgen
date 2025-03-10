@@ -3,8 +3,6 @@
 
 from enum import Enum
 
-from pydantic import field_validator
-
 from data_rentgen.consumer.openlineage.job_facets.base import OpenLineageJobFacet
 
 
@@ -47,6 +45,7 @@ class OpenLineageJobProcessingType(str, Enum):
 
     BATCH = "BATCH"
     STREAMING = "STREAMING"
+    NONE = "NONE"
 
 
 class OpenLineageJobTypeJobFacet(OpenLineageJobFacet):
@@ -56,11 +55,4 @@ class OpenLineageJobTypeJobFacet(OpenLineageJobFacet):
 
     integration: OpenLineageJobIntegrationType
     jobType: OpenLineageJobType
-    processingType: OpenLineageJobProcessingType | None = None
-
-    @field_validator("processingType", mode="before")
-    @classmethod
-    def _validate_processing_type(cls, processing_type: str):
-        if processing_type == "NONE":
-            return None
-        return processing_type
+    processingType: OpenLineageJobProcessingType = OpenLineageJobProcessingType.NONE

@@ -1,6 +1,6 @@
 import pytest
 from faststream.kafka import KafkaBroker
-from pydantic import ValidationError
+from msgspec import ValidationError
 
 pytestmark = [pytest.mark.consumer, pytest.mark.asyncio]
 

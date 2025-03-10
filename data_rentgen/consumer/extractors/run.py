@@ -109,7 +109,7 @@ def enrich_run_logs(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:  # noqa:
             return run
 
         processing_engine = event.run.facets.processing_engine
-        if processing_engine and processing_engine.version >= Version("2.3.0"):
+        if processing_engine and Version(processing_engine.version) >= Version("2.3.0"):
             run.persistent_log_url = get_airflow_2_3_plus_dag_run_url(
                 namespace,
                 airflow_dag_run_facet,
@@ -132,7 +132,7 @@ def enrich_run_logs(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:  # noqa:
             return run
 
         processing_engine = event.run.facets.processing_engine
-        if processing_engine and processing_engine.version >= Version("2.9.1"):
+        if processing_engine and Version(processing_engine.version) >= Version("2.9.1"):
             run.persistent_log_url = get_airflow_2_9_plus_task_log_url(
                 namespace,
                 airflow_task_run_facet,

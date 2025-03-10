@@ -1,10 +1,8 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from pydantic import BaseModel, ConfigDict
+from msgspec import Struct
 
 
-class OpenLineageBase(BaseModel):
+class OpenLineageBase(Struct):
     """Base class for all OpenLineage models."""
-
-    model_config = ConfigDict(extra="ignore", frozen=True, arbitrary_types_allowed=True)

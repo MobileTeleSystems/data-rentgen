@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from pydantic import Field
+from msgspec import field
 
 from data_rentgen.consumer.openlineage.base import OpenLineageBase
 from data_rentgen.consumer.openlineage.job_facets import OpenLineageJobFacets
@@ -14,4 +14,4 @@ class OpenLineageJob(OpenLineageBase):
 
     namespace: str
     name: str
-    facets: OpenLineageJobFacets = Field(default_factory=OpenLineageJobFacets)
+    facets: OpenLineageJobFacets = field(default_factory=OpenLineageJobFacets)

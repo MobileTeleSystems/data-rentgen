@@ -3,8 +3,9 @@
 
 from datetime import datetime
 from enum import Enum
+from typing import Annotated
 
-from pydantic import Field
+from msgspec import Meta, field
 
 from data_rentgen.consumer.openlineage.base import OpenLineageBase
 from data_rentgen.consumer.openlineage.dataset import (
@@ -36,10 +37,10 @@ class OpenLineageRunEvent(OpenLineageBase):
     See [RunEvent](https://github.com/OpenLineage/OpenLineage/blob/main/spec/OpenLineage.json).
     """
 
-    eventTime: datetime
+    eventTime: Annotated[datetime, Meta(tz=True)]
     eventType: OpenLineageRunEventType
     job: OpenLineageJob
     run: OpenLineageRun
-    inputs: list[OpenLineageInputDataset] = Field(default_factory=list)
-    outputs: list[OpenLineageOutputDataset] = Field(default_factory=list)
+    inputs: list[OpenLineageInputDataset] = field(default_factory=list)
+    outputs: list[OpenLineageOutputDataset] = field(default_factory=list)
     # ignore producer and schemaURL

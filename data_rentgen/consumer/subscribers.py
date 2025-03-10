@@ -3,7 +3,9 @@
 
 from __future__ import annotations
 
+import msgspec
 from faststream import Depends, Logger
+from faststream.kafka import KafkaMessage
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.consumer.extractors import BatchExtractionResult, extract_batch
@@ -15,16 +17,23 @@ __all__ = [
     "runs_events_subscriber",
 ]
 
+decoder = msgspec.json.Decoder(type=list[OpenLineageRunEvent])
+
 
 def get_unit_of_work(session: AsyncSession = Depends(Stub(AsyncSession))) -> UnitOfWork:
     return UnitOfWork(session)
 
 
 async def runs_events_subscriber(
-    events: list[OpenLineageRunEvent],
+    # cannot use msgpsec models here, waiting for FastStream 0.6.0
+    message: KafkaMessage,
     logger: Logger,
     unit_of_work: UnitOfWork = Depends(get_unit_of_work),
 ):
+    # https://github.com/airtai/faststream/issues/2102
+    values: list[bytes] = message.body  # type: ignore[assignment]
+    events = decoder.decode(b"[" + b",".join(values) + b"]")
+
     logger.info("Got %d events", len(events))
     extracted = extract_batch(events)
     logger.info("Extracted: %r", extracted)

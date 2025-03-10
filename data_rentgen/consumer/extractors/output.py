@@ -25,8 +25,8 @@ def extract_output(
         schema=extract_schema(dataset),
     )
     if dataset.outputFacets.outputStatistics:
-        result.num_rows = dataset.outputFacets.outputStatistics.rows
-        result.num_bytes = dataset.outputFacets.outputStatistics.bytes
-        result.num_files = dataset.outputFacets.outputStatistics.files
+        result.num_rows = dataset.outputFacets.outputStatistics.rowCount
+        result.num_bytes = dataset.outputFacets.outputStatistics.size
+        result.num_files = dataset.outputFacets.outputStatistics.fileCount
 
     return result, symlinks

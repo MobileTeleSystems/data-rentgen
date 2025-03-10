@@ -1,8 +1,7 @@
 from datetime import datetime, timezone
+from uuid import UUID
 
 import pytest
-from packaging.version import Version
-from uuid6 import UUID
 
 from data_rentgen.consumer.extractors.batch import extract_batch
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
@@ -62,9 +61,9 @@ def airflow_dag_run_event_start() -> OpenLineageRunEvent:
             runId=run_id,
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
-                    version=Version("2.9.2"),
+                    version="2.9.2",
                     name=OpenLineageProcessingEngineName.AIRFLOW,
-                    openlineageAdapterVersion=Version("1.10.0"),
+                    openlineageAdapterVersion="1.10.0",
                 ),
                 airflowDagRun=OpenLineageAirflowDagRunFacet(
                     dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="myuser"),
@@ -102,9 +101,9 @@ def airflow_dag_run_event_stop() -> OpenLineageRunEvent:
             runId=run_id,
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
-                    version=Version("2.9.2"),
+                    version="2.9.2",
                     name=OpenLineageProcessingEngineName.AIRFLOW,
-                    openlineageAdapterVersion=Version("1.10.0"),
+                    openlineageAdapterVersion="1.10.0",
                 ),
             ),
         ),
@@ -133,9 +132,9 @@ def airflow_task_run_event_start() -> OpenLineageRunEvent:
             runId=run_id,
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
-                    version=Version("2.9.2"),
+                    version="2.9.2",
                     name=OpenLineageProcessingEngineName.AIRFLOW,
-                    openlineageAdapterVersion=Version("1.10.0"),
+                    openlineageAdapterVersion="1.10.0",
                 ),
                 airflow=OpenLineageAirflowTaskRunFacet(
                     dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="myuser"),
@@ -182,9 +181,9 @@ def airflow_task_run_event_stop() -> OpenLineageRunEvent:
             runId=run_id,
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
-                    version=Version("2.9.2"),
+                    version="2.9.2",
                     name=OpenLineageProcessingEngineName.AIRFLOW,
-                    openlineageAdapterVersion=Version("1.10.0"),
+                    openlineageAdapterVersion="1.10.0",
                 ),
             ),
         ),
