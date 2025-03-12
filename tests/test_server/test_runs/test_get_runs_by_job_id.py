@@ -143,7 +143,7 @@ async def test_get_runs_by_job_id(
                     },
                 },
             }
-            for run in sorted(selected_runs, key=lambda x: x.id, reverse=True)
+            for run in sorted(selected_runs, key=lambda x: (x.created_at, x.id), reverse=True)
         ],
     }
 
@@ -158,13 +158,13 @@ async def test_get_runs_by_job_id_with_until(
     until = since + timedelta(seconds=1)
 
     selected_runs = [run for run in runs_with_same_job if since <= run.created_at <= until]
-    runs = await enrich_runs(selected_runs, async_session)
+    selected_runs = await enrich_runs(selected_runs, async_session)
 
     response = await test_client.get(
         "v1/runs",
         headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
-            "job_id": runs[0].job_id,
+            "job_id": selected_runs[0].job_id,
             "since": since.isoformat(),
             "until": until.isoformat(),
         },
@@ -175,7 +175,7 @@ async def test_get_runs_by_job_id_with_until(
         "meta": {
             "page": 1,
             "page_size": 20,
-            "total_count": 2,
+            "total_count": len(selected_runs),
             "pages_count": 1,
             "has_next": False,
             "has_previous": False,
@@ -204,6 +204,6 @@ async def test_get_runs_by_job_id_with_until(
                     },
                 },
             }
-            for run in sorted(runs, key=lambda x: x.id, reverse=True)
+            for run in sorted(selected_runs, key=lambda x: (x.created_at, x.id), reverse=True)
         ],
     }

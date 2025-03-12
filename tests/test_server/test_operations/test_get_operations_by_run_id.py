@@ -132,7 +132,7 @@ async def test_get_operations_by_run_id(
                     },
                 },
             }
-            for operation in sorted(selected_operations, key=lambda x: x.id, reverse=True)
+            for operation in sorted(selected_operations, key=lambda x: (x.created_at, x.id), reverse=True)
         ],
     }
 
@@ -190,6 +190,6 @@ async def test_get_operations_by_run_id_with_until(
                     },
                 },
             }
-            for operation in sorted(selected_operations, key=lambda x: x.id, reverse=True)
+            for operation in sorted(selected_operations, key=lambda x: (x.created_at, x.id), reverse=True)
         ],
     }

@@ -171,8 +171,8 @@ class RunsQueryV1(PaginateQueryV1):
 
     @model_validator(mode="after")
     def _check_fields(self):
-        if not any([self.run_id, self.job_id, self.parent_run_id, self.search_query]):
-            msg = "input should contain either 'run_id', 'job_id', 'parent_run_id' or 'search_query' field"
+        if not any([self.since, self.run_id, self.job_id, self.parent_run_id, self.search_query]):
+            msg = "input should contain either 'since', 'run_id', 'job_id', 'parent_run_id' or 'search_query' field"
             raise ValueError(msg)
         if self.job_id and not self.since:
             msg = "'job_id' can be passed only with 'since'"

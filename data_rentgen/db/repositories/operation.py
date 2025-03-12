@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from datetime import datetime, timezone
 from uuid import UUID
 
-from sqlalchemy import Row, any_, func, select
+from sqlalchemy import Row, UnaryExpression, any_, func, select
 from sqlalchemy.dialects.postgresql import insert
 
 from data_rentgen.db.models import Operation, OperationStatus, OperationType
@@ -87,7 +87,7 @@ class OperationRepository(Repository[Operation]):
             where.append(Operation.id == any_(operation_ids))  # type: ignore[arg-type]
 
         query = select(Operation).where(*where)
-        order_by = [Operation.run_id, Operation.id.desc()]
+        order_by: list[UnaryExpression] = [Operation.created_at.desc(), Operation.id.desc()]
         return await self._paginate_by_query(
             query=query,
             order_by=order_by,

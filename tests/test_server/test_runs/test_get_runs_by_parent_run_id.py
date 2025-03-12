@@ -137,7 +137,7 @@ async def test_get_runs_by_parent_run_id(
                     },
                 },
             }
-            for run in sorted(runs, key=lambda x: x.id, reverse=True)
+            for run in sorted(runs, key=lambda x: (x.created_at, x.id), reverse=True)
         ],
     }
 
@@ -198,6 +198,6 @@ async def test_get_runs_by_parent_run_id_with_until(
                     },
                 },
             }
-            for run in sorted(runs, key=lambda x: x.id, reverse=True)
+            for run in sorted(runs, key=lambda x: (x.created_at, x.id), reverse=True)
         ],
     }

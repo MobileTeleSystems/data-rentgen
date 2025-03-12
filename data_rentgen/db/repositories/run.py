@@ -100,10 +100,10 @@ class RunRepository(Repository[Run]):
                 func.max(union_cte.c.search_rank).label("search_rank"),
             ).group_by(*run_columns)
             # place the most recent runs on top
-            order_by = [desc("search_rank"), desc("id")]
+            order_by = [desc("search_rank"), desc("created_at"), desc("id")]
         else:
             query = select(Run).where(*where)
-            order_by = [Run.id.desc()]
+            order_by = [Run.created_at.desc(), Run.id.desc()]
 
         options = [selectinload(Run.started_by_user)]
         return await self._paginate_by_query(
