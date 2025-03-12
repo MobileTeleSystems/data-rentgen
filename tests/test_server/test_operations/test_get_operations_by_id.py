@@ -132,7 +132,7 @@ async def test_get_operations_by_multiple_ids(
                     },
                 },
             }
-            for operation in sorted(selected_operations, key=lambda x: (x.run_id.int, -x.id.int))
+            for operation in sorted(selected_operations, key=lambda x: (x.created_at, x.id.int), reverse=True)
         ],
     }
 
@@ -209,6 +209,6 @@ async def test_get_operations_by_multiple_ids_with_stats(
                     "outputs": output_stats[operation.id],
                 },
             }
-            for operation in sorted(simple_lineage.operations, key=lambda x: (x.run_id.int, -x.id.int))
+            for operation in sorted(simple_lineage.operations, key=lambda x: (x.created_at, x.id.int), reverse=True)
         ],
     }
