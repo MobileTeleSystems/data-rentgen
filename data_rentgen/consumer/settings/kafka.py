@@ -6,7 +6,7 @@ from enum import Enum
 
 from pydantic import BaseModel, Field
 
-from data_rentgen.consumer.settings.security import KafkaSecuritySettings
+from data_rentgen.consumer.settings.security import KafkaSecurityAnonymousSettings, KafkaSecuritySettings
 
 
 class KafkaCompression(str, Enum):
@@ -30,18 +30,18 @@ class KafkaSettings(BaseModel):
 
     .. code-block:: bash
 
-        DATA_RENTGEN__KAFKA__BOOTSTRAP_SERVERS=localhost:9092
-        DATA_RENTGEN__KAFKA__SECURITY__TYPE=scram-256
+        DATA_RENTGEN__KAFKA__BOOTSTRAP_SERVERS=["localhost:9092"]
+        DATA_RENTGEN__KAFKA__SECURITY__TYPE=SCRAM-SHA-256
         DATA_RENTGEN__KAFKA__REQUEST_TIMEOUT_MS=5000
         DATA_RENTGEN__KAFKA__CONNECTIONS_MAX_IDLE_MS=540000
     """
 
-    bootstrap_servers: str = Field(
+    bootstrap_servers: list[str] = Field(
         description="List of Kafka bootstrap servers.",
         min_length=1,
     )
     security: KafkaSecuritySettings = Field(
-        default_factory=KafkaSecuritySettings,
+        default_factory=KafkaSecurityAnonymousSettings,
         description="Kafka security settings.",
     )
     compression: KafkaCompression | None = Field(

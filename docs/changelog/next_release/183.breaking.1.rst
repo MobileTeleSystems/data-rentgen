@@ -1,0 +1,1 @@
+Change ``DATA_RENTGEN__KAFKA__BOOTSTRAP_SERVERS`` value type from string (one ``host:port`` item) to list (``["host1:port1", "host2:port2"]``).

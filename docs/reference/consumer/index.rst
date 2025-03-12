@@ -53,6 +53,22 @@ Without docker
 
       $ pip install data-rentgen[consumer,postgres]
 
+  .. note::
+
+    For ``SASL_GSSAPI`` auth mechanism you also need to install system packages providing ``kinit`` and ``kdestroy`` binaries:
+
+    .. code-block:: console
+
+        $ apt install libkrb5-dev krb5-user gcc make autoconf  # Debian-based
+        $ dnf install krb5-devel krb5-libs krb5-workstation gcc make autoconf  # CentOS, OracleLinux
+
+    And then install ``gssapi`` extra:
+
+    .. code-block:: console
+
+        $ pip install data-rentgen[consumer,postgres,gssapi]
+
+
 * Run consumer process
 
   .. code-block:: console
