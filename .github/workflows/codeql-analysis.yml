@@ -29,6 +29,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Install system packages
+        run: |
+          sudo apt update
+          sudo apt-get install --no-install-recommends -y libkrb5-dev krb5-user gcc
+
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5
         with:
