@@ -103,7 +103,7 @@ class KeycloakAuthProvider(AuthProvider):
         try:
             return await self.keycloak_openid.a_decode_token(token=access_token)
         except (KeycloakOperationError, JWException) as err:
-            logger.info("Access token is invalid or expired: %s", err)
+            logger.debug("Access token is invalid or expired: %s", err)
             return None
 
     async def refresh_access_token(self, refresh_token: str) -> tuple[str, str]:  # type: ignore[return]
@@ -121,7 +121,7 @@ class KeycloakAuthProvider(AuthProvider):
             scope=self.settings.keycloak.scope,
         )
 
-        logger.info("Redirecting user to auth url: %s", auth_url)
+        logger.debug("Redirecting user to auth url: %s", auth_url)
         raise RedirectError(
             message="Please authorize using provided URL",
             details=auth_url,

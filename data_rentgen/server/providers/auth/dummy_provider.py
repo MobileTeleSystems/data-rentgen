@@ -59,12 +59,12 @@ class DummyAuthProvider(AuthProvider):
             msg = "Missing auth credentials"
             raise AuthorizationError(msg)
 
-        logger.info("Get/create user %r in database", login)
+        logger.debug("Get/create user %r in database", login)
         async with self._uow:
             user = await self._uow.user.get_or_create(UserDTO(name=login))
 
-        logger.info("User with id %r found", user.id)
-        logger.info("Generate access token for user id %r", user.id)
+        logger.debug("User with id %r found", user.id)
+        logger.debug("Generate access token for user id %r", user.id)
         access_token, expires_at = self._generate_access_token(user_id=user.id)
         return {
             "access_token": access_token,

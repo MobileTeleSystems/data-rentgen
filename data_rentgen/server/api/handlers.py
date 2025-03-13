@@ -95,7 +95,7 @@ def application_exception_handler(request: Request, exc: ApplicationError) -> Re
 
 
 def not_authorized_redirect_exception_handler(request: Request, exc: RedirectError) -> Response:
-    logger.info("Redirect user to keycloak")
+    logger.debug("Redirect user to keycloak")
     response = get_response_for_exception(RedirectError)
     if not response:
         return unknown_exception_handler(request, exc)

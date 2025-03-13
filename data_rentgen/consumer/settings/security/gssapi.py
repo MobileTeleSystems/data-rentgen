@@ -75,7 +75,7 @@ class KafkaSecurityGSSAPISettings(KafkaSecurityBaseSettings):
 
     async def kinit_password(self):
         cmd = ["kinit", self.principal]
-        logger.info("Calling command: %s", " ".join(cmd))
+        logger.debug("Calling command: %s", " ".join(cmd))
 
         process = await asyncio.create_subprocess_exec(
             *cmd,
