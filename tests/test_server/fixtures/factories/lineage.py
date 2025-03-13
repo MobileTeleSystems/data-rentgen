@@ -245,7 +245,7 @@ async def lineage_with_depth(
             )
             lineage.operations.append(operation)
 
-            input = await create_input(
+            input_ = await create_input(
                 async_session,
                 input_kwargs={
                     "created_at": operation.created_at,
@@ -256,7 +256,7 @@ async def lineage_with_depth(
                     "schema_id": schema.id,
                 },
             )
-            lineage.inputs.append(input)
+            lineage.inputs.append(input_)
 
             output = await create_output(
                 async_session,

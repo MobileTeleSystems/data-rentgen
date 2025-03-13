@@ -835,66 +835,72 @@ async def test_operation_lineage_include_columns_with_depth(
                 *outputs_to_json(outputs, granularity="OPERATION"),
                 *outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
             ],
-            "direct_column_lineage": [
-                {
-                    "from": {"id": str(lineage.datasets[0].id), "kind": "DATASET"},
-                    "to": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
-                    "fields": {
-                        "direct_target_column": [
+            "direct_column_lineage": sorted(
+                [
+                    {
+                        "from": {"id": str(lineage.datasets[0].id), "kind": "DATASET"},
+                        "to": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                        "fields": {
+                            "direct_target_column": [
+                                {
+                                    "field": "direct_source_column",
+                                    "last_used_at": format_datetime(lineage.operations[0].created_at),
+                                    "types": [
+                                        "AGGREGATION",
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                        "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
+                        "fields": {
+                            "direct_target_column": [
+                                {
+                                    "field": "direct_source_column",
+                                    "last_used_at": format_datetime(lineage.operations[1].created_at),
+                                    "types": [
+                                        "AGGREGATION",
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                ],
+                key=lambda x: (x["from"]["id"], x["to"]["id"]),
+            ),
+            "indirect_column_lineage": sorted(
+                [
+                    {
+                        "from": {"id": str(lineage.datasets[0].id), "kind": "DATASET"},
+                        "to": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                        "fields": [
                             {
-                                "field": "direct_source_column",
+                                "field": "indirect_source_column",
                                 "last_used_at": format_datetime(lineage.operations[0].created_at),
                                 "types": [
-                                    "AGGREGATION",
+                                    "JOIN",
                                 ],
                             },
                         ],
                     },
-                },
-                {
-                    "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
-                    "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
-                    "fields": {
-                        "direct_target_column": [
+                    {
+                        "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                        "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
+                        "fields": [
                             {
-                                "field": "direct_source_column",
+                                "field": "indirect_source_column",
                                 "last_used_at": format_datetime(lineage.operations[1].created_at),
                                 "types": [
-                                    "AGGREGATION",
+                                    "JOIN",
                                 ],
                             },
                         ],
                     },
-                },
-            ],
-            "indirect_column_lineage": [
-                {
-                    "from": {"id": str(lineage.datasets[0].id), "kind": "DATASET"},
-                    "to": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
-                    "fields": [
-                        {
-                            "field": "indirect_source_column",
-                            "last_used_at": format_datetime(lineage.operations[0].created_at),
-                            "types": [
-                                "JOIN",
-                            ],
-                        },
-                    ],
-                },
-                {
-                    "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
-                    "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
-                    "fields": [
-                        {
-                            "field": "indirect_source_column",
-                            "last_used_at": format_datetime(lineage.operations[1].created_at),
-                            "types": [
-                                "JOIN",
-                            ],
-                        },
-                    ],
-                },
-            ],
+                ],
+                key=lambda x: (x["from"]["id"], x["to"]["id"]),
+            ),
         },
         "nodes": {
             "datasets": datasets_to_json(datasets),
@@ -987,66 +993,72 @@ async def test_run_lineage_include_columns_with_depth(
                 *outputs_to_json(merge_io_by_jobs(outputs), granularity="JOB"),
                 *outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
             ],
-            "direct_column_lineage": [
-                {
-                    "from": {"id": str(lineage.datasets[0].id), "kind": "DATASET"},
-                    "to": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
-                    "fields": {
-                        "direct_target_column": [
+            "direct_column_lineage": sorted(
+                [
+                    {
+                        "from": {"id": str(lineage.datasets[0].id), "kind": "DATASET"},
+                        "to": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                        "fields": {
+                            "direct_target_column": [
+                                {
+                                    "field": "direct_source_column",
+                                    "last_used_at": format_datetime(lineage.operations[0].created_at),
+                                    "types": [
+                                        "AGGREGATION",
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                        "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
+                        "fields": {
+                            "direct_target_column": [
+                                {
+                                    "field": "direct_source_column",
+                                    "last_used_at": format_datetime(lineage.operations[1].created_at),
+                                    "types": [
+                                        "AGGREGATION",
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                ],
+                key=lambda x: (x["from"]["id"], x["to"]["id"]),
+            ),
+            "indirect_column_lineage": sorted(
+                [
+                    {
+                        "from": {"id": str(lineage.datasets[0].id), "kind": "DATASET"},
+                        "to": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                        "fields": [
                             {
-                                "field": "direct_source_column",
+                                "field": "indirect_source_column",
                                 "last_used_at": format_datetime(lineage.operations[0].created_at),
                                 "types": [
-                                    "AGGREGATION",
+                                    "JOIN",
                                 ],
                             },
                         ],
                     },
-                },
-                {
-                    "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
-                    "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
-                    "fields": {
-                        "direct_target_column": [
+                    {
+                        "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                        "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
+                        "fields": [
                             {
-                                "field": "direct_source_column",
+                                "field": "indirect_source_column",
                                 "last_used_at": format_datetime(lineage.operations[1].created_at),
                                 "types": [
-                                    "AGGREGATION",
+                                    "JOIN",
                                 ],
                             },
                         ],
                     },
-                },
-            ],
-            "indirect_column_lineage": [
-                {
-                    "from": {"id": str(lineage.datasets[0].id), "kind": "DATASET"},
-                    "to": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
-                    "fields": [
-                        {
-                            "field": "indirect_source_column",
-                            "last_used_at": format_datetime(lineage.operations[0].created_at),
-                            "types": [
-                                "JOIN",
-                            ],
-                        },
-                    ],
-                },
-                {
-                    "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
-                    "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
-                    "fields": [
-                        {
-                            "field": "indirect_source_column",
-                            "last_used_at": format_datetime(lineage.operations[1].created_at),
-                            "types": [
-                                "JOIN",
-                            ],
-                        },
-                    ],
-                },
-            ],
+                ],
+                key=lambda x: (x["from"]["id"], x["to"]["id"]),
+            ),
         },
         "nodes": {
             "datasets": datasets_to_json(datasets),
@@ -1130,66 +1142,72 @@ async def test_job_lineage_include_columns_with_depth(
             "symlinks": [],
             "inputs": inputs_to_json(merge_io_by_jobs(inputs), granularity="JOB"),
             "outputs": outputs_to_json(merge_io_by_jobs(outputs), granularity="JOB"),
-            "direct_column_lineage": [
-                {
-                    "from": {"id": str(lineage.datasets[0].id), "kind": "DATASET"},
-                    "to": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
-                    "fields": {
-                        "direct_target_column": [
+            "direct_column_lineage": sorted(
+                [
+                    {
+                        "from": {"id": str(lineage.datasets[0].id), "kind": "DATASET"},
+                        "to": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                        "fields": {
+                            "direct_target_column": [
+                                {
+                                    "field": "direct_source_column",
+                                    "last_used_at": format_datetime(lineage.operations[0].created_at),
+                                    "types": [
+                                        "AGGREGATION",
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                        "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
+                        "fields": {
+                            "direct_target_column": [
+                                {
+                                    "field": "direct_source_column",
+                                    "last_used_at": format_datetime(lineage.operations[1].created_at),
+                                    "types": [
+                                        "AGGREGATION",
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                ],
+                key=lambda x: (x["from"]["id"], x["to"]["id"]),
+            ),
+            "indirect_column_lineage": sorted(
+                [
+                    {
+                        "from": {"id": str(lineage.datasets[0].id), "kind": "DATASET"},
+                        "to": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                        "fields": [
                             {
-                                "field": "direct_source_column",
+                                "field": "indirect_source_column",
                                 "last_used_at": format_datetime(lineage.operations[0].created_at),
                                 "types": [
-                                    "AGGREGATION",
+                                    "JOIN",
                                 ],
                             },
                         ],
                     },
-                },
-                {
-                    "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
-                    "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
-                    "fields": {
-                        "direct_target_column": [
+                    {
+                        "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                        "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
+                        "fields": [
                             {
-                                "field": "direct_source_column",
+                                "field": "indirect_source_column",
                                 "last_used_at": format_datetime(lineage.operations[1].created_at),
                                 "types": [
-                                    "AGGREGATION",
+                                    "JOIN",
                                 ],
                             },
                         ],
                     },
-                },
-            ],
-            "indirect_column_lineage": [
-                {
-                    "from": {"id": str(lineage.datasets[0].id), "kind": "DATASET"},
-                    "to": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
-                    "fields": [
-                        {
-                            "field": "indirect_source_column",
-                            "last_used_at": format_datetime(lineage.operations[0].created_at),
-                            "types": [
-                                "JOIN",
-                            ],
-                        },
-                    ],
-                },
-                {
-                    "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
-                    "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
-                    "fields": [
-                        {
-                            "field": "indirect_source_column",
-                            "last_used_at": format_datetime(lineage.operations[1].created_at),
-                            "types": [
-                                "JOIN",
-                            ],
-                        },
-                    ],
-                },
-            ],
+                ],
+                key=lambda x: (x["from"]["id"], x["to"]["id"]),
+            ),
         },
         "nodes": {
             "datasets": datasets_to_json(datasets),
