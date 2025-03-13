@@ -145,6 +145,10 @@ class LineageInputRelationV1(BaseModel):
         # pydantic models have reserved "schema" attribute, using alias
         serialization_alias="schema",
     )
+    schema_relevance_type: Literal["EXACT_MATCH", "LATEST_KNOWN"] | None = Field(
+        description="Relevance of schema",
+        default=None,
+    )
 
 
 class LineageOutputRelationV1(BaseModel):
@@ -160,6 +164,10 @@ class LineageOutputRelationV1(BaseModel):
         default=None,
         # pydantic models have reserved "schema" attribute, using alias
         serialization_alias="schema",
+    )
+    schema_relevance_type: Literal["EXACT_MATCH", "LATEST_KNOWN"] | None = Field(
+        description="Relevance of schema",
+        default=None,
     )
 
 

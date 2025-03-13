@@ -2,6 +2,11 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Literal
 
+from data_rentgen.db.models import (
+    Input,
+    Output,
+)
+
 if TYPE_CHECKING:
     from datetime import datetime
 
@@ -9,15 +14,15 @@ if TYPE_CHECKING:
         Address,
         Dataset,
         DatasetSymlink,
-        Input,
         Job,
         Location,
         Operation,
-        Output,
         Run,
         Schema,
         User,
     )
+    from data_rentgen.db.repositories.input import InputRow
+    from data_rentgen.db.repositories.output import OutputRow
 
 
 def format_datetime(value: datetime):
@@ -74,7 +79,7 @@ def schema_to_json(schema: Schema):
     }
 
 
-def input_to_json(input: Input, granularity: Literal["OPERATION", "RUN", "JOB"]):
+def input_to_json(input: InputRow | Input, granularity: Literal["OPERATION", "RUN", "JOB"]):
     if granularity == "OPERATION":
         to = {"kind": "OPERATION", "id": str(input.operation_id)}
     elif granularity == "RUN":
@@ -82,6 +87,10 @@ def input_to_json(input: Input, granularity: Literal["OPERATION", "RUN", "JOB"])
     else:
         to = {"kind": "JOB", "id": str(input.job_id)}
 
+    if isinstance(input, Input):
+        schema_relevance_type = "EXACT_MATCH" if input.schema else None
+    else:
+        schema_relevance_type = input.schema_relevance_type if input.schema_relevance_type else None
     return {
         "from": {"kind": "DATASET", "id": str(input.dataset_id)},
         "to": to,
@@ -90,10 +99,11 @@ def input_to_json(input: Input, granularity: Literal["OPERATION", "RUN", "JOB"])
         "num_files": input.num_files,
         "schema": schema_to_json(input.schema) if input.schema else None,
         "last_interaction_at": format_datetime(input.created_at),
+        "schema_relevance_type": schema_relevance_type,
     }
 
 
-def inputs_to_json(inputs: list[Input], granularity: Literal["OPERATION", "RUN", "JOB"]):
+def inputs_to_json(inputs: list[InputRow | Input], granularity: Literal["OPERATION", "RUN", "JOB"]):
     results = [input_to_json(input_, granularity) for input_ in inputs]
     return sorted(
         results,
@@ -101,7 +111,7 @@ def inputs_to_json(inputs: list[Input], granularity: Literal["OPERATION", "RUN",
     )
 
 
-def output_to_json(output: Output, granularity: Literal["OPERATION", "RUN", "JOB"]):
+def output_to_json(output: OutputRow | Output, granularity: Literal["OPERATION", "RUN", "JOB"]):
     if granularity == "OPERATION":
         from_ = {"kind": "OPERATION", "id": str(output.operation_id)}
     elif granularity == "RUN":
@@ -109,6 +119,10 @@ def output_to_json(output: Output, granularity: Literal["OPERATION", "RUN", "JOB
     else:
         from_ = {"kind": "JOB", "id": str(output.job_id)}
 
+    if isinstance(output, Output):
+        schema_relevance_type = "EXACT_MATCH" if output.schema else None
+    else:
+        schema_relevance_type = output.schema_relevance_type if output.schema_relevance_type else None
     return {
         "from": from_,
         "to": {"kind": "DATASET", "id": str(output.dataset_id)},
@@ -118,10 +132,11 @@ def output_to_json(output: Output, granularity: Literal["OPERATION", "RUN", "JOB
         "num_files": output.num_files,
         "schema": schema_to_json(output.schema) if output.schema else None,
         "last_interaction_at": format_datetime(output.created_at),
+        "schema_relevance_type": schema_relevance_type,
     }
 
 
-def outputs_to_json(outputs: list[Output], granularity: Literal["OPERATION", "RUN", "JOB"]):
+def outputs_to_json(outputs: list[OutputRow | Output], granularity: Literal["OPERATION", "RUN", "JOB"]):
     results = [output_to_json(output, granularity) for output in outputs]
     return sorted(
         results,

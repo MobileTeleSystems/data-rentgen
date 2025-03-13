@@ -13,13 +13,13 @@ from uuid6 import UUID
 from data_rentgen.db.models import (
     Dataset,
     DatasetSymlink,
-    Input,
     Job,
     Operation,
-    Output,
     Run,
 )
 from data_rentgen.db.repositories.column_lineage import ColumnLineageRow
+from data_rentgen.db.repositories.input import InputRow
+from data_rentgen.db.repositories.output import OutputRow
 from data_rentgen.server.schemas.v1.lineage import LineageDirectionV1
 from data_rentgen.services.uow import UnitOfWork
 
@@ -33,8 +33,8 @@ class LineageServiceResult:
     operations: dict[UUID, Operation] = field(default_factory=dict)
     datasets: dict[int, Dataset] = field(default_factory=dict)
     dataset_symlinks: dict[tuple[int, int], DatasetSymlink] = field(default_factory=dict)
-    inputs: dict[tuple[int, int, UUID | None, UUID | None], Input] = field(default_factory=dict)
-    outputs: dict[tuple[int, int, UUID | None, UUID | None, str | None], Output] = field(default_factory=dict)
+    inputs: dict[tuple[int, int, UUID | None, UUID | None], InputRow] = field(default_factory=dict)
+    outputs: dict[tuple[int, int, UUID | None, UUID | None, str | None], OutputRow] = field(default_factory=dict)
     column_lineage: dict[tuple[int, int], list[ColumnLineageRow]] = field(default_factory=dict)
 
     def merge(self, other: "LineageServiceResult") -> "LineageServiceResult":
@@ -110,8 +110,8 @@ class LineageService:
         jobs_by_id = {job.id: job for job in jobs}
         job_ids = sorted(jobs_by_id.keys())
 
-        inputs: list[Input] = []
-        outputs: list[Output] = []
+        inputs: list[InputRow] = []
+        outputs: list[OutputRow] = []
         if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             outputs.extend(
                 await self._uow.output.list_by_job_ids(
@@ -278,8 +278,8 @@ class LineageService:
         runs_by_id = {run.id: run for run in runs}
         run_ids = sorted(runs_by_id.keys())
 
-        inputs: list[Input] = []
-        outputs: list[Output] = []
+        inputs: list[InputRow] = []
+        outputs: list[OutputRow] = []
         if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             outputs.extend(
                 await self._uow.output.list_by_run_ids(
@@ -477,8 +477,8 @@ class LineageService:
         jobs = await self._uow.job.list_by_ids(sorted(job_ids - ids_to_skip.jobs))
         jobs_by_id = {job.id: job for job in jobs}
 
-        inputs: list[Input] = []
-        outputs: list[Output] = []
+        inputs: list[InputRow] = []
+        outputs: list[OutputRow] = []
         if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             outputs.extend(
                 await self._uow.output.list_by_operation_ids(operation_ids, granularity="OPERATION"),
@@ -752,8 +752,8 @@ class LineageService:
         include_column_lineage: bool,  # noqa: FBT001
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
-        inputs: list[Input] = []
-        outputs: list[Output] = []
+        inputs: list[InputRow] = []
+        outputs: list[OutputRow] = []
         if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             inputs.extend(
                 await self._uow.input.list_by_dataset_ids(
@@ -891,8 +891,8 @@ class LineageService:
         include_column_lineage: bool,  # noqa: FBT001
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
-        inputs: list[Input] = []
-        outputs: list[Output] = []
+        inputs: list[InputRow] = []
+        outputs: list[OutputRow] = []
         if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             inputs.extend(
                 await self._uow.input.list_by_dataset_ids(
@@ -935,7 +935,6 @@ class LineageService:
         output_schema_ids = {output.schema_id for output in outputs if output.schema_id is not None}
         schemas = await self._uow.schema.list_by_ids(sorted(input_schema_ids | output_schema_ids))
         schemas_by_id = {schema.id: schema for schema in schemas}
-
         for input_ in inputs:
             if input_.schema_id is not None:
                 input_.schema = schemas_by_id.get(input_.schema_id)
@@ -1008,8 +1007,8 @@ class LineageService:
         include_column_lineage: bool,  # noqa: FBT001
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
-        inputs: list[Input] = []
-        outputs: list[Output] = []
+        inputs: list[InputRow] = []
+        outputs: list[OutputRow] = []
         if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             inputs = await self._uow.input.list_by_dataset_ids(
                 sorted(datasets_by_id.keys()),
