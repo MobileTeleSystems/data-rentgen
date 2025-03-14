@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Literal
 
-from sqlalchemy import ColumnElement, Row, Select, any_, func, literal_column, select
+from sqlalchemy import ColumnElement, Row, any_, func, literal_column, select
 from sqlalchemy.dialects.postgresql import insert
 from uuid6 import UUID
 
@@ -192,48 +192,75 @@ class OutputRepository(Repository[Output]):
             ]
 
         # return an aggregated Output
-        query: Select[tuple]
         if granularity == "RUN":
+            partition_by = [Output.run_id, Output.job_id, Output.dataset_id]
+            base_query = (
+                select(
+                    Output,
+                    func.first_value(Output.schema_id)
+                    .over(partition_by=partition_by, order_by=[Output.created_at, Output.schema_id])
+                    .label("oldest_schema_id"),
+                    func.last_value(Output.schema_id)
+                    .over(partition_by=partition_by, order_by=[Output.created_at, Output.schema_id])
+                    .label("newest_schema_id"),
+                )
+                .where(*where)
+                .cte()
+            )
+
             query = select(
-                func.max(Output.created_at).label("created_at"),
+                func.max(base_query.c.created_at).label("created_at"),
                 literal_column("NULL").label("id"),
                 literal_column("NULL").label("operation_id"),
-                Output.run_id,
-                Output.job_id,
-                Output.dataset_id,
-                func.sum(Output.num_bytes).label("sum_num_bytes"),
-                func.sum(Output.num_rows).label("sum_num_rows"),
-                func.sum(Output.num_files).label("sum_num_files"),
-                func.min(Output.type).label("min_type"),
-                func.max(Output.type).label("max_type"),
-                func.min(Output.schema_id).label("min_schema_id"),
-                func.max(Output.schema_id).label("max_schema_id"),
+                base_query.c.run_id,
+                base_query.c.job_id,
+                base_query.c.dataset_id,
+                func.sum(base_query.c.num_bytes).label("sum_num_bytes"),
+                func.sum(base_query.c.num_rows).label("sum_num_rows"),
+                func.sum(base_query.c.num_files).label("sum_num_files"),
+                func.min(base_query.c.type).label("min_type"),
+                func.max(base_query.c.type).label("max_type"),
+                func.min(base_query.c.oldest_schema_id).label("min_schema_id"),
+                func.max(base_query.c.newest_schema_id).label("max_schema_id"),
             ).group_by(
-                Output.run_id,
-                Output.job_id,
-                Output.dataset_id,
+                base_query.c.run_id,
+                base_query.c.job_id,
+                base_query.c.dataset_id,
             )
         else:
+            partition_by = [Output.job_id, Output.dataset_id]
+            base_query = (
+                select(
+                    Output,
+                    func.first_value(Output.schema_id)
+                    .over(partition_by=partition_by, order_by=[Output.created_at, Output.schema_id])
+                    .label("oldest_schema_id"),
+                    func.last_value(Output.schema_id)
+                    .over(partition_by=partition_by, order_by=[Output.created_at, Output.schema_id])
+                    .label("newest_schema_id"),
+                )
+                .where(*where)
+                .cte()
+            )
+
             query = select(
-                func.max(Output.created_at).label("created_at"),
+                func.max(base_query.c.created_at).label("created_at"),
                 literal_column("NULL").label("id"),
                 literal_column("NULL").label("operation_id"),
                 literal_column("NULL").label("run_id"),
-                Output.job_id,
-                Output.dataset_id,
-                func.sum(Output.num_bytes).label("sum_num_bytes"),
-                func.sum(Output.num_rows).label("sum_num_rows"),
-                func.sum(Output.num_files).label("sum_num_files"),
-                func.min(Output.type).label("min_type"),
-                func.max(Output.type).label("max_type"),
-                func.min(Output.schema_id).label("min_schema_id"),
-                func.max(Output.schema_id).label("max_schema_id"),
+                base_query.c.job_id,
+                base_query.c.dataset_id,
+                func.sum(base_query.c.num_bytes).label("sum_num_bytes"),
+                func.sum(base_query.c.num_rows).label("sum_num_rows"),
+                func.sum(base_query.c.num_files).label("sum_num_files"),
+                func.min(base_query.c.type).label("min_type"),
+                func.max(base_query.c.type).label("max_type"),
+                func.min(base_query.c.oldest_schema_id).label("min_schema_id"),
+                func.max(base_query.c.newest_schema_id).label("max_schema_id"),
             ).group_by(
-                Output.job_id,
-                Output.dataset_id,
+                base_query.c.job_id,
+                base_query.c.dataset_id,
             )
-
-        query = query.where(*where)
         query_result = await self._session.execute(query)
         results = []
         for row in query_result.all():
@@ -259,7 +286,6 @@ class OutputRepository(Repository[Output]):
                     type=row.max_type if row.min_type == row.max_type else None,
                 ),
             )
-
         return results
 
     async def get_stats_by_operation_ids(self, operation_ids: Sequence[UUID]) -> dict[UUID, Row]:
