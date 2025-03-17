@@ -65,7 +65,7 @@ def symlinks_to_json(symlinks: list[DatasetSymlink]):
     return [symlink_to_json(run) for run in sorted(symlinks, key=lambda x: x.id)]
 
 
-def schema_to_json(schema: Schema):
+def schema_to_json(schema: Schema, schema_relevance_type: str):
     return {
         "id": str(schema.id),
         "fields": [
@@ -76,6 +76,7 @@ def schema_to_json(schema: Schema):
             }
             for field in schema.fields
         ],
+        "schema_relevance_type": schema_relevance_type,
     }
 
 
@@ -97,9 +98,8 @@ def input_to_json(input: InputRow | Input, granularity: Literal["OPERATION", "RU
         "num_bytes": input.num_bytes,
         "num_rows": input.num_rows,
         "num_files": input.num_files,
-        "schema": schema_to_json(input.schema) if input.schema else None,
+        "schema": schema_to_json(input.schema, schema_relevance_type) if input.schema else None,
         "last_interaction_at": format_datetime(input.created_at),
-        "schema_relevance_type": schema_relevance_type,
     }
 
 
@@ -130,9 +130,8 @@ def output_to_json(output: OutputRow | Output, granularity: Literal["OPERATION",
         "num_bytes": output.num_bytes,
         "num_rows": output.num_rows,
         "num_files": output.num_files,
-        "schema": schema_to_json(output.schema) if output.schema else None,
+        "schema": schema_to_json(output.schema, schema_relevance_type) if output.schema else None,
         "last_interaction_at": format_datetime(output.created_at),
-        "schema_relevance_type": schema_relevance_type,
     }
 
 

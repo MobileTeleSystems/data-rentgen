@@ -1,0 +1,132 @@
+Change logic for output/input dataset schema in lineage response.
+Add types of schema in response 'EXACT_MATCH' and 'LATEST_KNOWN'.
+
+'EXACT_MATCH' - when last and first(order by created_at ascending) schema_ids are the same.
+'LATEST_KNOWN' - when last and first are not the same, in this case last schema_id will return.
+
+
+from:
+
+.. code:: json
+"relations": {
+  "direct_column_lineage": [],
+  "indirect_column_lineage": [],
+  "inputs": [
+    {
+      "from": { "id": "2697", "kind": "DATASET" },
+      "last_interaction_at": "2025-03-14T15:22:30.572000Z",
+      "num_bytes": 13166146,
+      "num_files": 240,
+      "num_rows": 22793,
+      "schema": {
+        "fields": [
+          {
+            "description": null,
+            "fields": [],
+            "name": "dt",
+            "type": "timestamp"
+          },
+          {
+            "description": null,
+            "fields": [],
+            "name": "customer_id",
+            "type": "decimal(20,0)"
+          },
+          {
+            "description": null,
+            "fields": [],
+            "name": "total_spent",
+            "type": "float"
+          }
+        ],
+        "id": "1418"
+      },
+      "to": { "id": "1260", "kind": "JOB" }
+    },
+    {
+      "from": { "id": "3300", "kind": "DATASET" },
+      "last_interaction_at": "2025-03-17T08:45:58.439000Z",
+      "num_bytes": 13060345,
+      "num_files": 112,
+      "num_rows": 13723,
+      "schema": null,
+      "to": { "id": "0195a347-fa5f-7a72-aa14-bc510fadfd3a", "kind": "RUN" }
+    }
+  ]
+}
+
+
+
+to:
+
+.. code:: json
+"relations": {
+  "direct_column_lineage": [],
+  "indirect_column_lineage": [],
+  "inputs": [
+    {
+      "from": { "id": "2697", "kind": "DATASET" },
+      "last_interaction_at": "2025-03-14T15:22:30.572000Z",
+      "num_bytes": 13166146,
+      "num_files": 240,
+      "num_rows": 22793,
+      "schema": {
+        "fields": [
+          {
+            "description": null,
+            "fields": [],
+            "name": "dt",
+            "type": "timestamp"
+          },
+          {
+            "description": null,
+            "fields": [],
+            "name": "customer_id",
+            "type": "decimal(20,0)"
+          },
+          {
+            "description": null,
+            "fields": [],
+            "name": "total_spent",
+            "type": "float"
+          }
+        ],
+        "id": "1418"
+      },
+      "schema_relevance_type": "EXACT_MATCH",
+      "to": { "id": "1260", "kind": "JOB" }
+    },
+    {
+      "from": { "id": "3300", "kind": "DATASET" },
+      "last_interaction_at": "2025-03-17T08:45:58.439000Z",
+      "num_bytes": 13060345,
+      "num_files": 112,
+      "num_rows": 13723,
+      "schema": {
+        "fields": [
+          {
+            "description": null,
+            "fields": [],
+            "name": "dt",
+            "type": "timestamp"
+          },
+          {
+            "description": null,
+            "fields": [],
+            "name": "customer_id",
+            "type": "decimal(20,0)"
+          },
+          {
+            "description": null,
+            "fields": [],
+            "name": "total_spent",
+            "type": "float"
+          }
+        ],
+        "id": "1657"
+      },
+      "schema_relevance_type": "LATEST_KNOWN",
+      "to": { "id": "0195a347-fa5f-7a72-aa14-bc510fadfd3a", "kind": "RUN" }
+    }
+  ]
+}

@@ -128,7 +128,10 @@ class LineageIORelationSchemaFieldV1(BaseModel):
 class LineageIORelationSchemaV1(BaseModel):
     id: str = Field(description="Schema id", coerce_numbers_to_str=True)
     fields: list[LineageIORelationSchemaFieldV1] = Field(description="Schema fields")
-
+    schema_relevance_type: Literal["EXACT_MATCH", "LATEST_KNOWN"] | None = Field(
+        description="Relevance of schema",
+        default="LATEST_KNOWN",
+    )
     model_config = ConfigDict(from_attributes=True)
 
 
@@ -145,10 +148,6 @@ class LineageInputRelationV1(BaseModel):
         # pydantic models have reserved "schema" attribute, using alias
         serialization_alias="schema",
     )
-    schema_relevance_type: Literal["EXACT_MATCH", "LATEST_KNOWN"] | None = Field(
-        description="Relevance of schema",
-        default=None,
-    )
 
 
 class LineageOutputRelationV1(BaseModel):
@@ -164,10 +163,6 @@ class LineageOutputRelationV1(BaseModel):
         default=None,
         # pydantic models have reserved "schema" attribute, using alias
         serialization_alias="schema",
-    )
-    schema_relevance_type: Literal["EXACT_MATCH", "LATEST_KNOWN"] | None = Field(
-        description="Relevance of schema",
-        default=None,
     )
 
 

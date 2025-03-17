@@ -116,8 +116,9 @@ def _get_input_relations(inputs: dict[Any, InputRow]) -> list[LineageInputRelati
             num_rows=input_.num_rows,
             num_files=input_.num_files,
             i_schema=LineageIORelationSchemaV1.model_validate(input_.schema) if input_.schema else None,
-            schema_relevance_type=input_.schema_relevance_type,
         )
+        if relation.i_schema:
+            relation.i_schema.schema_relevance_type = input_.schema_relevance_type
         relations.append(relation)
 
     return sorted(relations, key=lambda x: (x.to.kind, str(x.from_.id), str(x.to.id)))
@@ -142,8 +143,9 @@ def _get_output_relations(outputs: dict[Any, OutputRow]) -> list[LineageOutputRe
             num_rows=output.num_rows,
             num_files=output.num_files,
             o_schema=LineageIORelationSchemaV1.model_validate(output.schema) if output.schema else None,
-            schema_relevance_type=output.schema_relevance_type,
         )
+        if relation.o_schema:
+            relation.o_schema.schema_relevance_type = output.schema_relevance_type
         relations.append(relation)
 
     return sorted(relations, key=lambda x: (x.from_.kind, str(x.from_.id), str(x.to.id), x.type))
