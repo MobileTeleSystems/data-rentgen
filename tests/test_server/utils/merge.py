@@ -2,6 +2,8 @@ from collections.abc import Sequence
 from typing import Any, Callable, TypeVar
 
 from data_rentgen.db.models import Input, Output
+from data_rentgen.db.repositories.input import InputRow
+from data_rentgen.db.repositories.output import OutputRow
 
 IO = TypeVar("IO", Input, Output)
 
@@ -13,8 +15,11 @@ def _not_none(value: Any) -> bool:
 def merge_io(inputs_outputs: Sequence[IO], get_key: Callable[[IO], tuple]) -> list[IO]:
     if not inputs_outputs:
         return []
-
-    io_type = type(inputs_outputs[0])
+    io_map = {
+        "Input": InputRow,
+        "Output": OutputRow,
+    }
+    io_type = io_map.get(type(inputs_outputs[0]).__name__)
     merged_inputs_outputs = {}
     for raw_io in inputs_outputs:
         key = get_key(raw_io)
@@ -22,6 +27,7 @@ def merge_io(inputs_outputs: Sequence[IO], get_key: Callable[[IO], tuple]) -> li
 
         if not merged_io:
             merged_io = io_type(
+                operation_id=raw_io.operation_id,
                 run_id=raw_io.run_id,
                 job_id=raw_io.job_id,
                 dataset_id=raw_io.dataset_id,
@@ -31,8 +37,9 @@ def merge_io(inputs_outputs: Sequence[IO], get_key: Callable[[IO], tuple]) -> li
                 num_rows=raw_io.num_rows,
                 schema_id=raw_io.schema_id,
                 schema=raw_io.schema,
+                schema_relevance_type="EXACT_MATCH" if raw_io.schema else None,
             )
-            if isinstance(merged_io, Output):
+            if isinstance(merged_io, OutputRow):
                 merged_io.type = raw_io.type
 
             merged_inputs_outputs[key] = merged_io
@@ -48,14 +55,14 @@ def merge_io(inputs_outputs: Sequence[IO], get_key: Callable[[IO], tuple]) -> li
                 and raw_io.schema_id is not None
                 and merged_io.schema_id != raw_io.schema_id
             ):
-                # cannot merge different schemas
-                merged_io.schema_id = None
-                merged_io.schema = None
+                schema_id = max(merged_io.schema_id, raw_io.schema_id)
+                merged_io.schema = merged_io.schema if schema_id == merged_io.schema_id else raw_io.schema
+                merged_io.schema_id = schema_id
+                merged_io.schema_relevance_type = "LATEST_KNOWN"
 
-            if isinstance(merged_io, Output) and merged_io.type != raw_io.type:
+            if isinstance(merged_io, OutputRow) and merged_io.type != raw_io.type:
                 # cannot merge different types
                 merged_io.type = None
-
     return list(merged_inputs_outputs.values())
 
 

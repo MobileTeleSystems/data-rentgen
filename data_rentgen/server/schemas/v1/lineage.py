@@ -128,7 +128,10 @@ class LineageIORelationSchemaFieldV1(BaseModel):
 class LineageIORelationSchemaV1(BaseModel):
     id: str = Field(description="Schema id", coerce_numbers_to_str=True)
     fields: list[LineageIORelationSchemaFieldV1] = Field(description="Schema fields")
-
+    relevance_type: Literal["EXACT_MATCH", "LATEST_KNOWN"] | None = Field(
+        description="Relevance of schema",
+        default="LATEST_KNOWN",
+    )
     model_config = ConfigDict(from_attributes=True)
 
 

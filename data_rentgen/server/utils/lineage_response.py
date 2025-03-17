@@ -7,11 +7,11 @@ from typing import Any
 from uuid6 import UUID
 
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink
-from data_rentgen.db.models.input import Input
 from data_rentgen.db.models.operation import Operation
-from data_rentgen.db.models.output import Output
 from data_rentgen.db.models.run import Run
 from data_rentgen.db.repositories.column_lineage import ColumnLineageRow
+from data_rentgen.db.repositories.input import InputRow
+from data_rentgen.db.repositories.output import OutputRow
 from data_rentgen.server.schemas.v1 import (
     ColumnLineageInteractionTypeV1,
     DatasetResponseV1,
@@ -98,7 +98,7 @@ def _get_symlink_relations(dataset_symlinks: dict[Any, DatasetSymlink]) -> list[
     return symlinks
 
 
-def _get_input_relations(inputs: dict[Any, Input]) -> list[LineageInputRelationV1]:
+def _get_input_relations(inputs: dict[Any, InputRow]) -> list[LineageInputRelationV1]:
     relations = []
     for input_ in inputs.values():
         if input_.operation_id is not None:
@@ -117,12 +117,14 @@ def _get_input_relations(inputs: dict[Any, Input]) -> list[LineageInputRelationV
             num_files=input_.num_files,
             i_schema=LineageIORelationSchemaV1.model_validate(input_.schema) if input_.schema else None,
         )
+        if relation.i_schema:
+            relation.i_schema.relevance_type = input_.schema_relevance_type
         relations.append(relation)
 
     return sorted(relations, key=lambda x: (x.to.kind, str(x.from_.id), str(x.to.id)))
 
 
-def _get_output_relations(outputs: dict[Any, Output]) -> list[LineageOutputRelationV1]:
+def _get_output_relations(outputs: dict[Any, OutputRow]) -> list[LineageOutputRelationV1]:
     relations = []
     for output in outputs.values():
         if output.operation_id is not None:
@@ -142,6 +144,8 @@ def _get_output_relations(outputs: dict[Any, Output]) -> list[LineageOutputRelat
             num_files=output.num_files,
             o_schema=LineageIORelationSchemaV1.model_validate(output.schema) if output.schema else None,
         )
+        if relation.o_schema:
+            relation.o_schema.relevance_type = output.schema_relevance_type
         relations.append(relation)
 
     return sorted(relations, key=lambda x: (x.from_.kind, str(x.from_.id), str(x.to.id), x.type))

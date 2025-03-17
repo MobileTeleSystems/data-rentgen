@@ -1,21 +1,37 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-
 from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Literal
-from uuid import UUID
 
-from sqlalchemy import ColumnElement, Row, Select, any_, func, literal_column, select
+from sqlalchemy import ColumnElement, Row, any_, func, literal_column, select
 from sqlalchemy.dialects.postgresql import insert
+from uuid6 import UUID
 
-from data_rentgen.db.models import Output, OutputType
+from data_rentgen.db.models import Output, OutputType, Schema
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.uuid import (
     extract_timestamp_from_uuid,
     generate_incremental_uuid,
 )
 from data_rentgen.dto import OutputDTO
+
+
+@dataclass
+class OutputRow:
+    created_at: datetime
+    operation_id: UUID
+    run_id: UUID
+    job_id: int
+    dataset_id: int
+    num_bytes: int | None
+    num_rows: int | None
+    num_files: int | None
+    type: str | None = None
+    schema_id: int | None = None
+    schema_relevance_type: Literal["EXACT_MATCH", "LATEST_KNOWN"] | None = None
+    schema: Schema | None = None
 
 
 class OutputRepository(Repository[Output]):
@@ -72,7 +88,7 @@ class OutputRepository(Repository[Output]):
         self,
         operation_ids: Sequence[UUID],
         granularity: Literal["JOB", "RUN", "OPERATION"],
-    ) -> list[Output]:
+    ) -> list[OutputRow]:
         if not operation_ids:
             return []
 
@@ -95,7 +111,7 @@ class OutputRepository(Repository[Output]):
         since: datetime,
         until: datetime | None,
         granularity: Literal["JOB", "RUN", "OPERATION"],
-    ) -> list[Output]:
+    ) -> list[OutputRow]:
         if not run_ids:
             return []
 
@@ -117,7 +133,7 @@ class OutputRepository(Repository[Output]):
         since: datetime,
         until: datetime | None,
         granularity: Literal["JOB", "RUN", "OPERATION"],
-    ) -> list[Output]:
+    ) -> list[OutputRow]:
         if not job_ids:
             return []
 
@@ -136,7 +152,7 @@ class OutputRepository(Repository[Output]):
         since: datetime,
         until: datetime | None,
         granularity: Literal["JOB", "RUN", "OPERATION"],
-    ) -> list[Output]:
+    ) -> list[OutputRow]:
         if not dataset_ids:
             return []
 
@@ -153,74 +169,124 @@ class OutputRepository(Repository[Output]):
         self,
         where: list[ColumnElement],
         granularity: Literal["JOB", "RUN", "OPERATION"],
-    ) -> list[Output]:
+    ) -> list[OutputRow]:
         if granularity == "OPERATION":
             # return Output as-is
             simple_query = select(Output).where(*where)
             result = await self._session.scalars(simple_query)
-            return list(result.all())
+            return [
+                OutputRow(
+                    created_at=row.created_at,
+                    operation_id=row.operation_id,
+                    run_id=row.run_id,
+                    job_id=row.job_id,
+                    dataset_id=row.dataset_id,
+                    num_bytes=row.num_bytes,
+                    num_rows=row.num_rows,
+                    num_files=row.num_files,
+                    schema_id=row.schema_id,
+                    schema_relevance_type="EXACT_MATCH" if row.schema_id else None,
+                    type=row.type,
+                )
+                for row in result.all()
+            ]
 
         # return an aggregated Output
-        query: Select[tuple]
         if granularity == "RUN":
+            partition_by = [Output.run_id, Output.job_id, Output.dataset_id]
+            base_query = (
+                select(
+                    Output,
+                    func.first_value(Output.schema_id)
+                    .over(partition_by=partition_by, order_by=[Output.created_at, Output.schema_id])
+                    .label("oldest_schema_id"),
+                    func.last_value(Output.schema_id)
+                    .over(partition_by=partition_by, order_by=[Output.created_at, Output.schema_id])
+                    .label("newest_schema_id"),
+                )
+                .where(*where)
+                .cte()
+            )
+
             query = select(
-                func.max(Output.created_at).label("created_at"),
+                func.max(base_query.c.created_at).label("created_at"),
                 literal_column("NULL").label("id"),
                 literal_column("NULL").label("operation_id"),
-                Output.run_id,
-                Output.job_id,
-                Output.dataset_id,
-                func.sum(Output.num_bytes).label("sum_num_bytes"),
-                func.sum(Output.num_rows).label("sum_num_rows"),
-                func.sum(Output.num_files).label("sum_num_files"),
-                func.min(Output.type).label("min_type"),
-                func.max(Output.type).label("max_type"),
-                func.min(Output.schema_id).label("min_schema_id"),
-                func.max(Output.schema_id).label("max_schema_id"),
+                base_query.c.run_id,
+                base_query.c.job_id,
+                base_query.c.dataset_id,
+                func.sum(base_query.c.num_bytes).label("sum_num_bytes"),
+                func.sum(base_query.c.num_rows).label("sum_num_rows"),
+                func.sum(base_query.c.num_files).label("sum_num_files"),
+                func.min(base_query.c.type).label("min_type"),
+                func.max(base_query.c.type).label("max_type"),
+                func.min(base_query.c.oldest_schema_id).label("min_schema_id"),
+                func.max(base_query.c.newest_schema_id).label("max_schema_id"),
             ).group_by(
-                Output.run_id,
-                Output.job_id,
-                Output.dataset_id,
+                base_query.c.run_id,
+                base_query.c.job_id,
+                base_query.c.dataset_id,
             )
         else:
+            partition_by = [Output.job_id, Output.dataset_id]
+            base_query = (
+                select(
+                    Output,
+                    func.first_value(Output.schema_id)
+                    .over(partition_by=partition_by, order_by=[Output.created_at, Output.schema_id])
+                    .label("oldest_schema_id"),
+                    func.last_value(Output.schema_id)
+                    .over(partition_by=partition_by, order_by=[Output.created_at, Output.schema_id])
+                    .label("newest_schema_id"),
+                )
+                .where(*where)
+                .cte()
+            )
+
             query = select(
-                func.max(Output.created_at).label("created_at"),
+                func.max(base_query.c.created_at).label("created_at"),
                 literal_column("NULL").label("id"),
                 literal_column("NULL").label("operation_id"),
                 literal_column("NULL").label("run_id"),
-                Output.job_id,
-                Output.dataset_id,
-                func.sum(Output.num_bytes).label("sum_num_bytes"),
-                func.sum(Output.num_rows).label("sum_num_rows"),
-                func.sum(Output.num_files).label("sum_num_files"),
-                func.min(Output.type).label("min_type"),
-                func.max(Output.type).label("max_type"),
-                func.min(Output.schema_id).label("min_schema_id"),
-                func.max(Output.schema_id).label("max_schema_id"),
+                base_query.c.job_id,
+                base_query.c.dataset_id,
+                func.sum(base_query.c.num_bytes).label("sum_num_bytes"),
+                func.sum(base_query.c.num_rows).label("sum_num_rows"),
+                func.sum(base_query.c.num_files).label("sum_num_files"),
+                func.min(base_query.c.type).label("min_type"),
+                func.max(base_query.c.type).label("max_type"),
+                func.min(base_query.c.oldest_schema_id).label("min_schema_id"),
+                func.max(base_query.c.newest_schema_id).label("max_schema_id"),
             ).group_by(
-                Output.job_id,
-                Output.dataset_id,
+                base_query.c.job_id,
+                base_query.c.dataset_id,
             )
-
-        query = query.where(*where)
-        results = await self._session.execute(query)
-        return [
-            Output(
-                created_at=row.created_at,
-                run_id=row.run_id,
-                job_id=row.job_id,
-                dataset_id=row.dataset_id,
-                num_bytes=row.sum_num_bytes,
-                num_rows=row.sum_num_rows,
-                num_files=row.sum_num_files,
-                # If all outputs within Dataset -> Run|Job have the same type, save it.
-                # If not, it's impossible to merge.
-                type=row.max_type if row.min_type == row.max_type else None,
-                # Same for schema
-                schema_id=row.max_schema_id if row.min_schema_id == row.max_schema_id else None,
+        query_result = await self._session.execute(query)
+        results = []
+        for row in query_result.all():
+            schema_relevance_type: Literal["EXACT_MATCH", "LATEST_KNOWN"] | None
+            if row.max_schema_id:
+                schema_relevance_type = "EXACT_MATCH" if row.min_schema_id == row.max_schema_id else "LATEST_KNOWN"
+            else:
+                schema_relevance_type = None
+            results.append(
+                OutputRow(
+                    created_at=row.created_at,
+                    operation_id=row.operation_id,
+                    run_id=row.run_id,
+                    job_id=row.job_id,
+                    dataset_id=row.dataset_id,
+                    num_bytes=row.sum_num_bytes,
+                    num_rows=row.sum_num_rows,
+                    num_files=row.sum_num_files,
+                    schema_id=row.max_schema_id,
+                    schema_relevance_type=schema_relevance_type,
+                    # If all outputs within Dataset -> Run|Job have the same type, save it.
+                    # If not, it's impossible to merge.
+                    type=row.max_type if row.min_type == row.max_type else None,
+                ),
             )
-            for row in results.all()
-        ]
+        return results
 
     async def get_stats_by_operation_ids(self, operation_ids: Sequence[UUID]) -> dict[UUID, Row]:
         if not operation_ids:

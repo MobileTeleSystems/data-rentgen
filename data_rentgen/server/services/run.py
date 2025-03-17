@@ -3,10 +3,10 @@
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Annotated
-from uuid import UUID
 
 from fastapi import Depends
 from sqlalchemy import Row
+from uuid6 import UUID
 
 from data_rentgen.db.models.run import Run
 from data_rentgen.dto.pagination import PaginationDTO

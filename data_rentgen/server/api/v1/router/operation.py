@@ -27,6 +27,7 @@ router = APIRouter(
 )
 
 
+# TODO: Remove type ignore in DOP-24446
 @router.get("", summary="Paginated list of Operations")
 async def operations(
     query_args: Annotated[OperationQueryV1, Depends()],
@@ -39,8 +40,8 @@ async def operations(
         page_size=query_args.page_size,
         since=query_args.since,
         until=query_args.until,
-        operation_ids=query_args.operation_id,
-        run_id=query_args.run_id,
+        operation_ids=query_args.operation_id,  # type: ignore[arg-type]
+        run_id=query_args.run_id,  # type: ignore[arg-type]
     )
     return PageResponseV1[OperationDetailedResponseV1].from_pagination(pagination)
 

@@ -1,21 +1,36 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-
 from collections.abc import Sequence
+from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Literal
-from uuid import UUID
 
-from sqlalchemy import ColumnElement, Row, Select, any_, func, literal_column, select
+from sqlalchemy import ColumnElement, Row, any_, func, literal_column, select
 from sqlalchemy.dialects.postgresql import insert
+from uuid6 import UUID
 
-from data_rentgen.db.models import Input
+from data_rentgen.db.models import Input, Schema
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.uuid import (
     extract_timestamp_from_uuid,
     generate_incremental_uuid,
 )
 from data_rentgen.dto import InputDTO
+
+
+@dataclass
+class InputRow:
+    created_at: datetime
+    operation_id: UUID
+    run_id: UUID
+    job_id: int
+    dataset_id: int
+    num_bytes: int | None
+    num_rows: int | None
+    num_files: int | None
+    schema_id: int | None = None
+    schema_relevance_type: Literal["EXACT_MATCH", "LATEST_KNOWN"] | None = None
+    schema: Schema | None = None
 
 
 class InputRepository(Repository[Input]):
@@ -71,7 +86,7 @@ class InputRepository(Repository[Input]):
         self,
         operation_ids: Sequence[UUID],
         granularity: Literal["JOB", "RUN", "OPERATION"],
-    ) -> list[Input]:
+    ) -> list[InputRow]:
         if not operation_ids:
             return []
 
@@ -94,7 +109,7 @@ class InputRepository(Repository[Input]):
         since: datetime,
         until: datetime | None,
         granularity: Literal["JOB", "RUN", "OPERATION"],
-    ) -> list[Input]:
+    ) -> list[InputRow]:
         if not run_ids:
             return []
 
@@ -116,7 +131,7 @@ class InputRepository(Repository[Input]):
         since: datetime,
         until: datetime | None,
         granularity: Literal["JOB", "RUN", "OPERATION"],
-    ) -> list[Input]:
+    ) -> list[InputRow]:
         if not job_ids:
             return []
 
@@ -135,7 +150,7 @@ class InputRepository(Repository[Input]):
         since: datetime,
         until: datetime | None,
         granularity: Literal["JOB", "RUN", "OPERATION"],
-    ) -> list[Input]:
+    ) -> list[InputRow]:
         if not dataset_ids:
             return []
 
@@ -152,66 +167,115 @@ class InputRepository(Repository[Input]):
         self,
         where: list[ColumnElement],
         granularity: Literal["JOB", "RUN", "OPERATION"],
-    ) -> list[Input]:
+    ) -> list[InputRow]:
         if granularity == "OPERATION":
             # return Input as-is
             simple_query = select(Input).where(*where)
             result = await self._session.scalars(simple_query)
-            return list(result.all())
+            return [
+                InputRow(
+                    created_at=row.created_at,
+                    operation_id=row.operation_id,
+                    run_id=row.run_id,
+                    job_id=row.job_id,
+                    dataset_id=row.dataset_id,
+                    num_bytes=row.num_bytes,
+                    num_rows=row.num_rows,
+                    num_files=row.num_files,
+                    schema_id=row.schema_id,
+                    schema_relevance_type="EXACT_MATCH" if row.schema_id else None,
+                )
+                for row in result.all()
+            ]
 
         # return an aggregated Input
-        query: Select[tuple]
         if granularity == "RUN":
+            partition_by = [Input.run_id, Input.job_id, Input.dataset_id]
+            base_query = (
+                select(
+                    Input,
+                    func.first_value(Input.schema_id)
+                    .over(partition_by=partition_by, order_by=[Input.created_at, Input.schema_id])
+                    .label("oldest_schema_id"),
+                    func.last_value(Input.schema_id)
+                    .over(partition_by=partition_by, order_by=[Input.created_at, Input.schema_id])
+                    .label("newest_schema_id"),
+                )
+                .where(*where)
+                .cte()
+            )
             query = select(
-                func.max(Input.created_at).label("created_at"),
+                func.max(base_query.c.created_at).label("created_at"),
                 literal_column("NULL").label("operation_id"),
-                Input.run_id,
-                Input.job_id,
-                Input.dataset_id,
-                func.sum(Input.num_bytes).label("sum_num_bytes"),
-                func.sum(Input.num_rows).label("sum_num_rows"),
-                func.sum(Input.num_files).label("sum_num_files"),
-                func.min(Input.schema_id).label("min_schema_id"),
-                func.max(Input.schema_id).label("max_schema_id"),
+                base_query.c.run_id,
+                base_query.c.job_id,
+                base_query.c.dataset_id,
+                func.sum(base_query.c.num_bytes).label("sum_num_bytes"),
+                func.sum(base_query.c.num_rows).label("sum_num_rows"),
+                func.sum(base_query.c.num_files).label("sum_num_files"),
+                func.min(base_query.c.oldest_schema_id).label("min_schema_id"),
+                func.max(base_query.c.newest_schema_id).label("max_schema_id"),
             ).group_by(
-                Input.run_id,
-                Input.job_id,
-                Input.dataset_id,
+                base_query.c.run_id,
+                base_query.c.job_id,
+                base_query.c.dataset_id,
             )
         else:
+            partition_by = [Input.job_id, Input.dataset_id]
+            base_query = (
+                select(
+                    Input,
+                    func.first_value(Input.schema_id)
+                    .over(partition_by=partition_by, order_by=[Input.created_at, Input.schema_id])
+                    .label("oldest_schema_id"),
+                    func.last_value(Input.schema_id)
+                    .over(partition_by=partition_by, order_by=[Input.created_at, Input.schema_id])
+                    .label("newest_schema_id"),
+                )
+                .where(*where)
+                .cte()
+            )
             query = select(
-                func.max(Input.created_at).label("created_at"),
+                func.max(base_query.c.created_at).label("created_at"),
                 literal_column("NULL").label("operation_id"),
                 literal_column("NULL").label("run_id"),
-                Input.job_id,
-                Input.dataset_id,
-                func.sum(Input.num_bytes).label("sum_num_bytes"),
-                func.sum(Input.num_rows).label("sum_num_rows"),
-                func.sum(Input.num_files).label("sum_num_files"),
-                func.min(Input.schema_id).label("min_schema_id"),
-                func.max(Input.schema_id).label("max_schema_id"),
+                base_query.c.job_id,
+                base_query.c.dataset_id,
+                func.sum(base_query.c.num_bytes).label("sum_num_bytes"),
+                func.sum(base_query.c.num_rows).label("sum_num_rows"),
+                func.sum(base_query.c.num_files).label("sum_num_files"),
+                func.min(base_query.c.oldest_schema_id).label("min_schema_id"),
+                func.max(base_query.c.newest_schema_id).label("max_schema_id"),
             ).group_by(
-                Input.job_id,
-                Input.dataset_id,
+                base_query.c.job_id,
+                base_query.c.dataset_id,
             )
 
-        query = query.where(*where)
         query_result = await self._session.execute(query)
-        return [
-            Input(
-                created_at=row.created_at,
-                run_id=row.run_id,
-                job_id=row.job_id,
-                dataset_id=row.dataset_id,
-                num_bytes=row.sum_num_bytes,
-                num_rows=row.sum_num_rows,
-                num_files=row.sum_num_files,
-                # If all outputs within Dataset -> Run|Job have the same schema, save it.
-                # If not, it's impossible to merge.
-                schema_id=row.max_schema_id if row.min_schema_id == row.max_schema_id else None,
+
+        results = []
+        for row in query_result.all():
+            schema_relevance_type: Literal["EXACT_MATCH", "LATEST_KNOWN"] | None
+            if row.max_schema_id:
+                schema_relevance_type = "EXACT_MATCH" if row.min_schema_id == row.max_schema_id else "LATEST_KNOWN"
+            else:
+                schema_relevance_type = None
+
+            results.append(
+                InputRow(
+                    created_at=row.created_at,
+                    operation_id=row.operation_id,
+                    run_id=row.run_id,
+                    job_id=row.job_id,
+                    dataset_id=row.dataset_id,
+                    num_bytes=row.sum_num_bytes,
+                    num_rows=row.sum_num_rows,
+                    num_files=row.sum_num_files,
+                    schema_id=row.max_schema_id,
+                    schema_relevance_type=schema_relevance_type,
+                ),
             )
-            for row in query_result.all()
-        ]
+        return results
 
     async def get_stats_by_operation_ids(self, operation_ids: Sequence[UUID]) -> dict[UUID, Row]:
         if not operation_ids:
