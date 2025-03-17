@@ -76,7 +76,7 @@ def schema_to_json(schema: Schema, schema_relevance_type: str):
             }
             for field in schema.fields
         ],
-        "schema_relevance_type": schema_relevance_type,
+        "relevance_type": schema_relevance_type,
     }
 
 

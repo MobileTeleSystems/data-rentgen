@@ -92,8 +92,8 @@ to:
           }
         ],
         "id": "1418"
+        "relevance_type": "EXACT_MATCH",
       },
-      "schema_relevance_type": "EXACT_MATCH",
       "to": { "id": "1260", "kind": "JOB" }
     },
     {
@@ -124,8 +124,8 @@ to:
           }
         ],
         "id": "1657"
+        "relevance_type": "LATEST_KNOWN",
       },
-      "schema_relevance_type": "LATEST_KNOWN",
       "to": { "id": "0195a347-fa5f-7a72-aa14-bc510fadfd3a", "kind": "RUN" }
     }
   ]
