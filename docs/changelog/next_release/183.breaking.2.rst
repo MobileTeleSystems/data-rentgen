@@ -1,1 +1,0 @@
-Sync ``DATA_RENTGEN__KAFKA__SECURITY__TYPE`` values with Kafka client values, e.g. ``scram-sha256`` -> ``SCRAM-SHA-256``.

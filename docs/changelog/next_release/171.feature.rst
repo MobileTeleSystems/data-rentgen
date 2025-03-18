@@ -1,3 +1,0 @@
-Include sum inputs & outputs to lineage responses.
-For example, if user asked for lineage with ``granularity=OPERATION``, include inputs & outputs with detalization to ``RUN`` (sum of all included operations by ``run_id``) and ``JOB`` (sum of all included operations by ``job_id``).
-This allows to show that specific operation is some specific percent of all operations within this run or job.

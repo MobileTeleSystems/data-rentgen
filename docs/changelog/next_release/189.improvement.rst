@@ -1,1 +1,0 @@
-Remove datasets and symlinks from lineage response which have no inputs or outputs.
