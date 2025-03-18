@@ -225,7 +225,7 @@ async def test_get_lineage_until_less_than_since(test_client: AsyncClient, mocke
     ["depth", "error_type", "error_message", "context"],
     [
         (0, "greater_than_equal", "Input should be greater than or equal to 1", {"ge": 1}),
-        (4, "less_than_equal", "Input should be less than or equal to 3", {"le": 3}),
+        (14, "less_than_equal", "Input should be less than or equal to 10", {"le": 10}),
     ],
     ids=["depth=0", "depth=4"],
 )

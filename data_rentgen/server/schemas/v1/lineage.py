@@ -60,7 +60,7 @@ class BaseLineageQueryV1(BaseModel):
     depth: int = Field(
         default=1,
         ge=1,
-        le=3,
+        le=10,
         description="Depth of the lineage",
         examples=[1, 3],
     )
