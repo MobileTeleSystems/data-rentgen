@@ -26,7 +26,7 @@ def upgrade() -> None:
         sa.text(
             """
             INSERT INTO dataset (name, location_id, format)
-            SELECT DISTINCT REGEXP_REPLACE(name, '/[^/]*=[^/]*.*', '', 1), location_id, format
+            SELECT DISTINCT REGEXP_REPLACE(name, '/[^/]*=[^/]*.*', ''), location_id, format
             FROM dataset WHERE regexp_match(name, '/[^/]*=[^/]*.*') is not null
             ON CONFLICT DO NOTHING;
             """,
@@ -39,13 +39,13 @@ def upgrade() -> None:
             WITH new_datasets as (
                 SELECT id, name
                 FROM dataset WHERE name in (
-                    SELECT distinct regexp_replace(name, '/[^/]*=[^/]*.*', '', 1)
+                    SELECT distinct regexp_replace(name, '/[^/]*=[^/]*.*', '')
                     FROM dataset WHERE regexp_match(name, '/[^/]*=[^/]*.*') is not null)
             )
             INSERT INTO dataset_migration (old_id, new_id)
             SELECT d1.id, d2.id
             FROM dataset AS d1
-            JOIN new_datasets AS d2 ON REGEXP_REPLACE(d1.name, '/[^/]*=[^/]*.*', '', 1) = d2.name;
+            JOIN new_datasets AS d2 ON REGEXP_REPLACE(d1.name, '/[^/]*=[^/]*.*', '') = d2.name;
             """,
         ),
     )
