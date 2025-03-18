@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16
+    image: postgres:17
     restart: unless-stopped
     env_file: .env.docker
     ports:
@@ -15,7 +15,7 @@ services:
       retries: 3
 
   broker:
-    image: bitnami/kafka:3.7
+    image: bitnami/kafka:3.9
     restart: unless-stopped
     env_file: .env.docker
     ports:
