@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "data-rentgen"
-version = "0.1.1"
+version = "0.2.0"
 license = "Apache-2.0"
 description = "Data.Rentgen REST API + Kafka consumer"
 authors = ["DataOps.ETL <onetools@mts.ru>"]
@@ -22,8 +22,6 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Topic :: Software Development :: Libraries",
-    "Topic :: Software Development :: Libraries :: Python Modules",
     "Typing :: Typed",
 ]
 keywords = ["Lineage", "FastAPI", "REST", "FastStream"]
