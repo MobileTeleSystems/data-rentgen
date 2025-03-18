@@ -228,9 +228,15 @@ class LineageService:
                 (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
                 for dataset_symlink in dataset_symlinks
             }
+
         if include_column_lineage:
             result.column_lineage.update(
-                await self._get_column_lineage(current_result=result, since=since, until=until, granularity="JOB"),
+                await self._get_column_lineage(
+                    current_result=result,
+                    since=since,
+                    until=until,
+                    granularity="JOB",
+                ),
             )
 
         if logger.isEnabledFor(logging.INFO):
@@ -417,6 +423,7 @@ class LineageService:
                 (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
                 for dataset_symlink in dataset_symlinks
             }
+
         if include_column_lineage:
             result.column_lineage.update(
                 await self._get_column_lineage(current_result=result, since=since, until=until, granularity="RUN"),
@@ -575,6 +582,7 @@ class LineageService:
                 (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
                 for dataset_symlink in dataset_symlinks
             }
+
         if include_column_lineage:
             result.column_lineage.update(
                 await self._get_column_lineage(
@@ -598,7 +606,7 @@ class LineageService:
             )
         return result
 
-    async def get_lineage_by_datasets(  # noqa: C901
+    async def get_lineage_by_datasets(
         self,
         start_node_ids: list[int],
         direction: LineageDirectionV1,
@@ -656,16 +664,6 @@ class LineageService:
                     include_column_lineage=include_column_lineage,
                     ids_to_skip=ids_to_skip,
                 )
-                if include_column_lineage:
-                    result.column_lineage.update(
-                        await self._get_column_lineage(
-                            current_result=result,
-                            since=since,
-                            until=until,
-                            granularity="OPERATION",
-                        ),
-                    )
-
             case "RUN":
                 result = await self._dataset_lineage_with_run_granularity(
                     datasets_by_id=datasets_by_id,
@@ -677,15 +675,6 @@ class LineageService:
                     include_column_lineage=include_column_lineage,
                     ids_to_skip=ids_to_skip,
                 )
-                if include_column_lineage:
-                    result.column_lineage.update(
-                        await self._get_column_lineage(
-                            current_result=result,
-                            since=since,
-                            until=until,
-                            granularity="RUN",
-                        ),
-                    )
             case "JOB":
                 result = await self._dataset_lineage_with_job_granularity(
                     datasets_by_id=datasets_by_id,
@@ -697,18 +686,19 @@ class LineageService:
                     include_column_lineage=include_column_lineage,
                     ids_to_skip=ids_to_skip,
                 )
-                if include_column_lineage:
-                    result.column_lineage.update(
-                        await self._get_column_lineage(
-                            current_result=result,
-                            since=since,
-                            until=until,
-                            granularity="JOB",
-                        ),
-                    )
             case _:
                 msg = f"Unknown granularity: {granularity}"
                 raise ValueError(msg)
+
+        if include_column_lineage:
+            result.column_lineage.update(
+                await self._get_column_lineage(
+                    current_result=result,
+                    since=since,
+                    until=until,
+                    granularity=granularity,
+                ),
+            )
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
