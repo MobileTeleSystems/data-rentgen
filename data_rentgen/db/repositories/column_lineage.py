@@ -74,8 +74,8 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
         job_ids: Sequence[int],
         since: datetime,
         until: datetime | None,
-        source_ids: Sequence[int],
-        target_ids: Sequence[int],
+        source_dataset_ids: Sequence[int],
+        target_dataset_ids: Sequence[int],
     ):
         if not job_ids:
             return []
@@ -83,8 +83,8 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
         where = [
             ColumnLineage.created_at >= since,
             ColumnLineage.job_id == any_(job_ids),  # type: ignore[arg-type]
-            ColumnLineage.source_dataset_id == any_(source_ids),  # type: ignore[arg-type]
-            ColumnLineage.target_dataset_id == any_(target_ids),  # type: ignore[arg-type]
+            ColumnLineage.source_dataset_id == any_(source_dataset_ids),  # type: ignore[arg-type]
+            ColumnLineage.target_dataset_id == any_(target_dataset_ids),  # type: ignore[arg-type]
         ]
         if until:
             where.append(ColumnLineage.created_at <= until)
@@ -96,8 +96,8 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
         run_ids: Sequence[UUID],
         since: datetime,
         until: datetime | None,
-        source_ids: Sequence[int],
-        target_ids: Sequence[int],
+        source_dataset_ids: Sequence[int],
+        target_dataset_ids: Sequence[int],
     ):
         if not run_ids:
             return []
@@ -105,8 +105,8 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
         where = [
             ColumnLineage.created_at >= since,
             ColumnLineage.run_id == any_(run_ids),  # type: ignore[arg-type]
-            ColumnLineage.source_dataset_id == any_(source_ids),  # type: ignore[arg-type]
-            ColumnLineage.target_dataset_id == any_(target_ids),  # type: ignore[arg-type]
+            ColumnLineage.source_dataset_id == any_(source_dataset_ids),  # type: ignore[arg-type]
+            ColumnLineage.target_dataset_id == any_(target_dataset_ids),  # type: ignore[arg-type]
         ]
         if until:
             where.append(ColumnLineage.created_at <= until)
@@ -115,8 +115,8 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
     async def list_by_operation_ids(
         self,
         operation_ids: Sequence[UUID],
-        source_ids: Sequence[int],
-        target_ids: Sequence[int],
+        source_dataset_ids: Sequence[int],
+        target_dataset_ids: Sequence[int],
     ):
         if not operation_ids:
             return []
@@ -130,8 +130,8 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
             ColumnLineage.created_at >= min_created_at,
             ColumnLineage.created_at <= max_created_at,
             ColumnLineage.operation_id == any_(operation_ids),  # type: ignore[arg-type]
-            ColumnLineage.source_dataset_id == any_(source_ids),  # type: ignore[arg-type]
-            ColumnLineage.target_dataset_id == any_(target_ids),  # type: ignore[arg-type]
+            ColumnLineage.source_dataset_id == any_(source_dataset_ids),  # type: ignore[arg-type]
+            ColumnLineage.target_dataset_id == any_(target_dataset_ids),  # type: ignore[arg-type]
         ]
         return await self._get_column_lineage_with_column_relations(where)
 

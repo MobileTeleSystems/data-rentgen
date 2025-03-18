@@ -1100,29 +1100,32 @@ class LineageService:
         if not current_result.inputs or not current_result.outputs:
             return result
 
+        source_dataset_ids = [input_.dataset_id for input_ in current_result.inputs.values()]
+        target_dataset_ids = [output.dataset_id for output in current_result.outputs.values()]
+
         match granularity:
             case "OPERATION":
                 column_lineage_result = await self._uow.column_lineage.list_by_operation_ids(
                     operation_ids=sorted(current_result.operations.keys()),
                     # return column lineage only for datasets included into response
-                    source_ids=[input_.dataset_id for input_ in current_result.inputs.values()],
-                    target_ids=[output.dataset_id for output in current_result.outputs.values()],
+                    source_dataset_ids=source_dataset_ids,
+                    target_dataset_ids=target_dataset_ids,
                 )
             case "RUN":
                 column_lineage_result = await self._uow.column_lineage.list_by_run_ids(
                     run_ids=sorted(current_result.runs.keys()),
                     since=since,
                     until=until,
-                    source_ids=[input_.dataset_id for input_ in current_result.inputs.values()],
-                    target_ids=[output.dataset_id for output in current_result.outputs.values()],
+                    source_dataset_ids=source_dataset_ids,
+                    target_dataset_ids=target_dataset_ids,
                 )
             case "JOB":
                 column_lineage_result = await self._uow.column_lineage.list_by_job_ids(
                     job_ids=sorted(current_result.jobs.keys()),
                     since=since,
                     until=until,
-                    source_ids=[input_.dataset_id for input_ in current_result.inputs.values()],
-                    target_ids=[output.dataset_id for output in current_result.outputs.values()],
+                    source_dataset_ids=source_dataset_ids,
+                    target_dataset_ids=target_dataset_ids,
                 )
             case _:
                 msg = f"Unknown granularity for column lineage: {granularity}"

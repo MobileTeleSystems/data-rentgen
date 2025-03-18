@@ -97,9 +97,8 @@ async def jobs(
         await clean_db(async_session)
 
 
-@pytest_asyncio.fixture(params=[{}])
+@pytest_asyncio.fixture
 async def jobs_search(
-    request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[tuple[dict[str, Job], dict[str, Job], dict[str, Job]], None]:
     """
