@@ -9,4 +9,4 @@ _raw_version = "0.1.1"
 __version__ = ".".join(_raw_version.split(".")[:3])
 
 # version tuple always contains only integer parts, like (0, 0, 1)
-__version_tuple__ = tuple(map(int, __version__.split(".")))
+__version_tuple__ = tuple(map(int, __version__.split(".")))  # noqa: RUF048
