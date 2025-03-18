@@ -727,7 +727,7 @@ class LineageService:
                     ),
                 )
 
-            result = self._drop_unused_datasets(result, keep_dataset_ids=datasets_by_id)
+            result = self._drop_unused_datasets(result, keep_dataset_ids=start_node_ids)
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
