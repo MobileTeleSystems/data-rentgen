@@ -462,7 +462,7 @@ class LineageService:
             )
         return result
 
-    async def get_lineage_by_operations(  # noqa: C901, PLR0912
+    async def get_lineage_by_operations(  # noqa: C901, PLR0912, PLR0915
         self,
         start_node_ids: Collection[UUID],
         direction: LineageDirectionV1,
