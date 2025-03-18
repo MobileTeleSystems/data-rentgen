@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
+from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Annotated
@@ -75,7 +76,7 @@ class RunService:
         page_size: int,
         since: datetime | None,
         until: datetime | None,
-        run_ids: list[UUID],
+        run_ids: Collection[UUID],
         job_id: int | None,
         parent_run_id: UUID | None,
         search_query: str | None,

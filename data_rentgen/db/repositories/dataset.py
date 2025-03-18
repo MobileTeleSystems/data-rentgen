@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from collections.abc import Sequence
+from collections.abc import Collection
 
 from sqlalchemy import (
     ColumnElement,
@@ -41,12 +41,12 @@ class DatasetRepository(Repository[Dataset]):
         self,
         page: int,
         page_size: int,
-        dataset_ids: Sequence[int],
+        dataset_ids: Collection[int],
         search_query: str | None,
     ) -> PaginationDTO[Dataset]:
         where = []
         if dataset_ids:
-            where.append(Dataset.id == any_(dataset_ids))  # type: ignore[arg-type]
+            where.append(Dataset.id == any_(list(dataset_ids)))  # type: ignore[arg-type]
 
         query: Select | CompoundSelect
         order_by: list[ColumnElement | SQLColumnExpression]
@@ -92,18 +92,18 @@ class DatasetRepository(Repository[Dataset]):
             page_size=page_size,
         )
 
-    async def list_by_ids(self, dataset_ids: Sequence[int]) -> list[Dataset]:
+    async def list_by_ids(self, dataset_ids: Collection[int]) -> list[Dataset]:
         if not dataset_ids:
             return []
         query = (
             select(Dataset)
-            .where(Dataset.id == any_(dataset_ids))  # type: ignore[arg-type]
+            .where(Dataset.id == any_(list(dataset_ids)))  # type: ignore[arg-type]
             .options(selectinload(Dataset.location).selectinload(Location.addresses))
         )
         result = await self._session.scalars(query)
         return list(result.all())
 
-    async def get_stats_by_location_ids(self, location_ids: Sequence[int]) -> dict[int, Row]:
+    async def get_stats_by_location_ids(self, location_ids: Collection[int]) -> dict[int, Row]:
         if not location_ids:
             return {}
 
@@ -113,7 +113,7 @@ class DatasetRepository(Repository[Dataset]):
                 func.count(Dataset.id.distinct()).label("total_datasets"),
             )
             .where(
-                Dataset.location_id == any_(location_ids),  # type: ignore[arg-type]
+                Dataset.location_id == any_(list(location_ids)),  # type: ignore[arg-type]
             )
             .group_by(Dataset.location_id)
         )

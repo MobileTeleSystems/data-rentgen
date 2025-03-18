@@ -3,6 +3,7 @@
 
 import logging
 from collections import defaultdict
+from collections.abc import Collection
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Annotated, Literal
@@ -79,7 +80,7 @@ class LineageService:
 
     async def get_lineage_by_jobs(  # noqa: C901, PLR0912
         self,
-        start_node_ids: list[int],
+        start_node_ids: Collection[int],
         direction: LineageDirectionV1,
         granularity: Literal["JOB", "RUN", "OPERATION"],
         since: datetime,
@@ -108,14 +109,13 @@ class LineageService:
 
         # Always include all requested jobs.
         jobs_by_id = {job.id: job for job in jobs}
-        job_ids = sorted(jobs_by_id.keys())
 
         inputs: list[InputRow] = []
         outputs: list[OutputRow] = []
         if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             outputs.extend(
                 await self._uow.output.list_by_job_ids(
-                    job_ids,
+                    jobs_by_id,
                     since=since,
                     until=until,
                     granularity=granularity,
@@ -125,7 +125,7 @@ class LineageService:
                 # include sum over all runs
                 outputs.extend(
                     await self._uow.output.list_by_job_ids(
-                        job_ids,
+                        jobs_by_id,
                         since=since,
                         until=until,
                         granularity="JOB",
@@ -135,7 +135,7 @@ class LineageService:
         if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
             inputs.extend(
                 await self._uow.input.list_by_job_ids(
-                    job_ids,
+                    jobs_by_id,
                     since=since,
                     until=until,
                     granularity=granularity,
@@ -145,7 +145,7 @@ class LineageService:
                 # include sum over all runs
                 inputs.extend(
                     await self._uow.input.list_by_job_ids(
-                        job_ids,
+                        jobs_by_id,
                         since=since,
                         until=until,
                         granularity="JOB",
@@ -154,7 +154,7 @@ class LineageService:
 
         input_schema_ids = {input_.schema_id for input_ in inputs if input_.schema_id is not None}
         output_schema_ids = {output.schema_id for output in outputs if output.schema_id is not None}
-        schemas = await self._uow.schema.list_by_ids(sorted(input_schema_ids | output_schema_ids))
+        schemas = await self._uow.schema.list_by_ids(input_schema_ids | output_schema_ids)
         schemas_by_id = {schema.id: schema for schema in schemas}
 
         for input_ in inputs:
@@ -170,7 +170,7 @@ class LineageService:
         input_run_ids = {input_.run_id for input_ in inputs if input_.run_id is not None}
         output_run_ids = {output.run_id for output in outputs if output.run_id is not None}
         run_ids = input_run_ids | output_run_ids - ids_to_skip.runs
-        runs = await self._uow.run.list_by_ids(sorted(run_ids))
+        runs = await self._uow.run.list_by_ids(run_ids)
         runs_by_id = {run.id: run for run in runs}
 
         result = LineageServiceResult(
@@ -195,7 +195,7 @@ class LineageService:
             # Also datasets and symlinks will be populated by nested calls.
             result.merge(
                 await self.get_lineage_by_datasets(
-                    start_node_ids=sorted(upstream_dataset_ids),
+                    start_node_ids=upstream_dataset_ids,
                     direction=LineageDirectionV1.UPSTREAM,
                     granularity=granularity,
                     since=since,
@@ -206,7 +206,7 @@ class LineageService:
             )
             result.merge(
                 await self.get_lineage_by_datasets(
-                    start_node_ids=sorted(downstream_dataset_ids),
+                    start_node_ids=downstream_dataset_ids,
                     direction=LineageDirectionV1.DOWNSTREAM,
                     granularity=granularity,
                     since=since,
@@ -217,7 +217,7 @@ class LineageService:
             )
         else:
             # datasets and symlinks will be populated by nested call
-            dataset_ids = sorted(upstream_dataset_ids | downstream_dataset_ids)
+            dataset_ids = upstream_dataset_ids | downstream_dataset_ids
             datasets = await self._uow.dataset.list_by_ids(dataset_ids)
 
             extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(dataset_ids, ids_to_skip)
@@ -256,7 +256,7 @@ class LineageService:
 
     async def get_lineage_by_runs(  # noqa: C901, PLR0915, PLR0912
         self,
-        start_node_ids: list[UUID],
+        start_node_ids: Collection[UUID],
         direction: LineageDirectionV1,
         granularity: Literal["OPERATION", "RUN"],
         since: datetime,
@@ -284,14 +284,13 @@ class LineageService:
 
         # Always include all requested runs.
         runs_by_id = {run.id: run for run in runs}
-        run_ids = sorted(runs_by_id.keys())
 
         inputs: list[InputRow] = []
         outputs: list[OutputRow] = []
         if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             outputs.extend(
                 await self._uow.output.list_by_run_ids(
-                    run_ids,
+                    runs_by_id,
                     since=since,
                     until=until,
                     granularity=granularity,
@@ -301,7 +300,7 @@ class LineageService:
                 # include sum over all operation
                 outputs.extend(
                     await self._uow.output.list_by_run_ids(
-                        run_ids,
+                        runs_by_id,
                         since=since,
                         until=until,
                         granularity="RUN",
@@ -310,7 +309,7 @@ class LineageService:
             # include sum over all runs
             outputs.extend(
                 await self._uow.output.list_by_run_ids(
-                    run_ids,
+                    runs_by_id,
                     since=since,
                     until=until,
                     granularity="JOB",
@@ -320,7 +319,7 @@ class LineageService:
         if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
             inputs.extend(
                 await self._uow.input.list_by_run_ids(
-                    run_ids,
+                    runs_by_id,
                     since=since,
                     until=until,
                     granularity=granularity,
@@ -330,7 +329,7 @@ class LineageService:
                 # include sum over all operation
                 inputs.extend(
                     await self._uow.input.list_by_run_ids(
-                        run_ids,
+                        runs_by_id,
                         since=since,
                         until=until,
                         granularity="RUN",
@@ -339,7 +338,7 @@ class LineageService:
             # include sum over all runs
             inputs.extend(
                 await self._uow.input.list_by_run_ids(
-                    run_ids,
+                    runs_by_id,
                     since=since,
                     until=until,
                     granularity="JOB",
@@ -348,7 +347,7 @@ class LineageService:
 
         input_schema_ids = {input_.schema_id for input_ in inputs if input_.schema_id is not None}
         output_schema_ids = {output.schema_id for output in outputs if output.schema_id is not None}
-        schemas = await self._uow.schema.list_by_ids(sorted(input_schema_ids | output_schema_ids))
+        schemas = await self._uow.schema.list_by_ids(input_schema_ids | output_schema_ids)
         schemas_by_id = {schema.id: schema for schema in schemas}
 
         for input_ in inputs:
@@ -364,10 +363,11 @@ class LineageService:
         input_operation_ids = {input_.operation_id for input_ in inputs if input_.operation_id is not None}
         output_operation_ids = {output.operation_id for output in outputs if output.operation_id is not None}
         operation_ids = input_operation_ids | output_operation_ids - ids_to_skip.operations
-        operations = await self._uow.operation.list_by_ids(sorted(operation_ids))
+        operations = await self._uow.operation.list_by_ids(operation_ids)
         operations_by_id = {operation.id: operation for operation in operations}
 
-        jobs = await self._uow.job.list_by_ids(sorted({run.job_id for run in runs} - ids_to_skip.jobs))
+        job_ids = {run.job_id for run in runs} - ids_to_skip.jobs
+        jobs = await self._uow.job.list_by_ids(job_ids)
         jobs_by_id = {job.id: job for job in jobs}
 
         result = LineageServiceResult(
@@ -393,7 +393,7 @@ class LineageService:
             # Also datasets and symlinks will be populated by nested calls.
             result.merge(
                 await self.get_lineage_by_datasets(
-                    start_node_ids=sorted(upstream_dataset_ids),
+                    start_node_ids=upstream_dataset_ids,
                     direction=LineageDirectionV1.UPSTREAM,
                     granularity=granularity,
                     since=since,
@@ -404,7 +404,7 @@ class LineageService:
             )
             result.merge(
                 await self.get_lineage_by_datasets(
-                    start_node_ids=sorted(downstream_dataset_ids),
+                    start_node_ids=downstream_dataset_ids,
                     direction=LineageDirectionV1.DOWNSTREAM,
                     granularity=granularity,
                     since=since,
@@ -414,7 +414,7 @@ class LineageService:
                 ),
             )
         else:
-            dataset_ids = sorted(upstream_dataset_ids | downstream_dataset_ids)
+            dataset_ids = upstream_dataset_ids | downstream_dataset_ids
             datasets = await self._uow.dataset.list_by_ids(dataset_ids)
 
             extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(dataset_ids, ids_to_skip)
@@ -446,9 +446,9 @@ class LineageService:
             )
         return result
 
-    async def get_lineage_by_operations(  # noqa: C901, PLR0915, PLR0912
+    async def get_lineage_by_operations(  # noqa: C901, PLR0912
         self,
-        start_node_ids: list[UUID],
+        start_node_ids: Collection[UUID],
         direction: LineageDirectionV1,
         since: datetime,
         until: datetime | None,
@@ -476,49 +476,48 @@ class LineageService:
 
         # Always include all requested operations.
         operations_by_id = {operation.id: operation for operation in operations}
-        operation_ids = sorted(operations_by_id.keys())
 
         # Also include all parent runs & jobs.
         ids_to_skip = ids_to_skip or IdsToSkip()
         run_ids = {operation.run_id for operation in operations}
-        runs = await self._uow.run.list_by_ids(sorted(run_ids - ids_to_skip.runs))
+        runs = await self._uow.run.list_by_ids(run_ids - ids_to_skip.runs)
         runs_by_id = {run.id: run for run in runs}
 
         job_ids = {run.job_id for run in runs}
-        jobs = await self._uow.job.list_by_ids(sorted(job_ids - ids_to_skip.jobs))
+        jobs = await self._uow.job.list_by_ids(job_ids - ids_to_skip.jobs)
         jobs_by_id = {job.id: job for job in jobs}
 
         inputs: list[InputRow] = []
         outputs: list[OutputRow] = []
         if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             outputs.extend(
-                await self._uow.output.list_by_operation_ids(operation_ids, granularity="OPERATION"),
+                await self._uow.output.list_by_operation_ids(operations_by_id, granularity="OPERATION"),
             )
             # include sum over all operations
             outputs.extend(
-                await self._uow.output.list_by_operation_ids(operation_ids, granularity="RUN"),
+                await self._uow.output.list_by_operation_ids(operations_by_id, granularity="RUN"),
             )
             # include sum over all runs
             outputs.extend(
-                await self._uow.output.list_by_operation_ids(operation_ids, granularity="JOB"),
+                await self._uow.output.list_by_operation_ids(operations_by_id, granularity="JOB"),
             )
 
         if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
             inputs.extend(
-                await self._uow.input.list_by_operation_ids(operation_ids, granularity="OPERATION"),
+                await self._uow.input.list_by_operation_ids(operations_by_id, granularity="OPERATION"),
             )
             # include sum over all operations
             inputs.extend(
-                await self._uow.input.list_by_operation_ids(operation_ids, granularity="RUN"),
+                await self._uow.input.list_by_operation_ids(operations_by_id, granularity="RUN"),
             )
             # include sum over all runs
             inputs.extend(
-                await self._uow.input.list_by_operation_ids(operation_ids, granularity="JOB"),
+                await self._uow.input.list_by_operation_ids(operations_by_id, granularity="JOB"),
             )
 
         input_schema_ids = {input_.schema_id for input_ in inputs if input_.schema_id is not None}
         output_schema_ids = {output.schema_id for output in outputs if output.schema_id is not None}
-        schemas = await self._uow.schema.list_by_ids(sorted(input_schema_ids | output_schema_ids))
+        schemas = await self._uow.schema.list_by_ids(input_schema_ids | output_schema_ids)
         schemas_by_id = {schema.id: schema for schema in schemas}
 
         for input_ in inputs:
@@ -551,7 +550,7 @@ class LineageService:
             # Also datasets and symlinks will be populated by nested calls.
             result.merge(
                 await self.get_lineage_by_datasets(
-                    start_node_ids=sorted(upstream_dataset_ids),
+                    start_node_ids=upstream_dataset_ids,
                     direction=LineageDirectionV1.UPSTREAM,
                     granularity="OPERATION",
                     since=since,
@@ -562,7 +561,7 @@ class LineageService:
             )
             result.merge(
                 await self.get_lineage_by_datasets(
-                    start_node_ids=sorted(downstream_dataset_ids),
+                    start_node_ids=downstream_dataset_ids,
                     direction=LineageDirectionV1.DOWNSTREAM,
                     granularity="OPERATION",
                     since=since,
@@ -572,7 +571,7 @@ class LineageService:
                 ),
             )
         else:
-            dataset_ids = sorted(upstream_dataset_ids | downstream_dataset_ids)
+            dataset_ids = upstream_dataset_ids | downstream_dataset_ids
             datasets = await self._uow.dataset.list_by_ids(dataset_ids)
 
             extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(
@@ -614,7 +613,7 @@ class LineageService:
 
     async def get_lineage_by_datasets(
         self,
-        start_node_ids: list[int],
+        start_node_ids: Collection[int],
         direction: LineageDirectionV1,
         granularity: Literal["JOB", "RUN", "OPERATION"],
         since: datetime,
@@ -645,10 +644,7 @@ class LineageService:
 
         # Threat dataset symlinks like they are specified in `start_node_ids`
         ids_to_skip = ids_to_skip or IdsToSkip()
-        extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(
-            sorted(datasets_by_id.keys()),
-            ids_to_skip,
-        )
+        extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(datasets_by_id, ids_to_skip)
         datasets.extend(extra_datasets)
 
         datasets_by_id.update({dataset.id: dataset for dataset in extra_datasets})
@@ -723,7 +719,7 @@ class LineageService:
 
     async def _extend_datasets_with_symlinks(
         self,
-        dataset_ids: list[int],
+        dataset_ids: Collection[int],
         ids_to_skip: IdsToSkip | None = None,
     ) -> tuple[list[Dataset], list[DatasetSymlink]]:
         # For now return all symlinks regardless of direction
@@ -736,7 +732,7 @@ class LineageService:
             (dataset_ids_from_symlinks | dataset_ids_to_symlinks) - set(dataset_ids) - ids_to_skip.datasets
         )
 
-        datasets_from_symlinks = await self._uow.dataset.list_by_ids(sorted(dataset_ids_to_load))
+        datasets_from_symlinks = await self._uow.dataset.list_by_ids(dataset_ids_to_load)
         return datasets_from_symlinks, dataset_symlinks
 
     async def _dataset_lineage_with_operation_granularity(
@@ -755,7 +751,7 @@ class LineageService:
         if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             inputs.extend(
                 await self._uow.input.list_by_dataset_ids(
-                    sorted(datasets_by_id.keys()),
+                    datasets_by_id,
                     since=since,
                     until=until,
                     granularity="OPERATION",
@@ -764,7 +760,7 @@ class LineageService:
             # include sum over all operations
             inputs.extend(
                 await self._uow.input.list_by_dataset_ids(
-                    sorted(datasets_by_id.keys()),
+                    datasets_by_id,
                     since=since,
                     until=until,
                     granularity="RUN",
@@ -773,7 +769,7 @@ class LineageService:
             # include sum over all runs
             inputs.extend(
                 await self._uow.input.list_by_dataset_ids(
-                    sorted(datasets_by_id.keys()),
+                    datasets_by_id,
                     since=since,
                     until=until,
                     granularity="JOB",
@@ -783,7 +779,7 @@ class LineageService:
         if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
             outputs.extend(
                 await self._uow.output.list_by_dataset_ids(
-                    sorted(datasets_by_id.keys()),
+                    datasets_by_id,
                     since=since,
                     until=until,
                     granularity="OPERATION",
@@ -792,7 +788,7 @@ class LineageService:
             # include sum over all operations
             outputs.extend(
                 await self._uow.output.list_by_dataset_ids(
-                    sorted(datasets_by_id.keys()),
+                    datasets_by_id,
                     since=since,
                     until=until,
                     granularity="RUN",
@@ -801,7 +797,7 @@ class LineageService:
             # include sum over all runs
             outputs.extend(
                 await self._uow.output.list_by_dataset_ids(
-                    sorted(datasets_by_id.keys()),
+                    datasets_by_id,
                     since=since,
                     until=until,
                     granularity="JOB",
@@ -810,7 +806,7 @@ class LineageService:
 
         input_schema_ids = {input_.schema_id for input_ in inputs if input_.schema_id is not None}
         output_schema_ids = {output.schema_id for output in outputs if output.schema_id is not None}
-        schemas = await self._uow.schema.list_by_ids(sorted(input_schema_ids | output_schema_ids))
+        schemas = await self._uow.schema.list_by_ids(input_schema_ids | output_schema_ids)
         schemas_by_id = {schema.id: schema for schema in schemas}
 
         for input_ in inputs:
@@ -845,7 +841,7 @@ class LineageService:
             # Also operations, runs and jobs will be populated by nested call.
             result.merge(
                 await self.get_lineage_by_operations(
-                    start_node_ids=sorted(downstream_operation_ids - ids_to_skip.operations),
+                    start_node_ids=downstream_operation_ids - ids_to_skip.operations,
                     direction=LineageDirectionV1.DOWNSTREAM,
                     since=since,
                     until=until,
@@ -855,7 +851,7 @@ class LineageService:
             )
             result.merge(
                 await self.get_lineage_by_operations(
-                    start_node_ids=sorted(upstream_operation_ids - ids_to_skip.operations),
+                    start_node_ids=upstream_operation_ids - ids_to_skip.operations,
                     direction=LineageDirectionV1.UPSTREAM,
                     since=since,
                     until=until,
@@ -864,16 +860,16 @@ class LineageService:
                 ),
             )
         else:
-            operation_ids = sorted(downstream_operation_ids | upstream_operation_ids - ids_to_skip.operations)
+            operation_ids = downstream_operation_ids | upstream_operation_ids - ids_to_skip.operations
             operations = await self._uow.operation.list_by_ids(operation_ids)
             result.operations = {operation.id: operation for operation in operations}
 
             run_ids = {operation.run_id for operation in operations}
-            runs = await self._uow.run.list_by_ids(sorted(run_ids - ids_to_skip.runs))
+            runs = await self._uow.run.list_by_ids(run_ids - ids_to_skip.runs)
             result.runs = {run.id: run for run in runs}
 
             job_ids = {run.job_id for run in runs}
-            jobs = await self._uow.job.list_by_ids(sorted(job_ids - ids_to_skip.jobs))
+            jobs = await self._uow.job.list_by_ids(job_ids - ids_to_skip.jobs)
             result.jobs = {job.id: job for job in jobs}
 
         return result
@@ -894,7 +890,7 @@ class LineageService:
         if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             inputs.extend(
                 await self._uow.input.list_by_dataset_ids(
-                    sorted(datasets_by_id.keys()),
+                    datasets_by_id,
                     since=since,
                     until=until,
                     granularity="RUN",
@@ -903,7 +899,7 @@ class LineageService:
             # include sum over all runs
             inputs.extend(
                 await self._uow.input.list_by_dataset_ids(
-                    sorted(datasets_by_id.keys()),
+                    datasets_by_id,
                     since=since,
                     until=until,
                     granularity="JOB",
@@ -913,7 +909,7 @@ class LineageService:
         if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
             outputs.extend(
                 await self._uow.output.list_by_dataset_ids(
-                    sorted(datasets_by_id.keys()),
+                    datasets_by_id,
                     since=since,
                     until=until,
                     granularity="RUN",
@@ -922,7 +918,7 @@ class LineageService:
             # include sum over all runs
             outputs.extend(
                 await self._uow.output.list_by_dataset_ids(
-                    sorted(datasets_by_id.keys()),
+                    datasets_by_id,
                     since=since,
                     until=until,
                     granularity="JOB",
@@ -931,7 +927,7 @@ class LineageService:
 
         input_schema_ids = {input_.schema_id for input_ in inputs if input_.schema_id is not None}
         output_schema_ids = {output.schema_id for output in outputs if output.schema_id is not None}
-        schemas = await self._uow.schema.list_by_ids(sorted(input_schema_ids | output_schema_ids))
+        schemas = await self._uow.schema.list_by_ids(input_schema_ids | output_schema_ids)
         schemas_by_id = {schema.id: schema for schema in schemas}
         for input_ in inputs:
             if input_.schema_id is not None:
@@ -963,7 +959,7 @@ class LineageService:
             # Also runs and jobs will be populated by nested call.
             result.merge(
                 await self.get_lineage_by_runs(
-                    start_node_ids=sorted(downstream_run_ids - ids_to_skip.runs),
+                    start_node_ids=downstream_run_ids - ids_to_skip.runs,
                     direction=LineageDirectionV1.DOWNSTREAM,
                     granularity="RUN",
                     since=since,
@@ -974,7 +970,7 @@ class LineageService:
             )
             result.merge(
                 await self.get_lineage_by_runs(
-                    start_node_ids=sorted(upstream_run_ids - ids_to_skip.runs),
+                    start_node_ids=upstream_run_ids - ids_to_skip.runs,
                     direction=LineageDirectionV1.UPSTREAM,
                     granularity="RUN",
                     since=since,
@@ -984,12 +980,12 @@ class LineageService:
                 ),
             )
         else:
-            run_ids = sorted(downstream_run_ids | upstream_run_ids - ids_to_skip.runs)
+            run_ids = downstream_run_ids | upstream_run_ids - ids_to_skip.runs
             runs = await self._uow.run.list_by_ids(run_ids)
             result.runs = {run.id: run for run in runs}
 
             job_ids = {run.job_id for run in runs}
-            jobs = await self._uow.job.list_by_ids(sorted(job_ids - ids_to_skip.jobs))
+            jobs = await self._uow.job.list_by_ids(job_ids - ids_to_skip.jobs)
             result.jobs = {job.id: job for job in jobs}
 
         return result
@@ -1009,7 +1005,7 @@ class LineageService:
         outputs: list[OutputRow] = []
         if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
             inputs = await self._uow.input.list_by_dataset_ids(
-                sorted(datasets_by_id.keys()),
+                datasets_by_id,
                 since=since,
                 until=until,
                 granularity="JOB",
@@ -1017,7 +1013,7 @@ class LineageService:
 
         if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
             outputs = await self._uow.output.list_by_dataset_ids(
-                sorted(datasets_by_id.keys()),
+                datasets_by_id,
                 since=since,
                 until=until,
                 granularity="JOB",
@@ -1025,7 +1021,7 @@ class LineageService:
 
         input_schema_ids = {input_.schema_id for input_ in inputs if input_.schema_id is not None}
         output_schema_ids = {output.schema_id for output in outputs if output.schema_id is not None}
-        schemas = await self._uow.schema.list_by_ids(sorted(input_schema_ids | output_schema_ids))
+        schemas = await self._uow.schema.list_by_ids(input_schema_ids | output_schema_ids)
         schemas_by_id = {schema.id: schema for schema in schemas}
 
         for input_ in inputs:
@@ -1058,7 +1054,7 @@ class LineageService:
             # Also jobs will be populated by nested call.
             result.merge(
                 await self.get_lineage_by_jobs(
-                    start_node_ids=sorted(downstream_job_ids - ids_to_skip.jobs),
+                    start_node_ids=downstream_job_ids - ids_to_skip.jobs,
                     direction=LineageDirectionV1.DOWNSTREAM,
                     granularity="JOB",
                     since=since,
@@ -1069,7 +1065,7 @@ class LineageService:
             )
             result.merge(
                 await self.get_lineage_by_jobs(
-                    start_node_ids=sorted(upstream_job_ids - ids_to_skip.jobs),
+                    start_node_ids=upstream_job_ids - ids_to_skip.jobs,
                     direction=LineageDirectionV1.UPSTREAM,
                     granularity="JOB",
                     since=since,
@@ -1079,7 +1075,7 @@ class LineageService:
                 ),
             )
         else:
-            job_ids = sorted(downstream_job_ids | upstream_job_ids - ids_to_skip.jobs)
+            job_ids = downstream_job_ids | upstream_job_ids - ids_to_skip.jobs
             jobs = await self._uow.job.list_by_ids(job_ids)
             result.jobs = {job.id: job for job in jobs}
 
@@ -1106,14 +1102,14 @@ class LineageService:
         match granularity:
             case "OPERATION":
                 column_lineage_result = await self._uow.column_lineage.list_by_operation_ids(
-                    operation_ids=sorted(current_result.operations.keys()),
+                    operation_ids=current_result.operations,
                     # return column lineage only for datasets included into response
                     source_dataset_ids=source_dataset_ids,
                     target_dataset_ids=target_dataset_ids,
                 )
             case "RUN":
                 column_lineage_result = await self._uow.column_lineage.list_by_run_ids(
-                    run_ids=sorted(current_result.runs.keys()),
+                    run_ids=current_result.runs,
                     since=since,
                     until=until,
                     source_dataset_ids=source_dataset_ids,
@@ -1121,7 +1117,7 @@ class LineageService:
                 )
             case "JOB":
                 column_lineage_result = await self._uow.column_lineage.list_by_job_ids(
-                    job_ids=sorted(current_result.jobs.keys()),
+                    job_ids=current_result.jobs,
                     since=since,
                     until=until,
                     source_dataset_ids=source_dataset_ids,

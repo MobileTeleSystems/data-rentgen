@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from collections.abc import Sequence
+from collections.abc import Collection
 
 from sqlalchemy import (
     ColumnElement,
@@ -28,12 +28,12 @@ class JobRepository(Repository[Job]):
         self,
         page: int,
         page_size: int,
-        job_ids: Sequence[int],
+        job_ids: Collection[int],
         search_query: str | None,
     ) -> PaginationDTO[Job]:
         where = []
         if job_ids:
-            where.append(Job.id == any_(job_ids))  # type: ignore[arg-type]
+            where.append(Job.id == any_(list(job_ids)))  # type: ignore[arg-type]
 
         query: Select | CompoundSelect
         order_by: list[ColumnElement | SQLColumnExpression]
@@ -91,18 +91,18 @@ class JobRepository(Repository[Job]):
             return await self._create(job)
         return await self._update(result, job)
 
-    async def list_by_ids(self, job_ids: Sequence[int]) -> list[Job]:
+    async def list_by_ids(self, job_ids: Collection[int]) -> list[Job]:
         if not job_ids:
             return []
         query = (
             select(Job)
-            .where(Job.id == any_(job_ids))  # type: ignore[arg-type]
+            .where(Job.id == any_(list(job_ids)))  # type: ignore[arg-type]
             .options(selectinload(Job.location).selectinload(Location.addresses))
         )
         result = await self._session.scalars(query)
         return list(result.all())
 
-    async def get_stats_by_location_ids(self, location_ids: Sequence[int]) -> dict[int, Row]:
+    async def get_stats_by_location_ids(self, location_ids: Collection[int]) -> dict[int, Row]:
         if not location_ids:
             return {}
 
@@ -112,7 +112,7 @@ class JobRepository(Repository[Job]):
                 func.count(Job.id.distinct()).label("total_jobs"),
             )
             .where(
-                Job.location_id == any_(location_ids),  # type: ignore[arg-type]
+                Job.location_id == any_(list(location_ids)),  # type: ignore[arg-type]
             )
             .group_by(Job.location_id)
         )

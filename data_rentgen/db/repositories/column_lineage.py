@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from collections.abc import Sequence
+from collections.abc import Collection
 from datetime import datetime
 from typing import NamedTuple
 from uuid import UUID
@@ -71,20 +71,20 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
 
     async def list_by_job_ids(
         self,
-        job_ids: Sequence[int],
+        job_ids: Collection[int],
         since: datetime,
         until: datetime | None,
-        source_dataset_ids: Sequence[int],
-        target_dataset_ids: Sequence[int],
+        source_dataset_ids: Collection[int],
+        target_dataset_ids: Collection[int],
     ):
         if not job_ids:
             return []
 
         where = [
             ColumnLineage.created_at >= since,
-            ColumnLineage.job_id == any_(job_ids),  # type: ignore[arg-type]
-            ColumnLineage.source_dataset_id == any_(source_dataset_ids),  # type: ignore[arg-type]
-            ColumnLineage.target_dataset_id == any_(target_dataset_ids),  # type: ignore[arg-type]
+            ColumnLineage.job_id == any_(list(job_ids)),  # type: ignore[arg-type]
+            ColumnLineage.source_dataset_id == any_(list(source_dataset_ids)),  # type: ignore[arg-type]
+            ColumnLineage.target_dataset_id == any_(list(target_dataset_ids)),  # type: ignore[arg-type]
         ]
         if until:
             where.append(ColumnLineage.created_at <= until)
@@ -93,20 +93,20 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
 
     async def list_by_run_ids(
         self,
-        run_ids: Sequence[UUID],
+        run_ids: Collection[UUID],
         since: datetime,
         until: datetime | None,
-        source_dataset_ids: Sequence[int],
-        target_dataset_ids: Sequence[int],
+        source_dataset_ids: Collection[int],
+        target_dataset_ids: Collection[int],
     ):
         if not run_ids:
             return []
 
         where = [
             ColumnLineage.created_at >= since,
-            ColumnLineage.run_id == any_(run_ids),  # type: ignore[arg-type]
-            ColumnLineage.source_dataset_id == any_(source_dataset_ids),  # type: ignore[arg-type]
-            ColumnLineage.target_dataset_id == any_(target_dataset_ids),  # type: ignore[arg-type]
+            ColumnLineage.run_id == any_(list(run_ids)),  # type: ignore[arg-type]
+            ColumnLineage.source_dataset_id == any_(list(source_dataset_ids)),  # type: ignore[arg-type]
+            ColumnLineage.target_dataset_id == any_(list(target_dataset_ids)),  # type: ignore[arg-type]
         ]
         if until:
             where.append(ColumnLineage.created_at <= until)
@@ -114,9 +114,9 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
 
     async def list_by_operation_ids(
         self,
-        operation_ids: Sequence[UUID],
-        source_dataset_ids: Sequence[int],
-        target_dataset_ids: Sequence[int],
+        operation_ids: Collection[UUID],
+        source_dataset_ids: Collection[int],
+        target_dataset_ids: Collection[int],
     ):
         if not operation_ids:
             return []
@@ -129,13 +129,13 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
         where = [
             ColumnLineage.created_at >= min_created_at,
             ColumnLineage.created_at <= max_created_at,
-            ColumnLineage.operation_id == any_(operation_ids),  # type: ignore[arg-type]
-            ColumnLineage.source_dataset_id == any_(source_dataset_ids),  # type: ignore[arg-type]
-            ColumnLineage.target_dataset_id == any_(target_dataset_ids),  # type: ignore[arg-type]
+            ColumnLineage.operation_id == any_(list(operation_ids)),  # type: ignore[arg-type]
+            ColumnLineage.source_dataset_id == any_(list(source_dataset_ids)),  # type: ignore[arg-type]
+            ColumnLineage.target_dataset_id == any_(list(target_dataset_ids)),  # type: ignore[arg-type]
         ]
         return await self._get_column_lineage_with_column_relations(where)
 
-    async def _get_column_lineage_with_column_relations(self, where: list[ColumnElement]):
+    async def _get_column_lineage_with_column_relations(self, where: Collection[ColumnElement]):
         query = (
             select(
                 ColumnLineage.source_dataset_id,

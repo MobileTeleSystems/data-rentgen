@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from collections.abc import Sequence
+from collections.abc import Collection
 from uuid import UUID
 
 from sqlalchemy import any_, select
@@ -24,11 +24,11 @@ class SchemaRepository(Repository[Schema]):
             result = await self._get(digest) or await self._create(digest, schema)
         return result
 
-    async def list_by_ids(self, schema_ids: Sequence[int]) -> list[Schema]:
+    async def list_by_ids(self, schema_ids: Collection[int]) -> list[Schema]:
         if not schema_ids:
             return []
 
-        query = select(Schema).where(Schema.id == any_(schema_ids))  # type: ignore[arg-type]
+        query = select(Schema).where(Schema.id == any_(list(schema_ids)))  # type: ignore[arg-type]
         result = await self._session.scalars(query)
         return list(result.all())
 

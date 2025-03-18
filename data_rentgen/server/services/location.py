@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
+from collections.abc import Collection
 from dataclasses import dataclass
 from typing import Annotated
 
@@ -60,7 +61,7 @@ class LocationService:
         self,
         page: int,
         page_size: int,
-        location_ids: list[int],
+        location_ids: Collection[int],
         location_type: str | None,
         search_query: str | None,
     ) -> LocationServicePaginatedResult:
