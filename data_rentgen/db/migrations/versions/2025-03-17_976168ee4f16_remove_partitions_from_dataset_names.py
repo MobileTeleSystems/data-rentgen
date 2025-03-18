@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-"""remove_partitions_from_dataset_names
+"""Remove partitions from dataset names
 
 Revision ID: 976168ee4f16
 Revises: 15c0a22b8566
@@ -25,9 +25,10 @@ def upgrade() -> None:
     op.execute(
         sa.text(
             """
-            INSERT INTO dataset (name, location_id)
-            SELECT DISTINCT REGEXP_REPLACE(name, '/[^/]*=[^/]*.*', '', 1), location_id
-            FROM dataset ON CONFLICT DO NOTHING;
+            INSERT INTO dataset (name, location_id, format)
+            SELECT DISTINCT REGEXP_REPLACE(name, '/[^/]*=[^/]*.*', '', 1), location_id, format
+            FROM dataset WHERE regexp_match(name, '/[^/]*=[^/]*.*') is not null
+            ON CONFLICT DO NOTHING;
             """,
         ),
     )
@@ -39,7 +40,7 @@ def upgrade() -> None:
                 SELECT id, name
                 FROM dataset WHERE name in (
                     SELECT distinct regexp_replace(name, '/[^/]*=[^/]*.*', '', 1)
-                    FROM dataset where regexp_match(name, '/[^/]*=[^/]*.*') is not null)
+                    FROM dataset WHERE regexp_match(name, '/[^/]*=[^/]*.*') is not null)
             )
             INSERT INTO dataset_migration (old_id, new_id)
             SELECT d1.id, d2.id
@@ -118,7 +119,7 @@ def upgrade() -> None:
             """,
         ),
     )
-    # Remove duplicates from inputs(other tables doesn't have duplicates)
+    # Remove duplicates from input and output
     op.execute(
         sa.text(
             """
@@ -130,7 +131,19 @@ def upgrade() -> None:
             """,
         ),
     )
+    op.execute(
+        sa.text(
+            """
+            WITH duplicates as (
+                SELECT id, row_number() over(partition by dataset_id, operation_id order by created_at desc) as row_num
+                FROM output
+            )
+            DELETE from output where id in (select id from duplicates where row_num > 1);
+            """,
+        ),
+    )
 
 
 def downgrade() -> None:
+    # This migration is irreversible
     pass
