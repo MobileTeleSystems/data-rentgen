@@ -1,6 +1,15 @@
 0.2.0 (2025-03-18)
 ==================
 
+TL;DR
+-----
+
+* Implemented column lineage support.
+* HDFS/S3 partitions are now truncated from table path.
+* Added total run/operation statistics (input/output bytes, rows, files).
+* Lineage graph UX improvements.
+* Kafka -> consumer integrations improvements.
+
 Breaking Changes
 ----------------
 
