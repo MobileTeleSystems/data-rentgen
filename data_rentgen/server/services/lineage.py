@@ -241,7 +241,8 @@ class LineageService:
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
-                "Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, %d inputs, %d outputs",
+                "Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, "
+                "%d inputs, %d outputs, %d column lineage",
                 len(result.jobs),
                 len(result.runs),
                 len(result.operations),
@@ -249,6 +250,7 @@ class LineageService:
                 len(result.dataset_symlinks),
                 len(result.inputs),
                 len(result.outputs),
+                len(result.column_lineage),
             )
         return result
 
@@ -431,7 +433,8 @@ class LineageService:
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
-                "Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, %d inputs, %d outputs",
+                "Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, "
+                "%d inputs, %d outputs, %d column lineage",
                 len(result.jobs),
                 len(result.runs),
                 len(result.operations),
@@ -439,6 +442,7 @@ class LineageService:
                 len(result.dataset_symlinks),
                 len(result.inputs),
                 len(result.outputs),
+                len(result.column_lineage),
             )
         return result
 
@@ -595,7 +599,8 @@ class LineageService:
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
-                "Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, %d inputs, %d outputs",
+                "Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, "
+                "%d inputs, %d outputs, %d column lineage",
                 len(result.jobs),
                 len(result.runs),
                 len(result.operations),
@@ -603,6 +608,7 @@ class LineageService:
                 len(result.dataset_symlinks),
                 len(result.inputs),
                 len(result.outputs),
+                len(result.column_lineage),
             )
         return result
 
@@ -702,7 +708,8 @@ class LineageService:
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
-                "Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, %d inputs, %d outputs",
+                "Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, "
+                "%d inputs, %d outputs, %d column lineage",
                 len(result.jobs),
                 len(result.runs),
                 len(result.operations),
@@ -710,6 +717,7 @@ class LineageService:
                 len(result.dataset_symlinks),
                 len(result.inputs),
                 len(result.outputs),
+                len(result.column_lineage),
             )
         return result
 
@@ -1091,6 +1099,7 @@ class LineageService:
         result: dict[tuple[int, int], list[ColumnLineageRow]] = defaultdict(list)
         if not current_result.inputs or not current_result.outputs:
             return result
+
         match granularity:
             case "OPERATION":
                 column_lineage_result = await self._uow.column_lineage.list_by_operation_ids(
