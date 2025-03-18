@@ -1,8 +1,10 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+import dataclasses
 import logging
 from collections import defaultdict
+from collections.abc import Collection
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Annotated, Literal
@@ -77,7 +79,7 @@ class LineageService:
     def __init__(self, uow: Annotated[UnitOfWork, Depends()]):
         self._uow = uow
 
-    async def get_lineage_by_jobs(  # noqa: C901, PLR0912
+    async def get_lineage_by_jobs(  # noqa: C901, PLR0912, PLR0915
         self,
         start_node_ids: list[int],
         direction: LineageDirectionV1,
@@ -87,23 +89,24 @@ class LineageService:
         depth: int,
         include_column_lineage: bool = False,  # noqa: FBT001, FBT002
         ids_to_skip: IdsToSkip | None = None,
+        level: int = 0,
     ) -> LineageServiceResult:
         if not start_node_ids:
             return LineageServiceResult()
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
-                "Get lineage by jobs %r, with direction %s, since %s, until %s, depth %s",
+                "[Level %d] Get lineage by runs %r, with direction %s, since %s, until %s",
+                level,
                 sorted(start_node_ids),
                 direction,
                 since,
                 until,
-                depth,
             )
 
         jobs = await self._uow.job.list_by_ids(start_node_ids)
         if not jobs:
-            logger.info("No jobs found")
+            logger.info("[Level %d] No jobs found", level)
             return LineageServiceResult()
 
         # Always include all requested jobs.
@@ -201,6 +204,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    level=level + 1,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -212,6 +216,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    level=level + 1,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -229,20 +234,24 @@ class LineageService:
                 for dataset_symlink in dataset_symlinks
             }
 
-        if include_column_lineage:
-            result.column_lineage.update(
-                await self._get_column_lineage(
-                    current_result=result,
-                    since=since,
-                    until=until,
-                    granularity="JOB",
-                ),
-            )
+        if level == 0:
+            if include_column_lineage:
+                result.column_lineage.update(
+                    await self._get_column_lineage(
+                        current_result=result,
+                        since=since,
+                        until=until,
+                        granularity="JOB",
+                    ),
+                )
+
+            result = self._drop_unused_datasets(result)
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
-                "Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, "
+                "[Level %d] Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, "
                 "%d inputs, %d outputs, %d column lineage",
+                level,
                 len(result.jobs),
                 len(result.runs),
                 len(result.operations),
@@ -264,22 +273,24 @@ class LineageService:
         depth: int,
         include_column_lineage: bool = False,  # noqa: FBT001, FBT002
         ids_to_skip: IdsToSkip | None = None,
+        level: int = 0,
     ) -> LineageServiceResult:
         if not start_node_ids:
             return LineageServiceResult()
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
-                "Get lineage by runs %r, with direction %s, since %s, until %s, depth %s",
+                "[Level %d] Get lineage by runs %r, with direction %s, since %s, until %s",
+                level,
                 sorted(start_node_ids),
                 direction,
                 since,
                 until,
-                depth,
             )
+
         runs = await self._uow.run.list_by_ids(start_node_ids)
         if not runs:
-            logger.info("No runs found")
+            logger.info("[Level %d] No runs found", level)
             return LineageServiceResult()
 
         # Always include all requested runs.
@@ -399,6 +410,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    level=level + 1,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -410,6 +422,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    level=level + 1,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -426,15 +439,19 @@ class LineageService:
                 for dataset_symlink in dataset_symlinks
             }
 
-        if include_column_lineage:
-            result.column_lineage.update(
-                await self._get_column_lineage(current_result=result, since=since, until=until, granularity="RUN"),
-            )
+        if level == 0:
+            if include_column_lineage:
+                result.column_lineage.update(
+                    await self._get_column_lineage(current_result=result, since=since, until=until, granularity="RUN"),
+                )
+
+            result = self._drop_unused_datasets(result)
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
-                "Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, "
+                "[Level %d] Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, "
                 "%d inputs, %d outputs, %d column lineage",
+                level,
                 len(result.jobs),
                 len(result.runs),
                 len(result.operations),
@@ -455,23 +472,24 @@ class LineageService:
         depth: int,
         include_column_lineage: bool = False,  # noqa: FBT001, FBT002
         ids_to_skip: IdsToSkip | None = None,
+        level: int = 0,
     ) -> LineageServiceResult:
         if not start_node_ids:
             return LineageServiceResult()
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
-                "Get lineage by operations %r, with direction %s, since %s, until %s, depth %s",
+                "[Level %d] Get lineage by operations %r, with direction %s, since %s, until %s",
+                level,
                 sorted(start_node_ids),
                 direction,
                 since,
                 until,
-                depth,
             )
 
         operations = await self._uow.operation.list_by_ids(start_node_ids)
         if not operations:
-            logger.info("No operations found")
+            logger.info("[Level %d] No operations found", level)
             return LineageServiceResult()
 
         # Always include all requested operations.
@@ -557,6 +575,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    level=level + 1,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -568,6 +587,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    level=level + 1,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -587,20 +607,24 @@ class LineageService:
                 for dataset_symlink in dataset_symlinks
             }
 
-        if include_column_lineage:
-            result.column_lineage.update(
-                await self._get_column_lineage(
-                    current_result=result,
-                    since=since,
-                    until=until,
-                    granularity="OPERATION",
-                ),
-            )
+        if level == 0:
+            if include_column_lineage:
+                result.column_lineage.update(
+                    await self._get_column_lineage(
+                        current_result=result,
+                        since=since,
+                        until=until,
+                        granularity="OPERATION",
+                    ),
+                )
+
+            result = self._drop_unused_datasets(result)
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
-                "Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, "
+                "[Level %d] Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, "
                 "%d inputs, %d outputs, %d column lineage",
+                level,
                 len(result.jobs),
                 len(result.runs),
                 len(result.operations),
@@ -622,23 +646,24 @@ class LineageService:
         depth: int,
         include_column_lineage: bool = False,  # noqa: FBT001, FBT002
         ids_to_skip: IdsToSkip | None = None,
+        level: int = 0,
     ) -> LineageServiceResult:
         if not start_node_ids:
             return LineageServiceResult()
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
-                "Get lineage by datasets %r, with direction %s, since %s, until %s, depth %s",
+                "[Level %d] Get lineage by datasets %r, with direction %s, since %s, until %s",
+                level,
                 sorted(start_node_ids),
                 direction,
                 since,
                 until,
-                depth,
             )
 
         datasets = await self._uow.dataset.list_by_ids(start_node_ids)
         if not datasets:
-            logger.info("No datasets found")
+            logger.info("[Level %d] No datasets found", level)
             return LineageServiceResult()
 
         datasets_by_id = {dataset.id: dataset for dataset in datasets}
@@ -667,7 +692,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth,
-                    include_column_lineage=include_column_lineage,
+                    level=level,
                     ids_to_skip=ids_to_skip,
                 )
             case "RUN":
@@ -678,7 +703,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth,
-                    include_column_lineage=include_column_lineage,
+                    level=level,
                     ids_to_skip=ids_to_skip,
                 )
             case "JOB":
@@ -689,27 +714,31 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth,
-                    include_column_lineage=include_column_lineage,
+                    level=level,
                     ids_to_skip=ids_to_skip,
                 )
             case _:
                 msg = f"Unknown granularity: {granularity}"
                 raise ValueError(msg)
 
-        if include_column_lineage:
-            result.column_lineage.update(
-                await self._get_column_lineage(
-                    current_result=result,
-                    since=since,
-                    until=until,
-                    granularity=granularity,
-                ),
-            )
+        if level == 0:
+            if include_column_lineage:
+                result.column_lineage.update(
+                    await self._get_column_lineage(
+                        current_result=result,
+                        since=since,
+                        until=until,
+                        granularity=granularity,
+                    ),
+                )
+
+            result = self._drop_unused_datasets(result, keep_dataset_ids=datasets_by_id)
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
-                "Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, "
+                "[Level %d] Found %d jobs, %d runs, %d operations, %d datasets, %d dataset symlinks, "
                 "%d inputs, %d outputs, %d column lineage",
+                level,
                 len(result.jobs),
                 len(result.runs),
                 len(result.operations),
@@ -747,7 +776,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
-        include_column_lineage: bool,  # noqa: FBT001
+        level: int,
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         inputs: list[InputRow] = []
@@ -850,6 +879,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    level=level + 1,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -860,6 +890,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    level=level + 1,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -886,7 +917,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
-        include_column_lineage: bool,  # noqa: FBT001
+        level: int,
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         inputs: list[InputRow] = []
@@ -969,6 +1000,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    level=level + 1,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -980,6 +1012,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    level=level + 1,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -1002,7 +1035,7 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
-        include_column_lineage: bool,  # noqa: FBT001
+        level: int,
         ids_to_skip: IdsToSkip | None = None,
     ) -> LineageServiceResult:
         inputs: list[InputRow] = []
@@ -1064,6 +1097,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    level=level + 1,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -1075,6 +1109,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth - 1,
+                    level=level + 1,
                     ids_to_skip=ids_to_skip,
                 ),
             )
@@ -1137,3 +1172,26 @@ class LineageService:
             )
 
         return result
+
+    def _drop_unused_datasets(
+        self,
+        current_result: LineageServiceResult,
+        keep_dataset_ids: Collection[int] | None = None,
+    ) -> LineageServiceResult:
+        dataset_ids_with_inputs = {input_.dataset_id for input_ in current_result.inputs.values()}
+        dataset_ids_with_outputs = {output.dataset_id for output in current_result.outputs.values()}
+
+        keep_ids = set(keep_dataset_ids or []) | dataset_ids_with_inputs | dataset_ids_with_outputs
+
+        final_datasets = {key: dataset for key, dataset in current_result.datasets.items() if dataset.id in keep_ids}
+        final_symlinks = {
+            key: symlink
+            for key, symlink in current_result.dataset_symlinks.items()
+            if symlink.from_dataset_id in keep_ids and symlink.to_dataset_id in keep_ids
+        }
+
+        return dataclasses.replace(
+            current_result,
+            datasets=final_datasets,
+            dataset_symlinks=final_symlinks,
+        )
