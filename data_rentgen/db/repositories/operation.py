@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from collections.abc import Sequence
+from collections.abc import Collection
 from datetime import datetime, timezone
 from uuid import UUID
 
@@ -58,7 +58,7 @@ class OperationRepository(Repository[Operation]):
         self,
         page: int,
         page_size: int,
-        operation_ids: Sequence[UUID],
+        operation_ids: Collection[UUID],
         since: datetime | None,
         until: datetime | None,
         run_id: UUID | None,
@@ -84,7 +84,7 @@ class OperationRepository(Repository[Operation]):
         if run_id:
             where.append(Operation.run_id == run_id)
         if operation_ids:
-            where.append(Operation.id == any_(operation_ids))  # type: ignore[arg-type]
+            where.append(Operation.id == any_(list(operation_ids)))  # type: ignore[arg-type]
 
         query = select(Operation).where(*where)
         order_by: list[UnaryExpression] = [Operation.created_at.desc(), Operation.id.desc()]
@@ -97,7 +97,7 @@ class OperationRepository(Repository[Operation]):
 
     async def list_by_run_ids(
         self,
-        run_ids: Sequence[UUID],
+        run_ids: Collection[UUID],
         since: datetime,
         until: datetime | None,
     ) -> list[Operation]:
@@ -109,14 +109,14 @@ class OperationRepository(Repository[Operation]):
         min_operation_created_at = max(min_run_created_at, since.astimezone(timezone.utc))
         query = select(Operation).where(
             Operation.created_at >= min_operation_created_at,
-            Operation.run_id == any_(run_ids),  # type: ignore[arg-type]
+            Operation.run_id == any_(list(run_ids)),  # type: ignore[arg-type]
         )
         if until:
             query = query.where(Operation.created_at <= until)
         result = await self._session.scalars(query)
         return list(result.all())
 
-    async def list_by_ids(self, operation_ids: Sequence[UUID]) -> list[Operation]:
+    async def list_by_ids(self, operation_ids: Collection[UUID]) -> list[Operation]:
         if not operation_ids:
             return []
         # do not use `tuple_(Operation.created_at, Operation.id).in_(...),
@@ -126,12 +126,12 @@ class OperationRepository(Repository[Operation]):
         query = select(Operation).where(
             Operation.created_at >= min_created_at,
             Operation.created_at <= max_created_at,
-            Operation.id == any_(operation_ids),  # type: ignore[arg-type]
+            Operation.id == any_(list(operation_ids)),  # type: ignore[arg-type]
         )
         result = await self._session.scalars(query)
         return list(result.all())
 
-    async def get_stats_by_run_ids(self, run_ids: Sequence[UUID]) -> dict[UUID, Row]:
+    async def get_stats_by_run_ids(self, run_ids: Collection[UUID]) -> dict[UUID, Row]:
         if not run_ids:
             return {}
 
@@ -144,7 +144,7 @@ class OperationRepository(Repository[Operation]):
             )
             .where(
                 Operation.created_at >= min_created_at,
-                Operation.run_id == any_(run_ids),  # type: ignore[arg-type]
+                Operation.run_id == any_(list(run_ids)),  # type: ignore[arg-type]
             )
             .group_by(Operation.run_id)
         )
