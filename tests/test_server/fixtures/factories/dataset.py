@@ -156,9 +156,8 @@ async def datasets_with_symlinks(
         await clean_db(async_session)
 
 
-@pytest_asyncio.fixture(params=[{}])
+@pytest_asyncio.fixture
 async def datasets_search(
-    request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[tuple[dict[str, Dataset], dict[str, Dataset], dict[str, Dataset]], None]:
     """

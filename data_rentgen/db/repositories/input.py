@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from collections.abc import Sequence
+from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Literal
@@ -84,7 +84,7 @@ class InputRepository(Repository[Input]):
 
     async def list_by_operation_ids(
         self,
-        operation_ids: Sequence[UUID],
+        operation_ids: Collection[UUID],
         granularity: Literal["JOB", "RUN", "OPERATION"],
     ) -> list[InputRow]:
         if not operation_ids:
@@ -98,14 +98,14 @@ class InputRepository(Repository[Input]):
         where = [
             Input.created_at >= min_created_at,
             Input.created_at <= max_created_at,
-            Input.operation_id == any_(operation_ids),  # type: ignore[arg-type]
+            Input.operation_id == any_(list(operation_ids)),  # type: ignore[arg-type]
         ]
 
         return await self._get_inputs(where, granularity)
 
     async def list_by_run_ids(
         self,
-        run_ids: Sequence[UUID],
+        run_ids: Collection[UUID],
         since: datetime,
         until: datetime | None,
         granularity: Literal["JOB", "RUN", "OPERATION"],
@@ -118,7 +118,7 @@ class InputRepository(Repository[Input]):
 
         where = [
             Input.created_at >= min_created_at,
-            Input.run_id == any_(run_ids),  # type: ignore[arg-type]
+            Input.run_id == any_(list(run_ids)),  # type: ignore[arg-type]
         ]
         if until:
             where.append(Input.created_at <= until)
@@ -127,7 +127,7 @@ class InputRepository(Repository[Input]):
 
     async def list_by_job_ids(
         self,
-        job_ids: Sequence[int],
+        job_ids: Collection[int],
         since: datetime,
         until: datetime | None,
         granularity: Literal["JOB", "RUN", "OPERATION"],
@@ -137,7 +137,7 @@ class InputRepository(Repository[Input]):
 
         where = [
             Input.created_at >= since,
-            Input.job_id == any_(job_ids),  # type: ignore[arg-type]
+            Input.job_id == any_(list(job_ids)),  # type: ignore[arg-type]
         ]
         if until:
             where.append(Input.created_at <= until)
@@ -146,7 +146,7 @@ class InputRepository(Repository[Input]):
 
     async def list_by_dataset_ids(
         self,
-        dataset_ids: Sequence[int],
+        dataset_ids: Collection[int],
         since: datetime,
         until: datetime | None,
         granularity: Literal["JOB", "RUN", "OPERATION"],
@@ -156,7 +156,7 @@ class InputRepository(Repository[Input]):
 
         where = [
             Input.created_at >= since,
-            Input.dataset_id == any_(dataset_ids),  # type: ignore[arg-type]
+            Input.dataset_id == any_(list(dataset_ids)),  # type: ignore[arg-type]
         ]
         if until:
             where.append(Input.created_at <= until)
@@ -165,7 +165,7 @@ class InputRepository(Repository[Input]):
 
     async def _get_inputs(
         self,
-        where: list[ColumnElement],
+        where: Collection[ColumnElement],
         granularity: Literal["JOB", "RUN", "OPERATION"],
     ) -> list[InputRow]:
         if granularity == "OPERATION":
@@ -277,7 +277,7 @@ class InputRepository(Repository[Input]):
             )
         return results
 
-    async def get_stats_by_operation_ids(self, operation_ids: Sequence[UUID]) -> dict[UUID, Row]:
+    async def get_stats_by_operation_ids(self, operation_ids: Collection[UUID]) -> dict[UUID, Row]:
         if not operation_ids:
             return {}
 
@@ -298,7 +298,7 @@ class InputRepository(Repository[Input]):
             .where(
                 Input.created_at >= min_created_at,
                 Input.created_at <= max_created_at,
-                Input.operation_id == any_(operation_ids),  # type: ignore[arg-type]
+                Input.operation_id == any_(list(operation_ids)),  # type: ignore[arg-type]
             )
             .group_by(Input.operation_id)
         )
@@ -306,7 +306,7 @@ class InputRepository(Repository[Input]):
         query_result = await self._session.execute(query)
         return {row.operation_id: row for row in query_result.all()}
 
-    async def get_stats_by_run_ids(self, run_ids: Sequence[UUID]) -> dict[UUID, Row]:
+    async def get_stats_by_run_ids(self, run_ids: Collection[UUID]) -> dict[UUID, Row]:
         if not run_ids:
             return {}
 
@@ -322,7 +322,7 @@ class InputRepository(Repository[Input]):
             )
             .where(
                 Input.created_at >= min_created_at,
-                Input.run_id == any_(run_ids),  # type: ignore[arg-type]
+                Input.run_id == any_(list(run_ids)),  # type: ignore[arg-type]
             )
             .group_by(Input.run_id)
         )

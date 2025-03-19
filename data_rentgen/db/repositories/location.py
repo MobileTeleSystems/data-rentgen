@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from collections.abc import Sequence
+from collections.abc import Collection
 
 from sqlalchemy import (
     ColumnElement,
@@ -42,14 +42,14 @@ class LocationRepository(Repository[Location]):
         self,
         page: int,
         page_size: int,
-        location_ids: Sequence[int],
+        location_ids: Collection[int],
         location_type: str | None,
         search_query: str | None,
     ) -> PaginationDTO[Location]:
         where = []
 
         if location_ids:
-            where.append(Location.id == any_(location_ids))  # type: ignore[arg-type]
+            where.append(Location.id == any_(list(location_ids)))  # type: ignore[arg-type]
 
         if location_type:
             where.append(Location.type == location_type)
@@ -108,7 +108,7 @@ class LocationRepository(Repository[Location]):
             .join(Location.addresses)
             .where(
                 Location.type == location.type,
-                Address.url == any_(sorted(location.addresses)),  # type: ignore[arg-type]
+                Address.url == any_(list(location.addresses)),  # type: ignore[arg-type]
             )
         )
         statement = (

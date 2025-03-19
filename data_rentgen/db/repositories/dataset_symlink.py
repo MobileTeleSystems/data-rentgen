@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from collections.abc import Sequence
+from collections.abc import Collection
 
 from sqlalchemy import any_, or_, select
 
@@ -23,14 +23,14 @@ class DatasetSymlinkRepository(Repository[DatasetSymlink]):
             return await self._create(dataset_symlink)
         return await self._update(result, dataset_symlink)
 
-    async def list_by_dataset_ids(self, dataset_ids: Sequence[int]) -> list[DatasetSymlink]:
+    async def list_by_dataset_ids(self, dataset_ids: Collection[int]) -> list[DatasetSymlink]:
         if not dataset_ids:
             return []
 
         query = select(DatasetSymlink).where(
             or_(
-                DatasetSymlink.from_dataset_id == any_(dataset_ids),  # type: ignore[arg-type]
-                DatasetSymlink.to_dataset_id == any_(dataset_ids),  # type: ignore[arg-type]
+                DatasetSymlink.from_dataset_id == any_(list(dataset_ids)),  # type: ignore[arg-type]
+                DatasetSymlink.to_dataset_id == any_(list(dataset_ids)),  # type: ignore[arg-type]
             ),
         )
         scalars = await self._session.scalars(query)

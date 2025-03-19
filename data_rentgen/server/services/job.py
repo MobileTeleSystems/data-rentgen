@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
+from collections.abc import Collection
 from dataclasses import dataclass
 from typing import Annotated
 
@@ -28,7 +29,7 @@ class JobService:
         self,
         page: int,
         page_size: int,
-        job_ids: list[int],
+        job_ids: Collection[int],
         search_query: str | None,
     ) -> JobServicePaginatedResult:
         pagination = await self._uow.job.paginate(

@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from collections.abc import Sequence
+from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Literal
@@ -86,7 +86,7 @@ class OutputRepository(Repository[Output]):
 
     async def list_by_operation_ids(
         self,
-        operation_ids: Sequence[UUID],
+        operation_ids: Collection[UUID],
         granularity: Literal["JOB", "RUN", "OPERATION"],
     ) -> list[OutputRow]:
         if not operation_ids:
@@ -100,14 +100,14 @@ class OutputRepository(Repository[Output]):
         where = [
             Output.created_at >= min_created_at,
             Output.created_at <= max_created_at,
-            Output.operation_id == any_(operation_ids),  # type: ignore[arg-type]
+            Output.operation_id == any_(list(operation_ids)),  # type: ignore[arg-type]
         ]
 
         return await self._get_outputs(where, granularity)
 
     async def list_by_run_ids(
         self,
-        run_ids: Sequence[UUID],
+        run_ids: Collection[UUID],
         since: datetime,
         until: datetime | None,
         granularity: Literal["JOB", "RUN", "OPERATION"],
@@ -120,7 +120,7 @@ class OutputRepository(Repository[Output]):
 
         where = [
             Output.created_at >= min_created_at,
-            Output.run_id == any_(run_ids),  # type: ignore[arg-type]
+            Output.run_id == any_(list(run_ids)),  # type: ignore[arg-type]
         ]
         if until:
             where.append(Output.created_at <= until)
@@ -129,7 +129,7 @@ class OutputRepository(Repository[Output]):
 
     async def list_by_job_ids(
         self,
-        job_ids: Sequence[int],
+        job_ids: Collection[int],
         since: datetime,
         until: datetime | None,
         granularity: Literal["JOB", "RUN", "OPERATION"],
@@ -139,7 +139,7 @@ class OutputRepository(Repository[Output]):
 
         where = [
             Output.created_at >= since,
-            Output.job_id == any_(job_ids),  # type: ignore[arg-type]
+            Output.job_id == any_(list(job_ids)),  # type: ignore[arg-type]
         ]
         if until:
             where.append(Output.created_at <= until)
@@ -148,7 +148,7 @@ class OutputRepository(Repository[Output]):
 
     async def list_by_dataset_ids(
         self,
-        dataset_ids: Sequence[int],
+        dataset_ids: Collection[int],
         since: datetime,
         until: datetime | None,
         granularity: Literal["JOB", "RUN", "OPERATION"],
@@ -158,7 +158,7 @@ class OutputRepository(Repository[Output]):
 
         where = [
             Output.created_at >= since,
-            Output.dataset_id == any_(dataset_ids),  # type: ignore[arg-type]
+            Output.dataset_id == any_(list(dataset_ids)),  # type: ignore[arg-type]
         ]
         if until:
             where.append(Output.created_at <= until)
@@ -167,7 +167,7 @@ class OutputRepository(Repository[Output]):
 
     async def _get_outputs(
         self,
-        where: list[ColumnElement],
+        where: Collection[ColumnElement],
         granularity: Literal["JOB", "RUN", "OPERATION"],
     ) -> list[OutputRow]:
         if granularity == "OPERATION":
@@ -288,7 +288,7 @@ class OutputRepository(Repository[Output]):
             )
         return results
 
-    async def get_stats_by_operation_ids(self, operation_ids: Sequence[UUID]) -> dict[UUID, Row]:
+    async def get_stats_by_operation_ids(self, operation_ids: Collection[UUID]) -> dict[UUID, Row]:
         if not operation_ids:
             return {}
 
@@ -309,7 +309,7 @@ class OutputRepository(Repository[Output]):
             .where(
                 Output.created_at >= min_created_at,
                 Output.created_at <= max_created_at,
-                Output.operation_id == any_(operation_ids),  # type: ignore[arg-type]
+                Output.operation_id == any_(list(operation_ids)),  # type: ignore[arg-type]
             )
             .group_by(Output.operation_id)
         )
@@ -317,7 +317,7 @@ class OutputRepository(Repository[Output]):
         query_result = await self._session.execute(query)
         return {row.operation_id: row for row in query_result.all()}
 
-    async def get_stats_by_run_ids(self, run_ids: Sequence[UUID]) -> dict[UUID, Row]:
+    async def get_stats_by_run_ids(self, run_ids: Collection[UUID]) -> dict[UUID, Row]:
         if not run_ids:
             return {}
 
@@ -333,7 +333,7 @@ class OutputRepository(Repository[Output]):
             )
             .where(
                 Output.created_at >= min_created_at,
-                Output.run_id == any_(run_ids),  # type: ignore[arg-type]
+                Output.run_id == any_(list(run_ids)),  # type: ignore[arg-type]
             )
             .group_by(Output.run_id)
         )

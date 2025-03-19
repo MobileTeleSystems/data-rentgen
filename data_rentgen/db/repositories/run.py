@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from collections.abc import Sequence
+from collections.abc import Collection
 from datetime import datetime
 from uuid import UUID
 
@@ -45,7 +45,7 @@ class RunRepository(Repository[Run]):
         page_size: int,
         since: datetime | None,
         until: datetime | None,
-        run_ids: Sequence[UUID],
+        run_ids: Collection[UUID],
         job_id: int | None,
         parent_run_id: UUID | None,
         search_query: str | None,
@@ -61,7 +61,7 @@ class RunRepository(Repository[Run]):
             where = [
                 Run.created_at >= min_created_at,
                 Run.created_at <= max_created_at,
-                Run.id == any_(run_ids),  # type: ignore[arg-type]
+                Run.id == any_(list(run_ids)),  # type: ignore[arg-type]
             ]
         else:
             if since:
@@ -70,7 +70,7 @@ class RunRepository(Repository[Run]):
                 where.append(Run.created_at <= until)
 
         if run_ids:
-            where.append(Run.id == any_(run_ids))  # type: ignore[arg-type]
+            where.append(Run.id == any_(list(run_ids)))  # type: ignore[arg-type]
         if job_id:
             where.append(Run.job_id == job_id)
         if parent_run_id:
@@ -114,7 +114,7 @@ class RunRepository(Repository[Run]):
             page_size=page_size,
         )
 
-    async def list_by_ids(self, run_ids: Sequence[UUID]) -> list[Run]:
+    async def list_by_ids(self, run_ids: Collection[UUID]) -> list[Run]:
         if not run_ids:
             return []
         # do not use `tuple_(Run.created_at, Run.id).in_(...),
@@ -126,21 +126,21 @@ class RunRepository(Repository[Run]):
             .where(
                 Run.created_at >= min_created_at,
                 Run.created_at <= max_created_at,
-                Run.id == any_(run_ids),  # type: ignore[arg-type]
+                Run.id == any_(list(run_ids)),  # type: ignore[arg-type]
             )
             .options(selectinload(Run.started_by_user))
         )
         result = await self._session.scalars(query)
         return list(result.all())
 
-    async def list_by_job_ids(self, job_ids: Sequence[int], since: datetime, until: datetime | None) -> list[Run]:
+    async def list_by_job_ids(self, job_ids: Collection[int], since: datetime, until: datetime | None) -> list[Run]:
         if not job_ids:
             return []
         query = (
             select(Run)
             .where(
                 Run.created_at >= since,
-                Run.job_id == any_(job_ids),  # type: ignore[arg-type]
+                Run.job_id == any_(list(job_ids)),  # type: ignore[arg-type]
             )
             .options(selectinload(Run.started_by_user))
         )
