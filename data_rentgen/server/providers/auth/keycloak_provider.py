@@ -64,7 +64,11 @@ class KeycloakAuthProvider(AuthProvider):
                 redirect_uri=self.settings.keycloak.redirect_uri,
             )
         except KeycloakOperationError as e:
-            logger.exception("Fail to get token from keycloak. status: {e.response_code}, message: {e.error_message}")
+            logger.exception(
+                "Fail to get token from keycloak. status: %s, message: %s",
+                e.response_code,
+                e.error_message,
+            )
             msg = "Failed to get token"
             raise AuthorizationError(msg) from e
 
