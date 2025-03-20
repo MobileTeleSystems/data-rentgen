@@ -59,7 +59,7 @@ db-partitions: ##@DB Create partitions
 	${POETRY} run python -m data_rentgen.db.scripts.create_partitions --start 2024-07-01
 
 db-views: ##@DB Create views
-	${POETRY} run python -m data_rentgen.db.scripts.create_analytic_views $(ARGS)
+	${POETRY} run python -m data_rentgen.db.scripts.refresh_analytic_views $(ARGS)
 
 broker: broker-start ##@Broker Prepare broker (in docker)
 

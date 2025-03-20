@@ -77,7 +77,7 @@ services:
   db-views:
     image: mtsrus/data-rentgen:develop
     command: |
-      python -m data_rentgen.db.scripts.create_analytic_views
+      python -m data_rentgen.db.scripts.refresh_analytic_views
     env_file: .env.docker
     depends_on:
       db-migration:
