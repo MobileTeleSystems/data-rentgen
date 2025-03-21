@@ -11,7 +11,7 @@ from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from pydantic import ValidationError
 
-from data_rentgen.exceptions import ApplicationError, AuthorizationError, RedirectError
+from data_rentgen.exceptions import ApplicationError, AuthorizationError, LogoutError, RedirectError
 from data_rentgen.server.errors.base import APIErrorSchema, BaseErrorSchema
 from data_rentgen.server.errors.registration import get_response_for_exception
 
@@ -110,6 +110,19 @@ def not_authorized_redirect_exception_handler(request: Request, exc: RedirectErr
     )
 
 
+def not_implemented_exception_handler(request: Request, exc: NotImplementedError) -> Response:
+    response = get_response_for_exception(NotImplementedError)
+    if not response:
+        return unknown_exception_handler(request, exc)
+    content = response.schema(  # type: ignore[call-arg]
+        message=str(exc),
+    )
+    return exception_json_response(
+        status=response.status,
+        content=content,
+    )
+
+
 def exception_json_response(
     status: int,
     content: BaseErrorSchema,
@@ -127,6 +140,8 @@ def exception_json_response(
 
 def apply_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(RedirectError, not_authorized_redirect_exception_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(LogoutError, application_exception_handler)  # type: ignore[arg-type]
+    app.add_exception_handler(NotImplementedError, not_implemented_exception_handler)  # type: ignore[arg-type]
     app.add_exception_handler(ApplicationError, application_exception_handler)  # type: ignore[arg-type]
     app.add_exception_handler(AuthorizationError, application_exception_handler)  # type: ignore[arg-type]
     app.add_exception_handler(

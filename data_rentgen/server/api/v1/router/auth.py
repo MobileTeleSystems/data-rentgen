@@ -10,10 +10,12 @@ from data_rentgen.db.models.user import User
 from data_rentgen.dependencies import Stub
 from data_rentgen.server.errors.registration import get_error_responses
 from data_rentgen.server.errors.schemas.invalid_request import InvalidRequestSchema
+from data_rentgen.server.errors.schemas.logout import LogoutErrorSchema
 from data_rentgen.server.errors.schemas.not_authorized import (
     NotAuthorizedRedirectSchema,
     NotAuthorizedSchema,
 )
+from data_rentgen.server.errors.schemas.not_implemented import NotImplementedErrorSchema
 from data_rentgen.server.providers.auth import (
     AuthProvider,
     DummyAuthProvider,
@@ -25,7 +27,15 @@ from data_rentgen.server.services import get_user
 router = APIRouter(
     prefix="/auth",
     tags=["Auth"],
-    responses=get_error_responses(include={NotAuthorizedSchema, InvalidRequestSchema, NotAuthorizedRedirectSchema}),
+    responses=get_error_responses(
+        include={
+            NotAuthorizedSchema,
+            InvalidRequestSchema,
+            NotAuthorizedRedirectSchema,
+            LogoutErrorSchema,
+            NotImplementedErrorSchema,
+        },
+    ),
 )
 
 
@@ -63,7 +73,6 @@ async def logout(
     auth_provider: Annotated[KeycloakAuthProvider, Depends(Stub(AuthProvider))],
 ):
     refresh_token = request.session.get("refresh_token", None)
+    request.session.clear()
     await auth_provider.logout(username=current_user.name, refresh_token=refresh_token)
-    del request.session["access_token"]
-    del request.session["refresh_token"]
     return Response(status_code=204)

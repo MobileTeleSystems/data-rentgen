@@ -195,3 +195,39 @@ async def test_keycloak_auth_logout(
             "details": f"{settings.server_url}/realms/{settings.realm_name}/protocol/openid-connect/auth?client_id={settings.client_id}&response_type=code&redirect_uri={settings.redirect_uri}&scope=email&state=&nonce=",
         },
     }
+
+
+@pytest.mark.parametrize(
+    "server_app_settings",
+    [
+        {
+            "auth": {
+                "provider": KEYCLOAK_PROVIDER,
+            },
+        },
+    ],
+    indirect=True,
+)
+async def test_keycloak_auth_logout_bad_request(
+    user: User,
+    test_client: AsyncClient,
+    server_app_settings: Settings,
+    create_session_cookie,
+    mock_keycloak_well_known,
+    mock_keycloak_realm,
+    mock_keycloak_token_refresh,
+    mock_keycloak_logout_bad_request,
+):
+    session_cookie = create_session_cookie(user)
+    headers = {
+        "Cookie": f"session={session_cookie}",
+    }
+    response = await test_client.get(
+        "/v1/auth/logout",
+        headers=headers,
+    )
+    assert response.status_code == 400, response.json()
+    assert response.json() == {
+        "error": {"code": "logout_error", "message": "Logout error", "details": f"Can't logout user: {user.name}"},
+    }
+    assert response.cookies.get("session") is None

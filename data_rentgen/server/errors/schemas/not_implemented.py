@@ -7,15 +7,14 @@ from typing import Any
 
 from typing_extensions import Literal
 
-from data_rentgen.exceptions.auth import LogoutError
 from data_rentgen.server.errors.base import BaseErrorSchema
 from data_rentgen.server.errors.registration import register_error_response
 
 
 @register_error_response(
-    exception=LogoutError,
-    status=http.HTTPStatus.BAD_REQUEST,
+    exception=NotImplementedError,
+    status=http.HTTPStatus.NOT_IMPLEMENTED,
 )
-class LogoutErrorSchema(BaseErrorSchema):
-    code: Literal["logout_error"] = "logout_error"
+class NotImplementedErrorSchema(BaseErrorSchema):
+    code: Literal["not_implemented"] = "not_implemented"
     details: Any = None
