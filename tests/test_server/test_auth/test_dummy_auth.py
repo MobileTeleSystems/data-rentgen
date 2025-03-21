@@ -96,7 +96,7 @@ async def test_dummy_auth_logout_not_implemented(
         "error": {
             "code": "not_implemented",
             "details": None,
-            "message": "Logout method is not implemented for Dummy Provider",
+            "message": "Logout method is not implemented for DummyAuthProvider.",
         },
     }, response.json()
 

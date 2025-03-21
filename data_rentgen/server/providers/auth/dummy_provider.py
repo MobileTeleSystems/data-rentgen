@@ -79,8 +79,8 @@ class DummyAuthProvider(AuthProvider):
         msg = "Authorization code grant is not supported by DummyAuthProvider."
         raise NotImplementedError(msg)
 
-    async def logout(self, username: str, refresh_token: str):
-        msg = "Logout method is not implemented for Dummy Provider"
+    async def logout(self, user: User, refresh_token: str):
+        msg = "Logout method is not implemented for DummyAuthProvider."
         raise NotImplementedError(msg)
 
     def _generate_access_token(self, user_id: int) -> tuple[str, float]:

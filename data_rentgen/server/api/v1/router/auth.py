@@ -74,5 +74,5 @@ async def logout(
 ):
     refresh_token = request.session.get("refresh_token", None)
     request.session.clear()
-    await auth_provider.logout(username=current_user.name, refresh_token=refresh_token)
+    await auth_provider.logout(user=current_user, refresh_token=refresh_token)
     return Response(status_code=204)

@@ -128,10 +128,10 @@ class KeycloakAuthProvider(AuthProvider):
             details=auth_url,
         )
 
-    async def logout(self, username: str, refresh_token: str) -> bytes | None:
+    async def logout(self, user: User, refresh_token: str) -> bytes | None:
         try:
             return await self.keycloak_openid.a_logout(refresh_token)
         except KeycloakOperationError as err:
-            msg = f"Can't logout user: {username}"
+            msg = f"Can't logout user: {user.name}"
             logger.debug("%s. Error: %s", msg, err)
             raise LogoutError(msg) from err
