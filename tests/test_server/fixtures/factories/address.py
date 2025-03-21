@@ -30,6 +30,7 @@ async def create_address(
     else:
         address_kwargs = {"location_id": location_id}
     address = address_factory(**address_kwargs)
+    del address.id
     async_session.add(address)
     await async_session.commit()
     await async_session.refresh(address)

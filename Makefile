@@ -64,7 +64,7 @@ db-views: ##@DB Create views
 broker: broker-start ##@Broker Prepare broker (in docker)
 
 broker-start: ##Broker Start broker
-	docker compose -f docker-compose.test.yml up -d --wait broker $(DOCKER_COMPOSE_ARGS)
+	docker compose -f docker-compose.test.yml --profile consumer up -d --wait $(DOCKER_COMPOSE_ARGS)
 
 
 test: test-db test-broker ##@Test Run tests
@@ -84,7 +84,7 @@ test-db-start: ##@TestDB Start database
 test-broker: test-broker-start ##@TestBroker Prepare broker (in docker)
 
 test-broker-start: ##@TestBroker Start broker
-	docker compose -f docker-compose.test.yml up -d --wait broker $(DOCKER_COMPOSE_ARGS)
+	docker compose -f docker-compose.test.yml --profile consumer up -d --wait $(DOCKER_COMPOSE_ARGS)
 
 test-ci: test-db test-broker ##@Test Run CI tests
 	${POETRY} run coverage run -m pytest
@@ -93,7 +93,7 @@ test-check-fixtures: ##@Test Check declared fixtures
 	${POETRY} run pytest --dead-fixtures $(PYTEST_ARGS)
 
 test-cleanup: ##@Test Cleanup tests dependencies
-	docker compose -f docker-compose.test.yml down $(ARGS)
+	docker compose -f docker-compose.test.yml --profile all down --remove-orphans $(ARGS)
 
 
 
@@ -110,7 +110,7 @@ prod: ##@Application Run production containers
 	docker compose up -d
 
 prod-cleanup: ##@Application Stop production containers
-	docker compose down $(ARGS)
+	docker compose down --remove-orphans $(ARGS)
 
 
 .PHONY: docs

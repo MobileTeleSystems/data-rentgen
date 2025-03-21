@@ -822,6 +822,67 @@ async def test_get_run_lineage_with_symlinks(
     }
 
 
+async def test_get_run_lineage_with_symlink_without_input_output(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_with_unconnected_symlinks: LineageResult,
+    mocked_user: MockedUser,
+):
+    lineage = lineage_with_unconnected_symlinks
+
+    run = lineage.runs[0]
+    job = next(job for job in lineage.jobs if job.id == run.job_id)
+
+    inputs = [input for input in lineage.inputs if input.run_id == run.id]
+    assert inputs
+
+    outputs = [output for output in lineage.outputs if output.run_id == run.id]
+    assert outputs
+
+    dataset_ids = {input.dataset_id for input in inputs} | {output.dataset_id for output in outputs}
+    assert dataset_ids
+
+    datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
+    assert datasets
+
+    [job] = await enrich_jobs([job], async_session)
+    [run] = await enrich_runs([run], async_session)
+    datasets = await enrich_datasets(datasets, async_session)
+
+    response = await test_client.get(
+        "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": run.created_at.isoformat(),
+            "start_node_id": str(run.id),
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": {
+            "parents": run_parents_to_json([run]),
+            "symlinks": [],  # symlinks without inputs/outputs are excluded
+            "inputs": [
+                *inputs_to_json(merge_io_by_jobs(inputs), granularity="JOB"),
+                *inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
+            ],
+            "outputs": [
+                *outputs_to_json(merge_io_by_jobs(outputs), granularity="JOB"),
+                *outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+            ],
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": jobs_to_json([job]),
+            "runs": runs_to_json([run]),
+            "operations": {},
+        },
+    }
+
+
 async def test_get_run_lineage_unmergeable_inputs_and_outputs(
     test_client: AsyncClient,
     async_session: AsyncSession,
