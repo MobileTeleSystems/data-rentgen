@@ -10,7 +10,7 @@ from keycloak import KeycloakOpenID, KeycloakOperationError
 from data_rentgen.db.models import User
 from data_rentgen.dependencies import Stub
 from data_rentgen.dto import UserDTO
-from data_rentgen.exceptions.auth import AuthorizationError
+from data_rentgen.exceptions.auth import AuthorizationError, LogoutError
 from data_rentgen.exceptions.redirect import RedirectError
 from data_rentgen.server.providers.auth.base_provider import AuthProvider
 from data_rentgen.server.settings.auth.keycloak import KeycloakAuthProviderSettings
@@ -127,3 +127,11 @@ class KeycloakAuthProvider(AuthProvider):
             message="Please authorize using provided URL",
             details=auth_url,
         )
+
+    async def logout(self, username: str, refresh_token: str) -> bytes | None:
+        try:
+            return await self.keycloak_openid.a_logout(refresh_token)
+        except KeycloakOperationError as err:
+            msg = f"Can't logout user: {username}"
+            logger.debug("%s. Error: %s", msg, err)
+            raise LogoutError(msg) from err

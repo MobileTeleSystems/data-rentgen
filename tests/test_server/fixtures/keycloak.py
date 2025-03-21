@@ -159,3 +159,14 @@ def mock_keycloak_token_refresh(user, server_app_settings, rsa_keys, respx_mock)
         },
         content_type="application/json",
     )
+
+
+@pytest.fixture
+def mock_keycloak_logout(user, server_app_settings, rsa_keys, respx_mock):
+    keycloak_settings = KeycloakSettings.model_validate(server_app_settings.auth.keycloak)
+    server_url = keycloak_settings.server_url
+    realm_name = keycloak_settings.realm_name
+    respx_mock.post(f"{server_url}/realms/{realm_name}/protocol/openid-connect/logout").respond(
+        status_code=204,
+        content_type="application/json",
+    )

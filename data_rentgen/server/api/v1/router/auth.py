@@ -3,8 +3,10 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request
+from fastapi.responses import Response
 from fastapi.security import OAuth2PasswordRequestForm
 
+from data_rentgen.db.models.user import User
 from data_rentgen.dependencies import Stub
 from data_rentgen.server.errors.registration import get_error_responses
 from data_rentgen.server.errors.schemas.invalid_request import InvalidRequestSchema
@@ -18,6 +20,7 @@ from data_rentgen.server.providers.auth import (
     KeycloakAuthProvider,
 )
 from data_rentgen.server.schemas.v1.auth import AuthTokenSchema
+from data_rentgen.server.services import get_user
 
 router = APIRouter(
     prefix="/auth",
@@ -51,3 +54,16 @@ async def auth_callback(
     request.session["refresh_token"] = code_grant["refresh_token"]
 
     return {}
+
+
+@router.get("/logout")
+async def logout(
+    request: Request,
+    current_user: Annotated[User, Depends(get_user())],
+    auth_provider: Annotated[KeycloakAuthProvider, Depends(Stub(AuthProvider))],
+):
+    refresh_token = request.session.get("refresh_token", None)
+    await auth_provider.logout(username=current_user.name, refresh_token=refresh_token)
+    del request.session["access_token"]
+    del request.session["refresh_token"]
+    return Response(status_code=204)

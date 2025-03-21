@@ -149,3 +149,49 @@ async def test_keycloak_auth_callback(
     assert response.cookies.get("session"), caplog.text  # cookie is set
     assert response.status_code == 200, response.json()
     assert response.json() == {}
+
+
+@pytest.mark.parametrize(
+    "server_app_settings",
+    [
+        {
+            "auth": {
+                "provider": KEYCLOAK_PROVIDER,
+            },
+        },
+    ],
+    indirect=True,
+)
+async def test_keycloak_auth_logout(
+    user: User,
+    test_client: AsyncClient,
+    server_app_settings: Settings,
+    create_session_cookie,
+    mock_keycloak_well_known,
+    mock_keycloak_realm,
+    mock_keycloak_token_refresh,
+    mock_keycloak_logout,
+):
+    settings = KeycloakSettings.model_validate(server_app_settings.auth.keycloak)
+    session_cookie = create_session_cookie(user)
+    headers = {
+        "Cookie": f"session={session_cookie}",
+    }
+    response = await test_client.get(
+        "/v1/auth/logout",
+        headers=headers,
+    )
+    assert response.status_code == 204, response.json()
+    assert response.cookies.get("session") is None
+
+    dataset_response = await test_client.get(
+        "v1/datasets",
+    )
+    assert dataset_response.status_code == 401, response.json()
+    assert dataset_response.json() == {
+        "error": {
+            "code": "auth_redirect",
+            "message": "Please authorize using provided URL",
+            "details": f"{settings.server_url}/realms/{settings.realm_name}/protocol/openid-connect/auth?client_id={settings.client_id}&response_type=code&redirect_uri={settings.redirect_uri}&scope=email&state=&nonce=",
+        },
+    }
