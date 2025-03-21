@@ -75,6 +75,32 @@ async def test_dummy_auth_unexisting_user(
     }, response.json()
 
 
+async def test_dummy_auth_logout_not_implemented(
+    test_client: AsyncClient,
+    user: User,
+    access_token_settings: JWTSettings,
+):
+    token = sign_jwt(
+        {"user_id": user.id, "exp": time.time() + 100000},
+        access_token_settings.secret_key.get_secret_value(),
+        access_token_settings.security_algorithm,
+    )
+
+    response = await test_client.get(
+        "v1/auth/logout",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    assert response.status_code == HTTPStatus.NOT_IMPLEMENTED, response.json()
+    assert response.json() == {
+        "error": {
+            "code": "not_implemented",
+            "details": None,
+            "message": "Logout method is not implemented for DummyAuthProvider.",
+        },
+    }, response.json()
+
+
 async def test_dummy_auth_generate_valid_token(
     test_client: AsyncClient,
 ):

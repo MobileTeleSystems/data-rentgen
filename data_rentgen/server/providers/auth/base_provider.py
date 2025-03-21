@@ -103,3 +103,11 @@ class AuthProvider(ABC):
         """
         Obtain a token using the Authorization Code grant.
         """
+
+    @abstractmethod
+    async def logout(
+        self,
+        user: User,
+        refresh_token: str,
+    ) -> Any | None:
+        """This method should implement user logout logic"""
