@@ -691,6 +691,35 @@ async def lineage_with_symlinks(
         await clean_db(async_session)
 
 
+@pytest_asyncio.fixture()
+async def lineage_with_unconnected_symlinks(
+    lineage_with_depth: LineageResult,
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
+) -> AsyncGenerator[LineageResult, None]:
+    # Same as lineage_with_depth, but each dataset has also a symlink,
+    # not connected to any input or output.
+
+    lineage = lineage_with_depth
+
+    async with async_session_maker() as async_session:
+        existing_datasets = lineage.datasets.copy()
+        for dataset in existing_datasets:
+            another_location = await create_location(async_session)
+            another_dataset = await create_dataset(async_session, location_id=another_location.id)
+            lineage.datasets.append(another_dataset)
+
+            metastore = [await make_symlink(async_session, another_dataset, dataset, DatasetSymlinkType.METASTORE)]
+            lineage.dataset_symlinks.extend(metastore)
+
+            warehouse = [await make_symlink(async_session, dataset, another_dataset, DatasetSymlinkType.WAREHOUSE)]
+            lineage.dataset_symlinks.extend(warehouse)
+
+    yield lineage
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)
+
+
 @pytest_asyncio.fixture
 async def duplicated_lineage_with_column_lineage(
     async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
