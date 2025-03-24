@@ -6,8 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, IntEnum
-
-from uuid6 import UUID
+from uuid import UUID
 
 from data_rentgen.dto.job import JobDTO
 from data_rentgen.dto.user import UserDTO

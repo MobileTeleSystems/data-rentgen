@@ -31,9 +31,9 @@ async def runs(
         page_size=query_args.page_size,
         since=query_args.since,
         until=query_args.until,
-        run_ids=query_args.run_id,  # type: ignore[arg-type]
+        run_ids=query_args.run_id,
         job_id=query_args.job_id,
-        parent_run_id=query_args.parent_run_id,  # type: ignore[arg-type]
+        parent_run_id=query_args.parent_run_id,
         search_query=query_args.search_query,
     )
     return PageResponseV1[RunDetailedResponseV1].from_pagination(pagination)
@@ -46,7 +46,7 @@ async def get_runs_lineage(
     current_user: Annotated[User, Depends(get_user())],
 ) -> LineageResponseV1:
     lineage = await lineage_service.get_lineage_by_runs(
-        start_node_ids=[query_args.start_node_id],  # type: ignore[list-item]
+        start_node_ids=[query_args.start_node_id],
         direction=query_args.direction,
         granularity=query_args.granularity,
         since=query_args.since,

@@ -3,8 +3,7 @@
 
 from collections import defaultdict
 from typing import Any
-
-from uuid6 import UUID
+from uuid import UUID
 
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink
 from data_rentgen.db.models.operation import Operation
