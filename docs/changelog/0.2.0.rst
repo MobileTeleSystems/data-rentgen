@@ -1,4 +1,4 @@
-0.2.0 (2025-03-18)
+0.2.0 (2025-03-24)
 ==================
 
 TL;DR
@@ -834,3 +834,4 @@ Improvements
 
 - Remove partition part of the name from dataset names. (:issue:`188`)
 - Remove datasets and symlinks from lineage response which have no inputs or outputs. (:issue:`189`)
+- Add ``/v1/auth/logout`` endpoint to KeycloakAuthProvider. (:issue:`192`)
