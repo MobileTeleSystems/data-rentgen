@@ -49,7 +49,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry install --no-root --extras server --extras consumer --with dev --without docs,test
+          poetry install --no-root --extras server --extras consumer --extras postgres --with dev --without docs,test
 
       - name: Run mypy
         run: poetry run mypy ./data_rentgen --config-file ./pyproject.toml
