@@ -3,11 +3,13 @@
 
 import logging
 from contextlib import asynccontextmanager
+from typing import Any
 
 import anyio
 from fast_depends import dependency_provider
 from faststream import ContextRepo, FastStream
 from faststream._compat import ExceptionGroup
+from faststream.asgi import AsgiFastStream, AsgiResponse, get
 from faststream.kafka import KafkaBroker
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,6 +20,11 @@ from data_rentgen.db.factory import create_session_factory
 from data_rentgen.logging.setup_logging import setup_logging
 
 logger = logging.getLogger(__name__)
+
+
+@get  # type: ignore[arg-type]
+async def liveness(scope: dict[str, Any]) -> AsgiResponse:
+    return AsgiResponse(b"", status_code=204)
 
 
 def broker_factory(settings: ConsumerApplicationSettings) -> KafkaBroker:
@@ -43,7 +50,7 @@ def broker_factory(settings: ConsumerApplicationSettings) -> KafkaBroker:
     return broker
 
 
-def application_factory(settings: ConsumerApplicationSettings) -> FastStream:
+def application_factory(settings: ConsumerApplicationSettings) -> AsgiFastStream:
     @asynccontextmanager
     async def security_lifespan(context: ContextRepo):
         try:
@@ -66,7 +73,7 @@ def application_factory(settings: ConsumerApplicationSettings) -> FastStream:
         description="Data.Rentgen is a nextgen DataLineage service",
         version=data_rentgen.__version__,
         logger=logger,
-    )
+    ).as_asgi(asgi_routes=[("/internal/healthcheck/liveness", liveness)])
 
 
 def get_application():

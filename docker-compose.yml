@@ -59,6 +59,12 @@ services:
     command: python -m data_rentgen.consumer
     restart: unless-stopped
     env_file: .env.docker
+    healthcheck:
+      test: [CMD-SHELL, curl -f http://localhost:8000/internal/healthcheck/liveness]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
     depends_on:
       broker:
         condition: service_healthy
