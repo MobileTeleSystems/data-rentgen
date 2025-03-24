@@ -15,7 +15,7 @@ services:
       retries: 3
 
   server:
-    image: mtsrus/data-rentgen:develop
+    image: mtsrus/data-rentgen:${BACKEND_IMAGE:-latest}
     command: python -m data_rentgen.server --host 0.0.0.0 --port 8000
     restart: unless-stopped
     env_file: .env.docker
@@ -55,7 +55,7 @@ services:
       retries: 5
 
   consumer:
-    image: mtsrus/data-rentgen:develop
+    image: mtsrus/data-rentgen:${BACKEND_IMAGE:-latest}
     command: python -m data_rentgen.consumer
     restart: unless-stopped
     env_file: .env.docker
@@ -72,7 +72,7 @@ services:
         condition: service_completed_successfully
 
   db-migration:
-    image: mtsrus/data-rentgen:develop
+    image: mtsrus/data-rentgen:${BACKEND_IMAGE:-latest}
     command: |
       python -m data_rentgen.db.migrations upgrade head && python -m data_rentgen.db.scripts.create_partitions
     env_file: .env.docker
@@ -81,7 +81,7 @@ services:
         condition: service_healthy
 
   db-views:
-    image: mtsrus/data-rentgen:develop
+    image: mtsrus/data-rentgen:${BACKEND_IMAGE:-latest}
     command: |
       python -m data_rentgen.db.scripts.refresh_analytic_views
     env_file: .env.docker
@@ -90,7 +90,7 @@ services:
         condition: service_completed_successfully
 
   frontend:
-    image: mtsrus/data-rentgen-ui:develop
+    image: mtsrus/data-rentgen-ui:${FRONTEND_IMAGE:-latest}
     restart: unless-stopped
     env_file: .env.docker
     ports:

@@ -2,6 +2,8 @@
 
 include .env.local
 
+BAKEND_IMAGE = develop
+FRONTEND_IMAGE = develop
 VENV = .venv
 PIP = ${VENV}/bin/pip
 POETRY = ${VENV}/bin/poetry
