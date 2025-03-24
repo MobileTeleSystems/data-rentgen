@@ -40,8 +40,8 @@ async def operations(
         page_size=query_args.page_size,
         since=query_args.since,
         until=query_args.until,
-        operation_ids=query_args.operation_id,  # type: ignore[arg-type]
-        run_id=query_args.run_id,  # type: ignore[arg-type]
+        operation_ids=query_args.operation_id,
+        run_id=query_args.run_id,
     )
     return PageResponseV1[OperationDetailedResponseV1].from_pagination(pagination)
 
@@ -53,7 +53,7 @@ async def get_operations_lineage(
     current_user: Annotated[User, Depends(get_user())],
 ) -> LineageResponseV1:
     lineage = await lineage_service.get_lineage_by_operations(
-        start_node_ids=[query_args.start_node_id],  # type: ignore[list-item]
+        start_node_ids=[query_args.start_node_id],
         direction=query_args.direction,
         since=query_args.since,
         until=query_args.until,
