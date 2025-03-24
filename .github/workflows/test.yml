@@ -24,11 +24,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install system packages
-        run: |
-          sudo apt update
-          sudo apt-get install --no-install-recommends -y libkrb5-dev krb5-user gcc
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 

@@ -50,7 +50,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          poetry install --no-root --all-extras --without docs,test,dev
+          poetry install --no-root --extras server --extras consumer --without docs,test,dev
 
       - name: Generate OpenAPI Schema
         run: |

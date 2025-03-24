@@ -37,7 +37,7 @@ venv-cleanup: ##@Env Cleanup venv
 venv-install: ##@Env Install requirements to venv
 	${POETRY} config virtualenvs.create false
 	${POETRY} self add poetry-bumpversion
-	${POETRY} install --no-root --all-extras --with dev,test,docs $(ARGS)
+	${POETRY} install --no-root --extras server --extras consumer --with dev,test,docs $(ARGS)
 	${PIP} install --no-deps sphinx-plantuml
 
 
