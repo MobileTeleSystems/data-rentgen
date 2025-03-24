@@ -7,8 +7,6 @@ from dataclasses import InitVar, dataclass, field
 from functools import cached_property
 from uuid import UUID
 
-from uuid6 import UUID as UUIDv6  # noqa: N811
-
 from data_rentgen.db.utils.uuid import generate_static_uuid
 from data_rentgen.dto.dataset import DatasetDTO
 from data_rentgen.dto.dataset_column_relation import (
@@ -26,7 +24,7 @@ class ColumnLineageDTO:
     dataset_column_relations: InitVar[list[DatasetColumnRelationDTO]]
     _dataset_column_relations: list[DatasetColumnRelationDTO] = field(default_factory=list, init=False)
     # id is generated using other ids combination
-    id: UUIDv6 | None = None
+    id: UUID | None = None
 
     def __post_init__(self, dataset_column_relations: list[DatasetColumnRelationDTO]):
         self._dataset_column_relations = merge_dataset_column_relations(dataset_column_relations)

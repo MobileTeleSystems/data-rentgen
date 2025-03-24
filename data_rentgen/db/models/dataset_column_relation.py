@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from enum import Flag
+from uuid import UUID
 
 from sqlalchemy import UUID as SQL_UUID
 from sqlalchemy import (
@@ -15,7 +16,6 @@ from sqlalchemy import (
     func,
 )
 from sqlalchemy.orm import Mapped, mapped_column
-from uuid6 import UUID
 
 from data_rentgen.db.models.base import Base
 

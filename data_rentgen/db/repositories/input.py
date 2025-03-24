@@ -4,10 +4,10 @@ from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Literal
+from uuid import UUID
 
 from sqlalchemy import ColumnElement, Row, any_, func, literal_column, select
 from sqlalchemy.dialects.postgresql import insert
-from uuid6 import UUID
 
 from data_rentgen.db.models import Input, Schema
 from data_rentgen.db.repositories.base import Repository

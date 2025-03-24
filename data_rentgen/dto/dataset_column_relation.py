@@ -5,8 +5,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import IntFlag
-
-from uuid6 import UUID
+from uuid import UUID
 
 
 class DatasetColumnRelationTypeDTO(IntFlag):

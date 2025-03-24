@@ -5,8 +5,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-
-from uuid6 import UUID
+from uuid import UUID
 
 from data_rentgen.dto.dataset import DatasetDTO
 from data_rentgen.dto.operation import OperationDTO

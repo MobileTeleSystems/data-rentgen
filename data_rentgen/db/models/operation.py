@@ -5,12 +5,12 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import Enum, IntEnum
+from uuid import UUID
 
 from sqlalchemy import UUID as SQL_UUID
 from sqlalchemy import DateTime, Integer, PrimaryKeyConstraint, SmallInteger, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
-from uuid6 import UUID
 
 from data_rentgen.db.models.base import Base
 from data_rentgen.db.models.run import Run

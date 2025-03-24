@@ -8,9 +8,9 @@ from collections.abc import Collection
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Annotated, Literal
+from uuid import UUID
 
 from fastapi import Depends
-from uuid6 import UUID
 
 from data_rentgen.db.models import (
     Dataset,
