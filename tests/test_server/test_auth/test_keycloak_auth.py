@@ -147,8 +147,7 @@ async def test_keycloak_auth_callback(
         )
 
     assert response.cookies.get("session"), caplog.text  # cookie is set
-    assert response.status_code == 200, response.json()
-    assert response.json() == {}
+    assert response.status_code == 204, response.json()
 
 
 @pytest.mark.parametrize(

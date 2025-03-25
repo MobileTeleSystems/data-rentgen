@@ -109,5 +109,5 @@ class AuthProvider(ABC):
         self,
         user: User,
         refresh_token: str,
-    ) -> Any | None:
+    ) -> None:
         """This method should implement user logout logic"""
