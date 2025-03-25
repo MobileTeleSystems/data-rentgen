@@ -62,8 +62,7 @@ async def auth_callback(
     )
     request.session["access_token"] = code_grant["access_token"]
     request.session["refresh_token"] = code_grant["refresh_token"]
-
-    return {}
+    return Response(status_code=204)
 
 
 @router.get("/logout")
