@@ -41,6 +41,16 @@ jobs:
             org.opencontainers.image.url=https://hub.docker.com/r/mtsrus/data-rentgen
             org.opencontainers.image.authors=DataOps.ETL <onetools@mts.ru>
 
+      - name: Set platforms
+        id: set_platforms
+        run: |
+          # Building krb5 on ARM is time consuming, do this only at release
+          if [[ "${{ github.ref_type }}" == "branch" && "${{ github.ref_name }}" == "develop" ]]; then
+            echo "PLATFORMS=linux/amd64" >> $GITHUB_ENV
+          elif [[ "${{ github.ref_type }}" == "tag" ]]; then
+            echo "PLATFORMS=linux/amd64,linux/arm64/v8" >> $GITHUB_ENV
+          fi
+
       - name: Build Backend Image
         uses: docker/build-push-action@v6
         with:
@@ -52,9 +62,7 @@ jobs:
           push: true
           cache-to: type=gha,mode=max
           cache-from: type=gha
-          platforms: |
-            linux/amd64
-            linux/arm64/v8
+          platforms: ${{ env.PLATFORMS }}
           provenance: mode=max
 
       - name: Convert README to Markdown
