@@ -29,21 +29,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set tag
-        id: set_tag
-        run: |
-          if [[ "${{ github.ref_type }}" == "branch" && "${{ github.ref_name }}" == "develop" ]]; then
-            echo "TAG=mtsrus/data-rentgen:develop" >> $GITHUB_ENV
-          elif [[ "${{ github.ref_type }}" == "tag" ]]; then
-            echo "TAG=mtsrus/data-rentgen:latest,mtsrus/data-rentgen:${{ github.ref_name }}" >> $GITHUB_ENV
-          fi
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: mtsrus/data-rentgen
+          labels: |
+            org.opencontainers.image.title=Data.Rentgen
+            org.opencontainers.image.vendor=MTS PJSC
+            org.opencontainers.image.documentation=https://data-rentgen.readthedocs.io/
+            org.opencontainers.image.url=https://hub.docker.com/r/mtsrus/data-rentgen
+            org.opencontainers.image.authors=DataOps.ETL <onetools@mts.ru>
 
       - name: Build Backend Image
         uses: docker/build-push-action@v6
         with:
-          tags: ${{ env.TAG }}
           context: .
           file: docker/Dockerfile
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
           pull: true
           push: true
           cache-to: type=gha,mode=max
