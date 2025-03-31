@@ -54,8 +54,7 @@ jobs:
 
       - name: Generate OpenAPI Schema
         run: |
-          source .env.local
-          poetry run python -m data_rentgen.server.scripts.export_openapi_schema openapi.json
+          make docs-openapi
 
       - name: Fix logo in Readme
         run: |
@@ -125,4 +124,4 @@ jobs:
           files: |-
             dist/*.tar.gz
             dist/*.whl
-            openapi.json
+            docs/_static/openapi.json

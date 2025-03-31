@@ -89,7 +89,7 @@ test-broker-start: ##@TestBroker Start broker
 	docker compose -f docker-compose.test.yml up -d --wait broker $(DOCKER_COMPOSE_ARGS)
 
 test-ci: test-db test-broker ##@Test Run CI tests
-	${POETRY} run coverage run -m pytest
+	${POETRY} run coverage run -m pytest $(PYTEST_ARGS)
 
 test-check-fixtures: ##@Test Check declared fixtures
 	${POETRY} run pytest --dead-fixtures $(PYTEST_ARGS)
@@ -130,5 +130,5 @@ docs-cleanup: ##@Docs Cleanup docs
 
 docs-fresh: docs-cleanup docs-build ##@Docs Cleanup & build docs
 
-openapi: ##@Docs Generate OpenAPI schema
+docs-openapi: ##@Docs Generate OpenAPI schema
 	python -m data_rentgen.server.scripts.export_openapi_schema docs/_static/openapi.json
