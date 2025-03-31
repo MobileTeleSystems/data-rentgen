@@ -25,7 +25,6 @@ RUN --mount=type=cache,target=/root/.cache/pypoetry \
 
 
 FROM python:3.13-slim AS prod
-LABEL maintainer="DataOps.ETL"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
