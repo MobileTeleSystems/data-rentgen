@@ -46,7 +46,7 @@ venv-install: ##@Env Install requirements to venv
 db: db-start db-upgrade db-partitions ##@DB Prepare database (in docker)
 
 db-start: ##@DB Start database
-	docker compose up -d --wait db $(DOCKER_COMPOSE_ARGS)
+	docker compose -f docker-compose.yml up -d --wait db $(DOCKER_COMPOSE_ARGS)
 
 db-revision: ##@DB Generate migration file
 	${POETRY} run python -m data_rentgen.db.migrations revision --autogenerate $(ARGS)
@@ -66,7 +66,7 @@ db-views: ##@DB Create views
 broker: broker-start ##@Broker Prepare broker (in docker)
 
 broker-start: ##Broker Start broker
-	docker compose -f docker-compose.test.yml --profile consumer up -d --wait $(DOCKER_COMPOSE_ARGS)
+	docker compose -f docker-compose.yml up -d --wait broker $(DOCKER_COMPOSE_ARGS)
 
 
 test: test-db test-broker ##@Test Run tests
@@ -86,7 +86,7 @@ test-db-start: ##@TestDB Start database
 test-broker: test-broker-start ##@TestBroker Prepare broker (in docker)
 
 test-broker-start: ##@TestBroker Start broker
-	docker compose -f docker-compose.test.yml --profile consumer up -d --wait $(DOCKER_COMPOSE_ARGS)
+	docker compose -f docker-compose.test.yml up -d --wait broker $(DOCKER_COMPOSE_ARGS)
 
 test-ci: test-db test-broker ##@Test Run CI tests
 	${POETRY} run coverage run -m pytest
@@ -100,19 +100,19 @@ test-cleanup: ##@Test Cleanup tests dependencies
 
 
 dev-server: db-start ##@Application Run development server (without docker)
-	${POETRY} run python -m data_rentgen.server $(ARGS)
+	${POETRY} run python -m data_rentgen.server --host 0.0.0.0 --port 8000 $(ARGS)
 
 dev-consumer: db-start broker-start ##@Application Run development broker (without docker)
-	${POETRY} run python -m data_rentgen.consumer $(ARGS)
+	${POETRY} run python -m data_rentgen.consumer --host 0.0.0.0 --port 8001 $(ARGS)
 
 prod-build: ##@Application Build docker image
 	docker build --progress=plain --network=host -t mtsrus/data-rentgen:develop -f ./docker/Dockerfile $(ARGS) .
 
 prod: ##@Application Run production containers
-	docker compose up -d
+	docker compose -f docker-compose.yml up -d
 
 prod-cleanup: ##@Application Stop production containers
-	docker compose down --remove-orphans $(ARGS)
+	docker compose -f docker-compose.yml down --remove-orphans $(ARGS)
 
 
 .PHONY: docs
