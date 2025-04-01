@@ -99,6 +99,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           # this requires token with read+write+delete permissions. read+write is not enough!
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: mtsrus/syncmaster-server
+          repository: mtsrus/data-rentgen
           short-description: ${{ github.event.repository.description }}
           enable-url-completion: true
