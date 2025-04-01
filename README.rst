@@ -9,8 +9,8 @@
 |Repo Status| |PyPI| |PyPI License| |PyPI Python Version| |Docker image| |Documentation|
 |Build Status| |Coverage| |pre-commit.ci|
 
-.. |Repo Status| image:: https://www.repostatus.org/badges/latest/concept.svg
-    :target: https://www.repostatus.org/#concept
+.. |Repo Status| image:: https://www.repostatus.org/badges/latest/wip.svg
+    :target: https://www.repostatus.org/#wip
 .. |PyPI| image:: https://img.shields.io/pypi/v/data-rentgen
     :target: https://pypi.org/project/data-rentgen/
 .. |PyPI License| image:: https://img.shields.io/pypi/l/data-rentgen.svg
