@@ -53,7 +53,7 @@ RUN --mount=type=cache,target=/root/.cache/pypoetry \
         --no-root \
         --all-extras \
         --without dev,test,docs \
-    && python -m compileall .venv
+    && python -m compileall -j 4 .venv
 
 
 FROM base AS prod
