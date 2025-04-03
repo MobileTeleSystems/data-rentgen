@@ -52,12 +52,13 @@ RUN --mount=type=cache,target=/root/.cache/pypoetry \
     poetry install \
         --no-root \
         --all-extras \
-        --without dev,test,docs
+        --without dev,test,docs \
+    && python -m compileall .venv
 
 
 FROM base AS prod
 
 # We don't need poetry and compilers in final image
 COPY --from=builder /app/.venv/ /app/.venv/
-COPY ./data_rentgen/ ./data_rentgen/
-RUN python -m compileall -b data_rentgen
+COPY ./data_rentgen/ /app/data_rentgen/
+RUN python -m compileall data_rentgen
