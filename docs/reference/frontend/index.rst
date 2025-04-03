@@ -19,7 +19,7 @@ With Docker
 
   .. code:: console
 
-    $ docker compose up -d db frontend
+    $ docker compose --profile frontend up -d
 
   ``docker-compose`` will download Data.Rentgen UI image, create containers, and then start them.
 
@@ -28,7 +28,7 @@ With Docker
   .. dropdown:: ``docker-compose.yml``
 
       .. literalinclude:: ../../../docker-compose.yml
-          :emphasize-lines: 92-106
+          :emphasize-lines: 103-120
 
   .. dropdown:: ``.env.docker``
 

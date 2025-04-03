@@ -19,7 +19,7 @@ With docker
 
   .. code:: console
 
-    $ docker compose up -d db server
+    $ docker compose --profile server up -d
 
   ``docker-compose`` will download all necessary images, create containers, and then start the server.
 
@@ -28,7 +28,7 @@ With docker
   .. dropdown:: ``docker-compose.yml``
 
       .. literalinclude:: ../../../docker-compose.yml
-          :emphasize-lines: 17-41
+          :emphasize-lines: 35-63
 
   .. dropdown:: ``.env.docker``
 

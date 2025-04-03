@@ -22,7 +22,7 @@ With Docker
 
   .. code:: console
 
-      $ docker compose up -d broker
+      $ docker compose --profile broker up -d
 
   ``docker-compose`` will download Apache Kafka image, create container and volume, and then start container.
 
@@ -32,7 +32,7 @@ With Docker
   .. dropdown:: ``docker-compose.yml``
 
       .. literalinclude:: ../../../docker-compose.yml
-          :emphasize-lines: 43-55,95
+          :emphasize-lines: 65-81,124
 
   .. dropdown:: ``.env.docker``
 

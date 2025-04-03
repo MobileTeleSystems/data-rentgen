@@ -2,8 +2,7 @@
 
 include .env.local
 
-BAKEND_IMAGE = develop
-FRONTEND_IMAGE = develop
+VERSION = develop
 VENV = .venv
 PIP = ${VENV}/bin/pip
 POETRY = ${VENV}/bin/poetry
@@ -108,10 +107,10 @@ prod-build: ##@Application Build docker image
 	docker build --progress=plain --network=host -t mtsrus/data-rentgen:develop -f ./docker/Dockerfile $(ARGS) .
 
 prod: ##@Application Run production containers
-	docker compose -f docker-compose.yml up -d
+	docker compose -f docker-compose.yml --profile all up -d $(ARGS)
 
-prod-cleanup: ##@Application Stop production containers
-	docker compose -f docker-compose.yml down --remove-orphans $(ARGS)
+prod-stop: ##@Application Stop production containers
+	docker compose -f docker-compose.yml --profile all down --remove-orphans $(ARGS)
 
 
 .PHONY: docs

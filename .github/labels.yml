@@ -19,8 +19,8 @@
     color: '5319e7'
     from_name: component:backend
 
-  - name: component:client
-    description: Client-related changes
+  - name: component:consumer
+    description: Consumer-related changes
     color: 75f526
 
   - name: kind:bug

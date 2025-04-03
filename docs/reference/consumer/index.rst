@@ -18,7 +18,7 @@ With docker
 
   .. code:: console
 
-      $ docker compose up -d db consumer
+      $ docker compose --profile consumer up -d
 
   ``docker-compose`` will download all necessary images, create containers, and then start consumer process.
 
@@ -27,7 +27,7 @@ With docker
   .. dropdown:: ``docker-compose.yml``
 
       .. literalinclude:: ../../../docker-compose.yml
-          :emphasize-lines: 57-72
+          :emphasize-lines: 83-101
 
   .. dropdown:: ``.env.docker``
 

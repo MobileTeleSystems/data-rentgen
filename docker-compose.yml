@@ -14,8 +14,26 @@ services:
       timeout: 5s
       retries: 3
 
+  db-migration:
+    image: mtsrus/data-rentgen:${VERSION:-latest}
+    command: |
+      python -m data_rentgen.db.migrations upgrade head && python -m data_rentgen.db.scripts.create_partitions
+    env_file: .env.docker
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db-views:
+    image: mtsrus/data-rentgen:${VERSION:-latest}
+    command: |
+      python -m data_rentgen.db.scripts.refresh_analytic_views
+    env_file: .env.docker
+    depends_on:
+      db-migration:
+        condition: service_completed_successfully
+
   server:
-    image: mtsrus/data-rentgen:${BACKEND_IMAGE:-latest}
+    image: mtsrus/data-rentgen:${VERSION:-latest}
     command: python -m data_rentgen.server --host 0.0.0.0 --port 8000
     restart: unless-stopped
     env_file: .env.docker
@@ -39,6 +57,10 @@ services:
         condition: service_healthy
       db-migration:
         condition: service_completed_successfully
+    profiles:
+      - server
+      - frontend
+      - all
 
   broker:
     image: bitnami/kafka:3.9
@@ -53,9 +75,13 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    profiles:
+      - consumer
+      - broker
+      - all
 
   consumer:
-    image: mtsrus/data-rentgen:${BACKEND_IMAGE:-latest}
+    image: mtsrus/data-rentgen:${VERSION:-latest}
     command: python -m data_rentgen.consumer --host 0.0.0.0 --port 8000
     restart: unless-stopped
     env_file: .env.docker
@@ -70,27 +96,12 @@ services:
         condition: service_healthy
       db-migration:
         condition: service_completed_successfully
-
-  db-migration:
-    image: mtsrus/data-rentgen:${BACKEND_IMAGE:-latest}
-    command: |
-      python -m data_rentgen.db.migrations upgrade head && python -m data_rentgen.db.scripts.create_partitions
-    env_file: .env.docker
-    depends_on:
-      db:
-        condition: service_healthy
-
-  db-views:
-    image: mtsrus/data-rentgen:${BACKEND_IMAGE:-latest}
-    command: |
-      python -m data_rentgen.db.scripts.refresh_analytic_views
-    env_file: .env.docker
-    depends_on:
-      db-migration:
-        condition: service_completed_successfully
+    profiles:
+      - consumer
+      - all
 
   frontend:
-    image: mtsrus/data-rentgen-ui:${FRONTEND_IMAGE:-latest}
+    image: mtsrus/data-rentgen-ui:${VERSION:-latest}
     restart: unless-stopped
     env_file: .env.docker
     ports:
@@ -104,6 +115,9 @@ services:
     depends_on:
       server:
         condition: service_healthy
+    profiles:
+      - frontend
+      - all
 
 volumes:
   postgres_data:

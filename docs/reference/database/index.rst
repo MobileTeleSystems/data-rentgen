@@ -9,6 +9,10 @@ After a database is started, it is required to run migration script.
 For empty database, it creates all the required tables and indexes.
 For non-empty database, it will perform database structure upgrade, using `Alembic <https://alembic.sqlalchemy.org/>`_.
 
+.. warning::
+
+    Other containers (consumer, server) should be stopped while running migrations, to prevent interference.
+
 After migrations are performed, it is required to run script which creates partitions for some tables in the database.
 By default, it creates monthly partitions, for current and next month. This can be changed by overriding command args.
 This script should run on schedule, for example by adding a dedicated entry to `crontab <https://help.ubuntu.com/community/CronHowto>`_.
@@ -17,18 +21,16 @@ Along with migrations analytics views are created. By default these materialized
 In order to fill these tables with data you need to run refresh script. The command for this shown below.
 Views based on data in ``output`` and ``input`` tables and has such structure:
 
-  .. code:: text
-
-    dataset_name - Name of dataset.
-    dataset_location - Name of dataset location (e.g. clusster name).
-    dataset_location_type - Type of dataset location (e.g. hive, hdfs, postgres).
-    user_id - Internal user id.
-    user_name - Internal user name (e.g. name of user which run spark job).
-    last_interaction_dt - Time when user lat time interact with dataset. Read or write depens on base table.
-    num_of_interactions - Number of interactions in given interval.
-    sum_bytes - Sum of bytes in given interval. ``num_bytes`` - column.
-    sum_rows - Sum of rows in given interval. ``num_rows`` - column.
-    sum_files - Sum of files in given interval. ``num_files`` - column.
+* ``dataset_name`` - Name of dataset.
+* ``dataset_location`` - Name of dataset location (e.g. clusster name).
+* ``dataset_location_type`` - Type of dataset location (e.g. hive, hdfs, postgres).
+* ``user_id`` - Internal user id.
+* ``user_name`` - Internal user name (e.g. name of user which run spark job).
+* ``last_interaction_dt`` - Time when user lat time interact with dataset. Read or write depens on base table.
+* ``num_of_interactions`` - Number of interactions in given interval.
+* ``sum_bytes`` - Sum of bytes in given interval.
+* ``sum_rows`` - Sum of rows in given interval.
+* ``sum_files`` - Sum of files in given interval.
 
 We provide three types of views: ``day``, ``week`` and ``month``, based on the time period in which the aggregation occur.
 Views are created for all intervals and by default, script refresh all views.
@@ -64,7 +66,7 @@ With Docker
   .. dropdown:: ``docker-compose.yml``
 
       .. literalinclude:: ../../../docker-compose.yml
-          :emphasize-lines: 1-15,108-110
+          :emphasize-lines: 1-33,123
 
   .. dropdown:: ``.env.docker``
 

@@ -27,7 +27,7 @@ Then start containers using ``docker-compose``:
 
 .. code:: console
 
-    $ docker compose up -d --wait
+    $ docker compose --profile all up -d --wait
 
 ``docker-compose`` will download required images, create containers and start them in a proper order.
 Options can be set via ``.env.docker`` file or ``environment`` section in ``docker-compose.yml``.
