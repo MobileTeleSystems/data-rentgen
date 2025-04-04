@@ -27,13 +27,13 @@ With docker
 
   .. dropdown:: ``docker-compose.yml``
 
-      .. literalinclude:: ../../../docker-compose.yml
-          :emphasize-lines: 35-63
+    .. literalinclude:: ../../../docker-compose.yml
+        :emphasize-lines: 35-63
 
   .. dropdown:: ``.env.docker``
 
-      .. literalinclude:: ../../../.env.docker
-          :emphasize-lines: 22-27
+    .. literalinclude:: ../../../.env.docker
+        :emphasize-lines: 22-27
 
 * After server is started and ready, open http://localhost:8000/docs.
 

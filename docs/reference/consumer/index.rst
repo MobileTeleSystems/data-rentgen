@@ -18,7 +18,7 @@ With docker
 
   .. code:: console
 
-      $ docker compose --profile consumer up -d --wait
+    $ docker compose --profile consumer up -d --wait
 
   ``docker-compose`` will download all necessary images, create containers, and then start consumer process.
 
@@ -26,13 +26,13 @@ With docker
 
   .. dropdown:: ``docker-compose.yml``
 
-      .. literalinclude:: ../../../docker-compose.yml
-          :emphasize-lines: 83-101
+    .. literalinclude:: ../../../docker-compose.yml
+        :emphasize-lines: 83-101
 
   .. dropdown:: ``.env.docker``
 
-      .. literalinclude:: ../../../.env.docker
-          :emphasize-lines: 22-24,29-34
+    .. literalinclude:: ../../../.env.docker
+        :emphasize-lines: 22-24,29-34
 
 Without docker
 ^^^^^^^^^^^^^^

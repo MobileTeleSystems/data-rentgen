@@ -24,7 +24,7 @@ With Docker
 
   .. code:: console
 
-      $ docker compose --profile broker up -d --wait
+    $ docker compose --profile broker up -d --wait
 
   ``docker-compose`` will download Apache Kafka image, create container and volume, and then start container.
 
@@ -33,13 +33,13 @@ With Docker
 
   .. dropdown:: ``docker-compose.yml``
 
-      .. literalinclude:: ../../../docker-compose.yml
-          :emphasize-lines: 65-81,124
+    .. literalinclude:: ../../../docker-compose.yml
+        :emphasize-lines: 65-81,124
 
   .. dropdown:: ``.env.docker``
 
-      .. literalinclude:: ../../../.env.docker
-          :emphasize-lines: 7-20
+    .. literalinclude:: ../../../.env.docker
+        :emphasize-lines: 7-20
 
 Without Docker
 ^^^^^^^^^^^^^^

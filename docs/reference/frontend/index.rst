@@ -27,13 +27,13 @@ With Docker
 
   .. dropdown:: ``docker-compose.yml``
 
-      .. literalinclude:: ../../../docker-compose.yml
-          :emphasize-lines: 103-120
+    .. literalinclude:: ../../../docker-compose.yml
+        :emphasize-lines: 103-120
 
   .. dropdown:: ``.env.docker``
 
-      .. literalinclude:: ../../../.env.docker
-          :emphasize-lines: 36-37
+    .. literalinclude:: ../../../.env.docker
+        :emphasize-lines: 36-37
 
 * After frontend is started and ready, open http://localhost:3000.
 

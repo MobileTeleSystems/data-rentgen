@@ -3,38 +3,39 @@
 Relation Database
 =================
 
-Currently, Data.Rentgen supports only `PostgreSQL <https://www.postgresql.org/>`_ as storage for lineage entities and relations.
+Data.Rentgen uses relational database as a storage for lineage entities and relations.
+
+Currently, Data.Rentgen supports only `PostgreSQL <https://www.postgresql.org/>`_, as it relies on table partitioning,
+full-text search and specific aggregation functions.
+
+Migrations
+----------
 
 After a database is started, it is required to run migration script.
 For empty database, it creates all the required tables and indexes.
-For non-empty database, it will perform database structure upgrade, using `Alembic <https://alembic.sqlalchemy.org/>`_.
+For non-empty database, it will perform database structure upgrade.
+
+Migration script is a thin wrapper around `Alembic cli <https://alembic.sqlalchemy.org/en/latest/tutorial.html#running-our-first-migration>`_,
+options and commands are just the same.
 
 .. warning::
 
     Other containers (consumer, server) should be stopped while running migrations, to prevent interference.
 
-After migrations are performed, it is required to run script which creates partitions for some tables in the database.
+Partitions
+---------------
+
+After migrations are performed, it is required to run :ref:`create-partitions-cli` which creates partitions for some tables in the database.
 By default, it creates monthly partitions, for current and next month. This can be changed by overriding command args.
-This script should run on schedule, for example by adding a dedicated entry to `crontab <https://help.ubuntu.com/community/CronHowto>`_.
 
-Along with migrations analytics views are created. By default these materialized views are empty(``WITH NO DATA``).
-In order to fill these tables with data you need to run refresh script. The command for this shown below.
-Views based on data in ``output`` and ``input`` tables and has such structure:
+This script should run on schedule, depending on partitions granularity.
+Scheduling can be done by adding a dedicated entry to `crontab <https://help.ubuntu.com/community/CronHowto>`_.
 
-* ``dataset_name`` - Name of dataset.
-* ``dataset_location`` - Name of dataset location (e.g. clusster name).
-* ``dataset_location_type`` - Type of dataset location (e.g. hive, hdfs, postgres).
-* ``user_id`` - Internal user id.
-* ``user_name`` - Internal user name (e.g. name of user which run spark job).
-* ``last_interaction_dt`` - Time when user lat time interact with dataset. Read or write depens on base table.
-* ``num_of_interactions`` - Number of interactions in given interval.
-* ``sum_bytes`` - Sum of bytes in given interval.
-* ``sum_rows`` - Sum of rows in given interval.
-* ``sum_files`` - Sum of files in given interval.
+Analytic views
+---------------
 
-We provide three types of views: ``day``, ``week`` and ``month``, based on the time period in which the aggregation occur.
-Views are created for all intervals and by default, script refresh all views.
-You can specify which views to refresh with ``depth`` parameter. Options are: ``day``, ``week``, ``month``.
+Along with migrations few analytics views are created. These are managed by :ref:`refres-analytic-views-cli`,
+and should be executed by schedule.
 
 Requirements
 ------------
@@ -65,13 +66,19 @@ With Docker
 
   .. dropdown:: ``docker-compose.yml``
 
-      .. literalinclude:: ../../../docker-compose.yml
-          :emphasize-lines: 1-33,123
+    .. literalinclude:: ../../../docker-compose.yml
+        :emphasize-lines: 1-33,123
 
   .. dropdown:: ``.env.docker``
 
-      .. literalinclude:: ../../../.env.docker
-          :emphasize-lines: 1-5,23
+    .. literalinclude:: ../../../.env.docker
+        :emphasize-lines: 1-5,23
+
+* Create partitions:
+
+  .. code:: console
+
+    $ docker exec data-rentgen-server-1 "python -m data_rentgen.db.scripts.create_partitions"
 
 * Add partitions creation script to crontab:
 
@@ -83,13 +90,13 @@ With Docker
 
     0 0 * * * docker exec data-rentgen-server-1 "python -m data_rentgen.db.scripts.create_partitions"
 
-* Refresh analytic views:
+* Create analytic views:
 
   .. code:: console
 
     $ docker exec data-rentgen-server-1 "python -m data_rentgen.db.scripts.refresh_analytic_views"
 
-* Add analytic views refresh script to crontab, to run every day:
+* Add analytic views refresh script to crontab:
 
   .. code:: console
 
@@ -137,9 +144,6 @@ Without Docker
 
     $ python -m data_rentgen.db.migrations upgrade head
 
-  This is a thin wrapper around `alembic cli <https://alembic.sqlalchemy.org/en/latest/tutorial.html#running-our-first-migration>`_,
-  options and commands are just the same.
-
   .. note::
 
       This command should be executed after each upgrade to new Data.Rentgen version.
@@ -167,7 +171,7 @@ Without Docker
 
     $ python -m data_rentgen.db.scripts.refresh_analytic_views
 
-* Add analytic views refresh script to crontab, to run every day:
+* Add analytic views refresh script to crontab:
 
   .. code:: console
 
@@ -178,8 +182,6 @@ Without Docker
     # read settings from .env file, and run script using a specific venv with all required dependencies
     0 0 * * * /bin/bash -c "source /some/.env && /some/.venv/bin/python -m data_rentgen.db.scripts.refresh_analytic_views"
 
-
-
 See also
 --------
 
@@ -188,5 +190,5 @@ See also
 
     configuration
     partitions_cli
-    views_cli
+    analytic_views_cli
     structure
