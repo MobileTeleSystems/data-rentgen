@@ -152,33 +152,34 @@ Database structure
     address ||--o{ location
 
     dataset ||--o{ location
+    job ||--o{ location
 
-    DatasetSymlink "from_dataset_id" ||--o{ Dataset
-    DatasetSymlink "to_dataset_id" ||--o{ Dataset
+    dataset_symlink "from_dataset_id" ||--o{ dataset
+    dataset_symlink "to_dataset_id" ||--o{ dataset
 
-    Run ||--o{ Job
-    Run "started_by_user_id" ||--o{ User
-    Run "parent_run_id" |o--o{ Run
+    run ||--o{ job
+    run "started_by_user_id" ||--o{ user
+    run "parent_run_id" |o--o{ run
 
-    Operation ||--o{ Run
+    operation ||--o{ run
 
-    Input ||--o{ Operation
-    Input ||--o{ Run
-    Input ||--o{ Job
-    Input ||--o{ Dataset
-    Input |o--o{ Schema
+    input ||--o{ operation
+    input ||--o{ run
+    input ||--o{ job
+    input ||--o{ dataset
+    input |o--o{ schema
 
-    Output ||--o{ Operation
-    Output ||--o{ Run
-    Output ||--o{ Job
-    Output ||--o{ Dataset
-    Output |o--o{ Schema
+    output ||--o{ operation
+    output ||--o{ run
+    output ||--o{ job
+    output ||--o{ dataset
+    output |o--o{ schema
 
-    ColumnLineage ||--o{ Operation
-    ColumnLineage ||--o{ Run
-    ColumnLineage ||--o{ Job
-    ColumnLineage "source_dataset_id" ||--o{ Dataset
-    ColumnLineage "target_dataset_id" ||--o{ Dataset
-    ColumnLineage ||--o{ DatasetColumnRelation
+    column_lineage ||--o{ operation
+    column_lineage ||--o{ run
+    column_lineage ||--o{ job
+    column_lineage "source_dataset_id" ||--o{ dataset
+    column_lineage "target_dataset_id" ||--o{ dataset
+    column_lineage ||--o{ dataset_column_relation
 
     @enduml
