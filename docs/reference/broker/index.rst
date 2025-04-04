@@ -3,7 +3,7 @@
 Message Broker
 ==============
 
-Message broker is component used by OpenLineage to store data, and then read by :ref:`consumer` in batches.
+Message broker is component used by OpenLineage to store data, and then read by :ref:`message-consumer` in batches.
 
 Currently, Data.Rentgen supports only `Apache Kafka <https://kafka.apache.org/>`_ as message broker.
 
