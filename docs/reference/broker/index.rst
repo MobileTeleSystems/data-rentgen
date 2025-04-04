@@ -3,7 +3,9 @@
 Message Broker
 ==============
 
-Currently, Data.Rentgen supports only `Apache Kafka <https://kafka.apache.org/>`_ as message broker for raw OpenLineage events.
+Message broker is component used by OpenLineage to store data, and then read by :ref:`consumer` in batches.
+
+Currently, Data.Rentgen supports only `Apache Kafka <https://kafka.apache.org/>`_ as message broker.
 
 Requirements
 ------------
@@ -22,7 +24,7 @@ With Docker
 
   .. code:: console
 
-      $ docker compose --profile broker up -d
+      $ docker compose --profile broker up -d --wait
 
   ``docker-compose`` will download Apache Kafka image, create container and volume, and then start container.
 
@@ -42,4 +44,4 @@ With Docker
 Without Docker
 ^^^^^^^^^^^^^^
 
-Please follow `Apacke Kafka installation instruction <https://kafka.apache.org/quickstart#quickstart_startserver>`_.
+Please follow `Apache Kafka installation instruction <https://kafka.apache.org/quickstart#quickstart_startserver>`_.

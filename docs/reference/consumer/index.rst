@@ -18,7 +18,7 @@ With docker
 
   .. code:: console
 
-      $ docker compose --profile consumer up -d
+      $ docker compose --profile consumer up -d --wait
 
   ``docker-compose`` will download all necessary images, create containers, and then start consumer process.
 

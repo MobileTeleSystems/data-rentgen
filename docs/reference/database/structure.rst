@@ -7,23 +7,23 @@ Database structure
 
 .. plantuml::
 
-    @startumlc
+    @startuml
     title Database structure
 
-    entity User {
+    entity user {
         * id: bigint
         ----
         * name: varchar(256)
     }
 
-    entity Address {
+    entity address {
         * id: bigint
         ----
         * location_id: bigint <<FK>>
         * url: varchar(256)
     }
 
-    entity Location {
+    entity location {
         * id: bigint
         ----
         * type: varchar(32)
@@ -32,7 +32,7 @@ Database structure
         search_vector: tsvector
     }
 
-    entity Dataset {
+    entity dataset {
         * id: bigint
         ----
         * location_id: bigint <<FK>>
@@ -41,7 +41,7 @@ Database structure
         search_vector: tsvector
     }
 
-    entity DatasetSymlink {
+    entity dataset_symlink {
         * id: bigint
         ----
         * from_dataset_id: bigint <<FK>>
@@ -49,7 +49,7 @@ Database structure
         type: varchar(32)
     }
 
-    entity Job {
+    entity job {
         * id: bigint
         ----
         * location_id: bigint <<FK>>
@@ -58,7 +58,7 @@ Database structure
         search_vector: tsvector
     }
 
-    entity Run {
+    entity run {
         * id: uuid(v7)
         * created_at: timestamptz
         ----
@@ -77,7 +77,7 @@ Database structure
         search_vector: tsvector
     }
 
-    entity Operation {
+    entity operation {
         * id: uuid(v7)
         * created_at: timestamptz
         ----
@@ -92,14 +92,14 @@ Database structure
         ended_at: timestamptz null
     }
 
-    entity Schema {
+    entity schema {
         * id: bigint
         ----
         * digest: uuid(v5)
         fields: json
     }
 
-    entity Input {
+    entity input {
         * id: uuid(v7)
         * created_at: timestamptz
         ----
@@ -113,7 +113,7 @@ Database structure
         num_files: bigint
     }
 
-    entity Output {
+    entity output {
         * id: uuid(v7)
         * created_at: timestamptz
         ----
@@ -128,7 +128,7 @@ Database structure
         num_files: bigint
     }
 
-    entity DatasetColumnRelation {
+    entity dataset_column_relation {
         * id: bigint
         ----
         * fingerprint: uuid(v5)
@@ -137,7 +137,7 @@ Database structure
         type: smallint
     }
 
-    entity ColumnLineage {
+    entity column_lineage {
         * id: uuid(v7)
         * created_at: timestamptz
         ----
@@ -149,9 +149,9 @@ Database structure
         * fingerprint: uuid(v5)
     }
 
-    Address ||--o{ Location
+    address ||--o{ location
 
-    Dataset ||--o{ Location
+    dataset ||--o{ location
 
     DatasetSymlink "from_dataset_id" ||--o{ Dataset
     DatasetSymlink "to_dataset_id" ||--o{ Dataset

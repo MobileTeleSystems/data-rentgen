@@ -19,7 +19,7 @@ With Docker
 
   .. code:: console
 
-    $ docker compose --profile frontend up -d
+    $ docker compose --profile frontend up -d --wait
 
   ``docker-compose`` will download Data.Rentgen UI image, create containers, and then start them.
 

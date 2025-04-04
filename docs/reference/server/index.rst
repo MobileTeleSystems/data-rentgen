@@ -19,7 +19,7 @@ With docker
 
   .. code:: console
 
-    $ docker compose --profile server up -d
+    $ docker compose --profile server up -d --wait
 
   ``docker-compose`` will download all necessary images, create containers, and then start the server.
 
