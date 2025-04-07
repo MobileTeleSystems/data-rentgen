@@ -6,19 +6,19 @@
     :alt: Data.Rentgen logo
     :target: https://github.com/MobileTeleSystems/data-rentgen
 
-|Repo Status| |PyPI| |PyPI License| |PyPI Python Version| |Docker image| |Documentation|
+|Repo Status| |Docker image| |PyPI| |PyPI License| |PyPI Python Version| |Documentation|
 |Build Status| |Coverage| |pre-commit.ci|
 
 .. |Repo Status| image:: https://www.repostatus.org/badges/latest/wip.svg
     :target: https://www.repostatus.org/#wip
+.. |Docker image| image:: https://img.shields.io/docker/v/mtsrus/data-rentgen?sort=semver&label=docker
+    :target: https://hub.docker.com/r/mtsrus/data-rentgen
 .. |PyPI| image:: https://img.shields.io/pypi/v/data-rentgen
     :target: https://pypi.org/project/data-rentgen/
 .. |PyPI License| image:: https://img.shields.io/pypi/l/data-rentgen.svg
     :target: https://github.com/MobileTeleSystems/data-rentgen/blob/develop/LICENSE.txt
 .. |PyPI Python Version| image:: https://img.shields.io/pypi/pyversions/data-rentgen.svg
     :target: https://badge.fury.io/py/data-rentgen
-.. |Docker image| image:: https://img.shields.io/docker/v/mtsrus/data-rentgen?sort=semver&label=docker
-    :target: https://hub.docker.com/r/mtsrus/data-rentgen
 .. |Documentation| image:: https://readthedocs.org/projects/data-rentgen/badge/?version=stable
     :target: https://data-rentgen.readthedocs.io/
 .. |Build Status| image:: https://github.com/MobileTeleSystems/data-rentgen/workflows/Tests/badge.svg
