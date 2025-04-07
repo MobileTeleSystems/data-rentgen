@@ -109,7 +109,7 @@ prod-build: ##@Application Build docker image
 prod: ##@Application Run production containers
 	docker compose -f docker-compose.yml --profile all up -d $(ARGS)
 
-prod-stop: ##@Application Stop production containers
+prod-cleanup: ##@Application Stop production containers
 	docker compose -f docker-compose.yml --profile all down --remove-orphans $(ARGS)
 
 

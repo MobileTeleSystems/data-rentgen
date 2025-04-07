@@ -45,7 +45,7 @@ services:
       PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus-metrics
     # tmpfs dir is cleaned up each container restart
     tmpfs:
-      - /tmp/prometheus-metrics
+      - /tmp/prometheus-metrics:mode=1777
     healthcheck:
       test: [CMD-SHELL, curl -f http://localhost:8000/monitoring/ping]
       interval: 30s
@@ -106,12 +106,6 @@ services:
     env_file: .env.docker
     ports:
       - 3000:3000
-    healthcheck:
-      test: [CMD-SHELL, curl -f http://localhost:3000/]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
     depends_on:
       server:
         condition: service_healthy
