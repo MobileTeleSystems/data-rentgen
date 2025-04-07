@@ -32,7 +32,7 @@ class ConsumerApplicationSettings(BaseSettings):
         DATA_RENTGEN__DATABASE__URL=postgresql+asyncpg://postgres:postgres@localhost:5432/data_rentgen
 
         # same as settings.kafka.bootstrap_servers = ["kafka1:9092", "kafka2:9092"]
-        DATA_RENTGEN__KAFKA__BOOTSTRAP_SERVERS=kafka1:9092,kafka2:9092
+        DATA_RENTGEN__KAFKA__BOOTSTRAP_SERVERS="kafka1:9092,kafka2:9092"
 
         # same as settings.logging.preset = "json"
         DATA_RENTGEN__LOGGING__PRESET=json
