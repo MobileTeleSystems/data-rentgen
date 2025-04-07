@@ -67,6 +67,11 @@ jobs:
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1
 
+      - name: Generate SBOM
+        run: |
+          pip install cyclonedx-bom
+          cyclonedx-py poetry --extras server,consumer,postgres,gssapi --without dev,test,docs > sbom.spdx.json
+
       - name: Get changelog
         run: |
           cat docs/changelog/$GITHUB_REF_NAME.rst > changelog.rst
@@ -125,3 +130,4 @@ jobs:
             dist/*.tar.gz
             dist/*.whl
             docs/_static/openapi.json
+            sbom.spdx.json
