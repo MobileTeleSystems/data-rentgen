@@ -19,8 +19,8 @@ build:
     post_install:
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m poetry install --no-root --extras server --extras consumer --extras postgres --with docs --without dev,test
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m poetry show -v
-      - python -m pip list -v
-      - make docs-openapi
+      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m pip list -v
+      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH make docs-openapi
 
 sphinx:
   configuration: docs/conf.py
