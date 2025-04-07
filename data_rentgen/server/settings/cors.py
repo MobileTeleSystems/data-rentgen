@@ -26,20 +26,20 @@ class CORSSettings(BaseModel):
     .. code-block:: bash
 
         DATA_RENTGEN__SERVER__CORS__ENABLED=True
-        DATA_RENTGEN__SERVER__CORS__ALLOW_ORIGINS=*
-        DATA_RENTGEN__SERVER__CORS__ALLOW_METHODS=*
-        DATA_RENTGEN__SERVER__CORS__ALLOW_HEADERS=*
-        DATA_RENTGEN__SERVER__CORS__EXPOSE_HEADERS=X-Request-ID
+        DATA_RENTGEN__SERVER__CORS__ALLOW_ORIGINS="*"
+        DATA_RENTGEN__SERVER__CORS__ALLOW_METHODS="*"
+        DATA_RENTGEN__SERVER__CORS__ALLOW_HEADERS="*"
+        DATA_RENTGEN__SERVER__CORS__EXPOSE_HEADERS="X-Request-ID,Location,Access-Control-Allow-Credentials"
 
     For production environment:
 
     .. code-block:: bash
 
         DATA_RENTGEN__SERVER__CORS__ENABLED=True
-        DATA_RENTGEN__SERVER__CORS__ALLOW_ORIGINS=production.example.com
-        DATA_RENTGEN__SERVER__CORS__ALLOW_METHODS=GET
-        DATA_RENTGEN__SERVER__CORS__ALLOW_HEADERS=X-Request-ID,X-Request-With
-        DATA_RENTGEN__SERVER__CORS__EXPOSE_HEADERS=X-Request-ID
+        DATA_RENTGEN__SERVER__CORS__ALLOW_ORIGINS="production.example.com"
+        DATA_RENTGEN__SERVER__CORS__ALLOW_METHODS="GET"
+        DATA_RENTGEN__SERVER__CORS__ALLOW_HEADERS="X-Request-ID,X-Request-With"
+        DATA_RENTGEN__SERVER__CORS__EXPOSE_HEADERS="X-Request-ID"
         # custom option passed directly to middleware
         DATA_RENTGEN__SERVER__CORS__MAX_AGE=600
     """
