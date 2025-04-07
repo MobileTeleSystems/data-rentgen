@@ -30,6 +30,8 @@ ENV DATA_RENTGEN__SERVER__OPENAPI__SWAGGER__JS_URL=/static/swagger/swagger-ui-bu
     DATA_RENTGEN__SERVER__OPENAPI__REDOC__JS_URL=/static/redoc/redoc.standalone.js \
     DATA_RENTGEN__SERVER__STATIC_FILES__DIRECTORY=/app/data_rentgen/server/static
 
+RUN chmod +r -R /app/data_rentgen/server/static
+
 
 FROM base AS builder
 
@@ -45,7 +47,8 @@ RUN apt-get update \
 ENV POETRY_VIRTUALENVS_IN_PROJECT=1 \
     POETRY_VIRTUALENVS_CREATE=1
 
-RUN pip install poetry
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install poetry
 
 COPY ./pyproject.toml ./poetry.lock* ./
 RUN --mount=type=cache,target=/root/.cache/pypoetry \
@@ -62,3 +65,8 @@ FROM base AS prod
 COPY --from=builder /app/.venv/ /app/.venv/
 COPY ./data_rentgen/ /app/data_rentgen/
 RUN python -m compileall data_rentgen
+
+# Do not run production as root, to improve security.
+# Also user does not own anything inside the image, including venv and source code.
+RUN useradd data-rentgen
+USER data-rentgen
