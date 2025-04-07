@@ -6,3 +6,4 @@ Improvements
 
 - Reduce image size x2
 - Change docker image user from ``root`` to ``data-rentgen``, to improve security.
+- SBOM file is generated on release.

@@ -20,7 +20,8 @@ build:
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m poetry install --no-root --extras server --extras consumer --extras postgres --with docs --without dev,test
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m poetry show -v
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m pip list -v
-      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH make docs-openapi
+      - source .env.local
+      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m data_rentgen.server.scripts.export_openapi_schema docs/_static/openapi.json
 
 sphinx:
   configuration: docs/conf.py

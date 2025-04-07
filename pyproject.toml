@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "data-rentgen"
-version = "0.2.1"
+version = "0.2.2"
 license = "Apache-2.0"
 description = "Data.Rentgen REST API + Kafka consumer"
 authors = ["DataOps.ETL <onetools@mts.ru>"]
