@@ -127,3 +127,6 @@ docs-cleanup: ##@Docs Cleanup docs
 	$(MAKE) -C docs clean
 
 docs-fresh: docs-cleanup docs-build ##@Docs Cleanup & build docs
+
+docs-openapi: ##@Docs Generate OpenAPI schema
+	python -m data_rentgen.server.scripts.export_openapi_schema docs/_static/openapi.json

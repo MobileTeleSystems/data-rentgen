@@ -1,10 +1,12 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+import json
 import textwrap
 from enum import Enum
+from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from data_rentgen.consumer.settings.security import KafkaSecurityAnonymousSettings, KafkaSecuritySettings
 
@@ -77,3 +79,12 @@ class KafkaSettings(BaseModel):
             """,
         ),
     )
+
+    @field_validator("bootstrap_servers", mode="before")
+    @classmethod
+    def _validate_bootstrap_servers(cls, value: Any):
+        if not isinstance(value, str):
+            return value
+        if "[" in value:
+            return json.loads(value)
+        return [item.strip() for item in value.split(",")]
