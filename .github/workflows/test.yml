@@ -30,7 +30,7 @@ jobs:
       - name: Start containers
         run: |
           docker compose -f docker-compose.test.yml down -v --remove-orphans
-          docker compose -f docker-compose.test.yml up -d --wait --wait-timeout 30
+          docker compose -f docker-compose.test.yml up -d --wait --wait-timeout 60
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5
@@ -59,6 +59,13 @@ jobs:
           mkdir -p reports/
           make test-ci
 
+      - name: Dump DB logs on failure
+        if: failure()
+        uses: jwalton/gh-docker-logs@v2
+        with:
+          images: postgres
+          dest: ./logs
+
       - name: Upload Coverage Results
         uses: actions/upload-artifact@v4
         with:
@@ -72,6 +79,12 @@ jobs:
         run: |
           docker compose -f docker-compose.test.yml down -v --remove-orphans
 
+      - name: Upload DB logs
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: db-logs
+          path: logs/*
 
   all_done:
     name: Tests done
