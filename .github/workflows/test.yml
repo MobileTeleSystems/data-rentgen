@@ -30,7 +30,7 @@ jobs:
       - name: Start containers
         run: |
           docker compose -f docker-compose.test.yml down -v --remove-orphans
-          docker compose -f docker-compose.test.yml up --wait-timeout 5 -d
+          docker compose -f docker-compose.test.yml up -d --wait --wait-timeout 30
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5
@@ -76,6 +76,8 @@ jobs:
   all_done:
     name: Tests done
     runs-on: ubuntu-latest
+
+    if: always()
     needs: [tests]
 
     steps:
