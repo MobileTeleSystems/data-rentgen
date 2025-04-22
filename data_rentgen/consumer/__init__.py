@@ -11,6 +11,7 @@ from faststream import ContextRepo, FastStream
 from faststream._compat import ExceptionGroup
 from faststream.asgi import AsgiFastStream, AsgiResponse, get
 from faststream.kafka import KafkaBroker
+from faststream.kafka.publisher.asyncapi import AsyncAPIDefaultPublisher
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import data_rentgen
@@ -38,15 +39,21 @@ def broker_factory(settings: ConsumerApplicationSettings) -> KafkaBroker:
     )
 
     # register subscribers using settings
-    consumer_settings = settings.consumer.model_dump(exclude={"topics_list", "topics_pattern"})
-    broker.subscriber(
+    consumer_settings = settings.consumer.model_dump(exclude={"topics_list", "topics_pattern", "malformed_topic"})
+
+    subscriber = broker.subscriber(
         *settings.consumer.topics_list,
         pattern=settings.consumer.topics_pattern,
         **consumer_settings,
         batch=True,
-    )(runs_events_subscriber)
+    )
+    publisher = broker.publisher(settings.producer.malformed_topic)
+
+    # perform registration
+    subscriber(runs_events_subscriber)
 
     dependency_provider.override(AsyncSession, create_session_factory(settings.database))
+    dependency_provider.override(AsyncAPIDefaultPublisher, lambda: publisher)
     return broker
 
 

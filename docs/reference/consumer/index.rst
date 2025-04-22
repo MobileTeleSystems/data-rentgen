@@ -3,7 +3,8 @@
 Message Consumer
 ================
 
-Data.Rentgen fetches messages from a :ref:`message-broker` using a `FastStream <https://faststream.airt.ai>`_ based consumer, parses incoming messages, and creates all parsed entities in the :ref:`database`.
+Data.Rentgen fetches messages from a :ref:`message-broker` using a `FastStream <https://faststream.airt.ai>`_ based consumer, parses incoming messages,
+and creates all parsed entities in the :ref:`database`. Malformed messages are send back to broker, to different topic.
 
 Install & run
 -------------

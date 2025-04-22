@@ -6,6 +6,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from data_rentgen.consumer.settings.consumer import ConsumerSettings
 from data_rentgen.consumer.settings.kafka import KafkaSettings
+from data_rentgen.consumer.settings.producer import ProducerSettings
 from data_rentgen.db.settings import DatabaseSettings
 from data_rentgen.logging.settings import LoggingSettings
 
@@ -49,6 +50,10 @@ class ConsumerApplicationSettings(BaseSettings):
     consumer: ConsumerSettings = Field(
         default_factory=ConsumerSettings,
         description=":ref:`Consumer settings <configuration-consumer-specific>`",
+    )
+    producer: ProducerSettings = Field(
+        default_factory=ProducerSettings,
+        description=":ref:`Producer settings <configuration-producer-specific>`",
     )
 
     model_config = SettingsConfigDict(env_prefix="DATA_RENTGEN__", env_nested_delimiter="__", extra="forbid")

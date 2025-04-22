@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "data-rentgen"
-version = "0.2.2"
+version = "0.3.0"
 license = "Apache-2.0"
 description = "Data.Rentgen REST API + Kafka consumer"
 authors = ["DataOps.ETL <onetools@mts.ru>"]
@@ -246,6 +246,10 @@ docstring-quotes = "double"
 
 [[tool.mypy.overrides]]
 module=["sqlalchemy_utils.*"]
+follow_untyped_imports = true
+
+[[tool.mypy.overrides]]
+module=["aiokafka.*"]
 follow_untyped_imports = true
 
 [tool.darglint]

@@ -3,10 +3,17 @@
 
 from __future__ import annotations
 
-from faststream import Depends, Logger
+import asyncio
+from typing import cast
+
+from aiokafka import ConsumerRecord
+from faststream import Depends, Logger, NoCast
+from faststream.kafka import KafkaMessage
+from faststream.kafka.publisher.asyncapi import AsyncAPIDefaultPublisher
+from pydantic import TypeAdapter
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.consumer.extractors import BatchExtractionResult, extract_batch
+from data_rentgen.consumer.extractors import BatchExtractionResult, BatchExtractor
 from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
 from data_rentgen.dependencies import Stub
 from data_rentgen.services.uow import UnitOfWork
@@ -15,32 +22,74 @@ __all__ = [
     "runs_events_subscriber",
 ]
 
-
-def get_unit_of_work(session: AsyncSession = Depends(Stub(AsyncSession))) -> UnitOfWork:
-    return UnitOfWork(session)
+OpenLineageRunEventAdapter = TypeAdapter(OpenLineageRunEvent)
 
 
 async def runs_events_subscriber(
-    events: list[OpenLineageRunEvent],
+    _events: NoCast[list[OpenLineageRunEvent]],
+    batch: KafkaMessage,
     logger: Logger,
-    unit_of_work: UnitOfWork = Depends(get_unit_of_work),
+    publisher: AsyncAPIDefaultPublisher = Depends(Stub(AsyncAPIDefaultPublisher)),
+    session: AsyncSession = Depends(Stub(AsyncSession)),
 ):
-    logger.info("Got %d events", len(events))
-    extracted = extract_batch(events)
-    logger.info("Extracted: %r", extracted)
+    logger.info("Extracting events")
+    parsed, malformed = await extract_events(batch, logger)
 
     logger.info("Saving to database")
-    await save_to_db(extracted, unit_of_work, logger)
+    await save_to_db(parsed, session, logger)
     logger.info("Saved successfully")
+
+    if malformed:
+        logger.warning("Malformed messages: %d", len(malformed))
+        await report_malformed(batch, malformed, publisher)
+
+
+async def extract_events(
+    raw_data: KafkaMessage,
+    logger: Logger,
+    await_every: int = 50,
+) -> tuple[BatchExtractionResult, list[ConsumerRecord]]:
+    messages = cast(tuple[ConsumerRecord], raw_data.raw_message)  # https://github.com/airtai/faststream/issues/2102
+    total_bytes = sum(len(message.value or "") for message in messages)
+    logger.info("Got %d messages (%dKiB)", len(messages), total_bytes / 1024)
+
+    extractor = BatchExtractor()
+    malformed: list[ConsumerRecord] = []
+
+    for i, message in enumerate(messages):
+        try:
+            if message.value is None:
+                msg = "Message value cannot be empty"
+                raise ValueError(msg)  # noqa: TRY301
+
+            event = OpenLineageRunEventAdapter.validate_json(message.value)
+            extractor.add_events([event])
+        except (ValueError, TypeError):
+            logger.error(  # noqa: TRY400
+                "Failed to parse message: ConsumerRecord(topic=%r, partition=%d, offset=%d)",
+                message.topic,
+                message.partition,
+                message.offset,
+            )
+            malformed.append(message)
+
+        if await_every and i >= await_every and i % await_every == 0:
+            # OpenLineage models are heavy, parsing is CPU bound task which may take some time.
+            # Blocking event loop is not a good idea, so we need to await sometimes,
+            await asyncio.sleep(0)
+
+    return extractor.result, malformed
 
 
 async def save_to_db(
     data: BatchExtractionResult,
-    unit_of_work: UnitOfWork,
+    session: AsyncSession,
     logger: Logger,
 ) -> None:
     # To avoid deadlocks when parallel consumer instances insert/update the same row,
     # commit changes for each row instead of committing the whole batch. Yes, this cloud be slow.
+
+    unit_of_work = UnitOfWork(session)
 
     logger.debug("Creating locations")
     for location_dto in data.locations():
@@ -108,3 +157,25 @@ async def save_to_db(
 
         logger.debug("Creating column lineage")
         await unit_of_work.column_lineage.create_bulk(column_lineage)
+
+
+async def report_malformed(
+    batch: KafkaMessage,
+    messages: list[ConsumerRecord],
+    publisher: AsyncAPIDefaultPublisher,
+):
+    # Return malformed messages back to the broker
+    for message in messages:
+        headers: dict[str, str] = {}
+        if message.headers:
+            headers = {key: value.decode("utf-8") for key, value in message.headers}
+
+        await publisher.publish(
+            message.value,
+            key=message.key,
+            partition=message.partition,
+            timestamp_ms=message.timestamp,
+            headers=headers or None,
+            reply_to=batch.message_id,
+            correlation_id=batch.correlation_id,
+        )

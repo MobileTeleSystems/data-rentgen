@@ -1,0 +1,4 @@
+Make consumer message parsing more robust.
+
+Previously malformed OpenLineage events (JSON) lead to skipping the entire message batch read from Kafka.
+Now messages are parsed separately, and malformed ones are send back to ``input.runs__malformed`` Kafka topic.

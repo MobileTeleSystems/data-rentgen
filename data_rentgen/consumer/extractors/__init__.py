@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from data_rentgen.consumer.extractors.batch import BatchExtractionResult, extract_batch
+from data_rentgen.consumer.extractors.batch_extraction_result import BatchExtractionResult
+from data_rentgen.consumer.extractors.batch_extractor import BatchExtractor
 from data_rentgen.consumer.extractors.column_lineage import extract_column_lineage
 from data_rentgen.consumer.extractors.dataset import (
     connect_dataset_with_symlinks,
@@ -17,8 +18,8 @@ from data_rentgen.consumer.extractors.schema import extract_schema
 
 __all__ = [
     "BatchExtractionResult",
+    "BatchExtractor",
     "connect_dataset_with_symlinks",
-    "extract_batch",
     "extract_column_lineage",
     "extract_dataset",
     "extract_dataset_and_symlinks",

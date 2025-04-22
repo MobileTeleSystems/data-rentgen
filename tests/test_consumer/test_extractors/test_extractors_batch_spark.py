@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import pytest
 from uuid6 import UUID
 
-from data_rentgen.consumer.extractors.batch import extract_batch
+from data_rentgen.consumer.extractors.batch_extractor import BatchExtractor
 from data_rentgen.consumer.openlineage.dataset import (
     OpenLineageInputDataset,
     OpenLineageOutputDataset,
@@ -584,7 +584,7 @@ def test_extractors_extract_batch_spark(
         spark_app_run_event_stop,
     ]
 
-    extracted = extract_batch(input_transformation(events))
+    extracted = BatchExtractor().add_events(input_transformation(events))
 
     assert extracted.locations() == [
         extracted_spark_location,
@@ -615,7 +615,7 @@ def test_extractors_extract_batch_spark(
     assert extracted.outputs() == [extracted_hive_output]
 
 
-def test_extract_batch_hdfs_strip_partitions(extracted_hdfs_dataset: DatasetDTO):
+def test_extractors_extract_batch_spark_strip_hdfs_partitions(extracted_hdfs_dataset: DatasetDTO):
     """
     There is two datasets name in event. They should be union into one, excluding partition.
     """
@@ -662,5 +662,5 @@ def test_extract_batch_hdfs_strip_partitions(extracted_hdfs_dataset: DatasetDTO)
         ],
     )
 
-    extracted = extract_batch([event])
+    extracted = BatchExtractor().add_events([event])
     assert extracted.datasets() == [extracted_hdfs_dataset]
