@@ -4,13 +4,6 @@ from __future__ import annotations
 
 from typing import TypeVar
 
-from data_rentgen.consumer.extractors.column_lineage import extract_column_lineage
-from data_rentgen.consumer.extractors.input import extract_input
-from data_rentgen.consumer.extractors.operation import extract_operation
-from data_rentgen.consumer.extractors.output import extract_output
-from data_rentgen.consumer.extractors.run import extract_run
-from data_rentgen.consumer.openlineage.job_facets.job_type import OpenLineageJobType
-from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
 from data_rentgen.dto import (
     ColumnLineageDTO,
     DatasetDTO,
@@ -252,44 +245,3 @@ class BatchExtractionResult:
 
     def users(self) -> list[UserDTO]:
         return list(map(self.get_user, self._users))
-
-
-def extract_batch(events: list[OpenLineageRunEvent]) -> BatchExtractionResult:
-    result = BatchExtractionResult()
-    dataset_cache: dict[tuple[str, str], DatasetDTO] = {}
-
-    for event in events:
-        if event.job.facets.jobType and event.job.facets.jobType.jobType == OpenLineageJobType.JOB:
-            operation = extract_operation(event)
-            result.add_operation(operation)
-
-            for input_dataset in event.inputs:
-                input_dto, symlink_dtos = extract_input(operation, input_dataset)
-
-                result.add_input(input_dto)
-                dataset_dto_cache_key = (input_dataset.namespace, input_dataset.name)
-                dataset_cache[dataset_dto_cache_key] = result.get_dataset(input_dto.dataset.unique_key)
-
-                for symlink_dto in symlink_dtos:
-                    result.add_dataset_symlink(symlink_dto)
-
-            for output_dataset in event.outputs:
-                output_dto, symlink_dtos = extract_output(operation, output_dataset)
-
-                result.add_output(output_dto)
-                dataset_dto_cache_key = (output_dataset.namespace, output_dataset.name)
-                dataset_cache[dataset_dto_cache_key] = result.get_dataset(output_dto.dataset.unique_key)
-
-                for symlink_dto in symlink_dtos:
-                    result.add_dataset_symlink(symlink_dto)
-
-            for dataset in event.inputs + event.outputs:
-                column_lineage = extract_column_lineage(operation, dataset, dataset_cache)
-                for item in column_lineage:
-                    result.add_column_lineage(item)
-
-        else:
-            run = extract_run(event)
-            result.add_run(run)
-
-    return result

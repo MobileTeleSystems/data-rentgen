@@ -1,7 +1,7 @@
 import pytest
 from uuid6 import UUID
 
-from data_rentgen.consumer.extractors import extract_batch
+from data_rentgen.consumer.extractors.batch_extractor import BatchExtractor
 from data_rentgen.consumer.extractors.column_lineage import (
     extract_column_lineage,
     extract_dataset_column_relation_type,
@@ -259,7 +259,8 @@ def test_extractors_extract_column_lineage_operations_with_same_lineage(
         second_operation_id,
         column_lineage_facet,
     )
-    extracted = extract_batch([first_event, second_event])
+
+    extracted = BatchExtractor().add_events([first_event, second_event])
     column_lineage = extracted.column_lineage()
 
     assert column_lineage == [
@@ -360,7 +361,7 @@ def test_extractors_extract_column_lineage_operations_with_transformation_on_sam
         second_operation_id,
         column_lineage_second_facet,
     )
-    extracted = extract_batch([first_event, second_event])
+    extracted = BatchExtractor().add_events([first_event, second_event])
     column_lineage = extracted.column_lineage()
 
     assert column_lineage == [

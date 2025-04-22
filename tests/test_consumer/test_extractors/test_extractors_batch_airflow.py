@@ -4,7 +4,7 @@ import pytest
 from packaging.version import Version
 from uuid6 import UUID
 
-from data_rentgen.consumer.extractors.batch import extract_batch
+from data_rentgen.consumer.extractors import BatchExtractor
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
@@ -298,7 +298,7 @@ def test_extractors_extract_batch_airflow(
         airflow_dag_run_event_stop,
     ]
 
-    extracted = extract_batch(input_transformation(events))
+    extracted = BatchExtractor().add_events(input_transformation(events))
 
     assert extracted.locations() == [extracted_airflow_location]
     assert extracted.jobs() == [extracted_airflow_dag_job, extracted_airflow_task_job]

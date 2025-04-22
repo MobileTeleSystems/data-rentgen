@@ -10,6 +10,7 @@ Consumer configuration
 
     kafka
     consumer-specific
+    producer-specific
     logging
 
 

@@ -19,6 +19,7 @@ class ConsumerSettings(BaseModel):
     .. code-block:: bash
 
         DATA_RENTGEN__CONSUMER__TOPICS_LIST=["input.runs"]
+        DATA_RENTGEN__CONSUMER__MALFOMED_TOPIC="input.runs:malformed"
         DATA_RENTGEN__CONSUMER__GROUP_ID=data-rentgen
         DATA_RENTGEN__CONSUMER__FETCH_MAX_WAIT_MS=5000
         DATA_RENTGEN__CONSUMER__MAX_PARTITION_FETCH_BYTES=5MiB
