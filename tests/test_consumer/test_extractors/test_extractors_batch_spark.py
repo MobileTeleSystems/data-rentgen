@@ -54,6 +54,122 @@ from data_rentgen.dto import (
 
 
 @pytest.fixture
+def spark_inputs() -> list[OpenLineageInputDataset]:
+    return [
+        OpenLineageInputDataset(
+            namespace="postgres://192.168.1.1:5432",
+            name="mydb.myschema.mytable",
+            facets=OpenLineageDatasetFacets(
+                schema=OpenLineageSchemaDatasetFacet(
+                    fields=[
+                        OpenLineageSchemaField(
+                            name="dt",
+                            type="timestamp",
+                            description="Business date",
+                        ),
+                        OpenLineageSchemaField(
+                            name="customer_id",
+                            type="decimal(20,0)",
+                        ),
+                        OpenLineageSchemaField(name="total_spent", type="float"),
+                        OpenLineageSchemaField(
+                            name="phones",
+                            type="array",
+                            fields=[
+                                OpenLineageSchemaField(
+                                    name="_element",
+                                    type="string",
+                                ),
+                            ],
+                        ),
+                        OpenLineageSchemaField(
+                            name="address",
+                            type="struct",
+                            fields=[
+                                OpenLineageSchemaField(
+                                    name="street",
+                                    type="string",
+                                ),
+                                OpenLineageSchemaField(name="city", type="string"),
+                                OpenLineageSchemaField(name="state", type="string"),
+                                OpenLineageSchemaField(name="zip", type="string"),
+                            ],
+                        ),
+                    ],
+                ),
+            ),
+        ),
+    ]
+
+
+@pytest.fixture
+def spark_outputs() -> list[OpenLineageOutputDataset]:
+    return [
+        OpenLineageOutputDataset(
+            namespace="hdfs://test-hadoop:9820",
+            name="/user/hive/warehouse/mydb.db/mytable",
+            facets=OpenLineageDatasetFacets(
+                lifecycleStateChange=OpenLineageLifecycleStateChangeDatasetFacet(
+                    lifecycleStateChange=OpenLineageDatasetLifecycleStateChange.CREATE,
+                ),
+                symlinks=OpenLineageSymlinksDatasetFacet(
+                    identifiers=[
+                        OpenLineageSymlinkIdentifier(
+                            namespace="hive://test-hadoop:9083",
+                            name="mydb.mytable",
+                            type=OpenLineageSymlinkType.TABLE,
+                        ),
+                    ],
+                ),
+                schema=OpenLineageSchemaDatasetFacet(
+                    fields=[
+                        OpenLineageSchemaField(
+                            name="dt",
+                            type="timestamp",
+                            description="Business date",
+                        ),
+                        OpenLineageSchemaField(
+                            name="customer_id",
+                            type="decimal(20,0)",
+                        ),
+                        OpenLineageSchemaField(name="total_spent", type="float"),
+                        OpenLineageSchemaField(
+                            name="phones",
+                            type="array",
+                            fields=[
+                                OpenLineageSchemaField(
+                                    name="_element",
+                                    type="string",
+                                ),
+                            ],
+                        ),
+                        OpenLineageSchemaField(
+                            name="address",
+                            type="struct",
+                            fields=[
+                                OpenLineageSchemaField(
+                                    name="street",
+                                    type="string",
+                                ),
+                                OpenLineageSchemaField(name="city", type="string"),
+                                OpenLineageSchemaField(name="state", type="string"),
+                                OpenLineageSchemaField(name="zip", type="string"),
+                            ],
+                        ),
+                    ],
+                ),
+            ),
+            outputFacets=OpenLineageOutputDatasetFacets(
+                outputStatistics=OpenLineageOutputStatisticsOutputDatasetFacet(
+                    rowCount=1_000_000,
+                    size=1000 * 1024 * 1024,
+                ),
+            ),
+        ),
+    ]
+
+
+@pytest.fixture
 def spark_app_run_event_start() -> OpenLineageRunEvent:
     event_time = datetime(2024, 7, 5, 9, 4, 48, 794900, tzinfo=timezone.utc)
     run_id = UUID("01908224-8410-79a2-8de6-a769ad6944c9")
@@ -143,108 +259,6 @@ def spark_operation_run_event_start() -> OpenLineageRunEvent:
                 ),
             ),
         ),
-        inputs=[
-            OpenLineageInputDataset(
-                namespace="postgres://192.168.1.1:5432",
-                name="mydb.myschema.mytable",
-                facets=OpenLineageDatasetFacets(
-                    schema=OpenLineageSchemaDatasetFacet(
-                        fields=[
-                            OpenLineageSchemaField(
-                                name="dt",
-                                type="timestamp",
-                                description="Business date",
-                            ),
-                            OpenLineageSchemaField(
-                                name="customer_id",
-                                type="decimal(20,0)",
-                            ),
-                            OpenLineageSchemaField(name="total_spent", type="float"),
-                            OpenLineageSchemaField(
-                                name="phones",
-                                type="array",
-                                fields=[
-                                    OpenLineageSchemaField(
-                                        name="_element",
-                                        type="string",
-                                    ),
-                                ],
-                            ),
-                            OpenLineageSchemaField(
-                                name="address",
-                                type="struct",
-                                fields=[
-                                    OpenLineageSchemaField(
-                                        name="street",
-                                        type="string",
-                                    ),
-                                    OpenLineageSchemaField(name="city", type="string"),
-                                    OpenLineageSchemaField(name="state", type="string"),
-                                    OpenLineageSchemaField(name="zip", type="string"),
-                                ],
-                            ),
-                        ],
-                    ),
-                ),
-            ),
-        ],
-        outputs=[
-            OpenLineageOutputDataset(
-                namespace="hdfs://test-hadoop:9820",
-                name="/user/hive/warehouse/mydb.db/mytable",
-                facets=OpenLineageDatasetFacets(
-                    lifecycleStateChange=OpenLineageLifecycleStateChangeDatasetFacet(
-                        lifecycleStateChange=OpenLineageDatasetLifecycleStateChange.CREATE,
-                    ),
-                    symlinks=OpenLineageSymlinksDatasetFacet(
-                        identifiers=[
-                            OpenLineageSymlinkIdentifier(
-                                namespace="hive://test-hadoop:9083",
-                                name="mydb.mytable",
-                                type=OpenLineageSymlinkType.TABLE,
-                            ),
-                        ],
-                    ),
-                    schema=OpenLineageSchemaDatasetFacet(
-                        fields=[
-                            OpenLineageSchemaField(
-                                name="dt",
-                                type="timestamp",
-                                description="Business date",
-                            ),
-                            OpenLineageSchemaField(
-                                name="customer_id",
-                                type="decimal(20,0)",
-                            ),
-                            OpenLineageSchemaField(name="total_spent", type="float"),
-                            OpenLineageSchemaField(
-                                name="phones",
-                                type="array",
-                                fields=[
-                                    OpenLineageSchemaField(
-                                        name="_element",
-                                        type="string",
-                                    ),
-                                ],
-                            ),
-                            OpenLineageSchemaField(
-                                name="address",
-                                type="struct",
-                                fields=[
-                                    OpenLineageSchemaField(
-                                        name="street",
-                                        type="string",
-                                    ),
-                                    OpenLineageSchemaField(name="city", type="string"),
-                                    OpenLineageSchemaField(name="state", type="string"),
-                                    OpenLineageSchemaField(name="zip", type="string"),
-                                ],
-                            ),
-                        ],
-                    ),
-                ),
-            ),
-        ],
     )
 
 
@@ -281,114 +295,6 @@ def spark_operation_run_event_running() -> OpenLineageRunEvent:
                 ),
             ),
         ),
-        inputs=[
-            OpenLineageInputDataset(
-                namespace="postgres://192.168.1.1:5432",
-                name="mydb.myschema.mytable",
-                facets=OpenLineageDatasetFacets(
-                    schema=OpenLineageSchemaDatasetFacet(
-                        fields=[
-                            OpenLineageSchemaField(
-                                name="dt",
-                                type="timestamp",
-                                description="Business date",
-                            ),
-                            OpenLineageSchemaField(
-                                name="customer_id",
-                                type="decimal(20,0)",
-                            ),
-                            OpenLineageSchemaField(name="total_spent", type="float"),
-                            OpenLineageSchemaField(
-                                name="phones",
-                                type="array",
-                                fields=[
-                                    OpenLineageSchemaField(
-                                        name="_element",
-                                        type="string",
-                                    ),
-                                ],
-                            ),
-                            OpenLineageSchemaField(
-                                name="address",
-                                type="struct",
-                                fields=[
-                                    OpenLineageSchemaField(
-                                        name="street",
-                                        type="string",
-                                    ),
-                                    OpenLineageSchemaField(name="city", type="string"),
-                                    OpenLineageSchemaField(name="state", type="string"),
-                                    OpenLineageSchemaField(name="zip", type="string"),
-                                ],
-                            ),
-                        ],
-                    ),
-                ),
-            ),
-        ],
-        outputs=[
-            OpenLineageOutputDataset(
-                namespace="hdfs://test-hadoop:9820",
-                name="/user/hive/warehouse/mydb.db/mytable",
-                facets=OpenLineageDatasetFacets(
-                    lifecycleStateChange=OpenLineageLifecycleStateChangeDatasetFacet(
-                        lifecycleStateChange=OpenLineageDatasetLifecycleStateChange.CREATE,
-                    ),
-                    symlinks=OpenLineageSymlinksDatasetFacet(
-                        identifiers=[
-                            OpenLineageSymlinkIdentifier(
-                                namespace="hive://test-hadoop:9083",
-                                name="mydb.mytable",
-                                type=OpenLineageSymlinkType.TABLE,
-                            ),
-                        ],
-                    ),
-                    schema=OpenLineageSchemaDatasetFacet(
-                        fields=[
-                            OpenLineageSchemaField(
-                                name="dt",
-                                type="timestamp",
-                                description="Business date",
-                            ),
-                            OpenLineageSchemaField(
-                                name="customer_id",
-                                type="decimal(20,0)",
-                            ),
-                            OpenLineageSchemaField(name="total_spent", type="float"),
-                            OpenLineageSchemaField(
-                                name="phones",
-                                type="array",
-                                fields=[
-                                    OpenLineageSchemaField(
-                                        name="_element",
-                                        type="string",
-                                    ),
-                                ],
-                            ),
-                            OpenLineageSchemaField(
-                                name="address",
-                                type="struct",
-                                fields=[
-                                    OpenLineageSchemaField(
-                                        name="street",
-                                        type="string",
-                                    ),
-                                    OpenLineageSchemaField(name="city", type="string"),
-                                    OpenLineageSchemaField(name="state", type="string"),
-                                    OpenLineageSchemaField(name="zip", type="string"),
-                                ],
-                            ),
-                        ],
-                    ),
-                ),
-                outputFacets=OpenLineageOutputDatasetFacets(
-                    outputStatistics=OpenLineageOutputStatisticsOutputDatasetFacet(
-                        rowCount=1_000,
-                        size=10 * 1024 * 1024,
-                    ),
-                ),
-            ),
-        ],
     )
 
 
@@ -425,114 +331,6 @@ def spark_operation_run_event_stop() -> OpenLineageRunEvent:
                 ),
             ),
         ),
-        inputs=[
-            OpenLineageInputDataset(
-                namespace="postgres://192.168.1.1:5432",
-                name="mydb.myschema.mytable",
-                facets=OpenLineageDatasetFacets(
-                    schema=OpenLineageSchemaDatasetFacet(
-                        fields=[
-                            OpenLineageSchemaField(
-                                name="dt",
-                                type="timestamp",
-                                description="Business date",
-                            ),
-                            OpenLineageSchemaField(
-                                name="customer_id",
-                                type="decimal(20,0)",
-                            ),
-                            OpenLineageSchemaField(name="total_spent", type="float"),
-                            OpenLineageSchemaField(
-                                name="phones",
-                                type="array",
-                                fields=[
-                                    OpenLineageSchemaField(
-                                        name="_element",
-                                        type="string",
-                                    ),
-                                ],
-                            ),
-                            OpenLineageSchemaField(
-                                name="address",
-                                type="struct",
-                                fields=[
-                                    OpenLineageSchemaField(
-                                        name="street",
-                                        type="string",
-                                    ),
-                                    OpenLineageSchemaField(name="city", type="string"),
-                                    OpenLineageSchemaField(name="state", type="string"),
-                                    OpenLineageSchemaField(name="zip", type="string"),
-                                ],
-                            ),
-                        ],
-                    ),
-                ),
-            ),
-        ],
-        outputs=[
-            OpenLineageOutputDataset(
-                namespace="hdfs://test-hadoop:9820",
-                name="/user/hive/warehouse/mydb.db/mytable",
-                facets=OpenLineageDatasetFacets(
-                    lifecycleStateChange=OpenLineageLifecycleStateChangeDatasetFacet(
-                        lifecycleStateChange=OpenLineageDatasetLifecycleStateChange.CREATE,
-                    ),
-                    symlinks=OpenLineageSymlinksDatasetFacet(
-                        identifiers=[
-                            OpenLineageSymlinkIdentifier(
-                                namespace="hive://test-hadoop:9083",
-                                name="mydb.mytable",
-                                type=OpenLineageSymlinkType.TABLE,
-                            ),
-                        ],
-                    ),
-                    schema=OpenLineageSchemaDatasetFacet(
-                        fields=[
-                            OpenLineageSchemaField(
-                                name="dt",
-                                type="timestamp",
-                                description="Business date",
-                            ),
-                            OpenLineageSchemaField(
-                                name="customer_id",
-                                type="decimal(20,0)",
-                            ),
-                            OpenLineageSchemaField(name="total_spent", type="float"),
-                            OpenLineageSchemaField(
-                                name="phones",
-                                type="array",
-                                fields=[
-                                    OpenLineageSchemaField(
-                                        name="_element",
-                                        type="string",
-                                    ),
-                                ],
-                            ),
-                            OpenLineageSchemaField(
-                                name="address",
-                                type="struct",
-                                fields=[
-                                    OpenLineageSchemaField(
-                                        name="street",
-                                        type="string",
-                                    ),
-                                    OpenLineageSchemaField(name="city", type="string"),
-                                    OpenLineageSchemaField(name="state", type="string"),
-                                    OpenLineageSchemaField(name="zip", type="string"),
-                                ],
-                            ),
-                        ],
-                    ),
-                ),
-                outputFacets=OpenLineageOutputDatasetFacets(
-                    outputStatistics=OpenLineageOutputStatisticsOutputDatasetFacet(
-                        rowCount=1_000_000,
-                        size=1000 * 1024 * 1024,
-                    ),
-                ),
-            ),
-        ],
     )
 
 
@@ -550,12 +348,68 @@ def spark_operation_run_event_stop() -> OpenLineageRunEvent:
         ),
     ],
 )
-def test_extractors_extract_batch_spark(
+def test_extractors_extract_batch_spark_without_lineage(
     spark_app_run_event_start: OpenLineageRunEvent,
     spark_app_run_event_stop: OpenLineageRunEvent,
     spark_operation_run_event_start: OpenLineageRunEvent,
     spark_operation_run_event_running: OpenLineageRunEvent,
     spark_operation_run_event_stop: OpenLineageRunEvent,
+    extracted_spark_location: LocationDTO,
+    extracted_spark_app_job: JobDTO,
+    extracted_user: UserDTO,
+    extracted_spark_app_run: RunDTO,
+    extracted_spark_operation: OperationDTO,
+    input_transformation,
+):
+    events = [
+        spark_app_run_event_start,
+        spark_operation_run_event_start,
+        spark_operation_run_event_running,
+        spark_operation_run_event_stop,
+        spark_app_run_event_stop,
+    ]
+
+    extracted = BatchExtractor().add_events(input_transformation(events))
+
+    assert extracted.locations() == [
+        extracted_spark_location,
+    ]
+
+    assert extracted.jobs() == [extracted_spark_app_job]
+    assert extracted.users() == [extracted_user]
+    assert extracted.runs() == [extracted_spark_app_run]
+    assert extracted.operations() == [extracted_spark_operation]
+
+    assert not extracted.datasets()
+    assert not extracted.dataset_symlinks()
+    assert not extracted.schemas()
+    assert not extracted.inputs()
+    assert not extracted.outputs()
+
+
+@pytest.mark.parametrize(
+    "input_transformation",
+    [
+        # receiving data out of order does not change result
+        pytest.param(
+            list,
+            id="preserve order",
+        ),
+        pytest.param(
+            reversed,
+            id="reverse order",
+        ),
+    ],
+)
+def test_extractors_extract_batch_spark_with_lineage(
+    spark_app_run_event_start: OpenLineageRunEvent,
+    spark_app_run_event_stop: OpenLineageRunEvent,
+    spark_operation_run_event_start: OpenLineageRunEvent,
+    spark_operation_run_event_running: OpenLineageRunEvent,
+    spark_operation_run_event_stop: OpenLineageRunEvent,
+    postgres_input: OpenLineageInputDataset,
+    hdfs_output: OpenLineageOutputDataset,
+    hdfs_output_with_stats: OpenLineageOutputDataset,
     extracted_postgres_location: LocationDTO,
     extracted_hdfs_location: LocationDTO,
     extracted_hive_location: LocationDTO,
@@ -570,15 +424,30 @@ def test_extractors_extract_batch_spark(
     extracted_user: UserDTO,
     extracted_spark_app_run: RunDTO,
     extracted_spark_operation: OperationDTO,
-    extracted_postgres_input: InputDTO,
-    extracted_hive_output: OutputDTO,
+    extracted_spark_postgres_input: InputDTO,
+    extracted_spark_hive_output: OutputDTO,
     input_transformation,
 ):
     events = [
         spark_app_run_event_start,
-        spark_operation_run_event_start,
-        spark_operation_run_event_running,
-        spark_operation_run_event_stop,
+        spark_operation_run_event_start.model_copy(
+            update={
+                "inputs": [postgres_input],
+                "outputs": [hdfs_output],
+            },
+        ),
+        spark_operation_run_event_running.model_copy(
+            update={
+                "inputs": [postgres_input],
+                "outputs": [hdfs_output_with_stats],
+            },
+        ),
+        spark_operation_run_event_stop.model_copy(
+            update={
+                "inputs": [postgres_input],
+                "outputs": [hdfs_output_with_stats],
+            },
+        ),
         spark_app_run_event_stop,
     ]
 
@@ -609,8 +478,8 @@ def test_extractors_extract_batch_spark(
 
     # Both input & output schemas are the same
     assert extracted.schemas() == [extracted_dataset_schema]
-    assert extracted.inputs() == [extracted_postgres_input]
-    assert extracted.outputs() == [extracted_hive_output]
+    assert extracted.inputs() == [extracted_spark_postgres_input]
+    assert extracted.outputs() == [extracted_spark_hive_output]
 
 
 def test_extractors_extract_batch_spark_strip_hdfs_partitions(extracted_hdfs_dataset: DatasetDTO):

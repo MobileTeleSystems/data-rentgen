@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from data_rentgen.consumer.extractors.run import extract_parent_run
+from data_rentgen.consumer.extractors.run import extract_parent_run, extract_run
 from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEvent,
     OpenLineageRunEventType,
@@ -10,13 +10,15 @@ from data_rentgen.dto import OperationDTO, OperationStatusDTO, OperationTypeDTO
 
 
 def extract_operation(event: OpenLineageRunEvent) -> OperationDTO:
-    # operation always has parent
-    run = extract_parent_run(event.run.facets.parent)  # type: ignore[arg-type]
+    if event.run.facets.parent and event.job.facets.jobType and event.job.facets.jobType.integration == "SPARK":
+        run = extract_parent_run(event.run.facets.parent)
+    else:
+        run = extract_run(event)
 
     # in some cases, operation name may contain raw SELECT query with newlines
     operation_name = " ".join(line.strip() for line in event.job.name.splitlines()).strip()
     # remove parent job name from operation name
-    if operation_name.startswith(run.job.name):
+    if operation_name.startswith(run.job.name) and operation_name != run.job.name:
         prefix = len(run.job.name) + 1
         operation_name = operation_name[prefix:]
 
@@ -29,6 +31,9 @@ def extract_operation(event: OpenLineageRunEvent) -> OperationDTO:
         run=run,
         name=operation_name,
         type=type_,
+        status=OperationStatusDTO(run.status),
+        started_at=run.started_at,
+        ended_at=run.ended_at,
     )
     enrich_operation_status(operation, event)
     enrich_operation_description(operation, event)

@@ -18,10 +18,10 @@ from data_rentgen.dto import (
     DatasetColumnRelationTypeDTO,
     DatasetDTO,
 )
-from tests.test_consumer.test_extractors.fixtures.column_lineage_facets import (
+from tests.test_consumer.test_extractors.fixtures.column_lineage_raw import (
     get_run_event_with_column_lineage,
 )
-from tests.test_consumer.test_extractors.fixtures.extracted_dto import get_operation_dto
+from tests.test_consumer.test_extractors.fixtures.spark_dto import get_spark_operation_dto
 
 
 def test_extractors_extract_dataset_column_relation_type_new_type():
@@ -265,7 +265,7 @@ def test_extractors_extract_column_lineage_operations_with_same_lineage(
 
     assert column_lineage == [
         ColumnLineageDTO(
-            operation=get_operation_dto(first_operation_id),
+            operation=get_spark_operation_dto(first_operation_id),
             source_dataset=extracted_postgres_dataset,
             target_dataset=extracted_hive_dataset,
             dataset_column_relations=[
@@ -284,7 +284,7 @@ def test_extractors_extract_column_lineage_operations_with_same_lineage(
             ],
         ),
         ColumnLineageDTO(
-            operation=get_operation_dto(second_operation_id),
+            operation=get_spark_operation_dto(second_operation_id),
             source_dataset=extracted_postgres_dataset,
             target_dataset=extracted_hive_dataset,
             dataset_column_relations=[
@@ -366,7 +366,7 @@ def test_extractors_extract_column_lineage_operations_with_transformation_on_sam
 
     assert column_lineage == [
         ColumnLineageDTO(
-            operation=get_operation_dto(first_operation_id),
+            operation=get_spark_operation_dto(first_operation_id),
             source_dataset=extracted_postgres_dataset,
             target_dataset=extracted_hive_dataset,
             dataset_column_relations=[
@@ -379,7 +379,7 @@ def test_extractors_extract_column_lineage_operations_with_transformation_on_sam
             ],
         ),
         ColumnLineageDTO(
-            operation=get_operation_dto(second_operation_id),
+            operation=get_spark_operation_dto(second_operation_id),
             source_dataset=extracted_postgres_dataset,
             target_dataset=extracted_hive_dataset,
             dataset_column_relations=[

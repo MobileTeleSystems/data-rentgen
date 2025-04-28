@@ -1,0 +1,142 @@
+import pytest
+
+from data_rentgen.consumer.openlineage.dataset import OpenLineageInputDataset, OpenLineageOutputDataset
+from data_rentgen.consumer.openlineage.dataset_facets import OpenLineageDatasetFacets, OpenLineageOutputDatasetFacets
+from data_rentgen.consumer.openlineage.dataset_facets.lifecycle_change import (
+    OpenLineageDatasetLifecycleStateChange,
+    OpenLineageLifecycleStateChangeDatasetFacet,
+)
+from data_rentgen.consumer.openlineage.dataset_facets.output_statistics import (
+    OpenLineageOutputStatisticsOutputDatasetFacet,
+)
+from data_rentgen.consumer.openlineage.dataset_facets.schema import (
+    OpenLineageSchemaDatasetFacet,
+    OpenLineageSchemaField,
+)
+from data_rentgen.consumer.openlineage.dataset_facets.symlinks import (
+    OpenLineageSymlinkIdentifier,
+    OpenLineageSymlinksDatasetFacet,
+    OpenLineageSymlinkType,
+)
+
+
+@pytest.fixture
+def postgres_input() -> OpenLineageInputDataset:
+    return OpenLineageInputDataset(
+        namespace="postgres://192.168.1.1:5432",
+        name="mydb.myschema.mytable",
+        facets=OpenLineageDatasetFacets(
+            schema=OpenLineageSchemaDatasetFacet(
+                fields=[
+                    OpenLineageSchemaField(
+                        name="dt",
+                        type="timestamp",
+                        description="Business date",
+                    ),
+                    OpenLineageSchemaField(
+                        name="customer_id",
+                        type="decimal(20,0)",
+                    ),
+                    OpenLineageSchemaField(name="total_spent", type="float"),
+                    OpenLineageSchemaField(
+                        name="phones",
+                        type="array",
+                        fields=[
+                            OpenLineageSchemaField(
+                                name="_element",
+                                type="string",
+                            ),
+                        ],
+                    ),
+                    OpenLineageSchemaField(
+                        name="address",
+                        type="struct",
+                        fields=[
+                            OpenLineageSchemaField(
+                                name="street",
+                                type="string",
+                            ),
+                            OpenLineageSchemaField(name="city", type="string"),
+                            OpenLineageSchemaField(name="state", type="string"),
+                            OpenLineageSchemaField(name="zip", type="string"),
+                        ],
+                    ),
+                ],
+            ),
+        ),
+    )
+
+
+@pytest.fixture
+def hdfs_output() -> OpenLineageOutputDataset:
+    return OpenLineageOutputDataset(
+        namespace="hdfs://test-hadoop:9820",
+        name="/user/hive/warehouse/mydb.db/mytable",
+        facets=OpenLineageDatasetFacets(
+            lifecycleStateChange=OpenLineageLifecycleStateChangeDatasetFacet(
+                lifecycleStateChange=OpenLineageDatasetLifecycleStateChange.CREATE,
+            ),
+            symlinks=OpenLineageSymlinksDatasetFacet(
+                identifiers=[
+                    OpenLineageSymlinkIdentifier(
+                        namespace="hive://test-hadoop:9083",
+                        name="mydb.mytable",
+                        type=OpenLineageSymlinkType.TABLE,
+                    ),
+                ],
+            ),
+            schema=OpenLineageSchemaDatasetFacet(
+                fields=[
+                    OpenLineageSchemaField(
+                        name="dt",
+                        type="timestamp",
+                        description="Business date",
+                    ),
+                    OpenLineageSchemaField(
+                        name="customer_id",
+                        type="decimal(20,0)",
+                    ),
+                    OpenLineageSchemaField(name="total_spent", type="float"),
+                    OpenLineageSchemaField(
+                        name="phones",
+                        type="array",
+                        fields=[
+                            OpenLineageSchemaField(
+                                name="_element",
+                                type="string",
+                            ),
+                        ],
+                    ),
+                    OpenLineageSchemaField(
+                        name="address",
+                        type="struct",
+                        fields=[
+                            OpenLineageSchemaField(
+                                name="street",
+                                type="string",
+                            ),
+                            OpenLineageSchemaField(name="city", type="string"),
+                            OpenLineageSchemaField(name="state", type="string"),
+                            OpenLineageSchemaField(name="zip", type="string"),
+                        ],
+                    ),
+                ],
+            ),
+        ),
+    )
+
+
+@pytest.fixture
+def hdfs_output_with_stats(
+    hdfs_output: OpenLineageOutputDataset,
+) -> OpenLineageOutputDataset:
+    return hdfs_output.model_copy(
+        update={
+            "outputFacets": OpenLineageOutputDatasetFacets(
+                outputStatistics=OpenLineageOutputStatisticsOutputDatasetFacet(
+                    rowCount=1_000_000,
+                    size=1000 * 1024 * 1024,
+                ),
+            ),
+        },
+    )
