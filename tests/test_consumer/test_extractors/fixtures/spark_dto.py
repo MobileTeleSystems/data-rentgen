@@ -1,12 +1,10 @@
 from datetime import datetime, timezone
+from uuid import UUID
 
 import pytest
-from uuid6 import UUID
 
 from data_rentgen.dto import (
     DatasetDTO,
-    DatasetSymlinkDTO,
-    DatasetSymlinkTypeDTO,
     InputDTO,
     JobDTO,
     JobTypeDTO,
@@ -24,151 +22,12 @@ from data_rentgen.dto import (
 
 
 @pytest.fixture
-def extracted_postgres_location() -> LocationDTO:
-    return LocationDTO(
-        type="postgres",
-        name="192.168.1.1:5432",
-        addresses={"postgres://192.168.1.1:5432"},
-    )
-
-
-@pytest.fixture
-def extracted_hdfs_location() -> LocationDTO:
-    return LocationDTO(
-        type="hdfs",
-        name="test-hadoop:9820",
-        addresses={"hdfs://test-hadoop:9820"},
-    )
-
-
-@pytest.fixture
-def extracted_hive_location() -> LocationDTO:
-    return LocationDTO(
-        type="hive",
-        name="test-hadoop:9083",
-        addresses={"hive://test-hadoop:9083"},
-    )
-
-
-@pytest.fixture
 def extracted_spark_location() -> LocationDTO:
     return LocationDTO(
         type="local",
         name="some.host.com",
         addresses={"local://some.host.com"},
     )
-
-
-@pytest.fixture
-def extracted_postgres_dataset(
-    extracted_postgres_location: LocationDTO,
-) -> DatasetDTO:
-    return DatasetDTO(
-        location=extracted_postgres_location,
-        name="mydb.myschema.mytable",
-    )
-
-
-@pytest.fixture
-def extracted_hdfs_dataset(
-    extracted_hdfs_location: LocationDTO,
-) -> DatasetDTO:
-    return DatasetDTO(
-        location=extracted_hdfs_location,
-        name="/user/hive/warehouse/mydb.db/mytable",
-    )
-
-
-@pytest.fixture
-def extracted_hive_dataset(
-    extracted_hive_location: LocationDTO,
-) -> DatasetDTO:
-    return DatasetDTO(
-        location=extracted_hive_location,
-        name="mydb.mytable",
-    )
-
-
-@pytest.fixture
-def extracted_hdfs_dataset_symlink(
-    extracted_hdfs_dataset: DatasetDTO,
-    extracted_hive_dataset: DatasetDTO,
-) -> DatasetSymlinkDTO:
-    return DatasetSymlinkDTO(
-        from_dataset=extracted_hdfs_dataset,
-        to_dataset=extracted_hive_dataset,
-        type=DatasetSymlinkTypeDTO.METASTORE,
-    )
-
-
-@pytest.fixture
-def extracted_hive_dataset_symlink(
-    extracted_hdfs_dataset: DatasetDTO,
-    extracted_hive_dataset: DatasetDTO,
-) -> DatasetSymlinkDTO:
-    return DatasetSymlinkDTO(
-        from_dataset=extracted_hive_dataset,
-        to_dataset=extracted_hdfs_dataset,
-        type=DatasetSymlinkTypeDTO.WAREHOUSE,
-    )
-
-
-@pytest.fixture
-def extracted_dataset_schema() -> SchemaDTO:
-    return SchemaDTO(
-        fields=[
-            {
-                "name": "dt",
-                "type": "timestamp",
-                "description": "Business date",
-            },
-            {
-                "name": "customer_id",
-                "type": "decimal(20,0)",
-            },
-            {
-                "name": "total_spent",
-                "type": "float",
-            },
-            {
-                "name": "phones",
-                "type": "array",
-                "fields": [
-                    {
-                        "name": "_element",
-                        "type": "string",
-                    },
-                ],
-            },
-            {
-                "name": "address",
-                "type": "struct",
-                "fields": [
-                    {
-                        "name": "street",
-                        "type": "string",
-                    },
-                    {
-                        "name": "city",
-                        "type": "string",
-                    },
-                    {
-                        "name": "state",
-                        "type": "string",
-                    },
-                    {
-                        "name": "zip",
-                        "type": "string",
-                    },
-                ],
-            },
-        ],
-    )
-
-
-@pytest.fixture
-def extracted_user() -> UserDTO:
-    return UserDTO(name="myuser")
 
 
 @pytest.fixture
@@ -215,7 +74,7 @@ def extracted_spark_operation(
 
 
 @pytest.fixture
-def extracted_postgres_input(
+def extracted_spark_postgres_input(
     extracted_spark_operation: OperationDTO,
     extracted_postgres_dataset: DatasetDTO,
     extracted_dataset_schema: SchemaDTO,
@@ -228,7 +87,7 @@ def extracted_postgres_input(
 
 
 @pytest.fixture
-def extracted_hive_output(
+def extracted_spark_hive_output(
     extracted_spark_operation: OperationDTO,
     extracted_hive_dataset: DatasetDTO,
     extracted_dataset_schema: SchemaDTO,
@@ -243,7 +102,7 @@ def extracted_hive_output(
     )
 
 
-def get_operation_dto(operation_id: UUID) -> OperationDTO:
+def get_spark_operation_dto(operation_id: UUID) -> OperationDTO:
     return OperationDTO(
         id=operation_id,
         run=RunDTO(

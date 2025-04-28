@@ -28,9 +28,11 @@ class BatchExtractor:
         return self.result
 
     def is_operation(self, event: OpenLineageRunEvent) -> bool:
+        has_lineage = bool(event.inputs or event.outputs)
+
         job_type_facet = event.job.facets.jobType
         if not job_type_facet:
-            return False
+            return has_lineage
 
         if job_type_facet.integration == "SPARK":
             return job_type_facet.jobType != "APPLICATION"
@@ -38,7 +40,7 @@ class BatchExtractor:
         if job_type_facet.integration == "AIRFLOW":
             return False
 
-        return False
+        return has_lineage
 
     def extract_run(self, event: OpenLineageRunEvent) -> None:
         run = extract_run(event)
