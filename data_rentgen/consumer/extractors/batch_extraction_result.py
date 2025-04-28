@@ -10,6 +10,7 @@ from data_rentgen.dto import (
     DatasetSymlinkDTO,
     InputDTO,
     JobDTO,
+    JobTypeDTO,
     LocationDTO,
     OperationDTO,
     OutputDTO,
@@ -25,6 +26,7 @@ T = TypeVar(
     ColumnLineageDTO,
     DatasetSymlinkDTO,
     JobDTO,
+    JobTypeDTO,
     RunDTO,
     OperationDTO,
     InputDTO,
@@ -56,6 +58,7 @@ class BatchExtractionResult:
         self._locations: dict[tuple, LocationDTO] = {}
         self._datasets: dict[tuple, DatasetDTO] = {}
         self._dataset_symlinks: dict[tuple, DatasetSymlinkDTO] = {}
+        self._job_types: dict[tuple, JobTypeDTO] = {}
         self._jobs: dict[tuple, JobDTO] = {}
         self._runs: dict[tuple, RunDTO] = {}
         self._operations: dict[tuple, OperationDTO] = {}
@@ -71,6 +74,7 @@ class BatchExtractionResult:
             f"locations={len(self._locations)}, "
             f"datasets={len(self._datasets)}, "
             f"dataset_symlinks={len(self._dataset_symlinks)}, "
+            f"job_types={len(self._job_types)}, "
             f"jobs={len(self._jobs)}, "
             f"runs={len(self._runs)}, "
             f"operations={len(self._operations)}, "
@@ -109,8 +113,13 @@ class BatchExtractionResult:
         dataset_symlink.to_dataset = self.add_dataset(dataset_symlink.to_dataset)
         return self._add(self._dataset_symlinks, dataset_symlink)
 
+    def add_job_type(self, job_type: JobTypeDTO):
+        return self._add(self._job_types, job_type)
+
     def add_job(self, job: JobDTO):
         job.location = self.add_location(job.location)
+        if job.type:
+            job.type = self.add_job_type(job.type)
         return self._add(self._jobs, job)
 
     def add_run(self, run: RunDTO):
@@ -171,9 +180,14 @@ class BatchExtractionResult:
         dataset_symlink.to_dataset = self.get_dataset(dataset_symlink.to_dataset.unique_key)
         return dataset_symlink
 
+    def get_job_type(self, job_type_key: tuple) -> JobTypeDTO:
+        return self._job_types[job_type_key]
+
     def get_job(self, job_key: tuple) -> JobDTO:
         job = self._jobs[job_key]
         job.location = self.get_location(job.location.unique_key)
+        if job.type:
+            job.type = self.get_job_type(job.type.unique_key)
         return job
 
     def get_run(self, run_key: tuple) -> RunDTO:
@@ -221,6 +235,9 @@ class BatchExtractionResult:
 
     def dataset_symlinks(self) -> list[DatasetSymlinkDTO]:
         return list(map(self.get_dataset_symlink, self._dataset_symlinks))
+
+    def job_types(self) -> list[JobTypeDTO]:
+        return list(map(self.get_job_type, self._job_types))
 
     def jobs(self) -> list[JobDTO]:
         return list(map(self.get_job, self._jobs))

@@ -9,9 +9,7 @@ from data_rentgen.consumer.extractors import extract_operation
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
-    OpenLineageJobIntegrationType,
     OpenLineageJobProcessingType,
-    OpenLineageJobType,
     OpenLineageJobTypeJobFacet,
 )
 from data_rentgen.consumer.openlineage.run import OpenLineageRun
@@ -46,9 +44,9 @@ def test_extractors_extract_operation_spark_job_no_details():
             name="mysession.execute_some_command",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    jobType=OpenLineageJobType.JOB,
                     processingType=OpenLineageJobProcessingType.BATCH,
-                    integration=OpenLineageJobIntegrationType.SPARK,
+                    integration="SPARK",
+                    jobType="SQL_JOB",
                 ),
             ),
         ),
@@ -125,9 +123,9 @@ def test_extractors_extract_operation_spark_job_with_details(
             name="mysession.execute_some_command",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    jobType=OpenLineageJobType.JOB,
                     processingType=OpenLineageJobProcessingType.STREAMING,
-                    integration=OpenLineageJobIntegrationType.SPARK,
+                    integration="SPARK",
+                    jobType="SQL_JOB",
                 ),
             ),
         ),
@@ -191,9 +189,9 @@ def test_extractors_extract_operation_spark_job_name_contains_newlines():
             """,
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    jobType=OpenLineageJobType.JOB,
                     processingType=OpenLineageJobProcessingType.BATCH,
-                    integration=OpenLineageJobIntegrationType.SPARK,
+                    integration="SPARK",
+                    jobType="SQL_JOB",
                 ),
             ),
         ),
@@ -255,7 +253,17 @@ def test_extractors_extract_operation_spark_job_finished(
     operation = OpenLineageRunEvent(
         eventType=event_type,
         eventTime=now,
-        job=OpenLineageJob(namespace="anything", name="mysession.execute_some_command"),
+        job=OpenLineageJob(
+            namespace="anything",
+            name="mysession.execute_some_command",
+            facets=OpenLineageJobFacets(
+                jobType=OpenLineageJobTypeJobFacet(
+                    processingType=OpenLineageJobProcessingType.BATCH,
+                    integration="SPARK",
+                    jobType="SQL_JOB",
+                ),
+            ),
+        ),
         run=OpenLineageRun(
             runId=operation_id,
             facets=OpenLineageRunFacets(
@@ -287,7 +295,7 @@ def test_extractors_extract_operation_spark_job_finished(
             ),
         ),
         name="execute_some_command",
-        type=None,
+        type=OperationTypeDTO.BATCH,
         position=None,
         description=None,
         status=expected_status,

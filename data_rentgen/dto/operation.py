@@ -18,6 +18,12 @@ class OperationTypeDTO(str, Enum):
     def __str__(self) -> str:
         return str(self.value)
 
+    @classmethod
+    def _missing_(cls, value: object) -> OperationTypeDTO:
+        if value == "NONE":
+            return OperationTypeDTO.BATCH
+        return super()._missing_(value)
+
 
 class OperationStatusDTO(IntEnum):
     UNKNOWN = -1
@@ -32,7 +38,7 @@ class OperationDTO:
     id: UUID
     run: RunDTO
     name: str
-    type: OperationTypeDTO | None = None
+    type: OperationTypeDTO = OperationTypeDTO.BATCH
     position: int | None = None
     group: str | None = None
     description: str | None = None
@@ -49,7 +55,7 @@ class OperationDTO:
             id=self.id,
             run=self.run.merge(new.run),
             name=new.name or self.name,
-            type=new.type or self.type,
+            type=new.type,
             group=new.group or self.group,
             description=new.description or self.description,
             status=max(new.status, self.status),

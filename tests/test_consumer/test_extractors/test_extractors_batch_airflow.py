@@ -8,8 +8,7 @@ from data_rentgen.consumer.extractors import BatchExtractor
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
-    OpenLineageJobIntegrationType,
-    OpenLineageJobType,
+    OpenLineageJobProcessingType,
     OpenLineageJobTypeJobFacet,
 )
 from data_rentgen.consumer.openlineage.run import OpenLineageRun
@@ -52,9 +51,9 @@ def airflow_dag_run_event_start() -> OpenLineageRunEvent:
             name="mydag",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
-                    integration=OpenLineageJobIntegrationType.AIRFLOW,
-                    jobType=OpenLineageJobType.DAG,
+                    processingType=OpenLineageJobProcessingType.BATCH,
+                    integration="AIRFLOW",
+                    jobType="DAG",
                 ),
             ),
         ),
@@ -92,9 +91,9 @@ def airflow_dag_run_event_stop() -> OpenLineageRunEvent:
             name="mydag",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
-                    integration=OpenLineageJobIntegrationType.AIRFLOW,
-                    jobType=OpenLineageJobType.DAG,
+                    processingType=OpenLineageJobProcessingType.BATCH,
+                    integration="AIRFLOW",
+                    jobType="DAG",
                 ),
             ),
         ),
@@ -123,9 +122,9 @@ def airflow_task_run_event_start() -> OpenLineageRunEvent:
             name="mydag.mytask",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
-                    integration=OpenLineageJobIntegrationType.AIRFLOW,
-                    jobType=OpenLineageJobType.TASK,
+                    processingType=OpenLineageJobProcessingType.BATCH,
+                    integration="AIRFLOW",
+                    jobType="TASK",
                 ),
             ),
         ),
@@ -172,9 +171,9 @@ def airflow_task_run_event_stop() -> OpenLineageRunEvent:
             name="mydag.mytask",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
-                    integration=OpenLineageJobIntegrationType.AIRFLOW,
-                    jobType=OpenLineageJobType.TASK,
+                    processingType=OpenLineageJobProcessingType.BATCH,
+                    integration="AIRFLOW",
+                    jobType="TASK",
                 ),
             ),
         ),
@@ -207,7 +206,7 @@ def extracted_airflow_dag_job(
     return JobDTO(
         name="mydag",
         location=extracted_airflow_location,
-        type=JobTypeDTO.AIRFLOW_DAG,
+        type=JobTypeDTO(type="AIRFLOW_DAG"),
     )
 
 
@@ -218,7 +217,7 @@ def extracted_airflow_task_job(
     return JobDTO(
         name="mydag.mytask",
         location=extracted_airflow_location,
-        type=JobTypeDTO.AIRFLOW_TASK,
+        type=JobTypeDTO(type="AIRFLOW_TASK"),
     )
 
 

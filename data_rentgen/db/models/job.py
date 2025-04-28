@@ -3,25 +3,13 @@
 
 from __future__ import annotations
 
-from enum import Enum
-
-from sqlalchemy import BigInteger, Computed, ForeignKey, Index, String, UniqueConstraint
+from sqlalchemy import BigInteger, Computed, ForeignKey, Index, String, UniqueConstraint, select
 from sqlalchemy.dialects.postgresql import TSVECTOR
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from sqlalchemy_utils import ChoiceType
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from data_rentgen.db.models.base import Base
+from data_rentgen.db.models.job_type import JobType
 from data_rentgen.db.models.location import Location
-
-
-class JobType(str, Enum):
-    AIRFLOW_DAG = "AIRFLOW_DAG"
-    AIRFLOW_TASK = "AIRFLOW_TASK"
-    SPARK_APPLICATION = "SPARK_APPLICATION"
-    UNKNOWN = "UNKNOWN"
-
-    def __str__(self) -> str:
-        return self.value
 
 
 class Job(Base):
@@ -49,12 +37,12 @@ class Job(Base):
         doc="Job name, e.g. Airflow DAG name + task name, or Spark applicationName",
     )
 
-    type: Mapped[JobType] = mapped_column(
-        ChoiceType(JobType, impl=String(32)),
+    type_id: Mapped[int] = mapped_column(
+        BigInteger,
+        ForeignKey("job_type.id", ondelete="CASCADE"),
         index=True,
         nullable=False,
-        default=JobType.UNKNOWN,
-        doc="Job type, e.g. AIRFLOW_DAG, AIRFLOW_TASK, SPARK_APPLICATION",
+        doc="Job type",
     )
 
     search_vector: Mapped[str] = mapped_column(
@@ -76,3 +64,6 @@ class Job(Base):
         deferred=True,
         doc="Full-text search vector",
     )
+
+
+Job.type = column_property(select(JobType.type).where(Job.type_id == JobType.id).scalar_subquery())

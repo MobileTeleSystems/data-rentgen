@@ -12,6 +12,7 @@ from data_rentgen.db.utils.uuid import generate_static_uuid
 from tests.test_server.fixtures.factories.dataset import create_dataset, make_symlink
 from tests.test_server.fixtures.factories.input import create_input
 from tests.test_server.fixtures.factories.job import create_job
+from tests.test_server.fixtures.factories.job_type import create_job_type
 from tests.test_server.fixtures.factories.location import create_location
 from tests.test_server.fixtures.factories.operation import create_operation
 from tests.test_server.fixtures.factories.output import create_output
@@ -223,7 +224,8 @@ async def lineage_with_depth(
         # Create a job, run and operation with IO datasets.
         for i in range(num_jobs):
             job_location = await create_location(async_session)
-            job = await create_job(async_session, location_id=job_location.id)
+            job_type = await create_job_type(async_session)
+            job = await create_job(async_session, location_id=job_location.id, job_type_id=job_type.id)
             lineage.jobs.append(job)
 
             run = await create_run(
@@ -304,7 +306,8 @@ async def cyclic_lineage(
             from_dataset, to_dataset = (datasets[0], datasets[1]) if i == 0 else (datasets[1], datasets[0])
 
             job_location = await create_location(async_session)
-            job = await create_job(async_session, location_id=job_location.id)
+            job_type = await create_job_type(async_session)
+            job = await create_job(async_session, location_id=job_location.id, job_type_id=job_type.id)
             lineage.jobs.append(job)
 
             run = await create_run(
@@ -391,7 +394,8 @@ async def duplicated_lineage(
         # Create a job, run and operation with IO datasets.
         for i in range(num_jobs):
             job_location = await create_location(async_session)
-            job = await create_job(async_session, location_id=job_location.id)
+            job_type = await create_job_type(async_session)
+            job = await create_job(async_session, location_id=job_location.id, job_type_id=job_type.id)
             lineage.jobs.append(job)
 
             runs = [
@@ -493,8 +497,14 @@ async def branchy_lineage(
         lineage.datasets.extend(datasets)
 
         job_locations = [await create_location(async_session) for _ in range(num_jobs)]
+        job_type = await create_job_type(async_session)
         jobs = [
-            await create_job(async_session, location_id=job_location.id, job_kwargs={"name": f"job_{i}"})
+            await create_job(
+                async_session,
+                location_id=job_location.id,
+                job_type_id=job_type.id,
+                job_kwargs={"name": f"job_{i}"},
+            )
             for i, job_location in enumerate(job_locations)
         ]
         lineage.jobs.extend(jobs)
@@ -637,7 +647,8 @@ async def lineage_with_symlinks(
         # Make graphs
         for i in range(num_jobs):
             job_location = await create_location(async_session)
-            job = await create_job(async_session, location_id=job_location.id)
+            job_type = await create_job_type(async_session)
+            job = await create_job(async_session, location_id=job_location.id, job_type_id=job_type.id)
             lineage.jobs.append(job)
 
             run = await create_run(

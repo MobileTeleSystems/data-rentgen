@@ -11,7 +11,6 @@ from uuid6 import UUID
 
 from data_rentgen.db.models import (
     Job,
-    JobType,
     Location,
     Operation,
     Run,
@@ -66,11 +65,11 @@ async def test_runs_handler_airflow(
     assert jobs[0].location.name == "airflow-host:8081"
     assert len(jobs[0].location.addresses) == 1
     assert jobs[0].location.addresses[0].url == "http://airflow-host:8081"
-    assert jobs[0].type == JobType.AIRFLOW_DAG
+    assert jobs[0].type == "AIRFLOW_DAG"
 
     assert jobs[1].name == "mydag.mytask"
     assert jobs[1].location == jobs[0].location
-    assert jobs[1].type == JobType.AIRFLOW_TASK
+    assert jobs[1].type == "AIRFLOW_TASK"
 
     run_query = select(Run).order_by(Run.id)
     run_scalars = await async_session.scalars(run_query)

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-from random import choice, randint
+from random import randint
 from typing import TYPE_CHECKING, Callable
 
 import pytest_asyncio
 
-from data_rentgen.db.models import Job, JobType
+from data_rentgen.db.models import Job
 from tests.test_server.fixtures.factories.base import random_string
+from tests.test_server.fixtures.factories.job_type import create_job_type
 from tests.test_server.fixtures.factories.location import create_location
 from tests.test_server.utils.delete import clean_db
 
@@ -23,7 +24,7 @@ def job_factory(**kwargs):
         "id": randint(0, 10000000),
         "location_id": randint(0, 10000000),
         "name": random_string(32),
-        "type": choice(list(JobType)),
+        "type_id": randint(0, 10000000),
     }
     data.update(kwargs)
     return Job(**data)
@@ -32,12 +33,13 @@ def job_factory(**kwargs):
 async def create_job(
     async_session: AsyncSession,
     location_id: int,
+    job_type_id: int,
     job_kwargs: dict | None = None,
 ) -> Job:
     if job_kwargs:
-        job_kwargs.update({"location_id": location_id})
+        job_kwargs.update({"location_id": location_id, "type_id": job_type_id})
     else:
-        job_kwargs = {"location_id": location_id}
+        job_kwargs = {"location_id": location_id, "type_id": job_type_id}
     job = job_factory(**job_kwargs)
     del job.id
     async_session.add(job)
@@ -65,7 +67,8 @@ async def job(
 
     async with async_session_maker() as async_session:
         location = await create_location(async_session)
-        item = await create_job(async_session, location_id=location.id, job_kwargs=params)
+        job_type = await create_job_type(async_session)
+        item = await create_job(async_session, location_id=location.id, job_type_id=job_type.id, job_kwargs=params)
 
         async_session.expunge_all()
 
@@ -86,7 +89,8 @@ async def jobs(
         items = []
         for _ in range(size):
             location = await create_location(async_session)
-            item = await create_job(async_session, location_id=location.id, **params)
+            job_type = await create_job_type(async_session)
+            item = await create_job(async_session, location_id=location.id, job_type_id=job_type.id, **params)
             items.append(item)
 
         async_session.expunge_all()
@@ -168,10 +172,13 @@ async def jobs_search(
             for _ in range(3)
         ]
 
+        job_type = await create_job_type(async_session)
+
         jobs_with_names = [
             await create_job(
                 async_session,
                 location_id=random_location[i].id,
+                job_type_id=job_type.id,
                 job_kwargs=kwargs,
             )
             for i, kwargs in enumerate(jobs_kwargs)
@@ -179,16 +186,18 @@ async def jobs_search(
         jobs_with_location_names = [
             await create_job(
                 async_session,
-                location_id=locations.id,
+                location_id=location.id,
+                job_type_id=job_type.id,
             )
-            for locations in locations_with_names
+            for location in locations_with_names
         ]
         jobs_with_address_urls = [
             await create_job(
                 async_session,
-                location_id=locations.id,
+                location_id=location.id,
+                job_type_id=job_type.id,
             )
-            for locations in locations_with_address_urls
+            for location in locations_with_address_urls
         ]
 
         async_session.expunge_all()

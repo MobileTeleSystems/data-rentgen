@@ -28,9 +28,7 @@ from data_rentgen.consumer.openlineage.dataset_facets import (
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
-    OpenLineageJobIntegrationType,
     OpenLineageJobProcessingType,
-    OpenLineageJobType,
     OpenLineageJobTypeJobFacet,
 )
 from data_rentgen.consumer.openlineage.run import OpenLineageRun
@@ -120,9 +118,9 @@ def test_run_event_spark_application_start():
             name="spark_session",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
-                    integration=OpenLineageJobIntegrationType.SPARK,
-                    jobType=OpenLineageJobType.APPLICATION,
+                    processingType=OpenLineageJobProcessingType.NONE,
+                    integration="SPARK",
+                    jobType="APPLICATION",
                 ),
             ),
         ),
@@ -206,9 +204,9 @@ def test_run_event_spark_application_stop():
             name="spark_session",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
-                    integration=OpenLineageJobIntegrationType.SPARK,
-                    jobType=OpenLineageJobType.APPLICATION,
+                    processingType=OpenLineageJobProcessingType.NONE,
+                    integration="SPARK",
+                    jobType="APPLICATION",
                 ),
             ),
         ),
@@ -440,8 +438,8 @@ def test_run_event_spark_job_running():
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
                     processingType=OpenLineageJobProcessingType.BATCH,
-                    integration=OpenLineageJobIntegrationType.SPARK,
-                    jobType=OpenLineageJobType.JOB,
+                    integration="SPARK",
+                    jobType="SQL_JOB",
                 ),
             ),
         ),

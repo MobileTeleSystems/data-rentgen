@@ -65,7 +65,7 @@ async def extract_events(
             event = OpenLineageRunEventAdapter.validate_json(message.value)
             extractor.add_events([event])
         except (ValueError, TypeError):
-            logger.error(  # noqa: TRY400
+            logger.exception(
                 "Failed to parse message: ConsumerRecord(topic=%r, partition=%d, offset=%d)",
                 message.topic,
                 message.partition,
@@ -108,6 +108,12 @@ async def save_to_db(
         async with unit_of_work:
             dataset_symlink = await unit_of_work.dataset_symlink.create_or_update(dataset_symlink_dto)
             dataset_symlink_dto.id = dataset_symlink.id
+
+    logger.debug("Creating job types")
+    for job_type_dto in data.job_types():
+        async with unit_of_work:
+            job_type = await unit_of_work.job_type.get_or_create(job_type_dto)
+            job_type_dto.id = job_type.id
 
     logger.debug("Creating jobs")
     for job_dto in data.jobs():
