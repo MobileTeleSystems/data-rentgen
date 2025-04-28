@@ -7,9 +7,7 @@ from data_rentgen.consumer.openlineage.job_facets.documentation import (
     OpenLineageDocumentationJobFacet,
 )
 from data_rentgen.consumer.openlineage.job_facets.job_type import (
-    OpenLineageJobIntegrationType,
     OpenLineageJobProcessingType,
-    OpenLineageJobType,
     OpenLineageJobTypeJobFacet,
 )
 
@@ -17,9 +15,7 @@ __all__ = [
     "OpenLineageDocumentationJobFacet",
     "OpenLineageJobFacet",
     "OpenLineageJobFacets",
-    "OpenLineageJobIntegrationType",
     "OpenLineageJobProcessingType",
-    "OpenLineageJobType",
     "OpenLineageJobTypeJobFacet",
 ]
 

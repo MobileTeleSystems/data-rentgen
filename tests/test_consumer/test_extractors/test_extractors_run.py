@@ -8,8 +8,7 @@ from data_rentgen.consumer.extractors import extract_run
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
-    OpenLineageJobIntegrationType,
-    OpenLineageJobType,
+    OpenLineageJobProcessingType,
     OpenLineageJobTypeJobFacet,
 )
 from data_rentgen.consumer.openlineage.run import OpenLineageRun
@@ -55,9 +54,9 @@ def test_extractors_extract_run_spark_app_yarn():
             name="myjob",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
-                    integration=OpenLineageJobIntegrationType.SPARK,
-                    jobType=OpenLineageJobType.APPLICATION,
+                    processingType=OpenLineageJobProcessingType.NONE,
+                    integration="SPARK",
+                    jobType="APPLICATION",
                 ),
             ),
         ),
@@ -83,7 +82,7 @@ def test_extractors_extract_run_spark_app_yarn():
         job=JobDTO(
             name="myjob",
             location=LocationDTO(type="yarn", name="cluster", addresses={"yarn://cluster"}),
-            type=JobTypeDTO.SPARK_APPLICATION,
+            type=JobTypeDTO(type="SPARK_APPLICATION"),
         ),
         status=RunStatusDTO.STARTED,
         started_at=now,
@@ -108,9 +107,9 @@ def test_extractors_extract_run_spark_app_local():
             name="myjob",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
-                    integration=OpenLineageJobIntegrationType.SPARK,
-                    jobType=OpenLineageJobType.APPLICATION,
+                    processingType=OpenLineageJobProcessingType.NONE,
+                    integration="SPARK",
+                    jobType="APPLICATION",
                 ),
             ),
         ),
@@ -135,7 +134,7 @@ def test_extractors_extract_run_spark_app_local():
         job=JobDTO(
             name="myjob",
             location=LocationDTO(type="host", name="some.host.com", addresses={"host://some.host.com"}),
-            type=JobTypeDTO.SPARK_APPLICATION,
+            type=JobTypeDTO(type="SPARK_APPLICATION"),
         ),
         status=RunStatusDTO.STARTED,
         started_at=None,
@@ -159,9 +158,9 @@ def test_extractors_extract_run_airflow_dag_2_3_plus():
             name="mydag",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
-                    integration=OpenLineageJobIntegrationType.AIRFLOW,
-                    jobType=OpenLineageJobType.DAG,
+                    processingType=OpenLineageJobProcessingType.BATCH,
+                    integration="AIRFLOW",
+                    jobType="DAG",
                 ),
             ),
         ),
@@ -195,7 +194,7 @@ def test_extractors_extract_run_airflow_dag_2_3_plus():
                 name="airflow-host:8081",
                 addresses={"http://airflow-host:8081"},
             ),
-            type=JobTypeDTO.AIRFLOW_DAG,
+            type=JobTypeDTO(type="AIRFLOW_DAG"),
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
@@ -222,9 +221,9 @@ def test_extractors_extract_run_airflow_dag_2_x():
             name="mydag",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
-                    integration=OpenLineageJobIntegrationType.AIRFLOW,
-                    jobType=OpenLineageJobType.DAG,
+                    processingType=OpenLineageJobProcessingType.BATCH,
+                    integration="AIRFLOW",
+                    jobType="DAG",
                 ),
             ),
         ),
@@ -258,7 +257,7 @@ def test_extractors_extract_run_airflow_dag_2_x():
                 name="airflow-host:8081",
                 addresses={"http://airflow-host:8081"},
             ),
-            type=JobTypeDTO.AIRFLOW_DAG,
+            type=JobTypeDTO(type="AIRFLOW_DAG"),
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
@@ -285,9 +284,9 @@ def test_extractors_extract_run_airflow_task_with_ti_persistent_log_url():
             name="mydag.mytask",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
-                    integration=OpenLineageJobIntegrationType.AIRFLOW,
-                    jobType=OpenLineageJobType.TASK,
+                    processingType=OpenLineageJobProcessingType.BATCH,
+                    integration="AIRFLOW",
+                    jobType="TASK",
                 ),
             ),
         ),
@@ -330,7 +329,7 @@ def test_extractors_extract_run_airflow_task_with_ti_persistent_log_url():
                 name="airflow-host:8081",
                 addresses={"http://airflow-host:8081"},
             ),
-            type=JobTypeDTO.AIRFLOW_TASK,
+            type=JobTypeDTO(type="AIRFLOW_TASK"),
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
@@ -357,9 +356,9 @@ def test_extractors_extract_run_airflow_task_2_9_plus():
             name="mydag.mytask",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
-                    integration=OpenLineageJobIntegrationType.AIRFLOW,
-                    jobType=OpenLineageJobType.TASK,
+                    processingType=OpenLineageJobProcessingType.BATCH,
+                    integration="AIRFLOW",
+                    jobType="TASK",
                 ),
             ),
         ),
@@ -399,7 +398,7 @@ def test_extractors_extract_run_airflow_task_2_9_plus():
                 name="airflow-host:8081",
                 addresses={"http://airflow-host:8081"},
             ),
-            type=JobTypeDTO.AIRFLOW_TASK,
+            type=JobTypeDTO(type="AIRFLOW_TASK"),
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
@@ -426,9 +425,9 @@ def test_extractors_extract_run_airflow_task_2_x():
             name="mydag.mytask",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
-                    integration=OpenLineageJobIntegrationType.AIRFLOW,
-                    jobType=OpenLineageJobType.TASK,
+                    processingType=OpenLineageJobProcessingType.BATCH,
+                    integration="AIRFLOW",
+                    jobType="TASK",
                 ),
             ),
         ),
@@ -463,7 +462,7 @@ def test_extractors_extract_run_airflow_task_2_x():
                 name="airflow-host:8081",
                 addresses={"http://airflow-host:8081"},
             ),
-            type=JobTypeDTO.AIRFLOW_TASK,
+            type=JobTypeDTO(type="AIRFLOW_TASK"),
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
@@ -490,9 +489,9 @@ def test_extractors_extract_run_airflow_dag_check_with_owner():
             name="mydag",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
-                    integration=OpenLineageJobIntegrationType.AIRFLOW,
-                    jobType=OpenLineageJobType.DAG,
+                    processingType=OpenLineageJobProcessingType.BATCH,
+                    integration="AIRFLOW",
+                    jobType="DAG",
                 ),
             ),
         ),
@@ -526,7 +525,7 @@ def test_extractors_extract_run_airflow_dag_check_with_owner():
                 name="airflow-host:8081",
                 addresses={"http://airflow-host:8081"},
             ),
-            type=JobTypeDTO.AIRFLOW_DAG,
+            type=JobTypeDTO(type="AIRFLOW_DAG"),
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
@@ -553,9 +552,9 @@ def test_extractors_extract_run_airflow_task_with_owner():
             name="mydag.mytask",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
-                    integration=OpenLineageJobIntegrationType.AIRFLOW,
-                    jobType=OpenLineageJobType.TASK,
+                    processingType=OpenLineageJobProcessingType.BATCH,
+                    integration="AIRFLOW",
+                    jobType="TASK",
                 ),
             ),
         ),
@@ -590,7 +589,7 @@ def test_extractors_extract_run_airflow_task_with_owner():
                 name="airflow-host:8081",
                 addresses={"http://airflow-host:8081"},
             ),
-            type=JobTypeDTO.AIRFLOW_TASK,
+            type=JobTypeDTO(type="AIRFLOW_TASK"),
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
@@ -617,9 +616,9 @@ def test_extractors_extract_run_airflow_dag_without_owner():
             name="mydag",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
-                    integration=OpenLineageJobIntegrationType.AIRFLOW,
-                    jobType=OpenLineageJobType.DAG,
+                    processingType=OpenLineageJobProcessingType.BATCH,
+                    integration="AIRFLOW",
+                    jobType="DAG",
                 ),
             ),
         ),
@@ -653,7 +652,7 @@ def test_extractors_extract_run_airflow_dag_without_owner():
                 name="airflow-host:8081",
                 addresses={"http://airflow-host:8081"},
             ),
-            type=JobTypeDTO.AIRFLOW_DAG,
+            type=JobTypeDTO(type="AIRFLOW_DAG"),
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
@@ -680,9 +679,9 @@ def test_extractors_extract_run_airflow_task_without_owner():
             name="mydag.mytask",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
-                    integration=OpenLineageJobIntegrationType.AIRFLOW,
-                    jobType=OpenLineageJobType.TASK,
+                    processingType=OpenLineageJobProcessingType.BATCH,
+                    integration="AIRFLOW",
+                    jobType="TASK",
                 ),
             ),
         ),
@@ -717,7 +716,7 @@ def test_extractors_extract_run_airflow_task_without_owner():
                 name="airflow-host:8081",
                 addresses={"http://airflow-host:8081"},
             ),
-            type=JobTypeDTO.AIRFLOW_TASK,
+            type=JobTypeDTO(type="AIRFLOW_TASK"),
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,

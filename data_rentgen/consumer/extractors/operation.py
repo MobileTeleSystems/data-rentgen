@@ -20,11 +20,15 @@ def extract_operation(event: OpenLineageRunEvent) -> OperationDTO:
         prefix = len(run.job.name) + 1
         operation_name = operation_name[prefix:]
 
+    type_: OperationTypeDTO = OperationTypeDTO.BATCH
+    if event.job.facets.jobType and event.job.facets.jobType.processingType:
+        type_ = OperationTypeDTO(event.job.facets.jobType.processingType)
+
     operation = OperationDTO(
         id=event.run.runId,  # type: ignore [arg-type]
         run=run,
         name=operation_name,
-        type=OperationTypeDTO(event.job.facets.jobType.processingType) if event.job.facets.jobType else None,
+        type=type_,
     )
     enrich_operation_status(operation, event)
     enrich_operation_description(operation, event)

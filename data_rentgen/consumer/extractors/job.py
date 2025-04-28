@@ -36,8 +36,9 @@ def extract_job_location(job: OpenLineageJob | OpenLineageParentJob) -> Location
 
 def extract_job_type(job: OpenLineageJob) -> JobTypeDTO | None:
     if job.facets.jobType:
-        job_type = job.facets.jobType.jobType
         integration_type = job.facets.jobType.integration
-        return JobTypeDTO(f"{integration_type}_{job_type}")
+        job_type = job.facets.jobType.jobType
+        type_ = f"{integration_type}_{job_type}" if job_type else integration_type
+        return JobTypeDTO(type=type_.upper())
 
     return None

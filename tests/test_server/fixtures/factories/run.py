@@ -10,6 +10,7 @@ from data_rentgen.db.models import Job, Run, RunStartReason, RunStatus, User
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
 from tests.test_server.fixtures.factories.base import random_datetime, random_string
 from tests.test_server.fixtures.factories.job import create_job
+from tests.test_server.fixtures.factories.job_type import create_job_type
 from tests.test_server.fixtures.factories.location import create_location
 from tests.test_server.utils.delete import clean_db
 
@@ -202,10 +203,12 @@ async def runs_search(
         jobs = []
         for kwargs in job_kwargs:
             location = await create_location(async_session)
+            job_type = await create_job_type(async_session, job_type_kwargs={"type": kwargs["type"]})
             jobs.append(
                 await create_job(
                     async_session,
                     location_id=location.id,
+                    job_type_id=job_type.id,
                     job_kwargs=kwargs,
                 ),
             )

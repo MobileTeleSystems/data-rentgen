@@ -17,10 +17,12 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import selectinload
 
-from data_rentgen.db.models import Address, Job, JobType, Location
+from data_rentgen.db.models import Address, Job, Location
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.search import make_tsquery, ts_match, ts_rank
 from data_rentgen.dto import JobDTO, PaginationDTO
+
+UNKNOWN_JOB_TYPE = 0
 
 
 class JobRepository(Repository[Job]):
@@ -128,7 +130,7 @@ class JobRepository(Repository[Job]):
         result = Job(
             location_id=job.location.id,
             name=job.name,
-            type=JobType(job.type) if job.type else JobType.UNKNOWN,
+            type_id=job.type.id if job.type else UNKNOWN_JOB_TYPE,
         )
         self._session.add(result)
         await self._session.flush([result])
@@ -136,7 +138,7 @@ class JobRepository(Repository[Job]):
 
     async def _update(self, existing: Job, new: JobDTO) -> Job:
         # almost of fields are immutable, so we can avoid UPDATE statements if row is unchanged
-        if new.type:
-            existing.type = JobType(new.type)
+        if new.type and new.type.id:
+            existing.type_id = new.type.id
             await self._session.flush([existing])
         return existing

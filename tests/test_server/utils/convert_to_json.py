@@ -178,7 +178,7 @@ def job_to_json(job: Job):
     return {
         "id": str(job.id),
         "name": job.name,
-        "type": job.type.value,
+        "type": job.type,
         "location": location_to_json(job.location),
     }
 

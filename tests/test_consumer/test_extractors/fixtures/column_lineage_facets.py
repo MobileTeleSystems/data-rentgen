@@ -17,9 +17,7 @@ from data_rentgen.consumer.openlineage.dataset_facets import (
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
-    OpenLineageJobIntegrationType,
     OpenLineageJobProcessingType,
-    OpenLineageJobType,
     OpenLineageJobTypeJobFacet,
 )
 from data_rentgen.consumer.openlineage.run import OpenLineageRun
@@ -241,9 +239,9 @@ def get_run_event_with_column_lineage(
             name="mysession.execute_some_command",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    jobType=OpenLineageJobType.JOB,
                     processingType=OpenLineageJobProcessingType.BATCH,
-                    integration=OpenLineageJobIntegrationType.SPARK,
+                    integration="SPARK",
+                    jobType="SQL_JOB",
                 ),
             ),
         ),

@@ -13,7 +13,8 @@ from data_rentgen.db.models.dataset_column_relation import (
 )
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
 from data_rentgen.db.models.input import Input
-from data_rentgen.db.models.job import Job, JobType
+from data_rentgen.db.models.job import Job
+from data_rentgen.db.models.job_type import JobType
 from data_rentgen.db.models.location import Location
 from data_rentgen.db.models.operation import Operation, OperationStatus, OperationType
 from data_rentgen.db.models.output import Output, OutputType

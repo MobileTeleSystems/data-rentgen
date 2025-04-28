@@ -14,6 +14,7 @@ from data_rentgen.db.repositories.dataset_column_relation import (
 from data_rentgen.db.repositories.dataset_symlink import DatasetSymlinkRepository
 from data_rentgen.db.repositories.input import InputRepository
 from data_rentgen.db.repositories.job import JobRepository
+from data_rentgen.db.repositories.job_type import JobTypeRepository
 from data_rentgen.db.repositories.location import LocationRepository
 from data_rentgen.db.repositories.operation import OperationRepository
 from data_rentgen.db.repositories.output import OutputRepository
@@ -30,6 +31,7 @@ class UnitOfWork:
     ):
         self._session = session
         self.location = LocationRepository(session)
+        self.job_type = JobTypeRepository(session)
         self.job = JobRepository(session)
         self.run = RunRepository(session)
         self.operation = OperationRepository(session)

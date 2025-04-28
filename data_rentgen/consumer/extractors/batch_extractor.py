@@ -8,7 +8,6 @@ from data_rentgen.consumer.extractors.input import extract_input
 from data_rentgen.consumer.extractors.operation import extract_operation
 from data_rentgen.consumer.extractors.output import extract_output
 from data_rentgen.consumer.extractors.run import extract_run
-from data_rentgen.consumer.openlineage.job_facets.job_type import OpenLineageJobType
 from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
 from data_rentgen.dto import (
     DatasetDTO,
@@ -22,12 +21,24 @@ class BatchExtractor:
 
     def add_events(self, events: list[OpenLineageRunEvent]) -> BatchExtractionResult:
         for event in events:
-            if event.job.facets.jobType and event.job.facets.jobType.jobType == OpenLineageJobType.JOB:
+            if self.is_operation(event):
                 self.extract_operation(event)
             else:
                 self.extract_run(event)
-
         return self.result
+
+    def is_operation(self, event: OpenLineageRunEvent) -> bool:
+        job_type_facet = event.job.facets.jobType
+        if not job_type_facet:
+            return False
+
+        if job_type_facet.integration == "SPARK":
+            return job_type_facet.jobType != "APPLICATION"
+
+        if job_type_facet.integration == "AIRFLOW":
+            return False
+
+        return False
 
     def extract_run(self, event: OpenLineageRunEvent) -> None:
         run = extract_run(event)

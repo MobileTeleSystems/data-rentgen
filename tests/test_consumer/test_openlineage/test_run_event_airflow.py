@@ -7,9 +7,7 @@ from uuid6 import UUID
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
-    OpenLineageJobIntegrationType,
     OpenLineageJobProcessingType,
-    OpenLineageJobType,
     OpenLineageJobTypeJobFacet,
 )
 from data_rentgen.consumer.openlineage.job_facets.documentation import (
@@ -135,8 +133,8 @@ def test_run_event_airflow_dag_start():
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
                     processingType=OpenLineageJobProcessingType.BATCH,
-                    integration=OpenLineageJobIntegrationType.AIRFLOW,
-                    jobType=OpenLineageJobType.DAG,
+                    integration="AIRFLOW",
+                    jobType="DAG",
                 ),
                 documentation=OpenLineageDocumentationJobFacet(
                     description="some description",
@@ -210,8 +208,8 @@ def test_run_event_airflow_dag_end():
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
                     processingType=OpenLineageJobProcessingType.BATCH,
-                    integration=OpenLineageJobIntegrationType.AIRFLOW,
-                    jobType=OpenLineageJobType.DAG,
+                    integration="AIRFLOW",
+                    jobType="DAG",
                 ),
             ),
             # unknown facets are ignored
@@ -375,8 +373,8 @@ def test_run_event_airflow_task_start():
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
                     processingType=OpenLineageJobProcessingType.BATCH,
-                    integration=OpenLineageJobIntegrationType.AIRFLOW,
-                    jobType=OpenLineageJobType.TASK,
+                    integration="AIRFLOW",
+                    jobType="TASK",
                 ),
                 # unknown facets are ignored
             ),
@@ -504,8 +502,8 @@ def test_run_event_airflow_task_complete():
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
                     processingType=OpenLineageJobProcessingType.BATCH,
-                    integration=OpenLineageJobIntegrationType.AIRFLOW,
-                    jobType=OpenLineageJobType.TASK,
+                    integration="AIRFLOW",
+                    jobType="TASK",
                 ),
             ),
         ),

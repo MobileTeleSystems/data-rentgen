@@ -23,9 +23,7 @@ from data_rentgen.consumer.openlineage.dataset_facets import (
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
-    OpenLineageJobIntegrationType,
     OpenLineageJobProcessingType,
-    OpenLineageJobType,
     OpenLineageJobTypeJobFacet,
 )
 from data_rentgen.consumer.openlineage.run import OpenLineageRun
@@ -67,9 +65,9 @@ def spark_app_run_event_start() -> OpenLineageRunEvent:
             name="mysession",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
-                    integration=OpenLineageJobIntegrationType.SPARK,
-                    jobType=OpenLineageJobType.APPLICATION,
+                    processingType=OpenLineageJobProcessingType.NONE,
+                    integration="SPARK",
+                    jobType="APPLICATION",
                 ),
             ),
         ),
@@ -102,9 +100,9 @@ def spark_app_run_event_stop() -> OpenLineageRunEvent:
             name="mysession",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    processingType=None,
-                    integration=OpenLineageJobIntegrationType.SPARK,
-                    jobType=OpenLineageJobType.APPLICATION,
+                    processingType=OpenLineageJobProcessingType.NONE,
+                    integration="SPARK",
+                    jobType="APPLICATION",
                 ),
             ),
         ),
@@ -125,9 +123,9 @@ def spark_operation_run_event_start() -> OpenLineageRunEvent:
             name="mysession.execute_some_command",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    jobType=OpenLineageJobType.JOB,
                     processingType=OpenLineageJobProcessingType.BATCH,
-                    integration=OpenLineageJobIntegrationType.SPARK,
+                    integration="SPARK",
+                    jobType="SQL_JOB",
                 ),
             ),
         ),
@@ -263,9 +261,9 @@ def spark_operation_run_event_running() -> OpenLineageRunEvent:
             name="mysession.execute_some_command",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    jobType=OpenLineageJobType.JOB,
                     processingType=OpenLineageJobProcessingType.BATCH,
-                    integration=OpenLineageJobIntegrationType.SPARK,
+                    integration="SPARK",
+                    jobType="SQL_JOB",
                 ),
             ),
         ),
@@ -407,9 +405,9 @@ def spark_operation_run_event_stop() -> OpenLineageRunEvent:
             name="mysession.execute_some_command",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    jobType=OpenLineageJobType.JOB,
                     processingType=OpenLineageJobProcessingType.BATCH,
-                    integration=OpenLineageJobIntegrationType.SPARK,
+                    integration="SPARK",
+                    jobType="SQL_JOB",
                 ),
             ),
         ),
@@ -630,9 +628,9 @@ def test_extractors_extract_batch_spark_strip_hdfs_partitions(extracted_hdfs_dat
             name="mysession.execute_some_command",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
-                    jobType=OpenLineageJobType.JOB,
                     processingType=OpenLineageJobProcessingType.BATCH,
-                    integration=OpenLineageJobIntegrationType.SPARK,
+                    integration="SPARK",
+                    jobType="SQL_JOB",
                 ),
             ),
         ),
