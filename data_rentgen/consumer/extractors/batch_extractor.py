@@ -38,7 +38,7 @@ class BatchExtractor:
             return job_type_facet.jobType != "APPLICATION"
 
         if job_type_facet.integration == "AIRFLOW":
-            return False
+            return job_type_facet.jobType == "TASK"
 
         return has_lineage
 

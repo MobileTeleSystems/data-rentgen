@@ -218,6 +218,7 @@ def enrich_run_user(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
         (
             airflow_application_details.dag.owner is not None,
             airflow_application_details.dag.owner != "airflow",
+            airflow_application_details.dag.owner != "***",
         ),
     ):
         run.user = UserDTO(name=airflow_application_details.dag.owner)  # type: ignore[arg-type]
@@ -227,6 +228,7 @@ def enrich_run_user(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
         (
             airflow_application_dag_details.dag.owner is not None,
             airflow_application_dag_details.dag.owner != "airflow",
+            airflow_application_dag_details.dag.owner != "***",
         ),
     ):
         run.user = UserDTO(name=airflow_application_dag_details.dag.owner)  # type: ignore[arg-type]

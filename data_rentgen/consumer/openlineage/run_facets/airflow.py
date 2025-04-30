@@ -10,7 +10,7 @@ from data_rentgen.consumer.openlineage.run_facets.base import OpenLineageRunFace
 
 class OpenLineageAirflowDagInfo(OpenLineageBase):
     """Airflow dag info.
-    See [Dag](https://github.com/apache/airflow/blob/providers-openlineage/1.9.0/airflow/providers/openlineage/facets/AirflowRunFacet.json).
+    See [Dag](https://github.com/apache/airflow/blob/providers-openlineage/2.2.0/providers/openlineage/src/airflow/providers/openlineage/facets/AirflowRunFacet.json).
     """
 
     dag_id: str
@@ -30,7 +30,7 @@ class OpenLineageAirflowDagRunType(Enum):
 
 class OpenLineageAirflowDagRunInfo(OpenLineageBase):
     """Airflow dagRun info.
-    See [DagRun](https://github.com/apache/airflow/blob/providers-openlineage/1.9.0/airflow/providers/openlineage/facets/AirflowRunFacet.json).
+    See [DagRun](https://github.com/apache/airflow/blob/providers-openlineage/2.2.0/providers/openlineage/src/airflow/providers/openlineage/facets/AirflowRunFacet.json).
     """
 
     run_id: str
@@ -39,17 +39,27 @@ class OpenLineageAirflowDagRunInfo(OpenLineageBase):
     data_interval_end: datetime
 
 
+class OpenLineageAirflowTaskGroupInfo(OpenLineageBase):
+    """Airflow TaskGroup info.
+    See [task_group](https://github.com/apache/airflow/blob/providers-openlineage/2.2.0/providers/openlineage/src/airflow/providers/openlineage/facets/AirflowRunFacet.json).
+    """
+
+    group_id: str
+
+
 class OpenLineageAirflowTaskInfo(OpenLineageBase):
     """Airflow task info.
-    See [Task](https://github.com/apache/airflow/blob/providers-openlineage/1.9.0/airflow/providers/openlineage/facets/AirflowRunFacet.json).
+    See [Task](https://github.com/apache/airflow/blob/providers-openlineage/2.2.0/providers/openlineage/src/airflow/providers/openlineage/facets/AirflowRunFacet.json).
     """
 
     task_id: str
+    operator_class: str | None = None
+    task_group: OpenLineageAirflowTaskGroupInfo | None = None
 
 
 class OpenLineageAirflowTaskInstanceInfo(OpenLineageBase):
     """Airflow taskInstance info.
-    See [TaskInstance](https://github.com/apache/airflow/blob/providers-openlineage/1.9.0/airflow/providers/openlineage/facets/AirflowRunFacet.json).
+    See [TaskInstance](https://github.com/apache/airflow/blob/providers-openlineage/2.2.0/providers/openlineage/src/airflow/providers/openlineage/facets/AirflowRunFacet.json).
     """
 
     try_number: int
@@ -68,7 +78,7 @@ class OpenLineageAirflowDagRunFacet(OpenLineageRunFacet):
 
 class OpenLineageAirflowTaskRunFacet(OpenLineageRunFacet):
     """Run facet describing Airflow Task run.
-    See [AirflowRunFacet](https://github.com/apache/airflow/blob/providers-openlineage/1.9.0/airflow/providers/openlineage/facets/AirflowRunFacet.json).
+    See [AirflowRunFacet](https://github.com/apache/airflow/blob/providers-openlineage/2.2.0/providers/openlineage/src/airflow/providers/openlineage/facets/AirflowRunFacet.json).
     """
 
     dag: OpenLineageAirflowDagInfo

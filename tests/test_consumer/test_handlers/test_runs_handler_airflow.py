@@ -13,6 +13,8 @@ from data_rentgen.db.models import (
     Job,
     Location,
     Operation,
+    OperationStatus,
+    OperationType,
     Run,
     RunStartReason,
     RunStatus,
@@ -115,4 +117,16 @@ async def test_runs_handler_airflow(
     operation_query = select(Operation)
     operation_scalars = await async_session.scalars(operation_query)
     operations = operation_scalars.all()
-    assert not operations
+
+    task_operation = operations[0]
+    assert task_operation.id == UUID("01908223-0782-7fc0-9d69-b1df9dac2c60")  # same id and created_at
+    assert task_operation.created_at == datetime(2024, 7, 5, 9, 4, 12, 162000, tzinfo=timezone.utc)
+    assert task_operation.run_id == task_run.id
+    assert task_operation.name == "mytask"
+    assert task_operation.type == OperationType.BATCH
+    assert task_operation.status == OperationStatus.SUCCEEDED
+    assert task_operation.started_at == datetime(2024, 7, 5, 9, 4, 20, 783845, tzinfo=timezone.utc)
+    assert task_operation.ended_at == datetime(2024, 7, 5, 9, 7, 37, 858423, tzinfo=timezone.utc)
+    assert task_operation.description == "SSHOperator"
+    assert task_operation.position is None
+    assert task_operation.group is None

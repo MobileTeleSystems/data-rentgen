@@ -37,8 +37,8 @@ class OperationStatusDTO(IntEnum):
 class OperationDTO:
     id: UUID
     run: RunDTO
-    name: str
-    type: OperationTypeDTO = OperationTypeDTO.BATCH
+    name: str | None = None
+    type: OperationTypeDTO | None = None
     position: int | None = None
     group: str | None = None
     description: str | None = None

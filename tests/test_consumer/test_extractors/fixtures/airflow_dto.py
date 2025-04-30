@@ -4,11 +4,19 @@ from uuid import UUID
 import pytest
 
 from data_rentgen.dto import (
+    DatasetDTO,
+    InputDTO,
     JobDTO,
     LocationDTO,
+    OperationDTO,
+    OperationStatusDTO,
+    OperationTypeDTO,
+    OutputDTO,
+    OutputTypeDTO,
     RunDTO,
     RunStartReasonDTO,
     RunStatusDTO,
+    SchemaDTO,
     UserDTO,
 )
 from data_rentgen.dto.job_type import JobTypeDTO
@@ -85,4 +93,49 @@ def extracted_airflow_task_run(
         persistent_log_url=(
             "http://airflow-host:8081/dags/mydag/grid?tab=logs&dag_run_id=manual__2024-07-05T09%3A04%3A13%3A979349%2B00%3A00&task_id=mytask"
         ),
+    )
+
+
+@pytest.fixture
+def extracted_airflow_task_operation(
+    extracted_airflow_task_run: RunDTO,
+) -> OperationDTO:
+    return OperationDTO(
+        id=UUID("01908223-0782-7fc0-9d69-b1df9dac2c60"),
+        name="mytask",
+        description="BashOperator",
+        run=extracted_airflow_task_run,
+        status=OperationStatusDTO.SUCCEEDED,
+        type=OperationTypeDTO.BATCH,
+        started_at=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
+        ended_at=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
+    )
+
+
+@pytest.fixture
+def extracted_airflow_postgres_input(
+    extracted_airflow_task_operation: OperationDTO,
+    extracted_postgres_dataset: DatasetDTO,
+    extracted_dataset_schema: SchemaDTO,
+) -> InputDTO:
+    return InputDTO(
+        operation=extracted_airflow_task_operation,
+        dataset=extracted_postgres_dataset,
+        schema=extracted_dataset_schema,
+    )
+
+
+@pytest.fixture
+def extracted_airflow_hive_output(
+    extracted_airflow_task_operation: OperationDTO,
+    extracted_hive_dataset: DatasetDTO,
+    extracted_dataset_schema: SchemaDTO,
+) -> OutputDTO:
+    return OutputDTO(
+        type=OutputTypeDTO.CREATE,
+        operation=extracted_airflow_task_operation,
+        dataset=extracted_hive_dataset,
+        schema=extracted_dataset_schema,
+        num_rows=1_000_000,
+        num_bytes=1000 * 1024 * 1024,
     )

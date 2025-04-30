@@ -78,6 +78,7 @@ class Operation(Base):
     name: Mapped[str] = mapped_column(
         String,
         nullable=False,
+        default="unknown",
         doc="Name of the operation, e.g. job name",
     )
 

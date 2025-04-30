@@ -136,6 +136,7 @@ def airflow_task_run_event_start() -> OpenLineageRunEvent:
                     ),
                     task=OpenLineageAirflowTaskInfo(
                         task_id="mytask",
+                        operator_class="BashOperator",
                     ),
                     taskInstance=OpenLineageAirflowTaskInstanceInfo(
                         try_number=1,

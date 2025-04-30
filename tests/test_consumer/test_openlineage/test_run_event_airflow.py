@@ -415,6 +415,7 @@ def test_run_event_airflow_task_start():
                     ),
                     task=OpenLineageAirflowTaskInfo(
                         task_id="mytask",
+                        operator_class="SSHOperator",
                     ),
                 ),
                 # unknown facets are ignored
