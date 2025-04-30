@@ -34,6 +34,7 @@ async def runs_events_subscriber(
 ):
     logger.info("Extracting events")
     parsed, malformed = await extract_events(batch, logger)
+    logger.info("Parsed %r", parsed)
 
     logger.info("Saving to database")
     await save_to_db(parsed, session, logger)

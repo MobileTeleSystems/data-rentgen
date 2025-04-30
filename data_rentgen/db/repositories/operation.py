@@ -5,7 +5,7 @@ from collections.abc import Collection
 from datetime import datetime, timezone
 from uuid import UUID
 
-from sqlalchemy import Row, UnaryExpression, any_, func, select
+from sqlalchemy import Row, UnaryExpression, any_, bindparam, func, select, update
 from sqlalchemy.dialects.postgresql import insert
 
 from data_rentgen.db.models import Operation, OperationStatus, OperationType
@@ -19,39 +19,44 @@ class OperationRepository(Repository[Operation]):
         if not operations:
             return
 
-        insert_statement = insert(Operation)
-        statement = insert_statement.on_conflict_do_update(
-            index_elements=[Operation.created_at, Operation.id],
-            set_={
-                "name": func.coalesce(insert_statement.excluded.name, Operation.name),
-                "type": func.coalesce(insert_statement.excluded.type, Operation.type),
-                "status": func.greatest(insert_statement.excluded.status, Operation.status),
-                "started_at": func.coalesce(insert_statement.excluded.started_at, Operation.started_at),
-                "ended_at": func.coalesce(insert_statement.excluded.ended_at, Operation.ended_at),
-                "description": func.coalesce(insert_statement.excluded.description, Operation.description),
-                "group": func.coalesce(insert_statement.excluded.group, Operation.group),
-                "position": func.coalesce(insert_statement.excluded.position, Operation.position),
-            },
+        data = [
+            {
+                "id": operation.id,
+                "created_at": extract_timestamp_from_uuid(operation.id),
+                "run_id": operation.run.id,
+                "name": operation.name,
+                "type": OperationType(operation.type) if operation.type else None,
+                "status": OperationStatus(operation.status),
+                "started_at": operation.started_at,
+                "ended_at": operation.ended_at,
+                "description": operation.description,
+                "group": operation.group,
+                "position": operation.position,
+            }
+            for operation in operations
+        ]
+
+        # this replaces all null values with defaults
+        await self._session.execute(
+            insert(Operation).on_conflict_do_nothing(),
+            data,
         )
 
+        # if value is still none, keep existing one
         await self._session.execute(
-            statement,
-            [
+            update(Operation).values(
                 {
-                    "id": operation.id,
-                    "created_at": extract_timestamp_from_uuid(operation.id),
-                    "run_id": operation.run.id,
-                    "name": operation.name,
-                    "type": OperationType(operation.type) if operation.type else None,
-                    "status": OperationStatus(operation.status),
-                    "started_at": operation.started_at,
-                    "ended_at": operation.ended_at,
-                    "description": operation.description,
-                    "group": operation.group,
-                    "position": operation.position,
-                }
-                for operation in operations
-            ],
+                    "name": func.coalesce(bindparam("name"), Operation.name),
+                    "type": func.coalesce(bindparam("type"), Operation.type),
+                    "status": func.greatest(bindparam("status"), Operation.status),
+                    "started_at": func.coalesce(bindparam("started_at"), Operation.started_at),
+                    "ended_at": func.coalesce(bindparam("ended_at"), Operation.ended_at),
+                    "description": func.coalesce(bindparam("description"), Operation.description),
+                    "group": func.coalesce(bindparam("group"), Operation.group),
+                    "position": func.coalesce(bindparam("position"), Operation.position),
+                },
+            ),
+            data,
         )
 
     async def paginate(

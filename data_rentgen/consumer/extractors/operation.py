@@ -6,38 +6,62 @@ from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEvent,
     OpenLineageRunEventType,
 )
-from data_rentgen.dto import OperationDTO, OperationStatusDTO, OperationTypeDTO
+from data_rentgen.dto import OperationDTO, OperationStatusDTO, OperationTypeDTO, RunDTO
 
 
 def extract_operation(event: OpenLineageRunEvent) -> OperationDTO:
-    if event.run.facets.parent and event.job.facets.jobType and event.job.facets.jobType.integration == "SPARK":
-        run = extract_parent_run(event.run.facets.parent)
-    else:
-        run = extract_run(event)
-
-    # in some cases, operation name may contain raw SELECT query with newlines
-    operation_name = " ".join(line.strip() for line in event.job.name.splitlines()).strip()
-    # remove parent job name from operation name
-    if operation_name.startswith(run.job.name) and operation_name != run.job.name:
-        prefix = len(run.job.name) + 1
-        operation_name = operation_name[prefix:]
-
-    type_: OperationTypeDTO = OperationTypeDTO.BATCH
-    if event.job.facets.jobType and event.job.facets.jobType.processingType:
-        type_ = OperationTypeDTO(event.job.facets.jobType.processingType)
+    run = extract_operation_run(event)
 
     operation = OperationDTO(
         id=event.run.runId,  # type: ignore [arg-type]
         run=run,
-        name=operation_name,
-        type=type_,
+        name=extract_operation_name(run, event),
+        type=extract_operation_type(event),
         status=OperationStatusDTO(run.status),
         started_at=run.started_at,
         ended_at=run.ended_at,
     )
     enrich_operation_status(operation, event)
-    enrich_operation_description(operation, event)
+    enrich_operation_details(operation, event)
     return operation
+
+
+def extract_operation_run(event: OpenLineageRunEvent) -> RunDTO:
+    if event.run.facets.parent and event.job.facets.jobType and event.job.facets.jobType.integration == "SPARK":
+        return extract_parent_run(event.run.facets.parent)
+
+    return extract_run(event)
+
+
+def extract_operation_type(event: OpenLineageRunEvent) -> OperationTypeDTO:
+    if event.job.facets.jobType and event.job.facets.jobType.processingType:
+        return OperationTypeDTO(event.job.facets.jobType.processingType)
+
+    return OperationTypeDTO.BATCH
+
+
+def extract_operation_name(run: RunDTO, event: OpenLineageRunEvent) -> str | None:
+    if event.job.facets.jobType and event.job.facets.jobType.integration == "SPARK":
+        # in some cases, operation name may contain raw SELECT query with newlines. use spaces instead
+        operation_name = " ".join(line.strip() for line in event.job.name.splitlines()).strip()
+
+        # Spark execution name is "applicationName.operationName". Strip prefix
+        if operation_name.startswith(run.job.name) and operation_name != run.job.name:
+            prefix = len(run.job.name) + 1
+            operation_name = operation_name[prefix:]
+
+        return operation_name
+
+    if event.job.facets.jobType and event.job.facets.jobType.integration == "AIRFLOW":
+        airflow_operator_details = event.run.facets.airflow
+        if airflow_operator_details:
+            return airflow_operator_details.task.task_id
+
+        # for FINISHED/KILLED event we don't receive task facet.
+        # keep existing name in DB instead of resetting it to "dag.task"
+        return None
+
+    return run.job.name
 
 
 def enrich_operation_status(operation: OperationDTO, event: OpenLineageRunEvent) -> OperationDTO:
@@ -62,10 +86,17 @@ def enrich_operation_status(operation: OperationDTO, event: OpenLineageRunEvent)
     return operation
 
 
-def enrich_operation_description(operation: OperationDTO, event: OpenLineageRunEvent) -> OperationDTO:
+def enrich_operation_details(operation: OperationDTO, event: OpenLineageRunEvent) -> OperationDTO:
     spark_job_details = event.run.facets.spark_jobDetails
     if spark_job_details:
         operation.position = spark_job_details.jobId
         operation.group = spark_job_details.jobGroup
         operation.description = spark_job_details.jobDescription
+
+    airflow_operator_details = event.run.facets.airflow
+    if airflow_operator_details:
+        operation.description = airflow_operator_details.task.operator_class
+        operation.position = airflow_operator_details.taskInstance.map_index
+        if airflow_operator_details.task.task_group:
+            operation.group = airflow_operator_details.task.task_group.group_id
     return operation
