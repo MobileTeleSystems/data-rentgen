@@ -18,7 +18,6 @@ class OperationRepository(Repository[Operation]):
     async def create_or_update_bulk(self, operations: list[OperationDTO]) -> None:
         if not operations:
             return
-
         data = [
             {
                 "id": operation.id,

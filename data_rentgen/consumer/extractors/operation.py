@@ -18,6 +18,7 @@ def extract_operation(event: OpenLineageRunEvent) -> OperationDTO:
         name=extract_operation_name(run, event),
         type=extract_operation_type(event),
         status=OperationStatusDTO(run.status),
+        sql_query=run.job.sql_query,
         started_at=run.started_at,
         ended_at=run.ended_at,
     )
