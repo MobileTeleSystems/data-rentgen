@@ -68,7 +68,7 @@ class BatchExtractionResult:
         self._outputs: dict[tuple, OutputDTO] = {}
         self._column_lineage: dict[tuple, ColumnLineageDTO] = {}
         self._schemas: dict[tuple, SchemaDTO] = {}
-        self._sql_queries: dict[str, SQLQueryDTO] = {}
+        self._sql_queries: dict[tuple, SQLQueryDTO] = {}
         self._users: dict[tuple, UserDTO] = {}
 
     def __repr__(self):
@@ -173,7 +173,7 @@ class BatchExtractionResult:
     def get_schema(self, schema_key: tuple) -> SchemaDTO:
         return self._schemas[schema_key]
 
-    def get_sql_query(self, sql_query_key: str) -> SQLQueryDTO:
+    def get_sql_query(self, sql_query_key: tuple) -> SQLQueryDTO:
         return self._sql_queries[sql_query_key]
 
     def get_user(self, user_key: tuple) -> UserDTO:
