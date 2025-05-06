@@ -20,6 +20,7 @@ from data_rentgen.db.models.operation import Operation, OperationStatus, Operati
 from data_rentgen.db.models.output import Output, OutputType
 from data_rentgen.db.models.run import Run, RunStartReason, RunStatus
 from data_rentgen.db.models.schema import Schema
+from data_rentgen.db.models.sql_query import SQLQuery
 from data_rentgen.db.models.user import User
 
 __all__ = [
@@ -45,6 +46,7 @@ __all__ = [
     "Run",
     "RunStartReason",
     "RunStatus",
+    "SQLQuery",
     "Schema",
     "User",
 ]

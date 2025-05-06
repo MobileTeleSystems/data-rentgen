@@ -16,6 +16,7 @@ from data_rentgen.dto import (
     OutputDTO,
     RunDTO,
     SchemaDTO,
+    SQLQueryDTO,
     UserDTO,
 )
 
@@ -32,6 +33,7 @@ T = TypeVar(
     InputDTO,
     OutputDTO,
     SchemaDTO,
+    SQLQueryDTO,
     UserDTO,
 )
 
@@ -66,6 +68,7 @@ class BatchExtractionResult:
         self._outputs: dict[tuple, OutputDTO] = {}
         self._column_lineage: dict[tuple, ColumnLineageDTO] = {}
         self._schemas: dict[tuple, SchemaDTO] = {}
+        self._sql_queries: dict[str, SQLQueryDTO] = {}
         self._users: dict[tuple, UserDTO] = {}
 
     def __repr__(self):
@@ -82,6 +85,7 @@ class BatchExtractionResult:
             f"outputs={len(self._outputs)}, "
             f"column_lineage={len(self._column_lineage)}, "
             f"schemas={len(self._schemas)}, "
+            f"sql_queries={len(self._sql_queries)}, "
             f"users={len(self._users)}"
             ")"
         )
@@ -157,6 +161,9 @@ class BatchExtractionResult:
     def add_schema(self, schema: SchemaDTO):
         return self._add(self._schemas, schema)
 
+    def add_sql_query(self, sql_query: SQLQueryDTO):
+        return self._add(self._sql_queries, sql_query)
+
     def add_user(self, user: UserDTO):
         return self._add(self._users, user)
 
@@ -165,6 +172,9 @@ class BatchExtractionResult:
 
     def get_schema(self, schema_key: tuple) -> SchemaDTO:
         return self._schemas[schema_key]
+
+    def get_sql_query(self, sql_query_key: str) -> SQLQueryDTO:
+        return self._sql_queries[sql_query_key]
 
     def get_user(self, user_key: tuple) -> UserDTO:
         return self._users[user_key]
@@ -259,6 +269,9 @@ class BatchExtractionResult:
 
     def schemas(self) -> list[SchemaDTO]:
         return list(map(self.get_schema, self._schemas))
+
+    def sql_queries(self) -> list[SQLQueryDTO]:
+        return list(map(self.get_sql_query, self._sql_queries))
 
     def users(self) -> list[UserDTO]:
         return list(map(self.get_user, self._users))

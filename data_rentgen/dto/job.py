@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 
 from data_rentgen.dto.job_type import JobTypeDTO
 from data_rentgen.dto.location import LocationDTO
+from data_rentgen.dto.sql_query import SQLQueryDTO
 
 
 @dataclass
@@ -14,6 +15,7 @@ class JobDTO:
     name: str
     location: LocationDTO
     type: JobTypeDTO | None = None
+    sql_query: SQLQueryDTO | None = None
     id: int | None = field(default=None, compare=False)
 
     @property
@@ -31,9 +33,16 @@ class JobDTO:
         else:
             type_ = new.type or self.type
 
+        sql_query: SQLQueryDTO | None
+        if new.sql_query and self.sql_query:
+            sql_query = self.sql_query.merge(new.sql_query)
+        else:
+            sql_query = new.sql_query or self.sql_query
+
         return JobDTO(
             location=self.location.merge(new.location),
             name=self.name,
             type=type_,
+            sql_query=sql_query,
             id=new.id or self.id,
         )
