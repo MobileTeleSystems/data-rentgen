@@ -18,7 +18,6 @@ class OperationRepository(Repository[Operation]):
     async def create_or_update_bulk(self, operations: list[OperationDTO]) -> None:
         if not operations:
             return
-
         insert_statement = insert(Operation)
         statement = insert_statement.on_conflict_do_update(
             index_elements=[Operation.created_at, Operation.id],
@@ -47,6 +46,7 @@ class OperationRepository(Repository[Operation]):
                     "started_at": operation.started_at,
                     "ended_at": operation.ended_at,
                     "description": operation.description,
+                    "sql_query_id": operation.sql_query.id if operation.sql_query else None,
                     "group": operation.group,
                     "position": operation.position,
                 }

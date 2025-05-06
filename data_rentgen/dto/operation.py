@@ -9,6 +9,7 @@ from enum import Enum, IntEnum
 from uuid import UUID
 
 from data_rentgen.dto.run import RunDTO
+from data_rentgen.dto.sql_query import SQLQueryDTO
 
 
 class OperationTypeDTO(str, Enum):
@@ -43,6 +44,7 @@ class OperationDTO:
     group: str | None = None
     description: str | None = None
     status: OperationStatusDTO = OperationStatusDTO.UNKNOWN
+    sql_query: SQLQueryDTO | None = None
     started_at: datetime | None = None
     ended_at: datetime | None = None
 
@@ -51,6 +53,11 @@ class OperationDTO:
         return (self.id,)
 
     def merge(self, new: OperationDTO) -> OperationDTO:
+        sql_query: SQLQueryDTO | None
+        if self.sql_query and new.sql_query:
+            sql_query = self.sql_query.merge(new.sql_query)
+        else:
+            sql_query = new.sql_query or self.sql_query
         return OperationDTO(
             id=self.id,
             run=self.run.merge(new.run),
@@ -59,6 +66,7 @@ class OperationDTO:
             group=new.group or self.group,
             description=new.description or self.description,
             status=max(new.status, self.status),
+            sql_query=sql_query,
             position=new.position or self.position,
             started_at=new.started_at or self.started_at,
             ended_at=new.ended_at or self.ended_at,

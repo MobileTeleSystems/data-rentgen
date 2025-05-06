@@ -49,6 +49,7 @@ class BatchExtractor:
     def extract_operation(self, event: OpenLineageRunEvent) -> None:
         operation = extract_operation(event)
         self.result.add_operation(operation)
+        # TODO here we don't have a query id, so we should store relation to query dto instead of only id
 
         for input_dataset in event.inputs:
             input_dto, symlink_dtos = extract_input(operation, input_dataset)
