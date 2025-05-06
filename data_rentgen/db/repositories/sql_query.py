@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2024-2025 MTS PJSC
+# SPDX-License-Identifier: Apache-2.0
 from uuid import UUID
 
 from sqlalchemy import select
