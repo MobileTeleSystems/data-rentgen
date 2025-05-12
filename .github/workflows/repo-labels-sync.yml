@@ -16,6 +16,12 @@ on:
 jobs:
   labeler:
     runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      issues: write # to update repo labels
+      pull-requests: write # to update repo labels
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
