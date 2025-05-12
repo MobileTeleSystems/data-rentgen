@@ -325,7 +325,9 @@ def test_extractors_extract_operation_spark_job_sql_query():
                 ),
                 sql=OpenLineageSqlJobFacet(
                     query="""
-                        select id, name from schema.table where id = 1
+                        select id, name
+                        from schema.table
+                        where id = 1
                     """,
                 ),
             ),

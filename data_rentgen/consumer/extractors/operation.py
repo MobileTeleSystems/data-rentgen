@@ -112,6 +112,8 @@ def extract_sql_query(job: OpenLineageJob) -> SQLQueryDTO | None:
     """
     if job.facets.sql:
         query = str.strip(dedent(job.facets.sql.query))
+        # after this step we have a row like 'select * from\ntable', so we replace '\n' with spaces
+        query = query.replace("\n", " ")
         return SQLQueryDTO(query=query)
 
     return None
