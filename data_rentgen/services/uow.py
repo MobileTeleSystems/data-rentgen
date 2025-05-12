@@ -20,6 +20,7 @@ from data_rentgen.db.repositories.operation import OperationRepository
 from data_rentgen.db.repositories.output import OutputRepository
 from data_rentgen.db.repositories.run import RunRepository
 from data_rentgen.db.repositories.schema import SchemaRepository
+from data_rentgen.db.repositories.sql_query import SQLQueryRepository
 from data_rentgen.db.repositories.user import UserRepository
 from data_rentgen.dependencies import Stub
 
@@ -38,6 +39,7 @@ class UnitOfWork:
         self.dataset = DatasetRepository(session)
         self.dataset_symlink = DatasetSymlinkRepository(session)
         self.schema = SchemaRepository(session)
+        self.sql_query = SQLQueryRepository(session)
         self.input = InputRepository(session)
         self.output = OutputRepository(session)
         self.dataset_column_relation = DatasetColumnRelationRepository(session)

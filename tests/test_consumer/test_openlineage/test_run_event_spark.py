@@ -30,6 +30,7 @@ from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
     OpenLineageJobProcessingType,
     OpenLineageJobTypeJobFacet,
+    OpenLineageSqlJobFacet,
 )
 from data_rentgen.consumer.openlineage.run import OpenLineageRun
 from data_rentgen.consumer.openlineage.run_event import (
@@ -279,6 +280,11 @@ def test_run_event_spark_job_running():
                     "integration": "SPARK",
                     "jobType": "SQL_JOB",
                 },
+                "sql": {
+                    "_producer": "https://some.producer.com/version/1.0",
+                    "_schemaURL": "https://github.com/OpenLineage/OpenLineage/blob/main/spec/facets/SQLJobFacet.json",
+                    "query": "select id, name from schema.table where id = 1",
+                },
             },
         },
         "inputs": [
@@ -441,6 +447,7 @@ def test_run_event_spark_job_running():
                     integration="SPARK",
                     jobType="SQL_JOB",
                 ),
+                sql=OpenLineageSqlJobFacet(query="select id, name from schema.table where id = 1"),
             ),
         ),
         run=OpenLineageRun(

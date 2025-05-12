@@ -8,12 +8,13 @@ from enum import Enum, IntEnum
 from uuid import UUID
 
 from sqlalchemy import UUID as SQL_UUID
-from sqlalchemy import DateTime, Integer, PrimaryKeyConstraint, SmallInteger, String
+from sqlalchemy import BigInteger, DateTime, Integer, PrimaryKeyConstraint, SmallInteger, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
 
 from data_rentgen.db.models.base import Base
 from data_rentgen.db.models.run import Run
+from data_rentgen.db.models.sql_query import SQLQuery
 
 
 class OperationStatus(IntEnum):
@@ -105,6 +106,20 @@ class Operation(Base):
         String,
         nullable=True,
         doc="Description of the operation, e.g. Spark jobDescription",
+    )
+
+    sql_query_id: Mapped[int | None] = mapped_column(
+        BigInteger,
+        index=True,
+        nullable=True,
+        doc="Sql query of operation",
+    )
+
+    sql_query: Mapped[SQLQuery | None] = relationship(
+        SQLQuery,
+        primaryjoin="Operation.sql_query_id == SQLQuery.id",
+        lazy="noload",
+        foreign_keys=[sql_query_id],
     )
 
     started_at: Mapped[datetime | None] = mapped_column(

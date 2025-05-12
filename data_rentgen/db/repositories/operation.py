@@ -18,7 +18,6 @@ class OperationRepository(Repository[Operation]):
     async def create_or_update_bulk(self, operations: list[OperationDTO]) -> None:
         if not operations:
             return
-
         data = [
             {
                 "id": operation.id,
@@ -30,6 +29,7 @@ class OperationRepository(Repository[Operation]):
                 "started_at": operation.started_at,
                 "ended_at": operation.ended_at,
                 "description": operation.description,
+                "sql_query_id": operation.sql_query.id if operation.sql_query else None,
                 "group": operation.group,
                 "position": operation.position,
             }
@@ -52,6 +52,7 @@ class OperationRepository(Repository[Operation]):
                     "started_at": func.coalesce(bindparam("started_at"), Operation.started_at),
                     "ended_at": func.coalesce(bindparam("ended_at"), Operation.ended_at),
                     "description": func.coalesce(bindparam("description"), Operation.description),
+                    "sql_query_id": func.coalesce(bindparam("sql_query_id"), Operation.sql_query_id),
                     "group": func.coalesce(bindparam("group"), Operation.group),
                     "position": func.coalesce(bindparam("position"), Operation.position),
                 },

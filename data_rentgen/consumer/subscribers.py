@@ -122,6 +122,12 @@ async def save_to_db(
             job = await unit_of_work.job.create_or_update(job_dto)
             job_dto.id = job.id
 
+    logger.debug("Creating sql queries")
+    for sql_query_dto in data.sql_queries():
+        async with unit_of_work:
+            sql_query = await unit_of_work.sql_query.get_or_create(sql_query_dto)
+            sql_query_dto.id = sql_query.id
+
     logger.debug("Creating users")
     for user_dto in data.users():
         async with unit_of_work:

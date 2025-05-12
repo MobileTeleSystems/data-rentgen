@@ -21,6 +21,7 @@ from data_rentgen.dto.output import OutputDTO, OutputTypeDTO
 from data_rentgen.dto.pagination import PaginationDTO
 from data_rentgen.dto.run import RunDTO, RunStartReasonDTO, RunStatusDTO
 from data_rentgen.dto.schema import SchemaDTO
+from data_rentgen.dto.sql_query import SQLQueryDTO
 from data_rentgen.dto.user import UserDTO
 
 __all__ = [
@@ -43,6 +44,7 @@ __all__ = [
     "RunDTO",
     "RunStartReasonDTO",
     "RunStatusDTO",
+    "SQLQueryDTO",
     "SchemaDTO",
     "UserDTO",
 ]

@@ -11,6 +11,7 @@ from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
     OpenLineageJobProcessingType,
     OpenLineageJobTypeJobFacet,
+    OpenLineageSqlJobFacet,
 )
 from data_rentgen.consumer.openlineage.run import OpenLineageRun
 from data_rentgen.consumer.openlineage.run_event import (
@@ -29,6 +30,7 @@ from data_rentgen.dto.job import JobDTO
 from data_rentgen.dto.location import LocationDTO
 from data_rentgen.dto.operation import OperationTypeDTO
 from data_rentgen.dto.run import RunDTO
+from data_rentgen.dto.sql_query import SQLQueryDTO
 
 
 def test_extractors_extract_operation_spark_job_no_details():
@@ -301,4 +303,69 @@ def test_extractors_extract_operation_spark_job_finished(
         status=expected_status,
         started_at=None,
         ended_at=ended_at,
+    )
+
+
+def test_extractors_extract_operation_spark_job_sql_query():
+    now = datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
+    run_id = UUID("01908224-8410-79a2-8de6-a769ad6944c9")
+    operation_id = UUID("01908225-1fd7-746b-910c-70d24f2898b1")
+
+    operation = OpenLineageRunEvent(
+        eventType=OpenLineageRunEventType.START,
+        eventTime=now,
+        job=OpenLineageJob(
+            namespace="anything",
+            name="mysession.execute_some_command",
+            facets=OpenLineageJobFacets(
+                jobType=OpenLineageJobTypeJobFacet(
+                    processingType=OpenLineageJobProcessingType.BATCH,
+                    integration="SPARK",
+                    jobType="SQL_JOB",
+                ),
+                sql=OpenLineageSqlJobFacet(
+                    query="""
+                        select id, name
+                        from schema.table
+                        where id = 1
+                    """,
+                ),
+            ),
+        ),
+        run=OpenLineageRun(
+            runId=operation_id,
+            facets=OpenLineageRunFacets(
+                parent=OpenLineageParentRunFacet(
+                    job=OpenLineageParentJob(
+                        namespace="anything",
+                        name="mysession",
+                    ),
+                    run=OpenLineageParentRun(
+                        runId=run_id,
+                    ),
+                ),
+            ),
+        ),
+    )
+    assert extract_operation(operation) == OperationDTO(
+        id=operation_id,
+        run=RunDTO(
+            id=run_id,
+            job=JobDTO(
+                name="mysession",
+                location=LocationDTO(
+                    type="unknown",
+                    name="anything",
+                    addresses={"unknown://anything"},
+                ),
+            ),
+        ),
+        name="execute_some_command",
+        type=OperationTypeDTO.BATCH,
+        position=None,
+        description=None,
+        status=OperationStatusDTO.STARTED,
+        sql_query=SQLQueryDTO(query="select id, name\nfrom schema.table\nwhere id = 1"),
+        started_at=now,
+        ended_at=None,
     )

@@ -10,6 +10,7 @@ from data_rentgen.consumer.openlineage.job_facets.job_type import (
     OpenLineageJobProcessingType,
     OpenLineageJobTypeJobFacet,
 )
+from data_rentgen.consumer.openlineage.job_facets.sql import OpenLineageSqlJobFacet
 
 __all__ = [
     "OpenLineageDocumentationJobFacet",
@@ -27,3 +28,4 @@ class OpenLineageJobFacets(OpenLineageBase):
 
     documentation: OpenLineageDocumentationJobFacet | None = None
     jobType: OpenLineageJobTypeJobFacet | None = None
+    sql: OpenLineageSqlJobFacet | None = None
