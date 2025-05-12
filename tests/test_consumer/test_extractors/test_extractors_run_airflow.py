@@ -25,7 +25,6 @@ from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageAirflowTaskInfo,
     OpenLineageAirflowTaskInstanceInfo,
     OpenLineageAirflowTaskRunFacet,
-    OpenLineageProcessingEngineName,
     OpenLineageProcessingEngineRunFacet,
     OpenLineageRunFacets,
 )
@@ -65,7 +64,7 @@ def test_extractors_extract_run_airflow_dag_log_url_2_3_plus():
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("2.9.2"),
-                    name=OpenLineageProcessingEngineName.AIRFLOW,
+                    name="Airflow",
                     openlineageAdapterVersion=Version("1.10.0"),
                 ),
                 airflowDagRun=OpenLineageAirflowDagRunFacet(
@@ -128,7 +127,7 @@ def test_extractors_extract_run_airflow_dag_log_url_2_x():
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("2.1.4"),
-                    name=OpenLineageProcessingEngineName.AIRFLOW,
+                    name="Airflow",
                     openlineageAdapterVersion=Version("1.10.0"),
                 ),
                 airflowDagRun=OpenLineageAirflowDagRunFacet(
@@ -191,7 +190,7 @@ def test_extractors_extract_run_airflow_task_log_url_preserve_original():
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("2.9.2"),
-                    name=OpenLineageProcessingEngineName.AIRFLOW,
+                    name="Airflow",
                     openlineageAdapterVersion=Version("1.10.0"),
                 ),
                 airflow=OpenLineageAirflowTaskRunFacet(
@@ -264,7 +263,7 @@ def test_extractors_extract_run_airflow_task_log_url_2_9_plus():
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("2.9.2"),
-                    name=OpenLineageProcessingEngineName.AIRFLOW,
+                    name="Airflow",
                     openlineageAdapterVersion=Version("1.9.0"),
                 ),
                 airflow=OpenLineageAirflowTaskRunFacet(
@@ -408,7 +407,7 @@ def test_extractors_extract_run_airflow_dag_owner(owner: str, extracted_user: Us
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("2.1.4"),
-                    name=OpenLineageProcessingEngineName.AIRFLOW,
+                    name="Airflow",
                     openlineageAdapterVersion=Version("1.10.0"),
                 ),
                 airflowDagRun=OpenLineageAirflowDagRunFacet(

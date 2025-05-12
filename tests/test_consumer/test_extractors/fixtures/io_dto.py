@@ -20,24 +20,6 @@ def extracted_postgres_location() -> LocationDTO:
 
 
 @pytest.fixture
-def extracted_hdfs_location() -> LocationDTO:
-    return LocationDTO(
-        type="hdfs",
-        name="test-hadoop:9820",
-        addresses={"hdfs://test-hadoop:9820"},
-    )
-
-
-@pytest.fixture
-def extracted_hive_location() -> LocationDTO:
-    return LocationDTO(
-        type="hive",
-        name="test-hadoop:9083",
-        addresses={"hive://test-hadoop:9083"},
-    )
-
-
-@pytest.fixture
 def extracted_postgres_dataset(
     extracted_postgres_location: LocationDTO,
 ) -> DatasetDTO:
@@ -48,12 +30,30 @@ def extracted_postgres_dataset(
 
 
 @pytest.fixture
+def extracted_hdfs_location() -> LocationDTO:
+    return LocationDTO(
+        type="hdfs",
+        name="test-hadoop:9820",
+        addresses={"hdfs://test-hadoop:9820"},
+    )
+
+
+@pytest.fixture
 def extracted_hdfs_dataset(
     extracted_hdfs_location: LocationDTO,
 ) -> DatasetDTO:
     return DatasetDTO(
         location=extracted_hdfs_location,
         name="/user/hive/warehouse/mydb.db/mytable",
+    )
+
+
+@pytest.fixture
+def extracted_hive_location() -> LocationDTO:
+    return LocationDTO(
+        type="hive",
+        name="test-hadoop:9083",
+        addresses={"hive://test-hadoop:9083"},
     )
 
 
@@ -88,6 +88,25 @@ def extracted_hive_dataset_symlink(
         from_dataset=extracted_hive_dataset,
         to_dataset=extracted_hdfs_dataset,
         type=DatasetSymlinkTypeDTO.WAREHOUSE,
+    )
+
+
+@pytest.fixture
+def extracted_kafka_location() -> LocationDTO:
+    return LocationDTO(
+        type="kafka",
+        name="server1:9092",
+        addresses={"kafka://server1:9092", "kafka://server2:9092"},
+    )
+
+
+@pytest.fixture
+def extracted_kafka_dataset(
+    extracted_kafka_location: LocationDTO,
+) -> DatasetDTO:
+    return DatasetDTO(
+        location=extracted_kafka_location,
+        name="mytopic",
     )
 
 

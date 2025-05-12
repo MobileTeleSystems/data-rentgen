@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from enum import Enum
 from typing import Annotated
 
 from packaging.version import Version as RawVersion
@@ -26,19 +25,11 @@ Version = Annotated[
 ]
 
 
-class OpenLineageProcessingEngineName(str, Enum):
-    AIRFLOW = "Airflow"
-    SPARK = "spark"
-
-    def __str__(self) -> str:
-        return self.value
-
-
 class OpenLineageProcessingEngineRunFacet(OpenLineageRunFacet):
     """Run facet describing processing engine.
     See [ProcessingEngineRunFacet](https://github.com/OpenLineage/OpenLineage/blob/main/spec/facets/ProcessingEngineRunFacet.json).
     """
 
-    name: OpenLineageProcessingEngineName
+    name: str
     version: Version
     openlineageAdapterVersion: Version

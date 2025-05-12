@@ -275,6 +275,37 @@ def test_extractors_extract_dataset_kafka():
     assert symlinks == []
 
 
+def test_extractors_extract_dataset_kafka_with_flink2_legacy_symlinks():
+    # https://github.com/OpenLineage/OpenLineage/pull/3657
+    dataset = OpenLineageDataset(
+        namespace="kafka://192.168.1.1:9092",
+        name="mytopic",
+        facets=OpenLineageDatasetFacets(
+            symlinks=OpenLineageSymlinksDatasetFacet(
+                identifiers=[
+                    OpenLineageSymlinkIdentifier(
+                        namespace="kafka://192.168.1.1:9092",
+                        name="default_catalog.default_database.sometable",
+                        type=OpenLineageSymlinkType.TABLE,
+                    ),
+                ],
+            ),
+        ),
+    )
+
+    dataset, symlinks = extract_dataset_and_symlinks(dataset)
+
+    assert dataset == DatasetDTO(
+        location=LocationDTO(
+            type="kafka",
+            name="192.168.1.1:9092",
+            addresses={"kafka://192.168.1.1:9092"},
+        ),
+        name="mytopic",
+    )
+    assert symlinks == []
+
+
 def test_extractors_extract_dataset_unknown():
     dataset = OpenLineageDataset(
         namespace="some-namespace",

@@ -41,7 +41,6 @@ from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageParentJob,
     OpenLineageParentRun,
     OpenLineageParentRunFacet,
-    OpenLineageProcessingEngineName,
     OpenLineageProcessingEngineRunFacet,
     OpenLineageRunFacets,
     OpenLineageSparkApplicationDetailsRunFacet,
@@ -130,7 +129,7 @@ def test_run_event_spark_application_start():
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("3.4.3"),
-                    name=OpenLineageProcessingEngineName.SPARK,
+                    name="spark",
                     openlineageAdapterVersion=Version("1.18.0"),
                 ),
                 spark_applicationDetails=OpenLineageSparkApplicationDetailsRunFacet(
@@ -216,7 +215,7 @@ def test_run_event_spark_application_stop():
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("3.4.3"),
-                    name=OpenLineageProcessingEngineName.SPARK,
+                    name="spark",
                     openlineageAdapterVersion=Version("1.18.0"),
                 ),
             ),
@@ -464,7 +463,7 @@ def test_run_event_spark_job_running():
                 ),
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("3.4.3"),
-                    name=OpenLineageProcessingEngineName.SPARK,
+                    name="spark",
                     openlineageAdapterVersion=Version("1.18.0"),
                 ),
                 spark_jobDetails=OpenLineageSparkJobDetailsRunFacet(
