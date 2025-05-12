@@ -1,12 +1,15 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+from textwrap import dedent
+
 from data_rentgen.consumer.extractors.run import extract_parent_run, extract_run
+from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEvent,
     OpenLineageRunEventType,
 )
-from data_rentgen.dto import OperationDTO, OperationStatusDTO, OperationTypeDTO, RunDTO
+from data_rentgen.dto import OperationDTO, OperationStatusDTO, OperationTypeDTO, RunDTO, SQLQueryDTO
 
 
 def extract_operation(event: OpenLineageRunEvent) -> OperationDTO:
@@ -18,7 +21,7 @@ def extract_operation(event: OpenLineageRunEvent) -> OperationDTO:
         name=extract_operation_name(run, event),
         type=extract_operation_type(event),
         status=OperationStatusDTO(run.status),
-        sql_query=run.job.sql_query,
+        sql_query=extract_sql_query(event.job),
         started_at=run.started_at,
         ended_at=run.ended_at,
     )
@@ -101,3 +104,14 @@ def enrich_operation_details(operation: OperationDTO, event: OpenLineageRunEvent
         if airflow_operator_details.task.task_group:
             operation.group = airflow_operator_details.task.task_group.group_id
     return operation
+
+
+def extract_sql_query(job: OpenLineageJob) -> SQLQueryDTO | None:
+    """
+    Sql queries are usual has format of multiline string. So we remove additional spaces and end of the rows symbols.
+    """
+    if job.facets.sql:
+        query = str.strip(dedent(job.facets.sql.query))
+        return SQLQueryDTO(query=query)
+
+    return None

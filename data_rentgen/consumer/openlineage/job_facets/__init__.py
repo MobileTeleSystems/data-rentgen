@@ -28,4 +28,4 @@ class OpenLineageJobFacets(OpenLineageBase):
 
     documentation: OpenLineageDocumentationJobFacet | None = None
     jobType: OpenLineageJobTypeJobFacet | None = None
-    sql_query: OpenLineageSqlJobFacet | None = None
+    sql: OpenLineageSqlJobFacet | None = None

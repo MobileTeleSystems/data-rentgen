@@ -29,6 +29,7 @@ class OperationRepository(Repository[Operation]):
                 "started_at": operation.started_at,
                 "ended_at": operation.ended_at,
                 "description": operation.description,
+                "sql_query_id": operation.sql_query_id,
                 "group": operation.group,
                 "position": operation.position,
             }

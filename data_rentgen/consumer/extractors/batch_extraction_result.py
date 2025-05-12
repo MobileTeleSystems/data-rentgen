@@ -136,6 +136,8 @@ class BatchExtractionResult:
 
     def add_operation(self, operation: OperationDTO):
         operation.run = self.add_run(operation.run)
+        if operation.sql_query:
+            operation.sql_query = self.add_sql_query(operation.sql_query)
         return self._add(self._operations, operation)
 
     def add_input(self, input_: InputDTO):

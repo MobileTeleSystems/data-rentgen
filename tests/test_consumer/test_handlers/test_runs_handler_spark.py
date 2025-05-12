@@ -27,6 +27,7 @@ from data_rentgen.db.models import (
     Run,
     RunStatus,
     Schema,
+    SQLQuery,
 )
 
 RESOURCES_PATH = Path(__file__).parent.parent.joinpath("resources").resolve()
@@ -95,6 +96,15 @@ async def test_runs_handler_spark(
     assert application_run.running_log_url == "http://127.0.0.1:4040"
     assert application_run.persistent_log_url is None
 
+    sql_query = select(SQLQuery).order_by(SQLQuery.id)
+    sql_query_scalars = await async_session.scalars(sql_query)
+    sql_queries = sql_query_scalars.all()
+    assert len(sql_queries) == 1
+
+    operation_sql_query = sql_queries[0]
+    assert operation_sql_query.fingerprint == UUID("250fe871-527a-5bf7-b730-3f89b42cceb2")
+    assert operation_sql_query.query == "select id, name from schema.table where id = 1"
+
     operation_query = select(Operation).order_by(Operation.id)
     operation_scalars = await async_session.scalars(operation_query)
     operations = operation_scalars.all()
@@ -108,6 +118,7 @@ async def test_runs_handler_spark(
     assert job_operation.type == OperationType.BATCH
     assert job_operation.status == OperationStatus.SUCCEEDED
     assert job_operation.started_at == datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
+    assert job_operation.sql_query_id == operation_sql_query.id
     assert job_operation.ended_at == datetime(2024, 7, 5, 9, 7, 15, 642000, tzinfo=timezone.utc)
     assert job_operation.position == 3
     assert job_operation.description == "Hive -> Clickhouse"
