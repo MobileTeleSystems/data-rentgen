@@ -365,7 +365,7 @@ def test_extractors_extract_operation_spark_job_sql_query():
         position=None,
         description=None,
         status=OperationStatusDTO.STARTED,
-        sql_query=SQLQueryDTO(query="select id, name from schema.table where id = 1"),
+        sql_query=SQLQueryDTO(query="select id, name\nfrom schema.table\nwhere id = 1"),
         started_at=now,
         ended_at=None,
     )
