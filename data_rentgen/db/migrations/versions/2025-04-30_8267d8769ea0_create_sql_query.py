@@ -28,7 +28,14 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix__sql_query__fingerprint"), "sql_query", ["fingerprint"], unique=True)
 
+    op.add_column(
+        "operation",
+        sa.Column("sql_query_id", sa.BigInteger, nullable=True),
+    )
+    op.create_index(op.f("ix__operation__sql_query_id"), "operation", ["sql_query_id"], unique=False)
+
 
 def downgrade() -> None:
+    op.drop_index(op.f("ix__operation__sql_query_id"), table_name="operation")
     op.drop_index(op.f("ix__sql_query__fingerprint"), table_name="sql_query")
     op.drop_table("sql_query")

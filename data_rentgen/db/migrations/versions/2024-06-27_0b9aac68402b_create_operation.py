@@ -24,7 +24,6 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("id", sa.UUID(), nullable=False),
         sa.Column("run_id", sa.UUID(), nullable=False),
-        sa.Column("sql_query_id", sa.BigInteger, nullable=True),
         sa.Column("status", sa.SmallInteger(), nullable=False),
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("type", sa.String(length=32), nullable=False),
@@ -37,10 +36,8 @@ def upgrade() -> None:
         postgresql_partition_by="RANGE (created_at)",
     )
     op.create_index(op.f("ix__operation__run_id"), "operation", ["run_id"], unique=False)
-    op.create_index(op.f("ix__operation__sql_query_id"), "operation", ["sql_query_id"], unique=False)
 
 
 def downgrade() -> None:
     op.drop_index(op.f("ix__operation__run_id"), table_name="operation")
-    op.drop_index(op.f("ix__operation__sql_query_id"), table_name="operation")
     op.drop_table("operation")
