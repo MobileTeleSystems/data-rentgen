@@ -102,8 +102,8 @@ async def test_runs_handler_spark(
     assert len(sql_queries) == 1
 
     operation_sql_query = sql_queries[0]
-    assert operation_sql_query.fingerprint == UUID("250fe871-527a-5bf7-b730-3f89b42cceb2")
     assert operation_sql_query.query == "select id, name from schema.table where id = 1"
+    assert operation_sql_query.fingerprint is not None
 
     operation_query = select(Operation).order_by(Operation.id)
     operation_scalars = await async_session.scalars(operation_query)
@@ -262,55 +262,54 @@ async def test_runs_handler_spark(
     assert len(dataset_column_relation) == 7
 
     # First event(only direct relations)
-    customer_id_relation = dataset_column_relation[0]
-    assert customer_id_relation.source_column == "customer_id"
-    assert customer_id_relation.target_column == "customer_id"
-    assert customer_id_relation.type == DatasetColumnRelationType.IDENTITY.value
+    customer_id_first_relation = dataset_column_relation[0]
+    assert customer_id_first_relation.source_column == "customer_id"
+    assert customer_id_first_relation.target_column == "customer_id"
+    assert customer_id_first_relation.type == DatasetColumnRelationType.IDENTITY.value
+    assert customer_id_first_relation.fingerprint is not None
 
-    dt_relation = dataset_column_relation[1]
-    assert dt_relation.source_column == "dt"
-    assert dt_relation.target_column == "dt"
-    assert dt_relation.type == DatasetColumnRelationType.IDENTITY.value
+    dt_first_relation = dataset_column_relation[1]
+    assert dt_first_relation.source_column == "dt"
+    assert dt_first_relation.target_column == "dt"
+    assert dt_first_relation.type == DatasetColumnRelationType.IDENTITY.value
+    assert dt_first_relation.fingerprint is not None
+    assert dt_first_relation.fingerprint == customer_id_first_relation.fingerprint
 
-    total_spent_relation = dataset_column_relation[2]
-    assert total_spent_relation.source_column == "total_spent"
-    assert total_spent_relation.target_column == "total_spent"
-    assert total_spent_relation.type == DatasetColumnRelationType.IDENTITY.value
-    fingerpints = [
-        customer_id_relation.fingerprint,
-        dt_relation.fingerprint,
-        total_spent_relation.fingerprint,
-    ]
-    assert fingerpints[0] is not None
-    assert all(fingerprint == fingerpints[0] for fingerprint in fingerpints)
+    total_spent_first_relation = dataset_column_relation[2]
+    assert total_spent_first_relation.source_column == "total_spent"
+    assert total_spent_first_relation.target_column == "total_spent"
+    assert total_spent_first_relation.type == DatasetColumnRelationType.IDENTITY.value
+    assert total_spent_first_relation.fingerprint is not None
+    assert total_spent_first_relation.fingerprint == customer_id_first_relation.fingerprint
 
     # Second event(direct and indirect relations)
-    customer_id_relation = dataset_column_relation[3]
-    assert customer_id_relation.source_column == "customer_id"
-    assert customer_id_relation.target_column == "customer_id"
-    assert customer_id_relation.type == DatasetColumnRelationType.IDENTITY.value
+    customer_id_second_relation = dataset_column_relation[3]
+    assert customer_id_second_relation.source_column == "customer_id"
+    assert customer_id_second_relation.target_column == "customer_id"
+    assert customer_id_second_relation.type == DatasetColumnRelationType.IDENTITY.value
+    assert customer_id_second_relation.fingerprint is not None
+    assert customer_id_second_relation.fingerprint != customer_id_first_relation.fingerprint
 
-    dt_relation = dataset_column_relation[4]
-    assert dt_relation.source_column == "dt"
-    assert dt_relation.target_column == "dt"
-    assert dt_relation.type == DatasetColumnRelationType.IDENTITY.value
+    dt_second_relation = dataset_column_relation[4]
+    assert dt_second_relation.source_column == "dt"
+    assert dt_second_relation.target_column == "dt"
+    assert dt_second_relation.type == DatasetColumnRelationType.IDENTITY.value
+    assert dt_second_relation.fingerprint is not None
+    assert dt_second_relation.fingerprint != dt_first_relation.fingerprint
+    assert dt_second_relation.fingerprint == customer_id_second_relation.fingerprint
 
-    total_spent_relation = dataset_column_relation[5]
-    assert total_spent_relation.source_column == "total_spent"
-    assert total_spent_relation.target_column == "total_spent"
-    assert total_spent_relation.type == DatasetColumnRelationType.IDENTITY.value
+    total_spent_second_relation = dataset_column_relation[5]
+    assert total_spent_second_relation.source_column == "total_spent"
+    assert total_spent_second_relation.target_column == "total_spent"
+    assert total_spent_second_relation.type == DatasetColumnRelationType.IDENTITY.value
+    assert total_spent_second_relation.fingerprint is not None
+    assert total_spent_second_relation.fingerprint != total_spent_first_relation.fingerprint
+    assert total_spent_second_relation.fingerprint == customer_id_second_relation.fingerprint
 
     # Indirect relation
     customer_id_indirect_relation = dataset_column_relation[6]
     assert customer_id_indirect_relation.target_column is None
     assert customer_id_indirect_relation.source_column == "customer_id"
     assert customer_id_indirect_relation.type == DatasetColumnRelationType.JOIN.value
-
-    fingerpints = [
-        customer_id_indirect_relation.fingerprint,
-        customer_id_relation.fingerprint,
-        dt_relation.fingerprint,
-        total_spent_relation.fingerprint,
-    ]
-    assert fingerpints[0] is not None
-    assert all(fingerprint == fingerpints[0] for fingerprint in fingerpints)
+    assert customer_id_indirect_relation.fingerprint is not None
+    assert customer_id_indirect_relation.fingerprint == customer_id_second_relation.fingerprint

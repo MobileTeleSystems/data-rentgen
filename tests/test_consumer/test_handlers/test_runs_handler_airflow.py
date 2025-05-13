@@ -10,14 +10,24 @@ from sqlalchemy.orm import selectinload
 from uuid6 import UUID
 
 from data_rentgen.db.models import (
+    ColumnLineage,
+    Dataset,
+    DatasetColumnRelation,
+    DatasetColumnRelationType,
+    DatasetSymlink,
+    Input,
     Job,
     Location,
     Operation,
     OperationStatus,
     OperationType,
+    Output,
+    OutputType,
     Run,
     RunStartReason,
     RunStatus,
+    Schema,
+    SQLQuery,
     User,
 )
 
@@ -114,6 +124,27 @@ async def test_runs_handler_airflow(
     )
     assert task_run.running_log_url is None
 
+    sql_query = select(SQLQuery).order_by(SQLQuery.id)
+    sql_query_scalars = await async_session.scalars(sql_query)
+    sql_queries = sql_query_scalars.all()
+    assert len(sql_queries) == 1
+
+    operation_sql_query = sql_queries[0]
+    assert operation_sql_query.query == (
+        "INSERT INTO popular_orders_day_of_week (order_day_of_week, order_placed_on,orders_placed)\n"
+        "SELECT EXTRACT(ISODOW FROM order_placed_on) AS order_day_of_week,\n"
+        "       order_placed_on,\n"
+        "       COUNT(*) AS orders_placed\n"
+        "  FROM top_delivery_times\n"
+        " GROUP BY order_placed_on"
+    )
+    assert operation_sql_query.fingerprint is not None
+
+    operation_query = select(Operation).order_by(Operation.id)
+    operation_scalars = await async_session.scalars(operation_query)
+    operations = operation_scalars.all()
+    assert len(operations) == 1
+
     operation_query = select(Operation)
     operation_scalars = await async_session.scalars(operation_query)
     operations = operation_scalars.all()
@@ -126,7 +157,131 @@ async def test_runs_handler_airflow(
     assert task_operation.type == OperationType.BATCH
     assert task_operation.status == OperationStatus.SUCCEEDED
     assert task_operation.started_at == datetime(2024, 7, 5, 9, 4, 20, 783845, tzinfo=timezone.utc)
+    assert task_operation.sql_query_id == operation_sql_query.id
     assert task_operation.ended_at == datetime(2024, 7, 5, 9, 7, 37, 858423, tzinfo=timezone.utc)
-    assert task_operation.description == "SSHOperator"
+    assert task_operation.description == "SQLExecuteQueryOperator"
     assert task_operation.position is None
     assert task_operation.group is None
+
+    dataset_query = (
+        select(Dataset)
+        .order_by(Dataset.name)
+        .options(
+            selectinload(Dataset.location).selectinload(Location.addresses),
+        )
+    )
+    dataset_scalars = await async_session.scalars(dataset_query)
+    datasets = dataset_scalars.all()
+    assert len(datasets) == 2
+
+    input_table = datasets[1]
+    assert input_table.name == "food_delivery.public.top_delivery_times"
+    assert input_table.location.type == "postgres"
+    assert input_table.location.name == "postgres:5432"
+    assert len(input_table.location.addresses) == 1
+    assert input_table.location.addresses[0].url == "postgres://postgres:5432"
+    assert input_table.format is None
+
+    output_table = datasets[0]
+    assert output_table.name == "food_delivery.public.popular_orders_day_of_week"
+    assert output_table.location.type == "postgres"
+    assert output_table.location.name == "postgres:5432"
+    assert len(output_table.location.addresses) == 1
+    assert output_table.location.addresses[0].url == "postgres://postgres:5432"
+    assert output_table.format is None
+
+    dataset_symlink_query = select(DatasetSymlink).order_by(DatasetSymlink.type)
+    dataset_symlink_scalars = await async_session.scalars(dataset_symlink_query)
+    dataset_symlinks = dataset_symlink_scalars.all()
+    assert not dataset_symlinks
+
+    schema_query = select(Schema).order_by(Schema.id)
+    schema_scalars = await async_session.scalars(schema_query)
+    schemas = schema_scalars.all()
+    assert len(schemas) == 2
+
+    input_schema = schemas[1]
+    assert input_schema.fields == [
+        {"name": "order_id", "type": "integer"},
+        {"name": "order_placed_on", "type": "timestamp"},
+        {"name": "order_dispatched_on", "type": "timestamp"},
+        {"name": "order_delivery_time", "type": "double precision"},
+    ]
+
+    output_schema = schemas[0]
+    assert output_schema.fields == [
+        {"name": "order_day_of_week", "type": "varchar"},
+        {"name": "order_placed_on", "type": "timestamp"},
+        {"name": "orders_placed", "type": "int4"},
+    ]
+
+    input_query = select(Input).order_by(Input.dataset_id)
+    input_scalars = await async_session.scalars(input_query)
+    inputs = input_scalars.all()
+    assert len(inputs) == 1
+
+    postgres_input = inputs[0]
+    assert postgres_input.created_at == datetime(2024, 7, 5, 9, 4, 12, 162000, tzinfo=timezone.utc)
+    assert postgres_input.operation_id == task_operation.id
+    assert postgres_input.run_id == task_run.id
+    assert postgres_input.job_id == task_run.job_id
+    assert postgres_input.dataset_id == input_table.id
+    assert postgres_input.schema_id == input_schema.id
+    assert postgres_input.num_bytes is None
+    assert postgres_input.num_rows is None
+    assert postgres_input.num_files is None
+
+    output_query = select(Output).order_by(Output.dataset_id)
+    output_scalars = await async_session.scalars(output_query)
+    outputs = output_scalars.all()
+    assert len(outputs) == 1
+
+    postgres_output = outputs[0]
+    assert postgres_output.created_at == datetime(2024, 7, 5, 9, 4, 12, 162000, tzinfo=timezone.utc)
+    assert postgres_output.operation_id == task_operation.id
+    assert postgres_output.run_id == task_run.id
+    assert postgres_output.job_id == task_run.job_id
+    assert postgres_output.dataset_id == output_table.id
+    assert postgres_output.type == OutputType.APPEND
+    assert postgres_output.schema_id == output_schema.id
+    assert postgres_output.num_bytes is None
+    assert postgres_output.num_rows is None
+    assert postgres_output.num_files is None
+
+    column_lineage_query = select(ColumnLineage).order_by(ColumnLineage.id)
+    column_lineage_scalars = await async_session.scalars(column_lineage_query)
+    column_lineage = column_lineage_scalars.all()
+    assert len(column_lineage) == 1
+
+    direct_column_lineage = column_lineage[0]
+    assert direct_column_lineage.created_at == datetime(2024, 7, 5, 9, 4, 12, 162000, tzinfo=timezone.utc)
+    assert direct_column_lineage.operation_id == task_operation.id
+    assert direct_column_lineage.run_id == task_run.id
+    assert direct_column_lineage.job_id == task_run.job_id
+    assert direct_column_lineage.source_dataset_id == input_table.id
+    assert direct_column_lineage.target_dataset_id == output_table.id
+
+    dataset_column_relation_query = select(DatasetColumnRelation).order_by(
+        DatasetColumnRelation.type,
+        DatasetColumnRelation.fingerprint,
+        DatasetColumnRelation.source_column,
+    )
+    dataset_column_relation_scalars = await async_session.scalars(
+        dataset_column_relation_query,
+    )
+    dataset_column_relation = dataset_column_relation_scalars.all()
+    assert len(dataset_column_relation) == 2
+
+    # First event(only direct relations)
+    order_day_of_week_relation = dataset_column_relation[0]
+    assert order_day_of_week_relation.source_column == "order_placed_on"
+    assert order_day_of_week_relation.target_column == "order_day_of_week"
+    assert order_day_of_week_relation.type == DatasetColumnRelationType.UNKNOWN.value
+    assert order_day_of_week_relation.fingerprint is not None
+
+    order_placed_on_relation = dataset_column_relation[1]
+    assert order_placed_on_relation.source_column == "order_placed_on"
+    assert order_placed_on_relation.target_column == "order_placed_on"
+    assert order_placed_on_relation.type == DatasetColumnRelationType.UNKNOWN.value
+    assert order_placed_on_relation.fingerprint is not None
+    assert order_placed_on_relation.fingerprint == order_day_of_week_relation.fingerprint

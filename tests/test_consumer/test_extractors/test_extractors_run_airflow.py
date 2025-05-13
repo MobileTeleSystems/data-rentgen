@@ -190,7 +190,7 @@ def test_extractors_extract_run_airflow_task_log_url_preserve_original():
             runId=run_id,
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
-                    version=Version("2.9.2"),
+                    version=Version("2.5.0"),
                     name=OpenLineageProcessingEngineName.AIRFLOW,
                     openlineageAdapterVersion=Version("1.10.0"),
                 ),
@@ -263,9 +263,9 @@ def test_extractors_extract_run_airflow_task_log_url_2_9_plus():
             runId=run_id,
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
-                    version=Version("2.9.2"),
+                    version=Version("2.10.5"),
                     name=OpenLineageProcessingEngineName.AIRFLOW,
-                    openlineageAdapterVersion=Version("1.9.0"),
+                    openlineageAdapterVersion=Version("2.2.0"),
                 ),
                 airflow=OpenLineageAirflowTaskRunFacet(
                     dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="airflow"),

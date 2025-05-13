@@ -24,7 +24,7 @@ class OpenLineageColumnLineageDatasetFacetFieldRef(OpenLineageBase):
     namespace: str
     name: str
     field: str
-    transformations: list[OpenLineageColumnLineageDatasetFacetFieldTransformation]
+    transformations: list[OpenLineageColumnLineageDatasetFacetFieldTransformation] = Field(default_factory=list)
 
 
 class OpenLineageColumnLineageDatasetFacetField(OpenLineageBase):

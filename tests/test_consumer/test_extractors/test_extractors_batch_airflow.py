@@ -132,10 +132,10 @@ def test_extractors_extract_batch_airflow_with_lineage(
     extracted = BatchExtractor().add_events(input_transformation(events))
 
     assert extracted.locations() == [
+        extracted_hdfs_location,
+        extracted_hive_location,
         extracted_airflow_location,
         extracted_postgres_location,
-        extracted_hive_location,
-        extracted_hdfs_location,
     ]
 
     assert extracted.jobs() == [extracted_airflow_dag_job, extracted_airflow_task_job]
@@ -144,9 +144,9 @@ def test_extractors_extract_batch_airflow_with_lineage(
     assert extracted.operations() == [extracted_airflow_task_operation]
 
     assert extracted.datasets() == [
-        extracted_postgres_dataset,
-        extracted_hive_dataset,
         extracted_hdfs_dataset,
+        extracted_hive_dataset,
+        extracted_postgres_dataset,
     ]
 
     assert extracted.dataset_symlinks() == [
