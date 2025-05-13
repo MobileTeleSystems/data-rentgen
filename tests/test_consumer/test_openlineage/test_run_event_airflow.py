@@ -29,7 +29,6 @@ from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageParentJob,
     OpenLineageParentRun,
     OpenLineageParentRunFacet,
-    OpenLineageProcessingEngineName,
     OpenLineageProcessingEngineRunFacet,
     OpenLineageRunFacets,
 )
@@ -393,7 +392,7 @@ def test_run_event_airflow_task_start():
                 ),
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("2.9.2"),
-                    name=OpenLineageProcessingEngineName.AIRFLOW,
+                    name="Airflow",
                     openlineageAdapterVersion=Version("1.10.0"),
                 ),
                 airflow=OpenLineageAirflowTaskRunFacet(

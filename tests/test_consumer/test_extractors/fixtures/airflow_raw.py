@@ -23,7 +23,6 @@ from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageAirflowTaskInfo,
     OpenLineageAirflowTaskInstanceInfo,
     OpenLineageAirflowTaskRunFacet,
-    OpenLineageProcessingEngineName,
     OpenLineageProcessingEngineRunFacet,
     OpenLineageRunFacets,
 )
@@ -52,7 +51,7 @@ def airflow_dag_run_event_start() -> OpenLineageRunEvent:
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("2.9.2"),
-                    name=OpenLineageProcessingEngineName.AIRFLOW,
+                    name="Airflow",
                     openlineageAdapterVersion=Version("1.10.0"),
                 ),
                 airflowDagRun=OpenLineageAirflowDagRunFacet(
@@ -92,7 +91,7 @@ def airflow_dag_run_event_stop() -> OpenLineageRunEvent:
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("2.9.2"),
-                    name=OpenLineageProcessingEngineName.AIRFLOW,
+                    name="Airflow",
                     openlineageAdapterVersion=Version("1.10.0"),
                 ),
             ),
@@ -123,7 +122,7 @@ def airflow_task_run_event_start() -> OpenLineageRunEvent:
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("2.9.2"),
-                    name=OpenLineageProcessingEngineName.AIRFLOW,
+                    name="Airflow",
                     openlineageAdapterVersion=Version("1.10.0"),
                 ),
                 airflow=OpenLineageAirflowTaskRunFacet(
@@ -173,7 +172,7 @@ def airflow_task_run_event_stop() -> OpenLineageRunEvent:
             facets=OpenLineageRunFacets(
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("2.9.2"),
-                    name=OpenLineageProcessingEngineName.AIRFLOW,
+                    name="Airflow",
                     openlineageAdapterVersion=Version("1.10.0"),
                 ),
             ),

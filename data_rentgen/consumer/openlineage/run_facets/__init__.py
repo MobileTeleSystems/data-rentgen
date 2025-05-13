@@ -19,7 +19,6 @@ from data_rentgen.consumer.openlineage.run_facets.parent_run import (
     OpenLineageParentRunFacet,
 )
 from data_rentgen.consumer.openlineage.run_facets.processing_engine import (
-    OpenLineageProcessingEngineName,
     OpenLineageProcessingEngineRunFacet,
 )
 from data_rentgen.consumer.openlineage.run_facets.spark_application import (

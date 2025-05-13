@@ -85,10 +85,16 @@ def extract_dataset_and_symlinks(dataset: OpenLineageDataset) -> tuple[DatasetDT
     if not dataset.facets.symlinks:
         return dataset_dto, []
 
-    table_symlinks = [
+    symlink_identifiers = [
         identifier
         for identifier in dataset.facets.symlinks.identifiers
-        if identifier.type == OpenLineageSymlinkType.TABLE
+        # Exclude Kafka fake symlinks produced by Flink 2.x integration.
+        # See https://github.com/OpenLineage/OpenLineage/pull/3657
+        if not (identifier.namespace.startswith("kafka://") and identifier.type == OpenLineageSymlinkType.TABLE)
+    ]
+
+    table_symlinks = [
+        identifier for identifier in symlink_identifiers if identifier.type == OpenLineageSymlinkType.TABLE
     ]
     if table_symlinks:
         # We are swapping the dataset with its TABLE symlink to create a cleaner lineage.
@@ -114,7 +120,7 @@ def extract_dataset_and_symlinks(dataset: OpenLineageDataset) -> tuple[DatasetDT
         )
 
     symlinks = []
-    for symlink_identifier in dataset.facets.symlinks.identifiers:
+    for symlink_identifier in symlink_identifiers:
         symlink_dto = extract_dataset_ref(symlink_identifier)
         symlinks.extend(
             connect_dataset_with_symlinks(

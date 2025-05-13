@@ -140,3 +140,66 @@ def hdfs_output_with_stats(
             ),
         },
     )
+
+
+@pytest.fixture
+def kafka_output() -> OpenLineageOutputDataset:
+    return OpenLineageOutputDataset(
+        namespace="kafka://server1:9092,server2:9092,",
+        name="mytopic",
+        facets=OpenLineageDatasetFacets(
+            schema=OpenLineageSchemaDatasetFacet(
+                fields=[
+                    OpenLineageSchemaField(
+                        name="dt",
+                        type="timestamp",
+                        description="Business date",
+                    ),
+                    OpenLineageSchemaField(
+                        name="customer_id",
+                        type="decimal(20,0)",
+                    ),
+                    OpenLineageSchemaField(name="total_spent", type="float"),
+                    OpenLineageSchemaField(
+                        name="phones",
+                        type="array",
+                        fields=[
+                            OpenLineageSchemaField(
+                                name="_element",
+                                type="string",
+                            ),
+                        ],
+                    ),
+                    OpenLineageSchemaField(
+                        name="address",
+                        type="struct",
+                        fields=[
+                            OpenLineageSchemaField(
+                                name="street",
+                                type="string",
+                            ),
+                            OpenLineageSchemaField(name="city", type="string"),
+                            OpenLineageSchemaField(name="state", type="string"),
+                            OpenLineageSchemaField(name="zip", type="string"),
+                        ],
+                    ),
+                ],
+            ),
+        ),
+    )
+
+
+@pytest.fixture
+def kafka_output_with_stats(
+    kafka_output: OpenLineageOutputDataset,
+) -> OpenLineageOutputDataset:
+    return kafka_output.model_copy(
+        update={
+            "outputFacets": OpenLineageOutputDatasetFacets(
+                outputStatistics=OpenLineageOutputStatisticsOutputDatasetFacet(
+                    rowCount=1_000_000,
+                    size=1000 * 1024 * 1024,
+                ),
+            ),
+        },
+    )
