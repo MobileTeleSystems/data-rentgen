@@ -6,7 +6,8 @@ from collections import defaultdict
 
 from data_rentgen.consumer.extractors.dataset import extract_dataset_ref
 from data_rentgen.consumer.openlineage.dataset import OpenLineageDataset
-from data_rentgen.consumer.openlineage.dataset_facets.column_lineage import (
+from data_rentgen.consumer.openlineage.dataset_facets import (
+    OpenLineageColumnLineageDatasetFacetField,
     OpenLineageColumnLineageDatasetFacetFieldRef,
     OpenLineageColumnLineageDatasetFacetFieldTransformation,
 )
@@ -21,8 +22,10 @@ from data_rentgen.dto.operation import OperationDTO
 logger = logging.getLogger(__name__)
 
 TRANSFORMATION_TYPE_DIRECT = "DIRECT"
+TRANSFORMATION_TYPE_INDIRECT = "INDIRECT"
 
 TRANSFORMATION_SUBTYPE_MAP_MASKING = {
+    "MASKED": DatasetColumnRelationTypeDTO.TRANSFORMATION_MASKING,
     "TRANSFORMATION": DatasetColumnRelationTypeDTO.TRANSFORMATION_MASKING,
     "AGGREGATION": DatasetColumnRelationTypeDTO.AGGREGATION_MASKING,
 }
@@ -65,6 +68,20 @@ def resolve_dataset_ref(
     return dataset_dto_cache[dataset_cache_key]
 
 
+def legacy_transformation(field: OpenLineageColumnLineageDatasetFacetField):
+    type_ = field.transformationType or ""
+    return OpenLineageColumnLineageDatasetFacetFieldTransformation(
+        type=TRANSFORMATION_TYPE_INDIRECT if type_ == TRANSFORMATION_TYPE_INDIRECT else TRANSFORMATION_TYPE_DIRECT,
+        subtype=type_,
+        description=field.transformationDescription,
+        masking="mask" in type_.lower(),
+    )
+
+
+def unknown_indirect_transformation():
+    return OpenLineageColumnLineageDatasetFacetFieldTransformation(type=TRANSFORMATION_TYPE_INDIRECT)
+
+
 def extract_column_lineage(
     operation: OperationDTO,
     target_dataset: OpenLineageDataset,
@@ -90,7 +107,8 @@ def extract_column_lineage(
             dataset_relation_key = (source_dataset_dto.unique_key, target_dataset_dto.unique_key)
             dataset_column_relation = dataset_column_relations[dataset_relation_key]
 
-            for transformation in input_field.transformations:
+            transformations = input_field.transformations or [legacy_transformation(raw_column_lineage)]
+            for transformation in transformations:
                 # OL integration for Spark before v1.23
                 # or with columnLineage.datasetLineageEnabled=false (which is still default)
                 # produces INDIRECT lineage for each combination source_column x target_column,
@@ -118,7 +136,8 @@ def extract_column_lineage(
         dataset_relation_key = (source_dataset_dto.unique_key, target_dataset_dto.unique_key)
         dataset_column_relation = dataset_column_relations[dataset_relation_key]
 
-        for transformation in input_field.transformations:
+        transformations = input_field.transformations or [unknown_indirect_transformation()]
+        for transformation in transformations:
             column_relation = DatasetColumnRelationDTO(
                 type=extract_dataset_column_relation_type(transformation),
                 source_column=input_field.field,

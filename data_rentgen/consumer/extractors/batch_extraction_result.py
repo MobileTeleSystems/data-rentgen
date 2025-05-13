@@ -240,40 +240,40 @@ class BatchExtractionResult:
         return lineage
 
     def locations(self) -> list[LocationDTO]:
-        return list(map(self.get_location, self._locations))
+        return list(map(self.get_location, sorted(self._locations)))
 
     def datasets(self) -> list[DatasetDTO]:
-        return list(map(self.get_dataset, self._datasets))
+        return list(map(self.get_dataset, sorted(self._datasets)))
 
     def dataset_symlinks(self) -> list[DatasetSymlinkDTO]:
-        return list(map(self.get_dataset_symlink, self._dataset_symlinks))
+        return list(map(self.get_dataset_symlink, sorted(self._dataset_symlinks)))
 
     def job_types(self) -> list[JobTypeDTO]:
-        return list(map(self.get_job_type, self._job_types))
+        return list(map(self.get_job_type, sorted(self._job_types)))
 
     def jobs(self) -> list[JobDTO]:
-        return list(map(self.get_job, self._jobs))
+        return list(map(self.get_job, sorted(self._jobs)))
 
     def runs(self) -> list[RunDTO]:
-        return list(map(self.get_run, self._runs))
+        return list(map(self.get_run, sorted(self._runs)))
 
     def operations(self) -> list[OperationDTO]:
-        return list(map(self.get_operation, self._operations))
+        return list(map(self.get_operation, sorted(self._operations)))
 
     def inputs(self) -> list[InputDTO]:
-        return list(map(self.get_input, self._inputs))
+        return list(map(self.get_input, sorted(self._inputs)))
 
     def outputs(self) -> list[OutputDTO]:
-        return list(map(self.get_output, self._outputs))
+        return list(map(self.get_output, sorted(self._outputs)))
 
     def column_lineage(self) -> list[ColumnLineageDTO]:
-        return list(map(self.get_column_lineage, self._column_lineage))
+        return list(map(self.get_column_lineage, sorted(self._column_lineage)))
 
     def schemas(self) -> list[SchemaDTO]:
-        return list(map(self.get_schema, self._schemas))
+        return list(map(self.get_schema, sorted(self._schemas)))
 
     def sql_queries(self) -> list[SQLQueryDTO]:
-        return list(map(self.get_sql_query, self._sql_queries))
+        return list(map(self.get_sql_query, sorted(self._sql_queries)))
 
     def users(self) -> list[UserDTO]:
-        return list(map(self.get_user, self._users))
+        return list(map(self.get_user, sorted(self._users)))

@@ -171,6 +171,100 @@ def test_extractors_extract_legacy_indirect_column_lineage(
     ]
 
 
+def test_extractors_extract_column_lineage_without_transformations(
+    extracted_spark_operation,
+    extracted_hive_dataset,
+    extracted_hdfs_dataset,
+    output_event_with_column_lineage_without_transformations,
+):
+    operation = extracted_spark_operation
+
+    column_lineage = extract_column_lineage(
+        operation,
+        output_event_with_column_lineage_without_transformations,
+    )
+    assert column_lineage == [
+        ColumnLineageDTO(
+            operation=operation,
+            source_dataset=extracted_hive_dataset,
+            target_dataset=extracted_hdfs_dataset,
+            dataset_column_relations=[
+                DatasetColumnRelationDTO(
+                    type=DatasetColumnRelationTypeDTO.UNKNOWN,
+                    source_column="source_col_1",
+                    target_column="column_1",
+                    fingerprint=None,
+                ),
+                DatasetColumnRelationDTO(
+                    type=DatasetColumnRelationTypeDTO.UNKNOWN,
+                    source_column="source_col_2",
+                    target_column=None,
+                    fingerprint=None,
+                ),
+                DatasetColumnRelationDTO(
+                    type=DatasetColumnRelationTypeDTO.UNKNOWN,
+                    source_column="source_col_3",
+                    target_column="column_2",
+                    fingerprint=None,
+                ),
+                DatasetColumnRelationDTO(
+                    type=DatasetColumnRelationTypeDTO.UNKNOWN,
+                    source_column="source_col_4",
+                    target_column=None,
+                    fingerprint=None,
+                ),
+            ],
+        ),
+    ]
+
+
+def test_extractors_extract_legacy_column_lineage(
+    extracted_spark_operation,
+    extracted_hive_dataset,
+    extracted_hdfs_dataset,
+    output_event_with_legacy_column_lineage,
+):
+    operation = extracted_spark_operation
+
+    column_lineage = extract_column_lineage(
+        operation,
+        output_event_with_legacy_column_lineage,
+    )
+    assert column_lineage == [
+        ColumnLineageDTO(
+            operation=operation,
+            source_dataset=extracted_hive_dataset,
+            target_dataset=extracted_hdfs_dataset,
+            dataset_column_relations=[
+                DatasetColumnRelationDTO(
+                    type=DatasetColumnRelationTypeDTO.IDENTITY,
+                    source_column="source_col_1",
+                    target_column="column_1",
+                    fingerprint=None,
+                ),
+                DatasetColumnRelationDTO(
+                    type=DatasetColumnRelationTypeDTO.UNKNOWN,
+                    source_column="source_col_2",
+                    target_column=None,
+                    fingerprint=None,
+                ),
+                DatasetColumnRelationDTO(
+                    type=DatasetColumnRelationTypeDTO.TRANSFORMATION_MASKING,
+                    source_column="source_col_3",
+                    target_column="column_2",
+                    fingerprint=None,
+                ),
+                DatasetColumnRelationDTO(
+                    type=DatasetColumnRelationTypeDTO.UNKNOWN,
+                    source_column="source_col_4",
+                    target_column=None,
+                    fingerprint=None,
+                ),
+            ],
+        ),
+    ]
+
+
 def test_extractors_extract_indirect_column_lineage(
     extracted_spark_operation,
     extracted_hive_dataset,
