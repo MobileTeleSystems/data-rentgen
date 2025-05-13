@@ -134,6 +134,7 @@ def output_event_with_one_to_two_direct_and_indirect_column_lineage() -> OpenLin
 
 @pytest.fixture
 def output_event_with_direct_and_legacy_indirect_column_lineage() -> OpenLineageOutputDataset:
+    # https://github.com/OpenLineage/OpenLineage/pull/3098
     return OpenLineageOutputDataset(
         namespace="hdfs://test-hadoop:9820",
         name="/user/hive/warehouse/mydb.db/mytable",
@@ -213,6 +214,104 @@ def output_event_with_direct_and_legacy_indirect_column_lineage() -> OpenLineage
                                 ],
                             ),
                         ],
+                    ),
+                },
+            ),
+        ),
+    )
+
+
+@pytest.fixture
+def output_event_with_column_lineage_without_transformations() -> OpenLineageOutputDataset:
+    return OpenLineageOutputDataset(
+        namespace="hdfs://test-hadoop:9820",
+        name="/user/hive/warehouse/mydb.db/mytable",
+        facets=OpenLineageDatasetFacets(
+            columnLineage=OpenLineageColumnLineageDatasetFacet(
+                fields={
+                    "column_1": OpenLineageColumnLineageDatasetFacetField(
+                        inputFields=[
+                            OpenLineageColumnLineageDatasetFacetFieldRef(
+                                namespace="hive://test-hadoop:9083",
+                                name="mydb.mytable",
+                                field="source_col_1",
+                            ),
+                        ],
+                    ),
+                    "column_2": OpenLineageColumnLineageDatasetFacetField(
+                        inputFields=[
+                            OpenLineageColumnLineageDatasetFacetFieldRef(
+                                namespace="hive://test-hadoop:9083",
+                                name="mydb.mytable",
+                                field="source_col_3",
+                            ),
+                        ],
+                    ),
+                },
+                dataset=[
+                    OpenLineageColumnLineageDatasetFacetFieldRef(
+                        namespace="hive://test-hadoop:9083",
+                        name="mydb.mytable",
+                        field="source_col_2",
+                    ),
+                    OpenLineageColumnLineageDatasetFacetFieldRef(
+                        namespace="hive://test-hadoop:9083",
+                        name="mydb.mytable",
+                        field="source_col_4",
+                    ),
+                ],
+            ),
+        ),
+    )
+
+
+@pytest.fixture
+def output_event_with_legacy_column_lineage() -> OpenLineageOutputDataset:
+    # https://github.com/OpenLineage/OpenLineage/pull/2756
+    # https://github.com/OpenLineage/OpenLineage/issues/2186
+    return OpenLineageOutputDataset(
+        namespace="hdfs://test-hadoop:9820",
+        name="/user/hive/warehouse/mydb.db/mytable",
+        facets=OpenLineageDatasetFacets(
+            columnLineage=OpenLineageColumnLineageDatasetFacet(
+                fields={
+                    "column_1": OpenLineageColumnLineageDatasetFacetField(
+                        inputFields=[
+                            OpenLineageColumnLineageDatasetFacetFieldRef(
+                                namespace="hive://test-hadoop:9083",
+                                name="mydb.mytable",
+                                field="source_col_1",
+                            ),
+                        ],
+                        transformationType="IDENTITY",
+                        transformationDescription="some description",
+                    ),
+                    "column_2": OpenLineageColumnLineageDatasetFacetField(
+                        inputFields=[
+                            OpenLineageColumnLineageDatasetFacetFieldRef(
+                                namespace="hive://test-hadoop:9083",
+                                name="mydb.mytable",
+                                field="source_col_3",
+                            ),
+                        ],
+                        transformationType="MASKED",
+                        transformationDescription="another description",
+                    ),
+                    "column_3": OpenLineageColumnLineageDatasetFacetField(
+                        inputFields=[
+                            OpenLineageColumnLineageDatasetFacetFieldRef(
+                                namespace="hive://test-hadoop:9083",
+                                name="mydb.mytable",
+                                field="source_col_2",
+                            ),
+                            OpenLineageColumnLineageDatasetFacetFieldRef(
+                                namespace="hive://test-hadoop:9083",
+                                name="mydb.mytable",
+                                field="source_col_4",
+                            ),
+                        ],
+                        transformationType="INDIRECT",
+                        transformationDescription="",
                     ),
                 },
             ),
