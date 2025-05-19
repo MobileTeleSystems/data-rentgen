@@ -1,1 +1,1 @@
-Add sql-query to operation response (for example in `/v1/operations`).
+Add `sql_query` field to `OperationResponseV1` (for example in `/v1/operations`).

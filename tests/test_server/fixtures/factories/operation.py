@@ -72,13 +72,11 @@ async def operation(
     params = request.param
 
     async with async_session_maker() as async_session:
-        sql_query = await create_sql_query(async_session=async_session)
         operation = await create_operation(
             async_session=async_session,
             operation_kwargs={
                 "run_id": run.id,
                 "created_at": run.created_at + timedelta(seconds=1),
-                "sql_query_id": sql_query.id,
                 **params,
             },
         )
@@ -100,14 +98,12 @@ async def operations(
 
     async with async_session_maker() as async_session:
         for index in range(size):
-            sql_query = await create_sql_query(async_session=async_session)
-            items.append(
+            items.append(  # noqa: PERF401
                 await create_operation(
                     async_session=async_session,
                     operation_kwargs={
                         "run_id": runs[index].id,
                         "created_at": runs[index].created_at + timedelta(seconds=index),
-                        "sql_query_id": sql_query.id,
                         **params,
                     },
                 ),
@@ -145,6 +141,35 @@ async def operations_with_same_run(
         async_session.expunge_all()
 
     yield items
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)
+
+
+@pytest_asyncio.fixture(params=[{}])
+async def operation_with_sql_query(
+    request: pytest.FixtureRequest,
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
+    run: Run,
+) -> AsyncGenerator[Operation, None]:
+    params = request.param
+
+    async with async_session_maker() as async_session:
+        sql_query = await create_sql_query(
+            async_session=async_session,
+            sql_query_kwargs={"id": 69, "query": "select id, name\nfrom schema.table\nwhere id = 1"},
+        )
+        operation = await create_operation(
+            async_session=async_session,
+            operation_kwargs={
+                "run_id": run.id,
+                "created_at": run.created_at + timedelta(seconds=1),
+                "sql_query_id": sql_query.id,
+                **params,
+            },
+        )
+
+    yield operation
 
     async with async_session_maker() as async_session:
         await clean_db(async_session)
