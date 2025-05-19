@@ -1,0 +1,1 @@
+Add sql-query to operation response (for example in `/v1/operations`).
