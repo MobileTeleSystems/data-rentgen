@@ -212,3 +212,49 @@ async def test_get_operations_by_multiple_ids_with_stats(
             for operation in sorted(simple_lineage.operations, key=lambda x: (x.created_at, x.id.int), reverse=True)
         ],
     }
+
+
+async def test_get_operations_by_one_id_with_sql_query(
+    test_client: AsyncClient,
+    operation_with_sql_query: Operation,
+    mocked_user: MockedUser,
+):
+    response = await test_client.get(
+        "v1/operations",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={"operation_id": str(operation_with_sql_query.id)},
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "page": 1,
+            "page_size": 20,
+            "total_count": 1,
+            "pages_count": 1,
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "previous_page": None,
+        },
+        "items": [
+            {
+                "id": str(operation_with_sql_query.id),
+                "data": operation_to_json(operation_with_sql_query),
+                "statistics": {
+                    "inputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "outputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                },
+            },
+        ],
+    }

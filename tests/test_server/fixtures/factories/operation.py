@@ -9,6 +9,7 @@ import pytest_asyncio
 from data_rentgen.db.models import Operation, OperationStatus, OperationType, Run
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
 from tests.test_server.fixtures.factories.base import random_datetime, random_string
+from tests.test_server.fixtures.factories.sql_query import create_sql_query
 from tests.test_server.utils.delete import clean_db
 
 if TYPE_CHECKING:
@@ -73,7 +74,11 @@ async def operation(
     async with async_session_maker() as async_session:
         operation = await create_operation(
             async_session=async_session,
-            operation_kwargs={"run_id": run.id, "created_at": run.created_at + timedelta(seconds=1), **params},
+            operation_kwargs={
+                "run_id": run.id,
+                "created_at": run.created_at + timedelta(seconds=1),
+                **params,
+            },
         )
 
     yield operation
@@ -136,6 +141,35 @@ async def operations_with_same_run(
         async_session.expunge_all()
 
     yield items
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)
+
+
+@pytest_asyncio.fixture(params=[{}])
+async def operation_with_sql_query(
+    request: pytest.FixtureRequest,
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
+    run: Run,
+) -> AsyncGenerator[Operation, None]:
+    params = request.param
+
+    async with async_session_maker() as async_session:
+        sql_query = await create_sql_query(
+            async_session=async_session,
+            sql_query_kwargs={"id": 69, "query": "select id, name\nfrom schema.table\nwhere id = 1"},
+        )
+        operation = await create_operation(
+            async_session=async_session,
+            operation_kwargs={
+                "run_id": run.id,
+                "created_at": run.created_at + timedelta(seconds=1),
+                "sql_query_id": sql_query.id,
+                **params,
+            },
+        )
+
+    yield operation
 
     async with async_session_maker() as async_session:
         await clean_db(async_session)

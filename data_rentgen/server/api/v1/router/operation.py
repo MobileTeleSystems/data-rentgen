@@ -27,7 +27,6 @@ router = APIRouter(
 )
 
 
-# TODO: Remove type ignore in DOP-24446
 @router.get("", summary="Paginated list of Operations")
 async def operations(
     query_args: Annotated[OperationQueryV1, Depends()],
