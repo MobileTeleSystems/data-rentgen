@@ -8,8 +8,8 @@ from enum import Enum, IntEnum
 from uuid import UUID
 
 from sqlalchemy import UUID as SQL_UUID
-from sqlalchemy import BigInteger, DateTime, Integer, PrimaryKeyConstraint, SmallInteger, String
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import BigInteger, DateTime, Integer, PrimaryKeyConstraint, SmallInteger, String, select
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
 
 from data_rentgen.db.models.base import Base
@@ -132,3 +132,8 @@ class Operation(Base):
         nullable=True,
         doc="End time of the operation",
     )
+
+
+Operation.sql_query = column_property(
+    select(SQLQuery.query).where(Operation.sql_query_id == SQLQuery.id).scalar_subquery(),
+)

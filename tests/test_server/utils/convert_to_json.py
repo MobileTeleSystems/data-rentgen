@@ -225,6 +225,7 @@ def operation_to_json(operation: Operation):
         "position": operation.position,
         "group": operation.group,
         "description": operation.description,
+        "sql_query": operation.sql_query,
         "started_at": format_datetime(operation.started_at) if operation.started_at else None,
         "ended_at": format_datetime(operation.ended_at) if operation.ended_at else None,
     }

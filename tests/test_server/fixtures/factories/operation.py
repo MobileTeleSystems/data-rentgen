@@ -9,6 +9,7 @@ import pytest_asyncio
 from data_rentgen.db.models import Operation, OperationStatus, OperationType, Run
 from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
 from tests.test_server.fixtures.factories.base import random_datetime, random_string
+from tests.test_server.fixtures.factories.sql_query import create_sql_query
 from tests.test_server.utils.delete import clean_db
 
 if TYPE_CHECKING:
@@ -71,9 +72,15 @@ async def operation(
     params = request.param
 
     async with async_session_maker() as async_session:
+        sql_query = await create_sql_query(async_session=async_session)
         operation = await create_operation(
             async_session=async_session,
-            operation_kwargs={"run_id": run.id, "created_at": run.created_at + timedelta(seconds=1), **params},
+            operation_kwargs={
+                "run_id": run.id,
+                "created_at": run.created_at + timedelta(seconds=1),
+                "sql_query_id": sql_query.id,
+                **params,
+            },
         )
 
     yield operation
@@ -93,12 +100,14 @@ async def operations(
 
     async with async_session_maker() as async_session:
         for index in range(size):
-            items.append(  # noqa: PERF401
+            sql_query = await create_sql_query(async_session=async_session)
+            items.append(
                 await create_operation(
                     async_session=async_session,
                     operation_kwargs={
                         "run_id": runs[index].id,
                         "created_at": runs[index].created_at + timedelta(seconds=index),
+                        "sql_query_id": sql_query.id,
                         **params,
                     },
                 ),
