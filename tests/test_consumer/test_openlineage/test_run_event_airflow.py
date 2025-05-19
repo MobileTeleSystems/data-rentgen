@@ -4,14 +4,26 @@ from packaging.version import Version
 from pydantic import TypeAdapter
 from uuid6 import UUID
 
+from data_rentgen.consumer.openlineage.dataset import (
+    OpenLineageInputDataset,
+    OpenLineageOutputDataset,
+)
+from data_rentgen.consumer.openlineage.dataset_facets import (
+    OpenLineageColumnLineageDatasetFacet,
+    OpenLineageColumnLineageDatasetFacetField,
+    OpenLineageColumnLineageDatasetFacetFieldRef,
+    OpenLineageDatasetFacets,
+    OpenLineageDatasourceDatasetFacet,
+    OpenLineageSchemaDatasetFacet,
+    OpenLineageSchemaField,
+)
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
+    OpenLineageDocumentationJobFacet,
     OpenLineageJobFacets,
     OpenLineageJobProcessingType,
     OpenLineageJobTypeJobFacet,
-)
-from data_rentgen.consumer.openlineage.job_facets.documentation import (
-    OpenLineageDocumentationJobFacet,
+    OpenLineageSqlJobFacet,
 )
 from data_rentgen.consumer.openlineage.run import OpenLineageRun
 from data_rentgen.consumer.openlineage.run_event import (
@@ -38,7 +50,7 @@ RunEventAdapter = TypeAdapter(OpenLineageRunEvent)
 
 def test_run_event_airflow_dag_start():
     json = {
-        "producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
+        "producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
         "schemaURL": "https://openlineage.io/spec/1-0-5/OpenLineage.json#/definitions/RunEvent",
         "eventTime": "2024-07-05T09:04:13.979349+00:00",
         "eventType": "START",
@@ -46,14 +58,9 @@ def test_run_event_airflow_dag_start():
             "name": "mydag",
             "namespace": "http://airflow-host:8081",
             "facets": {
-                "documentation": {
-                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
-                    "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/DocumentationJobFacet",
-                    "description": "some description",
-                },
                 "airflow": {
-                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
-                    "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/BaseFacet",
+                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/BaseFacet",
                     "taskGroups": {},
                     "taskTree": {
                         "mytask": {},
@@ -63,7 +70,7 @@ def test_run_event_airflow_dag_start():
                             "emits_ol_events": True,
                             "is_setup": False,
                             "is_teardown": False,
-                            "operator": "SSHOperator",
+                            "operator": "SQLExecuteQueryOperator",
                             "ui_color": "#fff",
                             "ui_fgcolor": "#000",
                             "ui_label": "mytask",
@@ -71,15 +78,15 @@ def test_run_event_airflow_dag_start():
                     },
                 },
                 "jobType": {
-                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
-                    "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/JobTypeJobFacet",
+                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/facets/2-0-3/JobTypeJobFacet.json#/$defs/JobTypeJobFacet",
                     "integration": "AIRFLOW",
                     "jobType": "DAG",
                     "processingType": "BATCH",
                 },
                 "ownership": {
-                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
-                    "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/OwnershipJobFacet",
+                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/facets/1-0-1/OwnershipJobFacet.json#/$defs/OwnershipJobFacet",
                     "owners": [{"name": "airflow"}],
                 },
             },
@@ -88,14 +95,14 @@ def test_run_event_airflow_dag_start():
             "runId": "01908223-0782-79b8-9495-b1c38aaee839",
             "facets": {
                 "nominalTime": {
-                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
-                    "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/NominalTimeRunFacet",
+                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/facets/1-0-1/NominalTimeRunFacet.json#/$defs/NominalTimeRunFacet",
                     "nominalEndTime": "2024-07-05T09:04:12.162809+00:00",
                     "nominalStartTime": "2024-07-05T09:04:12.162809+00:00",
                 },
                 "airflowDagRun": {
-                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
-                    "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/BaseFacet",
+                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/BaseFacet",
                     "dag": {
                         "dag_id": "mydag",
                         "owner": "myuser",
@@ -135,11 +142,8 @@ def test_run_event_airflow_dag_start():
                     integration="AIRFLOW",
                     jobType="DAG",
                 ),
-                documentation=OpenLineageDocumentationJobFacet(
-                    description="some description",
-                ),
+                # unknown facets are ignored
             ),
-            # unknown facets are ignored
         ),
         run=OpenLineageRun(
             runId=UUID("01908223-0782-79b8-9495-b1c38aaee839"),
@@ -166,7 +170,7 @@ def test_run_event_airflow_dag_start():
 
 def test_run_event_airflow_dag_end():
     json = {
-        "producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
+        "producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
         "schemaURL": "https://openlineage.io/spec/1-0-5/OpenLineage.json#/definitions/RunEvent",
         "eventTime": "2024-07-05T09:08:05.691973+00:00",
         "eventType": "COMPLETE",
@@ -175,8 +179,8 @@ def test_run_event_airflow_dag_end():
             "namespace": "http://airflow-host:8081",
             "facets": {
                 "jobType": {
-                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
-                    "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/JobTypeJobFacet",
+                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/facets/2-0-3/JobTypeJobFacet.json#/$defs/JobTypeJobFacet",
                     "integration": "AIRFLOW",
                     "jobType": "DAG",
                     "processingType": "BATCH",
@@ -187,8 +191,8 @@ def test_run_event_airflow_dag_end():
             "runId": "01908223-0782-79b8-9495-b1c38aaee839",
             "facets": {
                 "airflowState": {
-                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
-                    "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/BaseFacet",
+                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/BaseFacet",
                     "dagRunState": "success",
                     "tasksState": {"mytask": "success"},
                 },
@@ -210,8 +214,8 @@ def test_run_event_airflow_dag_end():
                     integration="AIRFLOW",
                     jobType="DAG",
                 ),
+                # unknown facets are ignored
             ),
-            # unknown facets are ignored
         ),
         run=OpenLineageRun(
             runId=UUID("01908223-0782-79b8-9495-b1c38aaee839"),
@@ -224,7 +228,7 @@ def test_run_event_airflow_dag_end():
 
 def test_run_event_airflow_task_start():
     json = {
-        "producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
+        "producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
         "schemaURL": "https://openlineage.io/spec/1-0-5/OpenLineage.json#/definitions/RunEvent",
         "eventTime": "2024-07-05T09:04:20.783845+00:00",
         "eventType": "START",
@@ -232,17 +236,35 @@ def test_run_event_airflow_task_start():
             "name": "mydag.mytask",
             "namespace": "http://airflow-host:8081",
             "facets": {
+                "documentation": {
+                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/facets/1-0-1/DocumentationJobFacet.json#/$defs/DocumentationJobFacet",
+                    "description": "Task description",
+                },
                 "jobType": {
-                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
-                    "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/JobTypeJobFacet",
+                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/facets/2-0-3/JobTypeJobFacet.json#/$defs/JobTypeJobFacet",
                     "integration": "AIRFLOW",
                     "jobType": "TASK",
                     "processingType": "BATCH",
                 },
                 "ownership": {
-                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
-                    "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/OwnershipJobFacet",
+                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/facets/1-0-1/OwnershipJobFacet.json#/$defs/OwnershipJobFacet",
                     "owners": [{"name": "myuser"}],
+                },
+                "sql": {
+                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/facets/1-0-1/SQLJobFacet.json#/$defs/SQLJobFacet",
+                    "query": (
+                        "\n    INSERT INTO popular_orders_day_of_week (order_day_of_week, order_placed_on,orders_placed)"
+                        "\n    SELECT EXTRACT(ISODOW FROM order_placed_on) AS order_day_of_week,"
+                        "\n           order_placed_on,"
+                        "\n           COUNT(*) AS orders_placed"
+                        "\n      FROM top_delivery_times"
+                        "\n     GROUP BY order_placed_on"
+                        "\n    "
+                    ),
                 },
             },
         },
@@ -250,8 +272,8 @@ def test_run_event_airflow_task_start():
             "runId": "01908223-0782-7fc0-9d69-b1df9dac2c60",
             "facets": {
                 "airflow": {
-                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
-                    "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/BaseFacet",
+                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/BaseFacet",
                     "dag": {
                         "dag_id": "mydag",
                         "owner": "myuser",
@@ -282,7 +304,7 @@ def test_run_event_airflow_task_start():
                         "is_teardown": False,
                         "mapped": False,
                         "multiple_outputs": False,
-                        "operator_class": "SSHOperator",
+                        "operator_class": "SQLExecuteQueryOperator",
                         "outlets": [],
                         "owner": "myuser",
                         "priority_weight": 1,
@@ -305,30 +327,30 @@ def test_run_event_airflow_task_start():
                     "taskUuid": "01908223-0782-7fc0-9d69-b1df9dac2c60",
                 },
                 "nominalTime": {
-                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
-                    "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/NominalTimeRunFacet",
+                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/facets/1-0-1/NominalTimeRunFacet.json#/$defs/NominalTimeRunFacet",
                     "nominalEndTime": "2024-07-05T09:04:12.162809+00:00",
                     "nominalStartTime": "2024-07-05T09:04:12.162809+00:00",
                 },
                 "parent": {
-                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
-                    "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/ParentRunFacet",
+                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/facets/1-1-0/ParentRunFacet.json#/$defs/ParentRunFacet",
                     "job": {"name": "mydag", "namespace": "http://airflow-host:8081"},
                     "run": {"runId": "01908223-0782-79b8-9495-b1c38aaee839"},
                 },
                 "processing_engine": {
-                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
-                    "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/ProcessingEngineRunFacet",
+                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/facets/1-1-1/ProcessingEngineRunFacet.json#/$defs/ProcessingEngineRunFacet",
                     "name": "Airflow",
-                    "openlineageAdapterVersion": "1.10.0",
-                    "version": "2.9.2",
+                    "openlineageAdapterVersion": "2.2.0",
+                    "version": "2.10.5",
                 },
                 "unknownSourceAttribute": {
-                    "_producer": "https://github.com/apache/myuser/tree/providers-openlineage/1.10.0",
-                    "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/BaseFacet",
+                    "_producer": "https://github.com/apache/myuser/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/BaseFacet",
                     "unknownItems": [
                         {
-                            "name": "SSHOperator",
+                            "name": "SQLExecuteQueryOperator",
                             "properties": {
                                 "depends_on_past": False,
                                 "downstream_task_ids": "[]",
@@ -339,7 +361,7 @@ def test_run_event_airflow_task_start():
                                 "is_teardown": False,
                                 "mapped": False,
                                 "multiple_outputs": False,
-                                "operator_class": "SSHOperator",
+                                "operator_class": "SQLExecuteQueryOperator",
                                 "outlets": [],
                                 "owner": "myuser",
                                 "priority_weight": 1,
@@ -359,8 +381,101 @@ def test_run_event_airflow_task_start():
                 },
             },
         },
-        "inputs": [],
-        "outputs": [],
+        "inputs": [
+            {
+                "namespace": "postgres://postgres:5432",
+                "name": "food_delivery.public.top_delivery_times",
+                "facets": {
+                    "dataSource": {
+                        "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.32.0/integration/airflow",
+                        "_schemaURL": "https://openlineage.io/spec/facets/1-0-1/DatasourceDatasetFacet.json#/$defs/DatasourceDatasetFacet",
+                        "name": "postgres://postgres:5432",
+                        "uri": "postgres://postgres:5432/food_delivery",
+                    },
+                    "schema": {
+                        "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.32.0/integration/airflow",
+                        "_schemaURL": "https://openlineage.io/spec/facets/1-1-1/SchemaDatasetFacet.json#/$defs/SchemaDatasetFacet",
+                        "fields": [
+                            {
+                                "name": "order_id",
+                                "type": "integer",
+                            },
+                            {
+                                "name": "order_placed_on",
+                                "type": "timestamp",
+                            },
+                            {
+                                "name": "order_dispatched_on",
+                                "type": "timestamp",
+                            },
+                            {
+                                "name": "order_delivery_time",
+                                "type": "double precision",
+                            },
+                        ],
+                    },
+                },
+                "inputFacets": {},
+            },
+        ],
+        "outputs": [
+            {
+                "name": "food_delivery.public.popular_orders_day_of_week",
+                "namespace": "postgres://postgres:5432",
+                "facets": {
+                    "dataSource": {
+                        "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.32.0/integration/airflow",
+                        "_schemaURL": "https://openlineage.io/spec/facets/1-0-1/DatasourceDatasetFacet.json#/$defs/DatasourceDatasetFacet",
+                        "name": "postgres://postgres:5432",
+                        "uri": "postgres://postgres:5432/food_delivery",
+                    },
+                    "schema": {
+                        "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.32.0/integration/airflow",
+                        "_schemaURL": "https://openlineage.io/spec/facets/1-1-1/SchemaDatasetFacet.json#/$defs/SchemaDatasetFacet",
+                        "fields": [
+                            {
+                                "name": "order_day_of_week",
+                                "type": "varchar",
+                            },
+                            {
+                                "name": "order_placed_on",
+                                "type": "timestamp",
+                            },
+                            {
+                                "name": "orders_placed",
+                                "type": "int4",
+                            },
+                        ],
+                    },
+                    "columnLineage": {
+                        "fields": {
+                            "order_day_of_week": {
+                                "inputFields": [
+                                    {
+                                        "field": "order_placed_on",
+                                        "name": "food_delivery.public.top_delivery_times",
+                                        "namespace": "postgres://postgres:5432",
+                                    },
+                                ],
+                                "transformationDescription": "",
+                                "transformationType": "",
+                            },
+                            "order_placed_on": {
+                                "inputFields": [
+                                    {
+                                        "field": "order_placed_on",
+                                        "name": "food_delivery.public.top_delivery_times",
+                                        "namespace": "postgres://postgres:5432",
+                                    },
+                                ],
+                                "transformationDescription": "",
+                                "transformationType": "",
+                            },
+                        },
+                    },
+                },
+            },
+        ],
     }
 
     assert RunEventAdapter.validate_python(json) == OpenLineageRunEvent(
@@ -374,6 +489,18 @@ def test_run_event_airflow_task_start():
                     processingType=OpenLineageJobProcessingType.BATCH,
                     integration="AIRFLOW",
                     jobType="TASK",
+                ),
+                documentation=OpenLineageDocumentationJobFacet(description="Task description"),
+                sql=OpenLineageSqlJobFacet(
+                    query=(
+                        "\n    INSERT INTO popular_orders_day_of_week (order_day_of_week, order_placed_on,orders_placed)"
+                        "\n    SELECT EXTRACT(ISODOW FROM order_placed_on) AS order_day_of_week,"
+                        "\n           order_placed_on,"
+                        "\n           COUNT(*) AS orders_placed"
+                        "\n      FROM top_delivery_times"
+                        "\n     GROUP BY order_placed_on"
+                        "\n    "
+                    ),
                 ),
                 # unknown facets are ignored
             ),
@@ -391,9 +518,9 @@ def test_run_event_airflow_task_start():
                     ),
                 ),
                 processing_engine=OpenLineageProcessingEngineRunFacet(
-                    version=Version("2.9.2"),
+                    version=Version("2.10.5"),
                     name="Airflow",
-                    openlineageAdapterVersion=Version("1.10.0"),
+                    openlineageAdapterVersion=Version("2.2.0"),
                 ),
                 airflow=OpenLineageAirflowTaskRunFacet(
                     dag=OpenLineageAirflowDagInfo(
@@ -414,20 +541,83 @@ def test_run_event_airflow_task_start():
                     ),
                     task=OpenLineageAirflowTaskInfo(
                         task_id="mytask",
-                        operator_class="SSHOperator",
+                        operator_class="SQLExecuteQueryOperator",
                     ),
                 ),
                 # unknown facets are ignored
             ),
         ),
-        inputs=[],
-        outputs=[],
+        inputs=[
+            OpenLineageInputDataset(
+                namespace="postgres://postgres:5432",
+                name="food_delivery.public.top_delivery_times",
+                facets=OpenLineageDatasetFacets(
+                    dataSource=OpenLineageDatasourceDatasetFacet(
+                        name="postgres://postgres:5432",
+                        uri="postgres://postgres:5432/food_delivery",
+                    ),
+                    schema=OpenLineageSchemaDatasetFacet(
+                        fields=[
+                            OpenLineageSchemaField(name="order_id", type="integer"),
+                            OpenLineageSchemaField(name="order_placed_on", type="timestamp"),
+                            OpenLineageSchemaField(name="order_dispatched_on", type="timestamp"),
+                            OpenLineageSchemaField(name="order_delivery_time", type="double precision"),
+                        ],
+                    ),
+                ),
+            ),
+        ],
+        outputs=[
+            OpenLineageOutputDataset(
+                namespace="postgres://postgres:5432",
+                name="food_delivery.public.popular_orders_day_of_week",
+                facets=OpenLineageDatasetFacets(
+                    dataSource=OpenLineageDatasourceDatasetFacet(
+                        name="postgres://postgres:5432",
+                        uri="postgres://postgres:5432/food_delivery",
+                    ),
+                    schema=OpenLineageSchemaDatasetFacet(
+                        fields=[
+                            OpenLineageSchemaField(name="order_day_of_week", type="varchar"),
+                            OpenLineageSchemaField(name="order_placed_on", type="timestamp"),
+                            OpenLineageSchemaField(name="orders_placed", type="int4"),
+                        ],
+                    ),
+                    columnLineage=OpenLineageColumnLineageDatasetFacet(
+                        fields={
+                            "order_day_of_week": OpenLineageColumnLineageDatasetFacetField(
+                                inputFields=[
+                                    OpenLineageColumnLineageDatasetFacetFieldRef(
+                                        namespace="postgres://postgres:5432",
+                                        name="food_delivery.public.top_delivery_times",
+                                        field="order_placed_on",
+                                    ),
+                                ],
+                                transformationDescription="",
+                                transformationType="",
+                            ),
+                            "order_placed_on": OpenLineageColumnLineageDatasetFacetField(
+                                inputFields=[
+                                    OpenLineageColumnLineageDatasetFacetFieldRef(
+                                        namespace="postgres://postgres:5432",
+                                        name="food_delivery.public.top_delivery_times",
+                                        field="order_placed_on",
+                                    ),
+                                ],
+                                transformationDescription="",
+                                transformationType="",
+                            ),
+                        },
+                    ),
+                ),
+            ),
+        ],
     )
 
 
 def test_run_event_airflow_task_complete():
     json = {
-        "producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
+        "producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
         "schemaURL": "https://openlineage.io/spec/1-0-5/OpenLineage.json#/definitions/RunEvent",
         "eventTime": "2024-07-05T09:07:37.858423+00:00",
         "eventType": "COMPLETE",
@@ -436,11 +626,24 @@ def test_run_event_airflow_task_complete():
             "namespace": "http://airflow-host:8081",
             "facets": {
                 "jobType": {
-                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
-                    "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/JobTypeJobFacet",
+                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/facets/2-0-3/JobTypeJobFacet.json#/$defs/JobTypeJobFacet",
                     "integration": "AIRFLOW",
                     "jobType": "TASK",
                     "processingType": "BATCH",
+                },
+                "sql": {
+                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/facets/1-0-1/SQLJobFacet.json#/$defs/SQLJobFacet",
+                    "query": (
+                        "\n    INSERT INTO popular_orders_day_of_week (order_day_of_week, order_placed_on,orders_placed)"
+                        "\n    SELECT EXTRACT(ISODOW FROM order_placed_on) AS order_day_of_week,"
+                        "\n           order_placed_on,"
+                        "\n           COUNT(*) AS orders_placed"
+                        "\n      FROM top_delivery_times"
+                        "\n     GROUP BY order_placed_on"
+                        "\n    "
+                    ),
                 },
             },
         },
@@ -448,17 +651,17 @@ def test_run_event_airflow_task_complete():
             "runId": "01908223-0782-7fc0-9d69-b1df9dac2c60",
             "facets": {
                 "parent": {
-                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/1.10.0",
-                    "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/ParentRunFacet",
+                    "_producer": "https://github.com/apache/airflow/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/facets/1-1-0/ParentRunFacet.json#/$defs/ParentRunFacet",
                     "job": {"name": "mydag", "namespace": "http://airflow-host:8081"},
                     "run": {"runId": "01908223-0782-79b8-9495-b1c38aaee839"},
                 },
                 "unknownSourceAttribute": {
-                    "_producer": "https://github.com/apache/myuser/tree/providers-openlineage/1.10.0",
-                    "_schemaURL": "https://raw.githubusercontent.com/OpenLineage/OpenLineage/main/spec/OpenLineage.json#/definitions/BaseFacet",
+                    "_producer": "https://github.com/apache/myuser/tree/providers-openlineage/2.2.0",
+                    "_schemaURL": "https://openlineage.io/spec/2-0-2/OpenLineage.json#/$defs/BaseFacet",
                     "unknownItems": [
                         {
-                            "name": "SSHOperator",
+                            "name": "SQLExecuteQueryOperator",
                             "properties": {
                                 "depends_on_past": False,
                                 "downstream_task_ids": "[]",
@@ -469,7 +672,7 @@ def test_run_event_airflow_task_complete():
                                 "is_teardown": False,
                                 "mapped": False,
                                 "multiple_outputs": False,
-                                "operator_class": "SSHOperator",
+                                "operator_class": "SQLExecuteQueryOperator",
                                 "outlets": [],
                                 "owner": "myuser",
                                 "priority_weight": 1,
@@ -489,8 +692,101 @@ def test_run_event_airflow_task_complete():
                 },
             },
         },
-        "inputs": [],
-        "outputs": [],
+        "inputs": [
+            {
+                "namespace": "postgres://postgres:5432",
+                "name": "food_delivery.public.top_delivery_times",
+                "facets": {
+                    "dataSource": {
+                        "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.32.0/integration/airflow",
+                        "_schemaURL": "https://openlineage.io/spec/facets/1-0-1/DatasourceDatasetFacet.json#/$defs/DatasourceDatasetFacet",
+                        "name": "postgres://postgres:5432",
+                        "uri": "postgres://postgres:5432/food_delivery",
+                    },
+                    "schema": {
+                        "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.32.0/integration/airflow",
+                        "_schemaURL": "https://openlineage.io/spec/facets/1-1-1/SchemaDatasetFacet.json#/$defs/SchemaDatasetFacet",
+                        "fields": [
+                            {
+                                "name": "order_id",
+                                "type": "integer",
+                            },
+                            {
+                                "name": "order_placed_on",
+                                "type": "timestamp",
+                            },
+                            {
+                                "name": "order_dispatched_on",
+                                "type": "timestamp",
+                            },
+                            {
+                                "name": "order_delivery_time",
+                                "type": "double precision",
+                            },
+                        ],
+                    },
+                },
+                "inputFacets": {},
+            },
+        ],
+        "outputs": [
+            {
+                "name": "food_delivery.public.popular_orders_day_of_week",
+                "namespace": "postgres://postgres:5432",
+                "facets": {
+                    "dataSource": {
+                        "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.32.0/integration/airflow",
+                        "_schemaURL": "https://openlineage.io/spec/facets/1-0-1/DatasourceDatasetFacet.json#/$defs/DatasourceDatasetFacet",
+                        "name": "postgres://postgres:5432",
+                        "uri": "postgres://postgres:5432/food_delivery",
+                    },
+                    "schema": {
+                        "_producer": "https://github.com/OpenLineage/OpenLineage/tree/1.32.0/integration/airflow",
+                        "_schemaURL": "https://openlineage.io/spec/facets/1-1-1/SchemaDatasetFacet.json#/$defs/SchemaDatasetFacet",
+                        "fields": [
+                            {
+                                "name": "order_day_of_week",
+                                "type": "varchar",
+                            },
+                            {
+                                "name": "order_placed_on",
+                                "type": "timestamp",
+                            },
+                            {
+                                "name": "orders_placed",
+                                "type": "int4",
+                            },
+                        ],
+                    },
+                    "columnLineage": {
+                        "fields": {
+                            "order_day_of_week": {
+                                "inputFields": [
+                                    {
+                                        "field": "order_placed_on",
+                                        "name": "food_delivery.public.top_delivery_times",
+                                        "namespace": "postgres://postgres:5432",
+                                    },
+                                ],
+                                "transformationDescription": "",
+                                "transformationType": "",
+                            },
+                            "order_placed_on": {
+                                "inputFields": [
+                                    {
+                                        "field": "order_placed_on",
+                                        "name": "food_delivery.public.top_delivery_times",
+                                        "namespace": "postgres://postgres:5432",
+                                    },
+                                ],
+                                "transformationDescription": "",
+                                "transformationType": "",
+                            },
+                        },
+                    },
+                },
+            },
+        ],
     }
 
     assert RunEventAdapter.validate_python(json) == OpenLineageRunEvent(
@@ -505,6 +801,18 @@ def test_run_event_airflow_task_complete():
                     integration="AIRFLOW",
                     jobType="TASK",
                 ),
+                sql=OpenLineageSqlJobFacet(
+                    query=(
+                        "\n    INSERT INTO popular_orders_day_of_week (order_day_of_week, order_placed_on,orders_placed)"
+                        "\n    SELECT EXTRACT(ISODOW FROM order_placed_on) AS order_day_of_week,"
+                        "\n           order_placed_on,"
+                        "\n           COUNT(*) AS orders_placed"
+                        "\n      FROM top_delivery_times"
+                        "\n     GROUP BY order_placed_on"
+                        "\n    "
+                    ),
+                ),
+                # unknown facets are ignored
             ),
         ),
         run=OpenLineageRun(
@@ -521,6 +829,69 @@ def test_run_event_airflow_task_complete():
                 ),
             ),
         ),
-        inputs=[],
-        outputs=[],
+        inputs=[
+            OpenLineageInputDataset(
+                namespace="postgres://postgres:5432",
+                name="food_delivery.public.top_delivery_times",
+                facets=OpenLineageDatasetFacets(
+                    dataSource=OpenLineageDatasourceDatasetFacet(
+                        name="postgres://postgres:5432",
+                        uri="postgres://postgres:5432/food_delivery",
+                    ),
+                    schema=OpenLineageSchemaDatasetFacet(
+                        fields=[
+                            OpenLineageSchemaField(name="order_id", type="integer"),
+                            OpenLineageSchemaField(name="order_placed_on", type="timestamp"),
+                            OpenLineageSchemaField(name="order_dispatched_on", type="timestamp"),
+                            OpenLineageSchemaField(name="order_delivery_time", type="double precision"),
+                        ],
+                    ),
+                ),
+            ),
+        ],
+        outputs=[
+            OpenLineageOutputDataset(
+                namespace="postgres://postgres:5432",
+                name="food_delivery.public.popular_orders_day_of_week",
+                facets=OpenLineageDatasetFacets(
+                    dataSource=OpenLineageDatasourceDatasetFacet(
+                        name="postgres://postgres:5432",
+                        uri="postgres://postgres:5432/food_delivery",
+                    ),
+                    schema=OpenLineageSchemaDatasetFacet(
+                        fields=[
+                            OpenLineageSchemaField(name="order_day_of_week", type="varchar"),
+                            OpenLineageSchemaField(name="order_placed_on", type="timestamp"),
+                            OpenLineageSchemaField(name="orders_placed", type="int4"),
+                        ],
+                    ),
+                    columnLineage=OpenLineageColumnLineageDatasetFacet(
+                        fields={
+                            "order_day_of_week": OpenLineageColumnLineageDatasetFacetField(
+                                inputFields=[
+                                    OpenLineageColumnLineageDatasetFacetFieldRef(
+                                        namespace="postgres://postgres:5432",
+                                        name="food_delivery.public.top_delivery_times",
+                                        field="order_placed_on",
+                                    ),
+                                ],
+                                transformationDescription="",
+                                transformationType="",
+                            ),
+                            "order_placed_on": OpenLineageColumnLineageDatasetFacetField(
+                                inputFields=[
+                                    OpenLineageColumnLineageDatasetFacetFieldRef(
+                                        namespace="postgres://postgres:5432",
+                                        name="food_delivery.public.top_delivery_times",
+                                        field="order_placed_on",
+                                    ),
+                                ],
+                                transformationDescription="",
+                                transformationType="",
+                            ),
+                        },
+                    ),
+                ),
+            ),
+        ],
     )

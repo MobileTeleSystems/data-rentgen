@@ -72,8 +72,8 @@ def test_extractors_extract_batch_flink(
 
     assert extracted.locations() == [
         extracted_flink_location,
-        extracted_postgres_location,
         extracted_kafka_location,
+        extracted_postgres_location,
     ]
 
     assert extracted.jobs() == [extracted_flink_job]
@@ -82,8 +82,8 @@ def test_extractors_extract_batch_flink(
     assert extracted.operations() == [extracted_flink_job_operation]
 
     assert extracted.datasets() == [
-        extracted_postgres_dataset,
         extracted_kafka_dataset,
+        extracted_postgres_dataset,
     ]
 
     assert not extracted.dataset_symlinks()
