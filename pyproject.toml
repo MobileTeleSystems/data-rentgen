@@ -61,7 +61,8 @@ starlette-exporter = {version = "^0.23.0", optional = true}
 uvicorn = {version = "^0.34.0", optional = true}
 asyncpg = {version = "^0.30.0", optional = true}
 asgi-correlation-id = {version = "^4.3.4", optional = true}
-faststream = {extras = ["kafka", "cli"], version = "^0.5.33", optional = true}
+# TODO: remove upper version limit after https://github.com/ag2ai/faststream/pull/2228
+faststream = {extras = ["kafka", "cli"], version = "0.5.41", optional = true}
 # used by aiokafka for LZ4, Snappy, ZSTD compression algorithms
 cramjam = {version = "^2.9.1", optional = true}
 packaging = {version = ">=24.2,<26.0", optional = true}
