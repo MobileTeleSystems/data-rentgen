@@ -157,7 +157,7 @@ async def operation_with_sql_query(
     async with async_session_maker() as async_session:
         sql_query = await create_sql_query(
             async_session=async_session,
-            sql_query_kwargs={"id": 69, "query": "select id, name\nfrom schema.table\nwhere id = 1"},
+            sql_query_kwargs={"query": "select id, name\nfrom schema.table\nwhere id = 1"},
         )
         operation = await create_operation(
             async_session=async_session,
