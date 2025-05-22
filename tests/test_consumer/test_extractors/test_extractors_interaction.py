@@ -41,10 +41,11 @@ def test_extractors_extract_input_output_schema(dataset_type: type[OpenLineageDa
                 fields=[
                     OpenLineageSchemaField(
                         name="dt",
-                        type="timestamp",
-                        description="Business date",
+                        type="",
+                        description="",
+                        fields=[],
                     ),
-                    OpenLineageSchemaField(name="customer_id", type="decimal(20,0)"),
+                    OpenLineageSchemaField(name="customer_id", type="decimal(20,0)", description=" some "),
                     OpenLineageSchemaField(name="total_spent", type="float"),
                     OpenLineageSchemaField(
                         name="phones",
@@ -70,8 +71,8 @@ def test_extractors_extract_input_output_schema(dataset_type: type[OpenLineageDa
 
     assert extract_schema(dataset) == SchemaDTO(
         fields=[
-            {"name": "dt", "type": "timestamp", "description": "Business date"},
-            {"name": "customer_id", "type": "decimal(20,0)"},
+            {"name": "dt"},  # all empty values are excluded
+            {"name": "customer_id", "type": "decimal(20,0)", "description": "some"},  # spaces are trimmed
             {"name": "total_spent", "type": "float"},
             {
                 "name": "phones",
@@ -90,6 +91,21 @@ def test_extractors_extract_input_output_schema(dataset_type: type[OpenLineageDa
             },
         ],
     )
+
+
+@pytest.mark.parametrize("dataset_type", [OpenLineageInputDataset, OpenLineageOutputDataset])
+def test_extractors_extract_input_output_schema_no_fields(dataset_type: type[OpenLineageDataset]):
+    dataset = dataset_type(
+        namespace="hdfs://test-hadoop:9820",
+        name="/user/hive/warehouse/mydb.db/mytable",
+        facets=OpenLineageDatasetFacets(
+            schema=OpenLineageSchemaDatasetFacet(
+                fields=[],
+            ),
+        ),
+    )
+
+    assert extract_schema(dataset) is None
 
 
 @pytest.mark.parametrize(

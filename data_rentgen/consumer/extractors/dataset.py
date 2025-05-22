@@ -59,6 +59,9 @@ def connect_dataset_with_symlinks(
 
 
 def strip_partitions_from_path(name: str):
+    # strip "None." prefix for DBT datasets: https://github.com/OpenLineage/OpenLineage/pull/3707
+    name = name.replace("None.", "")
+
     # convert /some/long/path/with=partition/another=abc to /some/long/path
     if "=" not in name or "/" not in name:
         return name

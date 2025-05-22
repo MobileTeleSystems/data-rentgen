@@ -306,6 +306,25 @@ def test_extractors_extract_dataset_kafka_with_flink2_legacy_symlinks():
     assert symlinks == []
 
 
+def test_extractors_extract_dataset_dbt_none():
+    dataset = OpenLineageDataset(
+        namespace="some-namespace",
+        name="None.some.name",
+    )
+
+    dataset, symlinks = extract_dataset_and_symlinks(dataset)
+
+    assert dataset == DatasetDTO(
+        location=LocationDTO(
+            type="unknown",
+            name="some-namespace",
+            addresses={"unknown://some-namespace"},
+        ),
+        name="some.name",
+    )
+    assert symlinks == []
+
+
 def test_extractors_extract_dataset_unknown():
     dataset = OpenLineageDataset(
         namespace="some-namespace",
