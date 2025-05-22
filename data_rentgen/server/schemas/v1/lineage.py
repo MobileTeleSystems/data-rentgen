@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum, IntEnum
+from enum import Enum, IntEnum, IntFlag
 from typing import Literal
 from uuid import UUID
 
@@ -150,10 +150,29 @@ class LineageInputRelationV1(BaseModel):
     )
 
 
+class OutputTypeV1(IntFlag):
+    APPEND = 1
+
+    CREATE = 2
+    ALTER = 4
+    RENAME = 8
+
+    OVERWRITE = 16
+
+    DROP = 32
+    TRUNCATE = 64
+
+    def __str__(self) -> str:
+        return f"{self.name}"
+
+
 class LineageOutputRelationV1(BaseModel):
     from_: LineageEntityV1 = Field(description="Start point of relation", serialization_alias="from")
     to: LineageEntityV1 = Field(description="End point of relation")
-    type: str | None = Field(description="Type of relation", examples=["CREATE", "APPEND"], default=None)
+    types: list[OutputTypeV1] = Field(
+        description="Type of relation",
+        examples=[[OutputTypeV1.APPEND], [OutputTypeV1.TRUNCATE, OutputTypeV1.DROP]],
+    )
     last_interaction_at: datetime = Field(description="Last interaction at", examples=["2008-09-15T15:53:00+05:00"])
     num_bytes: int | None = Field(description="Number of bytes", examples=[42], default=None)
     num_rows: int | None = Field(description="Number of rows", examples=[42], default=None)
@@ -164,6 +183,10 @@ class LineageOutputRelationV1(BaseModel):
         # pydantic models have reserved "schema" attribute, using alias
         serialization_alias="schema",
     )
+
+    @field_serializer("types")
+    def serialize_types(self, types: list[OutputTypeV1], _info):
+        return [str(t) for t in types]
 
 
 class LineageSymlinkRelationV1(BaseModel):

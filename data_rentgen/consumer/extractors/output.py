@@ -14,7 +14,7 @@ def extract_output(
 ) -> tuple[OutputDTO, list[DatasetSymlinkDTO]]:
     lifecycle_change = dataset.facets.lifecycleStateChange
     if lifecycle_change:  # noqa: SIM108
-        output_type = OutputTypeDTO(lifecycle_change.lifecycleStateChange)
+        output_type = OutputTypeDTO[lifecycle_change.lifecycleStateChange]
     else:
         output_type = OutputTypeDTO.APPEND
     dataset_dto, symlinks = extract_dataset_and_symlinks(dataset)

@@ -4,11 +4,11 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import IntFlag
 from uuid import UUID
 
 from sqlalchemy import UUID as SQL_UUID
-from sqlalchemy import BigInteger, DateTime, PrimaryKeyConstraint, String
+from sqlalchemy import BigInteger, DateTime, PrimaryKeyConstraint, SmallInteger
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
 
@@ -20,19 +20,17 @@ from data_rentgen.db.models.run import Run
 from data_rentgen.db.models.schema import Schema
 
 
-class OutputType(str, Enum):
-    CREATE = "CREATE"
-    ALTER = "ALTER"
-    RENAME = "RENAME"
+class OutputType(IntFlag):
+    APPEND = 1
 
-    APPEND = "APPEND"
-    OVERWRITE = "OVERWRITE"
+    CREATE = 2
+    ALTER = 4
+    RENAME = 8
 
-    DROP = "DROP"
-    TRUNCATE = "TRUNCATE"
+    OVERWRITE = 16
 
-    def __str__(self) -> str:
-        return self.value
+    DROP = 32
+    TRUNCATE = 64
 
 
 # no foreign keys to avoid scanning all the partitions
@@ -103,7 +101,7 @@ class Output(Base):
     )
 
     type: Mapped[OutputType] = mapped_column(
-        ChoiceType(OutputType, impl=String(32)),
+        ChoiceType(OutputType, impl=SmallInteger()),
         nullable=False,
         default=OutputType.APPEND,
         doc="Type of the output, e.g. READ, CREATE, APPEND",
