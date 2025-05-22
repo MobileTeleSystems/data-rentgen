@@ -43,6 +43,9 @@ class BatchExtractor:
         if job_type_facet.integration == "FLINK":
             return job_type_facet.jobType == "JOB"
 
+        if job_type_facet.integration == "DBT":
+            return job_type_facet.jobType != "JOB"  # MODEL, SNAPSHOT, TEST
+
         return has_lineage
 
     def extract_run(self, event: OpenLineageRunEvent) -> None:

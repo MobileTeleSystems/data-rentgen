@@ -207,22 +207,27 @@ def test_run_event_flink_job_start(processing_type: str, expected_job_type: Open
                             OpenLineageSchemaField(
                                 name="price",
                                 type="DECIMAL(38, 18)",
+                                description="",
                             ),
                             OpenLineageSchemaField(
                                 name="currency",
                                 type="STRING",
+                                description="",
                             ),
                             OpenLineageSchemaField(
                                 name="log_date",
                                 type="DATE",
+                                description="",
                             ),
                             OpenLineageSchemaField(
                                 name="log_time",
                                 type="TIME(0)",
+                                description="",
                             ),
                             OpenLineageSchemaField(
                                 name="log_ts",
                                 type="TIMESTAMP(3)",
+                                description="",
                             ),
                         ],
                     ),
@@ -250,26 +255,32 @@ def test_run_event_flink_job_start(processing_type: str, expected_job_type: Open
                             OpenLineageSchemaField(
                                 name="ts_interval",
                                 type="STRING",
+                                description="",
                             ),
                             OpenLineageSchemaField(
                                 name="max_log_date",
                                 type="STRING",
+                                description="",
                             ),
                             OpenLineageSchemaField(
                                 name="max_log_time",
                                 type="STRING",
+                                description="",
                             ),
                             OpenLineageSchemaField(
                                 name="max_ts",
                                 type="STRING",
+                                description="",
                             ),
                             OpenLineageSchemaField(
                                 name="counter",
                                 type="BIGINT",
+                                description="",
                             ),
                             OpenLineageSchemaField(
                                 name="max_price",
                                 type="DECIMAL(38, 18)",
+                                description="",
                             ),
                         ],
                     ),

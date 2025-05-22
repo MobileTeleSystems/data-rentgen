@@ -11,6 +11,13 @@ from data_rentgen.consumer.openlineage.run_event import (
 )
 from data_rentgen.dto import OperationDTO, OperationStatusDTO, OperationTypeDTO, RunDTO, SQLQueryDTO
 
+"""
+SQL_JOB=operation, SPARK_APPLICATION=run
+DBT_MODEL=operation, DBT_JOB=run
+But AIRFLOW_TASK=operation+run, FLINK_JOB=operation+run
+"""
+INTEGRATIONS_WITH_RUN_OPERATION_SEPARATION = {"SPARK", "DBT"}
+
 
 def extract_operation(event: OpenLineageRunEvent) -> OperationDTO:
     run = extract_operation_run(event)
@@ -31,7 +38,11 @@ def extract_operation(event: OpenLineageRunEvent) -> OperationDTO:
 
 
 def extract_operation_run(event: OpenLineageRunEvent) -> RunDTO:
-    if event.run.facets.parent and event.job.facets.jobType and event.job.facets.jobType.integration == "SPARK":
+    if (
+        event.run.facets.parent
+        and event.job.facets.jobType
+        and event.job.facets.jobType.integration in INTEGRATIONS_WITH_RUN_OPERATION_SEPARATION
+    ):
         return extract_parent_run(event.run.facets.parent)
 
     return extract_run(event)
@@ -65,7 +76,7 @@ def extract_operation_name(run: RunDTO, event: OpenLineageRunEvent) -> str | Non
         # keep existing name in DB instead of resetting it to "dag.task"
         return None
 
-    return run.job.name
+    return event.job.name
 
 
 def enrich_operation_status(operation: OperationDTO, event: OpenLineageRunEvent) -> OperationDTO:
@@ -103,6 +114,9 @@ def enrich_operation_details(operation: OperationDTO, event: OpenLineageRunEvent
         operation.position = airflow_operator_details.taskInstance.map_index
         if airflow_operator_details.task.task_group:
             operation.group = airflow_operator_details.task.task_group.group_id
+
+    if event.job.facets.jobType and event.job.facets.jobType.integration == "DBT":
+        operation.group = event.job.facets.jobType.jobType
     return operation
 
 
@@ -111,7 +125,7 @@ def extract_sql_query(job: OpenLineageJob) -> SQLQueryDTO | None:
     Sql queries are usual has format of multiline string. So we remove additional spaces and end of the rows symbols.
     """
     if job.facets.sql:
-        query = str.strip(dedent(job.facets.sql.query))
+        query = dedent(job.facets.sql.query).strip()
         return SQLQueryDTO(query=query)
 
     return None
