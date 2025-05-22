@@ -854,3 +854,75 @@ async def lineage_with_depth_and_with_column_lineage(
 
     async with async_session_maker() as async_session:
         await clean_db(async_session)
+
+
+@pytest_asyncio.fixture()
+async def lineage_with_different_dataset_interactions(
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
+    user: User,
+):
+    # Tree J -> R -> O0...03, interacting with the same dataset multiple times with different operations types:
+    # J0 -> R0 -> O0, O0 -> D1
+    # J0 -> R0 -> O1, O1 -> D1
+    # J0 -> R1 -> O2, O2 -> D1
+
+    operations_per_run = 3
+    created_at = datetime.now(tz=UTC)
+
+    lineage = LineageResult()
+    async with async_session_maker() as async_session:
+        dataset_location = await create_location(async_session)
+        dataset = await create_dataset(async_session, location_id=dataset_location.id)
+        lineage.datasets.append(dataset)
+
+        schema = await create_schema(async_session)
+
+        # Create a job, run and operation with IO datasets.
+        job_location = await create_location(async_session)
+        job_type = await create_job_type(async_session)
+        job = await create_job(async_session, location_id=job_location.id, job_type_id=job_type.id)
+        lineage.jobs.append(job)
+
+        run = await create_run(
+            async_session,
+            run_kwargs={
+                "job_id": job.id,
+                "started_by_user_id": user.id,
+                "created_at": created_at + timedelta(seconds=1),
+            },
+        )
+        lineage.runs.append(run)
+
+        operations = [
+            await create_operation(
+                async_session,
+                operation_kwargs={
+                    "run_id": run.id,
+                    "created_at": run.created_at + timedelta(seconds=0.2),
+                },
+            )
+            for _ in range(operations_per_run)
+        ]
+        lineage.operations.extend(operations)
+
+        outputs = [
+            await create_output(
+                async_session,
+                output_kwargs={
+                    "created_at": operation.created_at,
+                    "operation_id": operation.id,
+                    "run_id": operation.run_id,
+                    "job_id": job.id,
+                    "dataset_id": dataset.id,
+                    "type": type_,
+                    "schema_id": schema.id,
+                },
+            )
+            for operation, type_ in zip(operations, [OutputType.OVERWRITE, OutputType.TRUNCATE, OutputType.DROP])
+        ]
+        lineage.outputs.extend(outputs)
+
+    yield lineage
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)
