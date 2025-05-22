@@ -28,7 +28,7 @@ class OutputRow:
     num_bytes: int | None
     num_rows: int | None
     num_files: int | None
-    type: str | None = None
+    types_combined: int | None = None
     schema_id: int | None = None
     schema_relevance_type: Literal["EXACT_MATCH", "LATEST_KNOWN"] | None = None
     schema: Schema | None = None
@@ -186,7 +186,7 @@ class OutputRepository(Repository[Output]):
                     num_files=row.num_files,
                     schema_id=row.schema_id,
                     schema_relevance_type="EXACT_MATCH" if row.schema_id else None,
-                    type=row.type,
+                    types_combined=row.type,
                 )
                 for row in result.all()
             ]
@@ -218,8 +218,7 @@ class OutputRepository(Repository[Output]):
                 func.sum(base_query.c.num_bytes).label("sum_num_bytes"),
                 func.sum(base_query.c.num_rows).label("sum_num_rows"),
                 func.sum(base_query.c.num_files).label("sum_num_files"),
-                func.min(base_query.c.type).label("min_type"),
-                func.max(base_query.c.type).label("max_type"),
+                func.bit_or(base_query.c.type).label("types_combined"),
                 func.min(base_query.c.oldest_schema_id).label("min_schema_id"),
                 func.max(base_query.c.newest_schema_id).label("max_schema_id"),
             ).group_by(
@@ -253,8 +252,7 @@ class OutputRepository(Repository[Output]):
                 func.sum(base_query.c.num_bytes).label("sum_num_bytes"),
                 func.sum(base_query.c.num_rows).label("sum_num_rows"),
                 func.sum(base_query.c.num_files).label("sum_num_files"),
-                func.min(base_query.c.type).label("min_type"),
-                func.max(base_query.c.type).label("max_type"),
+                func.bit_or(base_query.c.type).label("types_combined"),
                 func.min(base_query.c.oldest_schema_id).label("min_schema_id"),
                 func.max(base_query.c.newest_schema_id).label("max_schema_id"),
             ).group_by(
@@ -281,9 +279,7 @@ class OutputRepository(Repository[Output]):
                     num_files=row.sum_num_files,
                     schema_id=row.max_schema_id,
                     schema_relevance_type=schema_relevance_type,
-                    # If all outputs within Dataset -> Run|Job have the same type, save it.
-                    # If not, it's impossible to merge.
-                    type=row.max_type if row.min_type == row.max_type else None,
+                    types_combined=row.types_combined,
                 ),
             )
         return results

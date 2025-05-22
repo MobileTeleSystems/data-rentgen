@@ -181,7 +181,7 @@ def test_extractors_extract_output(
 
     assert extract_output(operation_dto, output) == (
         OutputDTO(
-            type=expected_type,
+            type=expected_type.value,
             operation=operation_dto,
             dataset=DatasetDTO(
                 name="/user/hive/warehouse/mydb.db/mytable",

@@ -4,7 +4,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import IntFlag
 from uuid import UUID
 
 from data_rentgen.dto.dataset import DatasetDTO
@@ -12,19 +12,17 @@ from data_rentgen.dto.operation import OperationDTO
 from data_rentgen.dto.schema import SchemaDTO
 
 
-class OutputTypeDTO(str, Enum):
-    CREATE = "CREATE"
-    ALTER = "ALTER"
-    RENAME = "RENAME"
+class OutputTypeDTO(IntFlag):
+    APPEND = 1
 
-    APPEND = "APPEND"
-    OVERWRITE = "OVERWRITE"
+    CREATE = 2
+    ALTER = 4
+    RENAME = 8
 
-    DROP = "DROP"
-    TRUNCATE = "TRUNCATE"
+    OVERWRITE = 16
 
-    def __str__(self) -> str:
-        return self.value
+    DROP = 32
+    TRUNCATE = 64
 
 
 @dataclass

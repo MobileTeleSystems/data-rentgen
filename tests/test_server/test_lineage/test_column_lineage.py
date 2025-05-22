@@ -121,7 +121,6 @@ async def test_operation_lineage_include_columns_with_combined_transformations(
             "include_column_lineage": True,
         },
     )
-
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "relations": {

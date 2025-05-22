@@ -40,7 +40,7 @@ def merge_io(inputs_outputs: Sequence[IO], get_key: Callable[[IO], tuple]) -> li
                 schema_relevance_type="EXACT_MATCH" if raw_io.schema else None,
             )
             if isinstance(merged_io, OutputRow):
-                merged_io.type = raw_io.type
+                merged_io.types_combined = raw_io.type
 
             merged_inputs_outputs[key] = merged_io
         else:
@@ -60,9 +60,9 @@ def merge_io(inputs_outputs: Sequence[IO], get_key: Callable[[IO], tuple]) -> li
                 merged_io.schema_id = schema_id
                 merged_io.schema_relevance_type = "LATEST_KNOWN"
 
-            if isinstance(merged_io, OutputRow) and merged_io.type != raw_io.type:
+            if isinstance(merged_io, OutputRow):
                 # cannot merge different types
-                merged_io.type = None
+                merged_io.types_combined |= raw_io.type
     return list(merged_inputs_outputs.values())
 
 

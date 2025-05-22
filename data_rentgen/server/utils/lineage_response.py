@@ -27,6 +27,7 @@ from data_rentgen.server.schemas.v1 import (
     LineageSourceColumnV1,
     LineageSymlinkRelationV1,
     OperationResponseV1,
+    OutputTypeV1,
     RunResponseV1,
 )
 from data_rentgen.server.schemas.v1.lineage import (
@@ -134,7 +135,7 @@ def _get_output_relations(outputs: dict[Any, OutputRow]) -> list[LineageOutputRe
             from_ = LineageEntityV1(kind=LineageEntityKindV1.JOB, id=str(output.job_id))
 
         relation = LineageOutputRelationV1(
-            type=output.type,
+            types=[type_ for type_ in OutputTypeV1 if type_ & output.types_combined],  # type: ignore[operator]
             from_=from_,
             to=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(output.dataset_id)),
             last_interaction_at=output.created_at,
@@ -147,7 +148,7 @@ def _get_output_relations(outputs: dict[Any, OutputRow]) -> list[LineageOutputRe
             relation.o_schema.relevance_type = output.schema_relevance_type
         relations.append(relation)
 
-    return sorted(relations, key=lambda x: (x.from_.kind, str(x.from_.id), str(x.to.id), x.type))
+    return sorted(relations, key=lambda x: (x.from_.kind, str(x.from_.id), str(x.to.id)))
 
 
 def _get_direct_column_lineage(column_lineage_by_source_target_id: dict[tuple, list[ColumnLineageRow]]):

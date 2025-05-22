@@ -36,7 +36,7 @@ class LineageServiceResult:
     datasets: dict[int, Dataset] = field(default_factory=dict)
     dataset_symlinks: dict[tuple[int, int], DatasetSymlink] = field(default_factory=dict)
     inputs: dict[tuple[int, int, UUID | None, UUID | None], InputRow] = field(default_factory=dict)
-    outputs: dict[tuple[int, int, UUID | None, UUID | None, str | None], OutputRow] = field(default_factory=dict)
+    outputs: dict[tuple[int, int, UUID | None, UUID | None, int | None], OutputRow] = field(default_factory=dict)
     column_lineage: dict[tuple[int, int], list[ColumnLineageRow]] = field(default_factory=dict)
 
     def merge(self, other: "LineageServiceResult") -> "LineageServiceResult":
@@ -182,7 +182,7 @@ class LineageService:
                 (input_.dataset_id, input_.job_id, input_.run_id, input_.operation_id): input_ for input_ in inputs
             },
             outputs={
-                (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.type): output
+                (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.types_combined): output
                 for output in outputs
             },
         )
@@ -388,7 +388,7 @@ class LineageService:
                 (input_.dataset_id, input_.job_id, input_.run_id, input_.operation_id): input_ for input_ in inputs
             },
             outputs={
-                (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.type): output
+                (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.types_combined): output
                 for output in outputs
             },
         )
@@ -552,7 +552,7 @@ class LineageService:
                 (input_.dataset_id, input_.job_id, input_.run_id, input_.operation_id): input_ for input_ in inputs
             },
             outputs={
-                (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.type): output
+                (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.types_combined): output
                 for output in outputs
             },
         )
@@ -851,7 +851,7 @@ class LineageService:
                 (input_.dataset_id, input_.job_id, input_.run_id, input_.operation_id): input_ for input_ in inputs
             },
             outputs={
-                (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.type): output
+                (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.types_combined): output
                 for output in outputs
             },
         )
@@ -973,7 +973,7 @@ class LineageService:
                 (input_.dataset_id, input_.job_id, input_.run_id, input_.operation_id): input_ for input_ in inputs
             },
             outputs={
-                (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.type): output
+                (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.types_combined): output
                 for output in outputs
             },
         )
@@ -1070,7 +1070,7 @@ class LineageService:
                 (input_.dataset_id, input_.job_id, input_.run_id, input_.operation_id): input_ for input_ in inputs
             },
             outputs={
-                (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.type): output
+                (output.dataset_id, output.job_id, output.run_id, output.operation_id, output.types_combined): output
                 for output in outputs
             },
         )

@@ -6,6 +6,7 @@ from data_rentgen.db.models import (
     Input,
     Output,
 )
+from data_rentgen.server.schemas.v1.lineage import OutputTypeV1
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -121,12 +122,14 @@ def output_to_json(output: OutputRow | Output, granularity: Literal["OPERATION",
 
     if isinstance(output, Output):
         schema_relevance_type = "EXACT_MATCH" if output.schema else None
+        types = [output.type.name]
     else:
         schema_relevance_type = output.schema_relevance_type if output.schema_relevance_type else None
+        types = [type_.name for type_ in OutputTypeV1 if type_ & output.types_combined]
     return {
         "from": from_,
         "to": {"kind": "DATASET", "id": str(output.dataset_id)},
-        "type": output.type.value if output.type else None,
+        "types": types,
         "num_bytes": output.num_bytes,
         "num_rows": output.num_rows,
         "num_files": output.num_files,
@@ -139,7 +142,7 @@ def outputs_to_json(outputs: list[OutputRow | Output], granularity: Literal["OPE
     results = [output_to_json(output, granularity) for output in outputs]
     return sorted(
         results,
-        key=lambda x: (x["from"]["id"], x["to"]["id"], x["type"]),
+        key=lambda x: (x["from"]["id"], x["to"]["id"]),
     )
 
 
