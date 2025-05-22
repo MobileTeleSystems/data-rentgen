@@ -186,7 +186,7 @@ class LineageOutputRelationV1(BaseModel):
 
     @field_serializer("types")
     def serialize_types(self, types: list[OutputTypeV1], _info):
-        return [str(t) for t in types]
+        return [t.name for t in types]
 
 
 class LineageSymlinkRelationV1(BaseModel):

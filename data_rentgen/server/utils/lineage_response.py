@@ -148,7 +148,7 @@ def _get_output_relations(outputs: dict[Any, OutputRow]) -> list[LineageOutputRe
             relation.o_schema.relevance_type = output.schema_relevance_type
         relations.append(relation)
 
-    return sorted(relations, key=lambda x: (x.from_.kind, str(x.from_.id), str(x.to.id), x.types))
+    return sorted(relations, key=lambda x: (x.from_.kind, str(x.from_.id), str(x.to.id)))
 
 
 def _get_direct_column_lineage(column_lineage_by_source_target_id: dict[tuple, list[ColumnLineageRow]]):

@@ -142,7 +142,7 @@ def outputs_to_json(outputs: list[OutputRow | Output], granularity: Literal["OPE
     results = [output_to_json(output, granularity) for output in outputs]
     return sorted(
         results,
-        key=lambda x: (x["from"]["id"], x["to"]["id"], x["types"]),
+        key=lambda x: (x["from"]["id"], x["to"]["id"]),
     )
 
 
