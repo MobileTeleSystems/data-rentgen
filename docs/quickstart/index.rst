@@ -15,4 +15,4 @@ See basic installation instruction & dedicated pages for each integration.
 
     install
     setup_spark
-    setup_airflow
+    setup_airflow/index
