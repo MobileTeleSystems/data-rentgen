@@ -109,7 +109,12 @@ def enrich_run_logs(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:  # noqa:
             return run
 
         processing_engine = event.run.facets.processing_engine
-        if processing_engine and processing_engine.version >= Version("2.3.0"):
+        if processing_engine and processing_engine.version >= Version("3.0.0"):
+            run.persistent_log_url = get_airflow_3_x_plus_dag_run_url(
+                namespace,
+                airflow_dag_run_facet,
+            )
+        elif processing_engine and processing_engine.version >= Version("2.3.0"):
             run.persistent_log_url = get_airflow_2_3_plus_dag_run_url(
                 namespace,
                 airflow_dag_run_facet,
@@ -132,7 +137,12 @@ def enrich_run_logs(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:  # noqa:
             return run
 
         processing_engine = event.run.facets.processing_engine
-        if processing_engine and processing_engine.version >= Version("2.9.1"):
+        if processing_engine and processing_engine.version >= Version("3.0.0"):
+            run.persistent_log_url = get_airflow_3_x_task_log_url(
+                namespace,
+                airflow_task_run_facet,
+            )
+        elif processing_engine and processing_engine.version >= Version("2.9.1"):
             run.persistent_log_url = get_airflow_2_9_plus_task_log_url(
                 namespace,
                 airflow_task_run_facet,
@@ -143,6 +153,17 @@ def enrich_run_logs(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:  # noqa:
                 airflow_task_run_facet,
             )
     return run
+
+
+def get_airflow_3_x_plus_dag_run_url(
+    namespace: str,
+    airflow_dag_run_facet: OpenLineageAirflowDagRunFacet,
+) -> str:
+    # https://github.com/apache/airflow/pull/46942
+    # https://github.com/apache/airflow/blob/3.0.1/airflow-core/src/airflow/utils/helpers.py#L199-L207
+    dag_id = airflow_dag_run_facet.dag.dag_id
+    dag_run_id = airflow_dag_run_facet.dagRun.run_id
+    return f"{namespace}/dags/{dag_id}/runs/{dag_run_id}"
 
 
 def get_airflow_2_3_plus_dag_run_url(
@@ -164,6 +185,24 @@ def get_airflow_2_x_dag_run_url(
     dag_id = quote(airflow_dag_run_facet.dag.dag_id)
     execution_date = quote(airflow_dag_run_facet.dagRun.data_interval_start.isoformat())
     return f"{namespace}/graph?dag_id={dag_id}&execution_date={execution_date}"
+
+
+def get_airflow_3_x_task_log_url(
+    namespace: str,
+    airflow_task_run_facet: OpenLineageAirflowTaskRunFacet,
+) -> str:
+    # https://github.com/apache/airflow/pull/48996
+    # https://github.com/apache/airflow/blob/3.0.1/airflow-core/src/airflow/models/taskinstance.py#L980-L987
+    dag_id = airflow_task_run_facet.dag.dag_id
+    dag_run_id = airflow_task_run_facet.dagRun.run_id
+    task_id = airflow_task_run_facet.task.task_id
+    map_index = airflow_task_run_facet.taskInstance.map_index
+    try_number = airflow_task_run_facet.taskInstance.try_number
+
+    map_index_part = f"/mapped/{map_index}" if map_index is not None else ""
+    try_number_part = f"?try_number={try_number}" if try_number > 0 else ""
+
+    return f"{namespace}/dags/{dag_id}/runs/{dag_run_id}/tasks/{task_id}{map_index_part}{try_number_part}"
 
 
 def get_airflow_2_9_plus_task_log_url(
