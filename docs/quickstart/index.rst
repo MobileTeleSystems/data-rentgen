@@ -15,5 +15,5 @@ See basic installation instruction & dedicated pages for each integration.
 
     install
     setup_spark/index
-    setup_airflow
+    setup_airflow/index
     setup_dbt/index
