@@ -7,8 +7,7 @@ from uuid import UUID
 from sqlalchemy import any_, select, text
 from sqlalchemy.dialects.postgresql import insert
 
-from data_rentgen.db.models import ColumnLineage
-from data_rentgen.db.models.dataset_column_relation import (
+from data_rentgen.db.models import (
     DatasetColumnRelation,
     DatasetColumnRelationType,
 )
@@ -16,7 +15,7 @@ from data_rentgen.db.repositories.base import Repository
 from data_rentgen.dto import ColumnLineageDTO
 
 
-class DatasetColumnRelationRepository(Repository[ColumnLineage]):
+class DatasetColumnRelationRepository(Repository[DatasetColumnRelation]):
     async def create_bulk_for_column_lineage(self, items: list[ColumnLineageDTO]) -> None:
         if not items:
             return
