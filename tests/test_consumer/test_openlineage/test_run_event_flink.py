@@ -50,7 +50,7 @@ def test_run_event_flink_job_start(processing_type: str, expected_job_type: Open
             "facets": {},
         },
         "job": {
-            "namespace": "flink://localhost:18081",
+            "namespace": "http://localhost:18081",
             "name": "flink_job",
             "facets": {
                 "jobType": {
@@ -183,7 +183,7 @@ def test_run_event_flink_job_start(processing_type: str, expected_job_type: Open
         eventTime=datetime(2025, 4, 22, 8, 37, 53, 938068, tzinfo=timezone.utc),
         eventType=OpenLineageRunEventType.START,
         job=OpenLineageJob(
-            namespace="flink://localhost:18081",
+            namespace="http://localhost:18081",
             name="flink_job",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(

@@ -183,7 +183,7 @@ Operation details page
 .. image:: ./operation_details.png
 
 Dataset level lineage
-~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 .. image:: ./dataset_lineage.png
 

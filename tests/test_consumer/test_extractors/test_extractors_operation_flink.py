@@ -33,7 +33,7 @@ def test_extractors_extract_operation_flink_job():
         eventType=OpenLineageRunEventType.START,
         eventTime=now,
         job=OpenLineageJob(
-            namespace="flink://localhost:18081",
+            namespace="http://localhost:18081",
             name="myjob",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
@@ -55,9 +55,9 @@ def test_extractors_extract_operation_flink_job():
                 name="myjob",
                 type=JobTypeDTO(type="FLINK_JOB"),
                 location=LocationDTO(
-                    type="flink",
+                    type="http",
                     name="localhost:18081",
-                    addresses={"flink://localhost:18081"},
+                    addresses={"http://localhost:18081"},
                 ),
             ),
             status=RunStatusDTO.STARTED,
@@ -93,7 +93,7 @@ def test_extractors_extract_operation_flink_job_finished(
         eventType=event_type,
         eventTime=now,
         job=OpenLineageJob(
-            namespace="flink://localhost:18081",
+            namespace="http://localhost:18081",
             name="myjob",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
@@ -117,9 +117,9 @@ def test_extractors_extract_operation_flink_job_finished(
                 name="myjob",
                 type=JobTypeDTO(type="FLINK_JOB"),
                 location=LocationDTO(
-                    type="flink",
+                    type="http",
                     name="localhost:18081",
-                    addresses={"flink://localhost:18081"},
+                    addresses={"http://localhost:18081"},
                 ),
             ),
             status=RunStatusDTO(expected_status),
