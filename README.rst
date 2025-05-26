@@ -61,8 +61,8 @@ Non-goals
 Limitations
 -----------
 
-* For now, only Apache Spark, Apache Airflow and Apache Flink are supported as lineage event sources.
-  OpenLineage also supports DBT, Trino and others. DataRentgen support may be added later.
+* For now, only Apache Spark, Apache Airflow, Apache Flink and DBT are supported as lineage event sources.
+  OpenLineage also supports Trino and others. DataRentgen support may be added later.
 * Unlike Marquez, DataRentgen parses only limited set of facets send by OpenLineage, and doesn't store custom facets. This can be changed in future.
 
 .. documentation
