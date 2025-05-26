@@ -32,7 +32,7 @@ def test_extractors_extract_run_flink():
         eventType=OpenLineageRunEventType.START,
         eventTime=now,
         job=OpenLineageJob(
-            namespace="flink://localhost:18081",
+            namespace="http://localhost:18081",
             name="myjob",
             facets=OpenLineageJobFacets(
                 jobType=OpenLineageJobTypeJobFacet(
@@ -48,7 +48,7 @@ def test_extractors_extract_run_flink():
         id=run_id,
         job=JobDTO(
             name="myjob",
-            location=LocationDTO(type="flink", name="localhost:18081", addresses={"flink://localhost:18081"}),
+            location=LocationDTO(type="http", name="localhost:18081", addresses={"http://localhost:18081"}),
             type=JobTypeDTO(type="FLINK_JOB"),
         ),
         status=RunStatusDTO.STARTED,

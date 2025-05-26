@@ -14,6 +14,8 @@ See basic installation instruction & dedicated pages for each integration.
     :maxdepth: 1
 
     install
-    setup_spark/index
-    setup_airflow/index
-    setup_dbt/index
+    spark/index
+    airflow/index
+    flink1/index
+    flink2/index
+    dbt/index
