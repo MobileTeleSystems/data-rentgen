@@ -77,6 +77,13 @@ Database structure
         search_vector: tsvector
     }
 
+    entity sql_query {
+        * id: bigint
+        ----
+        * fingerprint: uuid(v5)
+        query: text
+    }
+
     entity operation {
         * id: uuid(v7)
         * created_at: timestamptz
@@ -90,6 +97,7 @@ Database structure
         description: text null
         started_at: timestamptz null
         ended_at: timestamptz null
+        sql_query_id: bigint null
     }
 
     entity schema {
@@ -162,6 +170,7 @@ Database structure
     run "parent_run_id" |o--o{ run
 
     operation ||--o{ run
+    operation |o--o{ sql_query
 
     input ||--o{ operation
     input ||--o{ run

@@ -247,7 +247,7 @@ class LineageSourceColumnV1(BaseModel):
 class DirectLineageColumnRelationV1(BaseModel):
     from_: LineageEntityV1 = Field(description="Dataset with source columns", serialization_alias="from")
     to: LineageEntityV1 = Field(description="Dataset with target columns")
-    fields: dict[str, LineageSourceColumnV1] = Field(
+    fields: dict[str, list[LineageSourceColumnV1]] = Field(
         description="Map of target and source columns with type of direct interaction",
         default_factory=dict,
     )

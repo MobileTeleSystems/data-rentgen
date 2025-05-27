@@ -34,6 +34,7 @@ Entities
         [Run] --> [Job]: PARENT
         [Operation] --> [Run]: PARENT
         [Run] --> [User]: started by
+        [Run] --> [Run]: PARENT
         [Dataset1] ..> [Operation]: INPUT
         [Operation] ..> [Dataset1]: OUTPUT
 
@@ -69,6 +70,8 @@ It contains following fields:
 - ``addresses`` - list of alternative location addresses (see below):
 
   - ``url: str`` - alternative address, in URL form.
+
+.. image:: quickstart/location_list.png
 
 Location addresses
 ^^^^^^^^^^^^^^^^^^
@@ -106,6 +109,8 @@ It contains following fields:
 - ``name: str`` - qualified name of Dataset, like ``mydb.myschema.mytable`` or ``/app/warehouse/hive/managed/myschema.df/mytable``
 - ``format: str | None`` - data format used in this dataset, like ``parquet``, ``avro``.
 
+.. image:: quickstart/dataset_list.png
+
 Job
 ~~~
 
@@ -124,12 +129,19 @@ It contains following fields:
 - ``id: int`` - internal unique identifier.
 - ``location: Location`` - Location where Job is run, e.g. cluster or host name.
 - ``name: str`` - name of Job, like ``my-session-name``, ``mydag``, ``mydag.mytask``
-- ``type: enum`` - type of Job. Currently these types are supported:
+- ``type: str`` - type of Job, like:
 
   - ``SPARK_APPLICATION``
   - ``AIRLOW_DAG``
   - ``AIRFLOW_TASK``
+  - ``FLINK_JOB``
+  - ``DBT_JOB``
   - ``UNKNOWN``
+
+.. image:: quickstart/spark/job_list.png
+.. image:: quickstart/airflow/job_list.png
+.. image:: quickstart/flink1/job_list.png
+.. image:: quickstart/dbt/job_list.png
 
 User
 ~~~~
@@ -149,13 +161,15 @@ Represents information about Job run:
 - for Spark applicationName it is a Spark applicationId
 - for Airflow DAG it is a DagRun
 - for Airflow Task it is a TaskInstance
+- for Apache Flink it is jobId
+- for dbt it is ``dbt run`` instance
 
 It contains following fields:
 
 - ``id: uuidv7`` - unique identifier, generated on client.
 - ``created_at: timestamp`` - extracted UUIDv7 timestamp, used for filtering purpose.
 - ``job_id: int`` - bound to specific Job.
-- ``parent_run_id: int`` - parent Run which triggered this specific Run, e.g. Spark applicationId was triggered by Airflow Task Instance.
+- ``parent_run_id: uuidv7`` - parent Run which triggered this specific Run, e.g. Spark applicationId was triggered by Airflow Task Instance, or Airflow Task Instance is a child of Airflow DagRun.
 - ``started_at: timestamp | None`` - timestamp when OpenLineage event with ``eventType=START`` was received.
 - ``started_by user: User | None`` - Spark session started as specific OS user/Kerberos principal.
 - ``start_reason: Enum | None`` - "why this Run was started?":
@@ -178,6 +192,10 @@ It contains following fields:
 - ``running_log_url: str | None`` - external URL there specific Run information could be found (e.g. Spark UI).
 - ``persistent_log_url: str | None`` - external URL there specific Run logs could be found (e.g. Spark History server, Airflow Web UI).
 
+.. image:: quickstart/run_list.png
+.. image:: quickstart/spark/run_details.png
+.. image:: quickstart/airflow/dag_run_details.png
+.. image:: quickstart/airflow/task_run_details.png
 
 Operation
 ~~~~~~~~~
@@ -199,11 +217,13 @@ It contains following fields:
   - ``KILLED``
 
 - ``ended_at: timestamp | None`` - timestamp when OpenLineage event with ``eventType=COMPLETE|FAIL|ABORT`` was received.
-- ``name: str`` - name of Operation, e.g. Spark command name in ``snake_case``.
-- ``position: int | None`` - positional number of Spark job in Spark UI, to simplify matching Data.Rentgen Operation with specific Spark job.
-- ``group: str | None`` - Spark job ``jobGroup`` field, to simplify matching Data.Rentgen Operation with specific Spark job.
-- ``description: str | None`` - Spark job ``jobDescription`` field, to simplify matching Data.Rentgen Operation with specific Spark job.
+- ``name: str`` - name of operation, e.g. Spark command name or Airflow Operator name.
+- ``position: int | None`` - positional number of operation, e.g. id of Spark execution in Spark UI or ``map_index`` of Airflow task.
+- ``group: str | None`` - field to group operations by, e.g. Spark job ``jobGroup`` or DBT command type (``MODEL``, ``SQL``, ``TEST``, ``SNAPSHOT``).
+- ``description: str | None`` - operation description, e.g. Spark job ``jobDescription`` field.
+- ``sql_query: str | None`` - SQL query executed by this operation, if any.
 
+.. image:: quickstart/spark/operation_details.png
 
 Relations
 ---------
@@ -229,6 +249,8 @@ It contains following fields:
     Currently, OpenLineage sends only symlinks ``HDFS location → Hive table`` which `do not exist in the real world <https://github.com/OpenLineage/OpenLineage/issues/2718#issuecomment-2134746258>`_.
     Message consumer automatically adds a reverse symlink ``Hive table → HDFS location`` to simplify building lineage graph, but this is temporary solution.
 
+.. image:: quickstart/spark/dataset_symlink_lineage.png
+
 Parent Relation
 ~~~~~~~~~~~~~~~
 
@@ -244,6 +266,8 @@ It contains following fields:
 - ``from: Job | Run`` - parent entity.
 - ``to: Run | Operation`` - child entity.
 
+.. image:: quickstart/spark/operation_lineage.png
+
 Input relation
 ~~~~~~~~~~~~~~
 
@@ -258,6 +282,14 @@ It contains following fields:
 - ``num_rows: int | None`` - number of rows read from dataset. For ``granularity=JOB|RUN`` it is a sum of all read rows from this dataset.
 - ``num_bytes: int | None`` - number of bytes read from dataset. For ``granularity=JOB|RUN`` it is a sum of all read bytes from this dataset.
 - ``num_files: int | None`` - number of files read from dataset. For ``granularity=JOB|RUN`` it is a sum of all read files from this dataset.
+- ``schema: Schema | None`` - schema of input dataset. Usually contains only selected columns (projection). ``Schema`` is:
+
+  - ``field: str`` - column name
+  - ``type: str | None`` - column type, if any.
+  - ``description: str | None`` - column description/comment, if any.
+
+.. image:: quickstart/spark/dataset_downstream_lineage.png
+.. image:: quickstart/spark/dataset_upstream_lineage.png
 
 Output relation
 ~~~~~~~~~~~~~~~
@@ -270,7 +302,7 @@ It contains following fields:
 
 - ``from: Operation | Run | Job`` - output source.
 - ``to: Dataset`` - output target.
-- ``type: Enum`` - type of output. these types are supported:
+- ``types: list[Enum]`` - type of output. these types are supported:
 
   - ``CREATE``
   - ``ALTER``
@@ -283,3 +315,54 @@ It contains following fields:
 - ``num_rows: int | None`` - number of rows written from dataset. For ``granularity=JOB|RUN`` it is a sum of all written rows from this dataset.
 - ``num_bytes: int | None`` - number of bytes written from dataset. For ``granularity=JOB|RUN`` it is a sum of all written bytes from this dataset.
 - ``num_files: int | None`` - number of files written from dataset. For ``granularity=JOB|RUN`` it is a sum of all written files from this dataset.
+- ``schema: Schema | None`` - schema of output dataset, where ``Schema`` is:
+
+  - ``field: str`` - column name
+  - ``type: str | None`` - column type, if any.
+  - ``description: str | None`` - column description/comment, if any.
+
+.. image:: quickstart/spark/dataset_downstream_lineage.png
+.. image:: quickstart/spark/dataset_upstream_lineage.png
+
+Direct Column Lineage relation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Relation Dataset columns → Dataset columns, describing how each target dataset column is related to some source dataset columns.
+
+- ``from: Dataset`` - source dataset.
+- ``to: Dataset`` - target dataset.
+- ``fields: dict[str, list[SourceColumn]]`` - mapping between target column name and source columns, where ``SourceColumn`` is:
+
+  - ``field: str`` - source column name
+  - ``types: list[Enum]`` - types of transformation applied to source column. Supported types are:
+
+    - ``IDENTITY`` - column is used as-is, e.g. ``SELECT source_column AS target_column``
+    - ``TRANSFORMATION`` - some non-masking function is applied to column value, e.g. ``SELECT source_column || '_suffix' AS target_column``
+    - ``TRANSFORMATION_MASKING`` - some masking function is applied to column value, e.g. ``SELECT hash(source_column) AS target_column``
+    - ``AGGREGATION`` - some non-masking aggregation function is applied to column value, e.g. ``SELECT max(source_column) AS target_column``
+    - ``AGGREGATION_MASKING`` - some masking aggregation function is applied to column value, e.g. ``SELECT count(DISTINCT source_column) AS target_column``
+    - ``UNKNOWN`` - some unknown transformation
+
+.. image:: quickstart/spark/dataset_direct_column_lineage.png
+
+Indirect Column Lineage relation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Relation Dataset columns → Dataset, describing how the entire target dataset is related to some source dataset columns.
+
+- ``from: Dataset`` - source dataset.
+- ``to: Dataset`` - target dataset.
+- ``fields: list[Column]`` - list of source columns, where ``SourceColumn`` is:
+
+  - ``field: str`` - source column name
+  - ``types: list[Enum]`` - types of transformation applied to source column. Supported types are:
+
+    - ``FILTER`` - column is used in ``WHERE`` clause, e.g. ``SELECT * WHERE source_column = 'abc'``
+    - ``JOIN`` - column is used in JOIN clause, e.g. ``SELECT * FROM source_dataset1 JOIN source_dataset2 ON source_dataset1.id = source_dataset2.id``
+    - ``GROUP_BY`` - column is used in ``GROUP BY`` clause, e.g. ``SELECT source_column, count(*) FROM source_dataset GROUP BY source_column``
+    - ``SORT`` - column is used in ``ORDER BY`` clause, e.g. ``SELECT * FROM source_dataset ORDER BY source_column``
+    - ``WINDOW`` - column is used in ``WINDOW`` clause, e.g. ``SELECT max(*) OVER (source_column) AS target_column``
+    - ``CONDITIONAL`` - column is used in ``CASE`` or ``IF`` clause, e.g. ``SELECT CASE source_column THEN 1 WHEN 'abc' ELSE 'cde' END AS target_column``
+    - ``UNKNOWN`` - some unknown transformation
+
+.. image:: quickstart/spark/dataset_indirect_column_lineage.png
