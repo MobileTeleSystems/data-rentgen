@@ -62,7 +62,7 @@ Limitations
 -----------
 
 * For now, only Apache Spark, Apache Airflow, Apache Flink and DBT are supported as lineage event sources.
-  OpenLineage also supports Trino and others. DataRentgen support may be added later.
+  OpenLineage also supports Hive, Trino and other lineage sources. DataRentgen support may be added later.
 * Unlike Marquez, DataRentgen parses only limited set of facets send by OpenLineage, and doesn't store custom facets. This can be changed in future.
 
 .. documentation
@@ -71,3 +71,71 @@ Documentation
 -------------
 
 See https://data-rentgen.readthedocs.io/
+
+Screenshots
+-----------
+
+Lineage graph
+~~~~~~~~~~~~~
+
+Dataset downstream lineage
+
+.. image:: docs/quickstart/spark/dataset_downstream_lineage.png
+    :alt: Dataset downstream lineage graph
+
+Dataset upstream lineage
+
+.. image:: docs/quickstart/spark/dataset_upstream_lineage.png
+    :alt: Dataset upstream lineage graph
+
+Direct column-level lineage
+
+.. image:: docs/quickstart/spark/dataset_direct_column_lineage.png
+    :alt: Dataset direct column-level lineage graph
+
+Inirect column-level lineage
+
+.. image:: docs/quickstart/spark/dataset_indirect_column_lineage.png
+    :alt: Dataset indirect column-level lineage graph
+
+Datasets
+~~~~~~~~
+
+.. image:: docs/quickstart/dataset_list.png
+    :alt: Datasets list
+
+Runs
+~~~~
+
+.. image:: docs/quickstart/run_list.png
+    :alt: Runs list
+
+Spark application
+~~~~~~~~~~~~~~~~~
+
+.. image:: docs/quickstart/spark/job_details.png
+    :alt: Spark application details
+
+Spark run
+~~~~~~~~~
+
+.. image:: docs/quickstart/spark/run_details.png
+    :alt: Spark run details
+
+Spark operation
+~~~~~~~~~~~~~~~
+
+.. image:: docs/quickstart/spark/operation_details.png
+    :alt: Spark operation details
+
+Airflow DagRun
+~~~~~~~~~~~~~~~
+
+.. image:: docs/quickstart/airflow/dag_run_details.png
+    :alt: Airflow DagRun details
+
+Airflow TaskInstance
+~~~~~~~~~~~~~~~~~~~~~
+
+.. image:: docs/quickstart/airflow/task_run_details.png
+    :alt: Airflow TaskInstance details

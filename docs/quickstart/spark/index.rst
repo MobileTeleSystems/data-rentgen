@@ -157,6 +157,11 @@ See results
 Browse frontend pages `Datasets <http://localhost:3000/datasets>`_ and `Jobs <http://localhost:3000/jobs>`_
 to see what information was extracted by OpenLineage & DataRentgen.
 
+Dataset list page
+~~~~~~~~~~~~~~~~~
+
+.. image:: ../dataset_list.png
+
 Job list page
 ~~~~~~~~~~~~~
 
@@ -172,11 +177,6 @@ Run details page
 
 .. image:: ./run_details.png
 
-Operation list
-~~~~~~~~~~~~~~
-
-.. image:: ./operation_list.png
-
 Operation details page
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -185,7 +185,25 @@ Operation details page
 Dataset level lineage
 ~~~~~~~~~~~~~~~~~~~~~
 
-.. image:: ./dataset_lineage.png
+Downstream
+
+.. image:: ./dataset_downstream_lineage.png
+
+Upstream
+
+.. image:: ./dataset_upstream_lineage.png
+
+Symlink
+
+.. image:: ./dataset_symlink_lineage.png
+
+Direct column-level lineage
+
+.. image:: ./dataset_direct_column_lineage.png
+
+Inirect column-level lineage
+
+.. image:: ./dataset_indirect_column_lineage.png
 
 Job level lineage
 ~~~~~~~~~~~~~~~~~
