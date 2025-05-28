@@ -114,15 +114,17 @@ It contains following fields:
 Job
 ~~~
 
-Represents information about ETL job, run in specific location.
-This is an abstraction to group by different runs of the same Spark application or Airflow DAG/Airflow task.
+Represents information about ETL job in specific location.
+This is an abstraction to group by different runs of the same Spark application, Airflow DAG, Airflow Task, etc.
 
 Examples:
 
 - ``yarn://some-cluster`` + ``my-spark-session`` - Spark applicationName, running inside a YARN cluster (``master=yarn``).
 - ``local://some.host.name`` + ``my-spark-session`` - Spark applicationName, running on a host (``master=local``).
 - ``http://airflow-web-ui.domain.com:8080`` + ``my_dag`` - Airflow DAG, created in Airflow instance.
-- ``http://airflow-web-ui.domain.com:8080`` + ``my_dag.mytask`` - Airflow task within Airflow DAG, created in Airflow instance.
+- ``http://airflow-web-ui.domain.com:8080`` + ``my_dag.mytask`` - Airflow Task within Airflow DAG, created in Airflow instance.
+- ``http://flink.domain.com:18081`` + ``some_flink_application`` - Flink job running in Flink instance.
+- ``local://some.host.name`` + ``my_project`` - dbt project running on a host.
 
 It contains following fields:
 
@@ -217,10 +219,10 @@ It contains following fields:
   - ``KILLED``
 
 - ``ended_at: timestamp | None`` - timestamp when OpenLineage event with ``eventType=COMPLETE|FAIL|ABORT`` was received.
-- ``name: str`` - name of operation, e.g. Spark command name or Airflow Operator name.
-- ``position: int | None`` - positional number of operation, e.g. id of Spark execution in Spark UI or ``map_index`` of Airflow task.
+- ``name: str`` - name of operation, e.g. Spark command , dbt command name.
+- ``position: int | None`` - positional number of operation, e.g. number of Spark execution in Spark UI or ``map_index`` of Airflow Task.
 - ``group: str | None`` - field to group operations by, e.g. Spark job ``jobGroup`` or DBT command type (``MODEL``, ``SQL``, ``TEST``, ``SNAPSHOT``).
-- ``description: str | None`` - operation description, e.g. Spark job ``jobDescription`` field.
+- ``description: str | None`` - operation description, e.g. Spark job ``jobDescription`` field, Airflow Operator name.
 - ``sql_query: str | None`` - SQL query executed by this operation, if any.
 
 .. image:: quickstart/spark/operation_details.png
@@ -233,7 +235,7 @@ These entities describe relationship between different nodes.
 Dataset Symlink
 ~~~~~~~~~~~~~~~
 
-Represents dataset relations like ``Hive table → HDFS location of table``, and vice versa.
+Represents dataset relations like ``Hive metastore table → HDFS/S3 location of table``, and vice versa.
 
 It contains following fields:
 
@@ -259,7 +261,7 @@ Relation between child run/operation and its parent. For example:
 - Spark applicationName is parent for all its runs (applicationId).
 - Spark applicationId is parent for all its Spark job or Spark execution.
 - Airflow DAG is parent of Airflow task.
-- Airflow Task Instance triggered a Spark applicationId.
+- Airflow Task Instance triggered a Spark applicationId, dbt run, and so on.
 
 It contains following fields:
 
@@ -271,9 +273,9 @@ It contains following fields:
 Input relation
 ~~~~~~~~~~~~~~
 
-Relation Dataset → Operation, describing the process of reading some data from specific table/folder by specific Spark operation.
+Relation Dataset → Operation, describing the process of reading some data from specific table/folder by specific operation.
 
-It is also possible to aggregate all inputs of specific Dataset → Run or Dataset → Job combination, by adjusting ``granularity`` option of Lineage graph.
+It is also possible to aggregate all inputs of specific Dataset → Run or Dataset → Job interaction, by adjusting ``granularity`` option of Lineage graph.
 
 It contains following fields:
 
@@ -282,11 +284,22 @@ It contains following fields:
 - ``num_rows: int | None`` - number of rows read from dataset. For ``granularity=JOB|RUN`` it is a sum of all read rows from this dataset.
 - ``num_bytes: int | None`` - number of bytes read from dataset. For ``granularity=JOB|RUN`` it is a sum of all read bytes from this dataset.
 - ``num_files: int | None`` - number of files read from dataset. For ``granularity=JOB|RUN`` it is a sum of all read files from this dataset.
-- ``schema: Schema | None`` - schema of input dataset. Usually contains only selected columns (projection). ``Schema`` is:
+- ``schema: Schema | None`` - schema of input dataset. Usually contains only selected columns (projection).
 
-  - ``field: str`` - column name
+``Schema`` object contains following fields
+
+- ``id: int`` - internal of a schema, used as unique identifier.
+- ``fields: list[SchemaField]``:
+
+  - ``name: str`` - column name
   - ``type: str | None`` - column type, if any.
   - ``description: str | None`` - column description/comment, if any.
+  - ``fields: list[SchemaField]`` - if column contain nested fields (e.g. ``struct``, ``array``, ``map``).
+
+- ``relevance_type: Enum`` - describes if this schema information is relevant:
+
+  - ``EXACT_MATCH`` - returned for ``granularity=OPERATION``, as each input has at most one schema.
+  - ``LATEST_KNOWN`` - returned for ``granularity=JOB|RUN`` if there are multiple inputs for same dataset but with different schemas. In this case a schema of the most recent input is returned.
 
 .. image:: quickstart/spark/dataset_downstream_lineage.png
 .. image:: quickstart/spark/dataset_upstream_lineage.png
@@ -312,14 +325,27 @@ It contains following fields:
   - ``DROP``
   - ``TRUNCATE``
 
-- ``num_rows: int | None`` - number of rows written from dataset. For ``granularity=JOB|RUN`` it is a sum of all written rows from this dataset.
-- ``num_bytes: int | None`` - number of bytes written from dataset. For ``granularity=JOB|RUN`` it is a sum of all written bytes from this dataset.
-- ``num_files: int | None`` - number of files written from dataset. For ``granularity=JOB|RUN`` it is a sum of all written files from this dataset.
-- ``schema: Schema | None`` - schema of output dataset, where ``Schema`` is:
+  For ``granularity=JOB|RUN`` it is a combination of all output types for this dataset.
 
-  - ``field: str`` - column name
+- ``num_rows: int | None`` - number of rows written from dataset. For ``granularity=JOB|RUN`` it is a sum of all written rows to this dataset.
+- ``num_bytes: int | None`` - number of bytes written from dataset. For ``granularity=JOB|RUN`` it is a sum of all written bytes to this dataset.
+- ``num_files: int | None`` - number of files written from dataset. For ``granularity=JOB|RUN`` it is a sum of all written files to this dataset.
+- ``schema: Schema | None`` - schema of output dataset.
+
+``Schema`` object contains following fields
+
+- ``id: int`` - internal of a schema, used as unique identifier.
+- ``fields: list[SchemaField]``:
+
+  - ``name: str`` - column name
   - ``type: str | None`` - column type, if any.
   - ``description: str | None`` - column description/comment, if any.
+  - ``fields: list[SchemaField]`` - if column contain nested fields (e.g. ``struct``, ``array``, ``map``).
+
+- ``relevance_type: Enum`` - describes if this schema information is relevant:
+
+  - ``EXACT_MATCH`` - returned for ``granularity=OPERATION``, as each output has at most one schema.
+  - ``LATEST_KNOWN`` - returned for ``granularity=JOB|RUN`` if there are multiple outputs for same dataset but with different schemas. In this case a schema of the most recent output is returned.
 
 .. image:: quickstart/spark/dataset_downstream_lineage.png
 .. image:: quickstart/spark/dataset_upstream_lineage.png
