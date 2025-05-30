@@ -59,8 +59,8 @@ Database structure
     }
 
     entity run {
-        * id: uuid(v7)
         * created_at: timestamptz
+        * id: uuid(v7)
         ----
         * job_id: bigint
         status: smallint
@@ -85,8 +85,8 @@ Database structure
     }
 
     entity operation {
-        * id: uuid(v7)
         * created_at: timestamptz
+        * id: uuid(v7)
         ----
         * run_id: uuid(v7)
         status: smallint
@@ -108,8 +108,8 @@ Database structure
     }
 
     entity input {
-        * id: uuid(v7)
         * created_at: timestamptz
+        * id: uuid(v7)
         ----
         * operation_id: uuid(v7)
         * run_id: uuid(v7)
@@ -122,8 +122,8 @@ Database structure
     }
 
     entity output {
-        * id: uuid(v7)
         * created_at: timestamptz
+        * id: uuid(v7)
         ----
         * operation_id: uuid(v7)
         * run_id: uuid(v7)
@@ -146,15 +146,15 @@ Database structure
     }
 
     entity column_lineage {
-        * id: uuid(v7)
         * created_at: timestamptz
+        * id: uuid(v7)
         ----
         * operation_id: uuid(v7)
         * run_id: uuid(v7)
         * job_id: bigint
         * source_dataset_id: bigint
         * target_dataset_id: bigint
-        * fingerprint: uuid(v5)
+        fingerprint: uuid(v5)
     }
 
     address ||--o{ location
@@ -189,6 +189,6 @@ Database structure
     column_lineage ||--o{ job
     column_lineage "source_dataset_id" ||--o{ dataset
     column_lineage "target_dataset_id" ||--o{ dataset
-    column_lineage ||--o{ dataset_column_relation
+    column_lineage "fingerprint" ||--o{ dataset_column_relation
 
     @enduml
