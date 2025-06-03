@@ -11,6 +11,7 @@ from tests.fixtures.mocks import MockedUser
 from tests.test_server.fixtures.factories.schema import create_schema
 from tests.test_server.utils.convert_to_json import (
     datasets_to_json,
+    inputs_and_outputs_to_json,
     inputs_to_json,
     jobs_to_json,
     operation_parents_to_json,
@@ -256,6 +257,123 @@ async def test_get_dataset_lineage_with_granularity_operation(
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": operations_to_json(operations),
+        },
+    }
+
+
+async def test_get_dataset_lineage_with_granularity_dataset(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_with_depth: LineageResult,
+    mocked_user: MockedUser,
+):
+    lineage = lineage_with_depth
+    # We need a middle dataset, which has inputs and outputs
+    lineage_dataset = lineage.datasets[1]
+    # If start dataset is d1 we should have this lineage: d0-d1-d2
+    datasets = lineage.datasets[:3]
+    datasests_ids = [dataset.id for dataset in datasets]
+
+    inputs = [input for input in lineage.inputs if input.dataset_id in datasests_ids]
+    assert inputs
+
+    outputs = [output for output in lineage.outputs if output.dataset_id in datasests_ids]
+    assert outputs
+
+    run_ids = {input.run_id for input in inputs} | {output.run_id for output in outputs}
+    runs = [run for run in lineage.runs if run.id in run_ids]
+    assert runs
+
+    datasets = await enrich_datasets(datasets, async_session)
+    runs = await enrich_runs(runs, async_session)
+    since = min(run.created_at for run in runs)
+
+    response = await test_client.get(
+        "v1/datasets/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "start_node_id": lineage_dataset.id,
+            "granularity": "DATASET",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+
+    inputs, outputs = inputs_and_outputs_to_json(merge_io_by_runs(inputs), merge_io_by_runs(outputs))
+    assert response.json() == {
+        "relations": {
+            "parents": [],
+            "symlinks": [],
+            "inputs": inputs,
+            "outputs": outputs,
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": {},
+            "runs": {},
+            "operations": {},
+        },
+    }
+
+
+async def test_get_dataset_lineage_with_granularity_dataset_and_depth(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_with_depth: LineageResult,
+    mocked_user: MockedUser,
+):
+    lineage = lineage_with_depth
+    # We need a middle dataset, which has inputs and outputs
+    lineage_dataset = lineage.datasets[1]
+    # If start dataset is d1 and depth = 2 we should have this lineage: d0-d1-d2-d3
+    datasets = lineage.datasets[:4]
+    datasests_ids = [dataset.id for dataset in datasets]
+
+    inputs = [input for input in lineage.inputs if input.dataset_id in datasests_ids]
+    assert inputs
+
+    outputs = [output for output in lineage.outputs if output.dataset_id in datasests_ids]
+    assert outputs
+
+    run_ids = {input.run_id for input in inputs} | {output.run_id for output in outputs}
+    runs = [run for run in lineage.runs if run.id in run_ids]
+    assert runs
+
+    datasets = await enrich_datasets(datasets, async_session)
+    runs = await enrich_runs(runs, async_session)
+    since = min(run.created_at for run in runs)
+
+    response = await test_client.get(
+        "v1/datasets/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "start_node_id": lineage_dataset.id,
+            "granularity": "DATASET",
+            "depth": 2,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+
+    inputs, outputs = inputs_and_outputs_to_json(merge_io_by_runs(inputs), merge_io_by_runs(outputs))
+    assert response.json() == {
+        "relations": {
+            "parents": [],
+            "symlinks": [],
+            "inputs": inputs,
+            "outputs": outputs,
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": {},
+            "runs": {},
+            "operations": {},
         },
     }
 

@@ -61,6 +61,24 @@ async def build_lineage_response(lineage: LineageServiceResult) -> LineageRespon
     )
 
 
+async def build_lineage_response_with_dataset_granularity(lineage: LineageServiceResult) -> LineageResponseV1:
+    datasets = {str(dataset.id): DatasetResponseV1.model_validate(dataset) for dataset in lineage.datasets.values()}
+    inputs, outputs = _get_input_and_output_relations_with_dataset_granularity(
+        inputs=lineage.inputs,
+        outputs=lineage.outputs,
+    )
+    return LineageResponseV1(
+        nodes=LineageNodesResponseV1(datasets=datasets),
+        relations=LineageRelationsResponseV1(
+            symlinks=_get_symlink_relations(lineage.dataset_symlinks),
+            inputs=inputs,
+            outputs=outputs,
+            direct_column_lineage=_get_direct_column_lineage(lineage.column_lineage),
+            indirect_column_lineage=_get_indirect_column_lineage(lineage.column_lineage),
+        ),
+    )
+
+
 def _get_run_parent_relations(runs: dict[UUID, Run]) -> list[LineageParentRelationV1]:
     parents = []
     for run_id in sorted(runs):
@@ -149,6 +167,46 @@ def _get_output_relations(outputs: dict[Any, OutputRow]) -> list[LineageOutputRe
         relations.append(relation)
 
     return sorted(relations, key=lambda x: (x.from_.kind, str(x.from_.id), str(x.to.id)))
+
+
+def _get_input_and_output_relations_with_dataset_granularity(
+    inputs: dict[Any, InputRow],
+    outputs: dict[Any, OutputRow],
+) -> tuple[list[LineageInputRelationV1], list[LineageOutputRelationV1]]:
+    i_relations = []
+    o_relations = []
+    for input_ in inputs.values():
+        for output in outputs.values():
+            if input_.run_id == output.run_id:
+                i_relation = LineageInputRelationV1(
+                    from_=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(input_.dataset_id)),
+                    to=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(output.dataset_id)),
+                    last_interaction_at=input_.created_at,
+                    num_bytes=input_.num_bytes,
+                    num_rows=input_.num_rows,
+                    num_files=input_.num_files,
+                    i_schema=LineageIORelationSchemaV1.model_validate(input_.schema) if input_.schema else None,
+                )
+                if i_relation.i_schema:
+                    i_relation.i_schema.relevance_type = input_.schema_relevance_type
+                i_relations.append(i_relation)
+                o_relation = LineageOutputRelationV1(
+                    types=[type_ for type_ in OutputTypeV1 if type_ & output.types_combined],  # type: ignore[operator]
+                    from_=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(input_.dataset_id)),
+                    to=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(output.dataset_id)),
+                    last_interaction_at=output.created_at,
+                    num_bytes=output.num_bytes,
+                    num_rows=output.num_rows,
+                    num_files=output.num_files,
+                    o_schema=LineageIORelationSchemaV1.model_validate(output.schema) if output.schema else None,
+                )
+                if o_relation.o_schema:
+                    o_relation.o_schema.relevance_type = output.schema_relevance_type
+                o_relations.append(o_relation)
+    return sorted(i_relations, key=lambda x: (x.to.kind, str(x.from_.id), str(x.to.id))), sorted(
+        o_relations,
+        key=lambda x: (x.from_.kind, str(x.from_.id), str(x.to.id)),
+    )
 
 
 def _get_direct_column_lineage(column_lineage_by_source_target_id: dict[tuple, list[ColumnLineageRow]]):
