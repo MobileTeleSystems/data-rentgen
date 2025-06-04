@@ -1,0 +1,231 @@
+Add `DATASET` granularity for `/datasets/lineage`
+
+   .. dropdown:: Response examples
+
+        .. code :: json
+
+            {
+                "relations": {
+                        "parents": [],
+                        "symlinks": [],
+                        "inputs": [
+                            {
+                                "from": {
+                                    "kind": "DATASET",
+                                    "id": "1244"
+                                },
+                                "to": {
+                                    "kind": "DATASET",
+                                    "id": "1245"
+                                },
+                                "last_interaction_at": "2025-06-04T07:07:03.393000Z",
+                                "num_bytes": 2050771,
+                                "num_rows": 451,
+                                "num_files": 61,
+                                "schema": {
+                                    "id": "464",
+                                    "fields": [
+                                        {
+                                            "name": "dt",
+                                            "type": "timestamp",
+                                            "description": null,
+                                            "fields": []
+                                        },
+                                        {
+                                            "name": "customer_id",
+                                            "type": "decimal(20,0)",
+                                            "description": null,
+                                            "fields": []
+                                        },
+                                        {
+                                            "name": "total_spent",
+                                            "type": "float",
+                                            "description": null,
+                                            "fields": []
+                                        }
+                                    ],
+                                    "relevance_type": "EXACT_MATCH"
+                                }
+                            },
+                            {
+                                "from": {
+                                    "kind": "DATASET",
+                                    "id": "1245"
+                                },
+                                "to": {
+                                    "kind": "DATASET",
+                                    "id": "1246"
+                                },
+                                "last_interaction_at": "2025-06-04T07:07:04.393000Z",
+                                "num_bytes": 356560,
+                                "num_rows": 8172,
+                                "num_files": 23,
+                                "schema": {
+                                    "id": "464",
+                                    "fields": [
+                                        {
+                                            "name": "dt",
+                                            "type": "timestamp",
+                                            "description": null,
+                                            "fields": []
+                                        },
+                                        {
+                                            "name": "customer_id",
+                                            "type": "decimal(20,0)",
+                                            "description": null,
+                                            "fields": []
+                                        },
+                                        {
+                                            "name": "total_spent",
+                                            "type": "float",
+                                            "description": null,
+                                            "fields": []
+                                        }
+                                    ],
+                                    "relevance_type": "EXACT_MATCH"
+                                }
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "from": {
+                                    "kind": "DATASET",
+                                    "id": "1244"
+                                },
+                                "to": {
+                                    "kind": "DATASET",
+                                    "id": "1245"
+                                },
+                                "types": [
+                                    "APPEND"
+                                ],
+                                "last_interaction_at": "2025-06-04T07:07:03.393000Z",
+                                "num_bytes": 7343379,
+                                "num_rows": 2410,
+                                "num_files": 23,
+                                "schema": {
+                                    "id": "464",
+                                    "fields": [
+                                        {
+                                            "name": "dt",
+                                            "type": "timestamp",
+                                            "description": null,
+                                            "fields": []
+                                        },
+                                        {
+                                            "name": "customer_id",
+                                            "type": "decimal(20,0)",
+                                            "description": null,
+                                            "fields": []
+                                        },
+                                        {
+                                            "name": "total_spent",
+                                            "type": "float",
+                                            "description": null,
+                                            "fields": []
+                                        }
+                                    ],
+                                    "relevance_type": "EXACT_MATCH"
+                                }
+                            },
+                            {
+                                "from": {
+                                    "kind": "DATASET",
+                                    "id": "1245"
+                                },
+                                "to": {
+                                    "kind": "DATASET",
+                                    "id": "1246"
+                                },
+                                "types": [
+                                    "APPEND"
+                                ],
+                                "last_interaction_at": "2025-06-04T07:07:04.393000Z",
+                                "num_bytes": 8245614,
+                                "num_rows": 5251,
+                                "num_files": 99,
+                                "schema": {
+                                    "id": "464",
+                                    "fields": [
+                                        {
+                                            "name": "dt",
+                                            "type": "timestamp",
+                                            "description": null,
+                                            "fields": []
+                                        },
+                                        {
+                                            "name": "customer_id",
+                                            "type": "decimal(20,0)",
+                                            "description": null,
+                                            "fields": []
+                                        },
+                                        {
+                                            "name": "total_spent",
+                                            "type": "float",
+                                            "description": null,
+                                            "fields": []
+                                        }
+                                    ],
+                                    "relevance_type": "EXACT_MATCH"
+                                }
+                            }
+                        ],
+                        "direct_column_lineage": [],
+                        "indirect_column_lineage": []
+                    },
+                    "nodes": {
+                        "datasets": {
+                            "1245": {
+                                "id": "1245",
+                                "location": {
+                                    "id": "1984",
+                                    "type": "postgres",
+                                    "name": "f1oL&=D9_t[_MGk3",
+                                    "addresses": [
+                                        {
+                                            "url": "E#5&IUYVo`.I]qWI@-KIw$;nttw<+'4?"
+                                        }
+                                    ],
+                                    "external_id": "5]_\",FEcIK[m~N)E"
+                                },
+                                "name": "z~%i;i k8*~*hS$:w><r^:\\sr;Grzg^[",
+                                "format": null
+                            },
+                            "1244": {
+                                "id": "1244",
+                                "location": {
+                                    "id": "1983",
+                                    "type": "postgres",
+                                    "name": "6<w8u<K0f6}h<[IR",
+                                    "addresses": [
+                                        {
+                                            "url": "b;ZxOU40|I3]OXHx6du{RH=U(^s^7N'%"
+                                        }
+                                    ],
+                                    "external_id": "<p}jYTp?*fS}(s;R"
+                                },
+                                "name": "w&AQg;^9o^K1UjO<M`IGe*AF**+gKr(N",
+                                "format": null
+                            },
+                            "1246": {
+                                "id": "1246",
+                                "location": {
+                                    "id": "1985",
+                                    "type": "hdfs",
+                                    "name": "C>DAxr`^$[:#s~J#",
+                                    "addresses": [
+                                        {
+                                            "url": "epxxWU&a@-WJL0LnU_.o<vA#?K2P8[aq"
+                                        }
+                                    ],
+                                    "external_id": "8T,,qqq0rztxwj.7"
+                                },
+                                "name": "4YOkl-B\"3R0dH ]n;`lUb#K<!m[Q:>'x",
+                                "format": null
+                            }
+                        },
+                        "jobs": {},
+                        "runs": {},
+                        "operations": {}
+                    }
+                }
