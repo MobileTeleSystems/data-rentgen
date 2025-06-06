@@ -146,48 +146,6 @@ def outputs_to_json(outputs: list[OutputRow | Output], granularity: Literal["OPE
     )
 
 
-def inputs_and_outputs_to_json(inputs: list[InputRow], outputs: list[OutputRow]):
-    i_results = []
-    o_results = []
-
-    for input in inputs:
-        for output in outputs:
-            if input.run_id == output.run_id:
-                schema_relevance_type = input.schema_relevance_type if input.schema_relevance_type else None
-                i_results.append(
-                    {
-                        "from": {"kind": "DATASET", "id": str(input.dataset_id)},
-                        "to": {"kind": "DATASET", "id": str(output.dataset_id)},
-                        "num_bytes": input.num_bytes,
-                        "num_rows": input.num_rows,
-                        "num_files": input.num_files,
-                        "schema": schema_to_json(input.schema, schema_relevance_type) if input.schema else None,
-                        "last_interaction_at": format_datetime(input.created_at),
-                    },
-                )
-                schema_relevance_type = output.schema_relevance_type if output.schema_relevance_type else None
-                types = [type_.name for type_ in OutputTypeV1 if type_ & output.types_combined]
-                o_results.append(
-                    {
-                        "from": {"kind": "DATASET", "id": str(input.dataset_id)},
-                        "to": {"kind": "DATASET", "id": str(output.dataset_id)},
-                        "types": types,
-                        "num_bytes": output.num_bytes,
-                        "num_rows": output.num_rows,
-                        "num_files": output.num_files,
-                        "schema": schema_to_json(output.schema, schema_relevance_type) if output.schema else None,
-                        "last_interaction_at": format_datetime(output.created_at),
-                    },
-                )
-    return sorted(
-        i_results,
-        key=lambda x: (x["from"]["id"], x["to"]["id"]),
-    ), sorted(
-        o_results,
-        key=lambda x: (x["from"]["id"], x["to"]["id"]),
-    )
-
-
 def address_to_json(address: Address):
     return {"url": address.url}
 
