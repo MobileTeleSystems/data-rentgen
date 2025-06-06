@@ -80,7 +80,7 @@ class BaseLineageQueryV1(BaseModel):
 
 class DatasetLineageQueryV1(BaseLineageQueryV1):
     start_node_id: int = Field(description="Dataset id", examples=[42])
-    granularity: Literal["OPERATION", "RUN", "JOB"] = Field(
+    granularity: Literal["OPERATION", "RUN", "JOB", "DATASET"] = Field(
         default="RUN",
         description="Granularity of the dataset lineage",
         examples=["OPERATION", "RUN", "JOB"],

@@ -1,0 +1,211 @@
+Add `DATASET` granularity for `/datasets/lineage`
+
+    .. dropdown:: Response examples
+
+        .. code :: json
+
+            {
+                "relations": {
+                    "parents": [],
+                    "symlinks": [],
+                    "inputs": [],
+                    "outputs": [
+                        {
+                            "from": {
+                                "kind": "DATASET",
+                                "id": "226"
+                            },
+                            "to": {
+                                "kind": "DATASET",
+                                "id": "227"
+                            },
+                            "types": [
+                                "APPEND"
+                            ],
+                            "last_interaction_at": "2025-06-06T10:54:57.683000Z",
+                            "num_bytes": null,
+                            "num_rows": null,
+                            "num_files": null,
+                            "schema": {
+                                "id": "82",
+                                "fields": [
+                                    {
+                                        "name": "dt",
+                                        "type": "timestamp",
+                                        "description": null,
+                                        "fields": []
+                                    },
+                                    {
+                                        "name": "customer_id",
+                                        "type": "decimal(20,0)",
+                                        "description": null,
+                                        "fields": []
+                                    },
+                                    {
+                                        "name": "total_spent",
+                                        "type": "float",
+                                        "description": null,
+                                        "fields": []
+                                    }
+                                ],
+                                "relevance_type": "EXACT_MATCH"
+                            }
+                        },
+                        {
+                            "from": {
+                                "kind": "DATASET",
+                                "id": "227"
+                            },
+                            "to": {
+                                "kind": "DATASET",
+                                "id": "228"
+                            },
+                            "types": [
+                                "APPEND"
+                            ],
+                            "last_interaction_at": "2025-06-06T10:54:58.683000Z",
+                            "num_bytes": null,
+                            "num_rows": null,
+                            "num_files": null,
+                            "schema": {
+                                "id": "82",
+                                "fields": [
+                                    {
+                                        "name": "dt",
+                                        "type": "timestamp",
+                                        "description": null,
+                                        "fields": []
+                                    },
+                                    {
+                                        "name": "customer_id",
+                                        "type": "decimal(20,0)",
+                                        "description": null,
+                                        "fields": []
+                                    },
+                                    {
+                                        "name": "total_spent",
+                                        "type": "float",
+                                        "description": null,
+                                        "fields": []
+                                    }
+                                ],
+                                "relevance_type": "EXACT_MATCH"
+                            }
+                        },
+                        {
+                            "from": {
+                                "kind": "DATASET",
+                                "id": "228"
+                            },
+                            "to": {
+                                "kind": "DATASET",
+                                "id": "229"
+                            },
+                            "types": [
+                                "APPEND"
+                            ],
+                            "last_interaction_at": "2025-06-06T10:54:59.683000Z",
+                            "num_bytes": null,
+                            "num_rows": null,
+                            "num_files": null,
+                            "schema": {
+                                "id": "82",
+                                "fields": [
+                                    {
+                                        "name": "dt",
+                                        "type": "timestamp",
+                                        "description": null,
+                                        "fields": []
+                                    },
+                                    {
+                                        "name": "customer_id",
+                                        "type": "decimal(20,0)",
+                                        "description": null,
+                                        "fields": []
+                                    },
+                                    {
+                                        "name": "total_spent",
+                                        "type": "float",
+                                        "description": null,
+                                        "fields": []
+                                    }
+                                ],
+                                "relevance_type": "EXACT_MATCH"
+                            }
+                        }
+                    ],
+                    "direct_column_lineage": [],
+                    "indirect_column_lineage": []
+                },
+                "nodes": {
+                    "datasets": {
+                        "227": {
+                            "id": "227",
+                            "location": {
+                                "id": "371",
+                                "type": "kafka",
+                                "name": "kafka-location",
+                                "addresses": [
+                                    {
+                                        "url": "host"
+                                    }
+                                ],
+                                "external_id": "external_id"
+                            },
+                            "name": "kafka_name",
+                            "format": null
+                        },
+                        "226": {
+                            "id": "226",
+                            "location": {
+                                "id": "370",
+                                "type": "hdfs",
+                                "name": "hdfs_name",
+                                "addresses": [
+                                    {
+                                        "url": "hdfs_host"
+                                    }
+                                ],
+                                "external_id": "external_id"
+                            },
+                            "name": "hdfs_name",
+                            "format": null
+                        },
+                        "228": {
+                            "id": "228",
+                            "location": {
+                                "id": "372",
+                                "type": "hdfs",
+                                "name": "hdfs_name",
+                                "addresses": [
+                                    {
+                                        "url": "hdfs_host"
+                                    }
+                                ],
+                                "external_id": "external_id"
+                            },
+                            "name": "hdfs_name",
+                            "format": null
+                        },
+                        "229": {
+                            "id": "229",
+                            "location": {
+                                "id": "373",
+                                "type": "postgres",
+                                "name": "postgres_name",
+                                "addresses": [
+                                    {
+                                        "url": "postgres_host"
+                                    }
+                                ],
+                                "external_id": "external_id"
+                            },
+                            "name": "postgres_name",
+                            "format": null
+                        }
+                    },
+                    "jobs": {},
+                    "runs": {},
+                    "operations": {}
+                }
+            }

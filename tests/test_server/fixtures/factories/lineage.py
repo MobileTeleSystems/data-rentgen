@@ -208,9 +208,10 @@ async def lineage_with_depth(
     # J1 -> R1 -> O1, D1 -> O1 -> D2
     # J2 -> R2 -> O2, D2 -> O2 -> D3
     # J3 -> R3 -> O3, D3 -> O3 -> D4
+    # J4 -> R4 -> O4, D4 -> O4 -> D5
 
-    num_datasets = 4
-    num_jobs = 3
+    num_datasets = 5
+    num_jobs = 4
     created_at = datetime.now(tz=UTC)
 
     lineage = LineageResult()

@@ -15,7 +15,10 @@ from data_rentgen.server.schemas.v1 import (
     PageResponseV1,
 )
 from data_rentgen.server.services import DatasetService, LineageService, get_user
-from data_rentgen.server.utils.lineage_response import build_lineage_response
+from data_rentgen.server.utils.lineage_response import (
+    build_lineage_response,
+    build_lineage_response_with_dataset_granularity,
+)
 
 router = APIRouter(prefix="/datasets", tags=["Datasets"], responses=get_error_responses(include={InvalidRequestSchema}))
 
@@ -50,4 +53,7 @@ async def get_datasets_lineage(
         depth=query_args.depth,
         include_column_lineage=query_args.include_column_lineage,
     )
-    return await build_lineage_response(lineage)
+    if query_args.granularity == "DATASET":
+        return build_lineage_response_with_dataset_granularity(lineage)
+
+    return build_lineage_response(lineage)
