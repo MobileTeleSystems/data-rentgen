@@ -54,6 +54,6 @@ async def get_datasets_lineage(
         include_column_lineage=query_args.include_column_lineage,
     )
     if query_args.granularity == "DATASET":
-        return await build_lineage_response_with_dataset_granularity(lineage)
+        return build_lineage_response_with_dataset_granularity(lineage)
 
-    return await build_lineage_response(lineage)
+    return build_lineage_response(lineage)

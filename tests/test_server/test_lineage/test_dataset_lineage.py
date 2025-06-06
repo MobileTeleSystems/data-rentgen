@@ -353,7 +353,7 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_depth(
             "since": since.isoformat(),
             "start_node_id": lineage_dataset.id,
             "granularity": "DATASET",
-            "depth": 2,
+            "depth": 3,
         },
     )
 
