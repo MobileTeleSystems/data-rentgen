@@ -13,6 +13,7 @@ from data_rentgen.db.repositories.dataset_column_relation import (
 )
 from data_rentgen.db.repositories.dataset_symlink import DatasetSymlinkRepository
 from data_rentgen.db.repositories.input import InputRepository
+from data_rentgen.db.repositories.io_dataset_relation import IODatasetRelationRepository
 from data_rentgen.db.repositories.job import JobRepository
 from data_rentgen.db.repositories.job_type import JobTypeRepository
 from data_rentgen.db.repositories.location import LocationRepository
@@ -44,6 +45,7 @@ class UnitOfWork:
         self.output = OutputRepository(session)
         self.dataset_column_relation = DatasetColumnRelationRepository(session)
         self.column_lineage = ColumnLineageRepository(session)
+        self.io_dataset_relation = IODatasetRelationRepository(session)
         self.user = UserRepository(session)
 
     async def __aenter__(self):

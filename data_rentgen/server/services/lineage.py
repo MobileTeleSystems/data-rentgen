@@ -18,10 +18,10 @@ from data_rentgen.db.models import (
     Job,
     Operation,
     Run,
-    Schema,
 )
 from data_rentgen.db.repositories.column_lineage import ColumnLineageRow
 from data_rentgen.db.repositories.input import InputRow
+from data_rentgen.db.repositories.io_dataset_relation import IODatasetRelationRow
 from data_rentgen.db.repositories.output import OutputRow
 from data_rentgen.server.schemas.v1.lineage import LineageDirectionV1
 from data_rentgen.services.uow import UnitOfWork
@@ -39,6 +39,7 @@ class LineageServiceResult:
     inputs: dict[tuple[int, int, UUID | None, UUID | None], InputRow] = field(default_factory=dict)
     outputs: dict[tuple[int, int, UUID | None, UUID | None, int | None], OutputRow] = field(default_factory=dict)
     column_lineage: dict[tuple[int, int], list[ColumnLineageRow]] = field(default_factory=dict)
+    io_dataset_relations: dict[tuple[int, int], IODatasetRelationRow] = field(default_factory=dict)
 
     def merge(self, other: "LineageServiceResult") -> "LineageServiceResult":
         self.jobs.update(other.jobs)
@@ -49,6 +50,7 @@ class LineageServiceResult:
         self.inputs.update(other.inputs)
         self.outputs.update(other.outputs)
         self.column_lineage.update(other.column_lineage)
+        self.io_dataset_relations.update(other.io_dataset_relations)
         return self
 
 
@@ -721,8 +723,7 @@ class LineageService:
                     since=since,
                     until=until,
                     depth=depth,
-                    level=level,
-                    ids_to_skip=ids_to_skip,
+                    include_column_lineage=include_column_lineage,
                 )
             case _:
                 msg = f"Unknown granularity: {granularity}"
@@ -1127,7 +1128,7 @@ class LineageService:
 
         return result
 
-    async def _dataset_lineage_with_dataset_granularity(  # noqa: C901
+    async def _dataset_lineage_with_dataset_granularity(
         self,
         datasets_by_id: dict[int, Dataset],
         dataset_symlinks_by_id: dict[tuple[int, int], DatasetSymlink],
@@ -1135,166 +1136,96 @@ class LineageService:
         since: datetime,
         until: datetime | None,
         depth: int,
-        level: int,
-        ids_to_skip: IdsToSkip | None = None,
+        include_column_lineage: bool,  # noqa: FBT001
     ) -> LineageServiceResult:
         result = LineageServiceResult(
             datasets=datasets_by_id,
             dataset_symlinks=dataset_symlinks_by_id,
         )
-        ids_to_skip = ids_to_skip or IdsToSkip()
-        ids_to_skip = ids_to_skip.merge(IdsToSkip.from_result(result))
-        layer_datasets_by_id = {
-            "downstream": datasets_by_id,
-            "upstream": datasets_by_id,
+        layer_dataset_ids = {
+            "downstream": set(datasets_by_id.keys()),
+            "upstream": set(datasets_by_id.keys()),
         }
         while depth:
+            relations_by_id = {}
+
             if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
-                downstream_outputs = await self._uow.output.list_by_dataset_ids(
-                    layer_datasets_by_id["downstream"],
+                downstream_relations = await self._uow.io_dataset_relation.get_relations(
+                    layer_dataset_ids["downstream"],
                     since=since,
                     until=until,
-                    granularity="RUN",
+                    direction="DOWNSTREAM",
                 )
-
-                downstream_run_ids = {output.run_id for output in downstream_outputs if output.run_id is not None}
-                downstream_inputs = await self._uow.input.list_by_run_ids(
-                    downstream_run_ids,
-                    since=since,
-                    until=until,
-                    granularity="RUN",
+                downstream_dataset_ids = {relation.out_dataset_id for relation in downstream_relations}
+                relations_by_id.update(
+                    {(relation.in_dataset_id, relation.out_dataset_id): relation for relation in downstream_relations},
                 )
-
-                schemas_by_id = await self._get_schemas_by_io(downstream_inputs, downstream_outputs)
-                for input_ in downstream_inputs:
-                    if input_.schema_id is not None:
-                        input_.schema = schemas_by_id.get(input_.schema_id)
-                for output in downstream_outputs:
-                    if output.schema_id is not None:
-                        output.schema = schemas_by_id.get(output.schema_id)
-
-                downstream_datasets_by_id, downstream_dataset_symlinks_by_id = await self._get_datasets_by_io(
-                    downstream_inputs,
-                    downstream_outputs,
-                    ids_to_skip,
-                )
-                downstream_runs = await self._uow.run.list_by_ids(downstream_run_ids)
-
-                result.datasets.update(downstream_datasets_by_id)
-                result.runs.update({run.id: run for run in downstream_runs})
-                result.dataset_symlinks.update(downstream_dataset_symlinks_by_id)
-                result.inputs.update(
-                    {
-                        (input_.dataset_id, input_.job_id, input_.run_id, input_.operation_id): input_
-                        for input_ in downstream_inputs
-                    },
-                )
-                result.outputs.update(
-                    {
-                        (
-                            output.dataset_id,
-                            output.job_id,
-                            output.run_id,
-                            output.operation_id,
-                            output.types_combined,
-                        ): output
-                        for output in downstream_outputs
-                    },
-                )
-                layer_datasets_by_id["downstream"] = {
-                    input_.dataset_id: downstream_datasets_by_id[input_.dataset_id] for input_ in downstream_inputs
-                }
 
             if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
-                upstream_inputs = await self._uow.input.list_by_dataset_ids(
-                    layer_datasets_by_id["upstream"],
+                upstream_relations = await self._uow.io_dataset_relation.get_relations(
+                    layer_dataset_ids["upstream"],
                     since=since,
                     until=until,
-                    granularity="RUN",
+                    direction="UPSTREAM",
                 )
 
-                upstream_run_ids = {input_.run_id for input_ in upstream_inputs if input_.run_id is not None}
-                upstream_outputs = await self._uow.output.list_by_run_ids(
-                    upstream_run_ids,
-                    since=since,
-                    until=until,
-                    granularity="RUN",
+                upstream_dataset_ids = {relation.in_dataset_id for relation in upstream_relations}
+                relations_by_id.update(
+                    {(relation.in_dataset_id, relation.out_dataset_id): relation for relation in upstream_relations},
                 )
 
-                schemas_by_id = await self._get_schemas_by_io(upstream_inputs, upstream_outputs)
-                for input_ in upstream_inputs:
-                    if input_.schema_id is not None:
-                        input_.schema = schemas_by_id.get(input_.schema_id)
-                for output in upstream_outputs:
-                    if output.schema_id is not None:
-                        output.schema = schemas_by_id.get(output.schema_id)
+            schema_ids = {relation.schema_id for relation in downstream_relations} | {
+                relation.schema_id for relation in upstream_relations
+            }
 
-                upstream_datasets_by_id, upstream_dataset_symlinks_by_id = await self._get_datasets_by_io(
-                    upstream_inputs,
-                    upstream_outputs,
-                    ids_to_skip,
-                )
+            schemas = await self._uow.schema.list_by_ids(schema_ids)  # type: ignore[arg-type]
+            schemas_by_id = {schema.id: schema for schema in schemas}
+            for relation in downstream_relations:
+                if relation.schema_id is not None:
+                    relation.schema = schemas_by_id.get(relation.schema_id)
+            for relation in upstream_relations:
+                if relation.schema_id is not None:
+                    relation.schema = schemas_by_id.get(relation.schema_id)
 
-                upstream_runs = await self._uow.run.list_by_ids(upstream_run_ids)
+            dataset_ids = downstream_dataset_ids | upstream_dataset_ids
+            datasets = await self._uow.dataset.list_by_ids(dataset_ids)  # type: ignore[arg-type]
+            datasets_by_id = {dataset.id: dataset for dataset in datasets}
+            extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(
+                datasets_by_id,
+            )
+            datasets.extend(extra_datasets)
 
-                result.datasets.update(upstream_datasets_by_id)
-                result.runs.update({run.id: run for run in upstream_runs})
-                result.dataset_symlinks.update(upstream_dataset_symlinks_by_id)
-                result.inputs.update(
-                    {
-                        (input_.dataset_id, input_.job_id, input_.run_id, input_.operation_id): input_
-                        for input_ in upstream_inputs
-                    },
-                )
-                result.outputs.update(
-                    {
-                        (
-                            output.dataset_id,
-                            output.job_id,
-                            output.run_id,
-                            output.operation_id,
-                            output.types_combined,
-                        ): output
-                        for output in upstream_outputs
-                    },
-                )
-                layer_datasets_by_id["upstream"] = {
-                    output.dataset_id: upstream_datasets_by_id[output.dataset_id] for output in upstream_outputs
-                }
+            datasets_by_id.update({dataset.id: dataset for dataset in extra_datasets})
+            dataset_symlinks_by_id = {
+                (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
+                for dataset_symlink in dataset_symlinks
+            }
 
-            ids_to_skip = ids_to_skip.merge(IdsToSkip.from_result(result))
+            result.datasets.update(datasets_by_id)
+            result.dataset_symlinks.update(dataset_symlinks_by_id)
+            result.io_dataset_relations.update(relations_by_id)
+
             depth -= 1
+            layer_dataset_ids = {
+                "downstream": downstream_dataset_ids,
+                "upstream": upstream_dataset_ids,
+            }
 
+        if include_column_lineage:
+            column_lineage_result = await self._uow.column_lineage.list_by_io_relations(
+                result.io_dataset_relations.keys(),
+                since,
+                until,
+            )
+            column_lineage_relations: dict[tuple[int, int], list[ColumnLineageRow]] = defaultdict(list)
+            for columns_relation in column_lineage_result:
+                column_lineage_relations[
+                    (columns_relation.source_dataset_id, columns_relation.target_dataset_id)
+                ].append(
+                    columns_relation,
+                )
+            result.column_lineage.update(column_lineage_relations)
         return result
-
-    async def _get_schemas_by_io(self, inputs: list[InputRow], outputs: list[OutputRow]) -> dict[int, Schema]:
-        schema_ids = {input_.schema_id for input_ in inputs if input_.schema_id is not None} | {
-            output.schema_id for output in outputs if output.schema_id is not None
-        }
-        schemas = await self._uow.schema.list_by_ids(schema_ids)
-        return {schema.id: schema for schema in schemas}
-
-    async def _get_datasets_by_io(
-        self,
-        inputs: list[InputRow],
-        outputs: list[OutputRow],
-        ids_to_skip: IdsToSkip | None = None,
-    ) -> tuple[dict[int, Dataset], dict[tuple[int, int], DatasetSymlink]]:
-        dataset_ids = {input_.dataset_id for input_ in inputs} | {output.dataset_id for output in outputs}
-        datasets = await self._uow.dataset.list_by_ids(dataset_ids)
-        datasets_by_id = {dataset.id: dataset for dataset in datasets}
-        extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(
-            datasets_by_id,
-            ids_to_skip,
-        )
-        datasets.extend(extra_datasets)
-
-        datasets_by_id.update({dataset.id: dataset for dataset in extra_datasets})
-        dataset_symlinks_by_id = {
-            (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
-            for dataset_symlink in dataset_symlinks
-        }
-        return datasets_by_id, dataset_symlinks_by_id
 
     async def _get_column_lineage(
         self,
@@ -1322,14 +1253,6 @@ class LineageService:
                     source_dataset_ids=source_dataset_ids,
                     target_dataset_ids=target_dataset_ids,
                 )
-            case "DATASET":
-                column_lineage_result = await self._uow.column_lineage.list_by_run_ids(
-                    run_ids=current_result.runs,
-                    since=since,
-                    until=until,
-                    source_dataset_ids=source_dataset_ids,
-                    target_dataset_ids=target_dataset_ids,
-                )
             case "RUN":
                 column_lineage_result = await self._uow.column_lineage.list_by_run_ids(
                     run_ids=current_result.runs,
@@ -1346,6 +1269,9 @@ class LineageService:
                     source_dataset_ids=source_dataset_ids,
                     target_dataset_ids=target_dataset_ids,
                 )
+            case "DATASET":
+                # For dataset granularity column lineage added inside `_dataset_lineage_with_dataset_granularity` method
+                return result
             case _:
                 msg = f"Unknown granularity for column lineage: {granularity}"
                 raise ValueError(msg)
@@ -1364,8 +1290,16 @@ class LineageService:
     ) -> LineageServiceResult:
         dataset_ids_with_inputs = {input_.dataset_id for input_ in current_result.inputs.values()}
         dataset_ids_with_outputs = {output.dataset_id for output in current_result.outputs.values()}
+        dataset_ids_with_io_relations = {
+            relation.in_dataset_id for relation in current_result.io_dataset_relations.values()
+        } | {relation.out_dataset_id for relation in current_result.io_dataset_relations.values()}
 
-        keep_ids = set(keep_dataset_ids or []) | dataset_ids_with_inputs | dataset_ids_with_outputs
+        keep_ids = (
+            set(keep_dataset_ids or [])
+            | dataset_ids_with_inputs
+            | dataset_ids_with_outputs
+            | dataset_ids_with_io_relations
+        )
 
         final_datasets = {key: dataset for key, dataset in current_result.datasets.items() if dataset.id in keep_ids}
         final_symlinks = {
