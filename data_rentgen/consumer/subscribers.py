@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncGenerator
 from typing import cast
 
 from aiokafka import ConsumerRecord
@@ -32,39 +33,49 @@ async def runs_events_subscriber(
     publisher: AsyncAPIDefaultPublisher = Depends(Stub(AsyncAPIDefaultPublisher)),
     session: AsyncSession = Depends(Stub(AsyncSession)),
 ):
-    logger.info("Extracting events")
-    parsed, malformed = await extract_events(batch, logger)
-    logger.info("Parsed %r", parsed)
+    message_id = batch.message_id
+    correlation_id = batch.correlation_id
+    messages = cast(tuple[ConsumerRecord, ...], batch.raw_message)  # https://github.com/airtai/faststream/issues/2102
+    del batch  # free memory
 
-    logger.info("Saving to database")
-    await save_to_db(parsed, session, logger)
-    logger.info("Saved successfully")
-
-    if malformed:
-        logger.warning("Malformed messages: %d", len(malformed))
-        await report_malformed(batch, malformed, publisher)
-
-
-async def extract_events(
-    raw_data: KafkaMessage,
-    logger: Logger,
-    await_every: int = 50,
-) -> tuple[BatchExtractionResult, list[ConsumerRecord]]:
-    messages = cast(tuple[ConsumerRecord], raw_data.raw_message)  # https://github.com/airtai/faststream/issues/2102
     total_bytes = sum(len(message.value or "") for message in messages)
     logger.info("Got %d messages (%dKiB)", len(messages), total_bytes / 1024)
 
     extractor = BatchExtractor()
     malformed: list[ConsumerRecord] = []
+    logger.info("Extracting events")
+    async for parsed, raw in parse_messages(messages, logger):
+        if parsed:
+            extractor.add_events([parsed])
+        if raw:
+            malformed.append(raw)
+    del messages  # free memory
 
-    for i, message in enumerate(messages):
+    extracted = extractor.result
+    logger.info("Got %r", extracted)
+
+    logger.info("Saving to database")
+    await save_to_db(extracted, session, logger)
+    logger.info("Saved successfully")
+
+    if malformed:
+        logger.warning("Malformed messages: %d", len(malformed))
+        await report_malformed(malformed, message_id, correlation_id, publisher)
+
+
+async def parse_messages(
+    messages: tuple[ConsumerRecord, ...],
+    logger: Logger,
+) -> AsyncGenerator[tuple[OpenLineageRunEvent, None] | tuple[None, ConsumerRecord]]:
+    # OpenLineage models are heavy, parsing is CPU bound task which may take some time.
+    # Blocking event loop is not a good idea, so we need to await sometimes,
+    for message in messages:
         try:
             if message.value is None:
                 msg = "Message value cannot be empty"
                 raise ValueError(msg)  # noqa: TRY301
 
-            event = OpenLineageRunEventAdapter.validate_json(message.value)
-            extractor.add_events([event])
+            yield OpenLineageRunEventAdapter.validate_json(message.value), None
         except (ValueError, TypeError):
             logger.exception(
                 "Failed to parse message: ConsumerRecord(topic=%r, partition=%d, offset=%d)",
@@ -72,14 +83,9 @@ async def extract_events(
                 message.partition,
                 message.offset,
             )
-            malformed.append(message)
+            yield None, message
 
-        if await_every and i >= await_every and i % await_every == 0:
-            # OpenLineage models are heavy, parsing is CPU bound task which may take some time.
-            # Blocking event loop is not a good idea, so we need to await sometimes,
-            await asyncio.sleep(0)
-
-    return extractor.result, malformed
+        await asyncio.sleep(0)
 
 
 async def save_to_db(
@@ -173,8 +179,9 @@ async def save_to_db(
 
 
 async def report_malformed(
-    batch: KafkaMessage,
     messages: list[ConsumerRecord],
+    message_id: str,
+    correlation_id: str,
     publisher: AsyncAPIDefaultPublisher,
 ):
     # Return malformed messages back to the broker
@@ -189,6 +196,6 @@ async def report_malformed(
             partition=message.partition,
             timestamp_ms=message.timestamp,
             headers=headers or None,
-            reply_to=batch.message_id,
-            correlation_id=batch.correlation_id,
+            reply_to=message_id,
+            correlation_id=correlation_id,
         )
