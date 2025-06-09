@@ -1148,6 +1148,8 @@ class LineageService:
         }
         while depth:
             relations_by_id = {}
+            downstream_relations, upstream_relations = [], []
+            downstream_dataset_ids, upstream_dataset_ids = set(), set()
 
             if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
                 downstream_relations = await self._uow.io_dataset_relation.get_relations(
