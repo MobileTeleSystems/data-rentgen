@@ -46,6 +46,8 @@ def broker_factory(settings: ConsumerApplicationSettings) -> KafkaBroker:
         pattern=settings.consumer.topics_pattern,
         **consumer_settings,
         batch=True,
+        # Disable parsing JSONs on FastStream level
+        decoder=lambda _: None,
     )
     publisher = broker.publisher(settings.producer.malformed_topic)
 
