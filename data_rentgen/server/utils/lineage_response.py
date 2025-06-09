@@ -68,7 +68,7 @@ def build_lineage_response_with_dataset_granularity(lineage: LineageServiceResul
         nodes=LineageNodesResponseV1(datasets=datasets),
         relations=LineageRelationsResponseV1(
             symlinks=_get_symlink_relations(lineage.dataset_symlinks),
-            outputs=_get_output_relations_with_dataset_granularity(lineage.io_dataset_relations),
+            inputs=_get_input_relations_with_dataset_granularity(lineage.io_dataset_relations),
             direct_column_lineage=_get_direct_column_lineage(lineage.column_lineage),
             indirect_column_lineage=_get_indirect_column_lineage(lineage.column_lineage),
         ),
@@ -165,22 +165,21 @@ def _get_output_relations(outputs: dict[Any, OutputRow]) -> list[LineageOutputRe
     return sorted(relations, key=lambda x: (x.from_.kind, str(x.from_.id), str(x.to.id)))
 
 
-def _get_output_relations_with_dataset_granularity(
+def _get_input_relations_with_dataset_granularity(
     io_dataset_relations: dict[Any, IODatasetRelationRow],
-) -> list[LineageOutputRelationV1]:
+) -> list[LineageInputRelationV1]:
     relations = []
     for relation in io_dataset_relations.values():
-        output = LineageOutputRelationV1(
-            types=[type_ for type_ in OutputTypeV1 if type_ & relation.types_combined],  # type: ignore[operator]
+        input_ = LineageInputRelationV1(
             from_=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(relation.in_dataset_id)),
             to=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(relation.out_dataset_id)),
             last_interaction_at=relation.created_at,
-            o_schema=LineageIORelationSchemaV1.model_validate(relation.schema) if relation.schema else None,
+            i_schema=LineageIORelationSchemaV1.model_validate(relation.schema) if relation.schema else None,
         )
 
-        if output.o_schema:
-            output.o_schema.relevance_type = relation.schema_relevance_type
-        relations.append(output)
+        if input_.i_schema:
+            input_.i_schema.relevance_type = relation.schema_relevance_type
+        relations.append(input_)
     return sorted(relations, key=lambda x: (str(x.from_.id), str(x.to.id)))
 
 

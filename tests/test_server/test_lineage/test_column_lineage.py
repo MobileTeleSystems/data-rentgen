@@ -1251,13 +1251,12 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_column_lineage(
         "relations": {
             "parents": [],
             "symlinks": [],
-            "inputs": [],
-            "outputs": sorted(
+            "outputs": [],
+            "inputs": sorted(
                 [
                     {
                         "from": {"kind": "DATASET", "id": str(datasets[i].id)},
                         "to": {"kind": "DATASET", "id": str(datasets[i + 1].id)},
-                        "types": ["APPEND"],
                         "num_bytes": None,
                         "num_rows": None,
                         "num_files": None,

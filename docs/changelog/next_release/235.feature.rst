@@ -8,8 +8,8 @@ Add `DATASET` granularity for `/datasets/lineage`
                 "relations": {
                     "parents": [],
                     "symlinks": [],
-                    "inputs": [],
-                    "outputs": [
+                    "outputs": [],
+                    "inputs": [
                         {
                             "from": {
                                 "kind": "DATASET",
@@ -19,9 +19,6 @@ Add `DATASET` granularity for `/datasets/lineage`
                                 "kind": "DATASET",
                                 "id": "227"
                             },
-                            "types": [
-                                "APPEND"
-                            ],
                             "last_interaction_at": "2025-06-06T10:54:57.683000Z",
                             "num_bytes": null,
                             "num_rows": null,
@@ -60,9 +57,6 @@ Add `DATASET` granularity for `/datasets/lineage`
                                 "kind": "DATASET",
                                 "id": "228"
                             },
-                            "types": [
-                                "APPEND"
-                            ],
                             "last_interaction_at": "2025-06-06T10:54:58.683000Z",
                             "num_bytes": null,
                             "num_rows": null,
@@ -101,9 +95,6 @@ Add `DATASET` granularity for `/datasets/lineage`
                                 "kind": "DATASET",
                                 "id": "229"
                             },
-                            "types": [
-                                "APPEND"
-                            ],
                             "last_interaction_at": "2025-06-06T10:54:59.683000Z",
                             "num_bytes": null,
                             "num_rows": null,

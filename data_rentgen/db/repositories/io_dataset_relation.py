@@ -50,7 +50,6 @@ class IODatasetRelationRepository:
                         Input.dataset_id.label("in_dataset_id"),
                         Output.created_at.label("created_at"),
                         Output.dataset_id.label("out_dataset_id"),
-                        Output.type.label("type"),
                         func.first_value(Output.schema_id)
                         .over(partition_by=partition_by, order_by=order_by)
                         .label("oldest_schema_id"),
@@ -78,7 +77,6 @@ class IODatasetRelationRepository:
                         Input.dataset_id.label("in_dataset_id"),
                         Input.created_at.label("created_at"),
                         Output.dataset_id.label("out_dataset_id"),
-                        Output.type.label("type"),
                         func.first_value(Output.schema_id)
                         .over(partition_by=partition_by, order_by=order_by)
                         .label("oldest_schema_id"),
@@ -96,7 +94,6 @@ class IODatasetRelationRepository:
             base_query.c.out_dataset_id,
             func.min(base_query.c.oldest_schema_id).label("min_schema_id"),
             func.max(base_query.c.newest_schema_id).label("max_schema_id"),
-            func.bit_or(base_query.c.type).label("types_combined"),
         ).group_by(
             base_query.c.in_dataset_id,
             base_query.c.out_dataset_id,
@@ -116,7 +113,6 @@ class IODatasetRelationRepository:
                     created_at=row.created_at,
                     in_dataset_id=row.in_dataset_id,
                     out_dataset_id=row.out_dataset_id,
-                    types_combined=row.types_combined,
                     schema_id=row.max_schema_id,
                     schema_relevance_type=schema_relevance_type,
                 ),
