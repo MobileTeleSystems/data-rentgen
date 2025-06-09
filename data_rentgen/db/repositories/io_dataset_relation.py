@@ -38,10 +38,11 @@ class IODatasetRelationRepository:
                 # dasasets as Outputs
                 where = [
                     Output.created_at >= since,
+                    Input.created_at >= since,
                     Output.dataset_id == any_(list(dataset_ids)),  # type: ignore[arg-type]
                 ]
                 if until:
-                    where.append(Output.created_at <= until)
+                    where.extend([Output.created_at <= until, Input.created_at <= until])
 
                 partition_by = [Output.run_id, Output.dataset_id]
                 order_by = [Output.created_at, Output.schema_id]
@@ -65,12 +66,13 @@ class IODatasetRelationRepository:
                 # dasasets as Inputs
                 where = [
                     Input.created_at >= since,
+                    Output.created_at >= since,
                     Input.dataset_id == any_(list(dataset_ids)),  # type: ignore[arg-type]
                 ]
                 if until:
-                    where.append(Input.created_at <= until)
+                    where.extend([Input.created_at <= until, Output.created_at <= until])
 
-                partition_by = [Input.run_id, Input.dataset_id]
+                partition_by = [Output.run_id, Output.dataset_id]
                 order_by = [Input.created_at, Input.schema_id]
                 base_query = (
                     select(

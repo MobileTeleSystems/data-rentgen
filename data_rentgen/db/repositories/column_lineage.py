@@ -135,7 +135,7 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
         ]
         return await self._get_column_lineage_with_column_relations(where)
 
-    async def list_by_io_relations(
+    async def list_by_dataset_pairs(
         self,
         dataset_ids_pairs: Collection[tuple[int, int]],
         since: datetime,

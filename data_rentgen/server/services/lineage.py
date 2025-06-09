@@ -1212,7 +1212,7 @@ class LineageService:
             }
 
         if include_column_lineage:
-            column_lineage_result = await self._uow.column_lineage.list_by_io_relations(
+            column_lineage_result = await self._uow.column_lineage.list_by_dataset_pairs(
                 result.io_dataset_relations.keys(),
                 since,
                 until,
