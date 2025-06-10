@@ -109,7 +109,7 @@ def _get_symlink_relations(dataset_symlinks: dict[Any, DatasetSymlink]) -> list[
             to=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(dataset_symlink.to_dataset_id)),
         )
         symlinks.append(relation)
-    return symlinks
+    return sorted(symlinks, key=lambda x: (x.from_.id, x.to.id))
 
 
 def _get_input_relations(inputs: dict[Any, InputRow]) -> list[LineageInputRelationV1]:

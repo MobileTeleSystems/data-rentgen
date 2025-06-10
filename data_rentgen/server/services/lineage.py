@@ -1158,10 +1158,26 @@ class LineageService:
                     until=until,
                     direction="DOWNSTREAM",
                 )
-                downstream_dataset_ids = {relation.out_dataset_id for relation in downstream_relations}
                 relations_by_id.update(
                     {(relation.in_dataset_id, relation.out_dataset_id): relation for relation in downstream_relations},
                 )
+
+                downstream_dataset_ids = {relation.out_dataset_id for relation in downstream_relations}
+                downstream_datasets = await self._uow.dataset.list_by_ids(downstream_dataset_ids)  # type: ignore[arg-type]
+                downstream_datasets_by_id = {dataset.id: dataset for dataset in downstream_datasets}
+                downstream_extra_datasets, downstream_dataset_symlinks = await self._extend_datasets_with_symlinks(
+                    downstream_datasets_by_id,
+                )
+                downstream_dataset_ids = downstream_dataset_ids | {dataset.id for dataset in downstream_extra_datasets}
+                downstream_datasets.extend(downstream_extra_datasets)
+                downstream_datasets_by_id.update({dataset.id: dataset for dataset in downstream_extra_datasets})
+                downstream_dataset_symlinks_by_id = {
+                    (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
+                    for dataset_symlink in downstream_dataset_symlinks
+                }
+
+                result.datasets.update(downstream_datasets_by_id)
+                result.dataset_symlinks.update(downstream_dataset_symlinks_by_id)
 
             if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
                 upstream_relations = await self._uow.io_dataset_relation.get_relations(
@@ -1171,10 +1187,26 @@ class LineageService:
                     direction="UPSTREAM",
                 )
 
-                upstream_dataset_ids = {relation.in_dataset_id for relation in upstream_relations}
                 relations_by_id.update(
                     {(relation.in_dataset_id, relation.out_dataset_id): relation for relation in upstream_relations},
                 )
+
+                upstream_dataset_ids = {relation.in_dataset_id for relation in upstream_relations}
+                upstream_datasets = await self._uow.dataset.list_by_ids(upstream_dataset_ids)  # type: ignore[arg-type]
+                upstream_datasets_by_id = {dataset.id: dataset for dataset in upstream_datasets}
+                upstream_extra_datasets, upstream_dataset_symlinks = await self._extend_datasets_with_symlinks(
+                    upstream_datasets_by_id,
+                )
+                upstream_dataset_ids = upstream_dataset_ids | {dataset.id for dataset in upstream_extra_datasets}
+                upstream_datasets.extend(upstream_extra_datasets)
+                upstream_datasets_by_id.update({dataset.id: dataset for dataset in upstream_extra_datasets})
+                upstream_dataset_symlinks_by_id = {
+                    (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
+                    for dataset_symlink in upstream_dataset_symlinks
+                }
+
+                result.datasets.update(upstream_datasets_by_id)
+                result.dataset_symlinks.update(upstream_dataset_symlinks_by_id)
 
             schema_ids = {relation.schema_id for relation in downstream_relations} | {
                 relation.schema_id for relation in upstream_relations
@@ -1189,22 +1221,6 @@ class LineageService:
                 if relation.schema_id is not None:
                     relation.schema = schemas_by_id.get(relation.schema_id)
 
-            dataset_ids = downstream_dataset_ids | upstream_dataset_ids
-            datasets = await self._uow.dataset.list_by_ids(dataset_ids)  # type: ignore[arg-type]
-            datasets_by_id = {dataset.id: dataset for dataset in datasets}
-            extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(
-                datasets_by_id,
-            )
-            datasets.extend(extra_datasets)
-
-            datasets_by_id.update({dataset.id: dataset for dataset in extra_datasets})
-            dataset_symlinks_by_id = {
-                (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
-                for dataset_symlink in dataset_symlinks
-            }
-
-            result.datasets.update(datasets_by_id)
-            result.dataset_symlinks.update(dataset_symlinks_by_id)
             result.io_dataset_relations.update(relations_by_id)
 
             depth -= 1
