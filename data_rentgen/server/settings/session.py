@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import textwrap
+
 from pydantic import BaseModel, ConfigDict, Field
 
 DEFAULT_MAX_AGE = 1_209_600
@@ -31,8 +33,23 @@ class SessionSettings(BaseModel):
 
     """
 
-    secret_key: str = Field(description="A random string for signing cookies.")
-    session_cookie: str | None = Field(default="session", description="Name of the session cookie.")
+    secret_key: str = Field(
+        description=textwrap.dedent(
+            """
+            Secret key for encrypting cookies.
+
+            Can be any string. It is recommended to generate random value for every application instance, e.g.:
+
+            .. code:: shell
+
+                pwgen 32 1
+            """,
+        ),
+    )
+    session_cookie: str | None = Field(
+        default="session",
+        description="Name of the session cookie. Change this if there are multiple application under the same domain.",
+    )
     max_age: int | None = Field(
         default=DEFAULT_MAX_AGE,
         description="Session expiry time in seconds. Defaults to 2 weeks.",

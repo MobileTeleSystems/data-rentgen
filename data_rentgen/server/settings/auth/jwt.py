@@ -22,7 +22,11 @@ class JWTSettings(BaseModel):
             """
             Secret key for signing JWT tokens.
 
-            Can be any string. It is recommended to generate random value for every application instance.
+            Can be any string. It is recommended to generate random value for every application instance, e.g.:
+
+            .. code:: shell
+
+                pwgen 32 1
             """,
         ),
     )
