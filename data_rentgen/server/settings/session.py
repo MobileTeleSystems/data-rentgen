@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import textwrap
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, SecretStr
 
 DEFAULT_MAX_AGE = 1_209_600
 
@@ -33,7 +33,7 @@ class SessionSettings(BaseModel):
 
     """
 
-    secret_key: str = Field(
+    secret_key: SecretStr = Field(
         description=textwrap.dedent(
             """
             Secret key for encrypting cookies.
