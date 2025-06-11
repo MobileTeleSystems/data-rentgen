@@ -52,9 +52,10 @@ def extracted_flink_job_run(
         start_reason=None,
         user=None,
         ended_at=datetime(2024, 7, 5, 9, 8, 5, 691973, tzinfo=timezone.utc),
-        external_id=None,
+        external_id="b825f524-49d6-4dd8-bffd-3e5742c528d0",
         attempt=None,
-        persistent_log_url=None,
+        running_log_url="http://flink-host:18081/#/job/running/b825f524-49d6-4dd8-bffd-3e5742c528d0",
+        persistent_log_url="http://flink-host:18081/#/job/completed/b825f524-49d6-4dd8-bffd-3e5742c528d0",
     )
 
 

@@ -20,6 +20,7 @@ from data_rentgen.consumer.openlineage.run_event import (
 )
 from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageAirflowDagInfo,
+    OpenLineageAirflowDagRunFacet,
     OpenLineageAirflowDagRunInfo,
     OpenLineageAirflowDagRunType,
     OpenLineageAirflowTaskInfo,
@@ -27,9 +28,6 @@ from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageAirflowTaskRunFacet,
     OpenLineageProcessingEngineRunFacet,
     OpenLineageRunFacets,
-)
-from data_rentgen.consumer.openlineage.run_facets.airflow import (
-    OpenLineageAirflowDagRunFacet,
 )
 from data_rentgen.dto import (
     JobDTO,
