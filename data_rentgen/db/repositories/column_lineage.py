@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import NamedTuple
 from uuid import UUID
 
-from sqlalchemy import ColumnElement, any_, func, select
+from sqlalchemy import ColumnElement, any_, func, select, tuple_
 from sqlalchemy.dialects.postgresql import insert
 
 from data_rentgen.db.models import ColumnLineage, DatasetColumnRelation
@@ -133,6 +133,25 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
             ColumnLineage.source_dataset_id == any_(list(source_dataset_ids)),  # type: ignore[arg-type]
             ColumnLineage.target_dataset_id == any_(list(target_dataset_ids)),  # type: ignore[arg-type]
         ]
+        return await self._get_column_lineage_with_column_relations(where)
+
+    async def list_by_dataset_pairs(
+        self,
+        dataset_ids_pairs: Collection[tuple[int, int]],
+        since: datetime,
+        until: datetime | None = None,
+    ):
+        if not dataset_ids_pairs:
+            return []
+
+        where = [
+            ColumnLineage.created_at >= since,
+            tuple_(ColumnLineage.source_dataset_id, ColumnLineage.target_dataset_id).in_(dataset_ids_pairs),
+        ]
+        if until:
+            where.append(
+                ColumnLineage.created_at <= until,
+            )
         return await self._get_column_lineage_with_column_relations(where)
 
     async def _get_column_lineage_with_column_relations(self, where: Collection[ColumnElement]):

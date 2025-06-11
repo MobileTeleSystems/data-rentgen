@@ -51,4 +51,4 @@ async def get_jobs_lineage(
         include_column_lineage=query_args.include_column_lineage,
     )
 
-    return await build_lineage_response(lineage)
+    return build_lineage_response(lineage)

@@ -11,6 +11,7 @@ from tests.fixtures.mocks import MockedUser
 from tests.test_server.fixtures.factories.schema import create_schema
 from tests.test_server.utils.convert_to_json import (
     datasets_to_json,
+    format_datetime,
     inputs_to_json,
     jobs_to_json,
     operation_parents_to_json,
@@ -18,6 +19,7 @@ from tests.test_server.utils.convert_to_json import (
     outputs_to_json,
     run_parents_to_json,
     runs_to_json,
+    schema_to_json,
     symlinks_to_json,
 )
 from tests.test_server.utils.enrich import enrich_datasets, enrich_jobs, enrich_runs
@@ -256,6 +258,324 @@ async def test_get_dataset_lineage_with_granularity_operation(
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": operations_to_json(operations),
+        },
+    }
+
+
+async def test_get_dataset_lineage_with_granularity_dataset(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_with_depth: LineageResult,
+    mocked_user: MockedUser,
+):
+    lineage = lineage_with_depth
+    # We need a middle dataset, which has inputs and outputs
+    lineage_dataset = lineage.datasets[1]
+    # If start dataset is d1 we should have this lineage: d0-d1-d2
+    datasets = lineage.datasets[:3]
+    outputs_by_dataset_id = {output.dataset_id: output for output in lineage.outputs}
+
+    datasets = await enrich_datasets(datasets, async_session)
+    runs = await enrich_runs(lineage.runs, async_session)
+    since = min(run.created_at for run in runs)
+
+    response = await test_client.get(
+        "v1/datasets/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "start_node_id": lineage_dataset.id,
+            "granularity": "DATASET",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": {
+            "parents": [],
+            "symlinks": [],
+            "outputs": [],
+            "inputs": sorted(
+                [
+                    {
+                        "from": {"kind": "DATASET", "id": str(datasets[i].id)},
+                        "to": {"kind": "DATASET", "id": str(datasets[i + 1].id)},
+                        "num_bytes": None,
+                        "num_rows": None,
+                        "num_files": None,
+                        "schema": schema_to_json(outputs_by_dataset_id[datasets[i + 1].id].schema, "EXACT_MATCH"),
+                        "last_interaction_at": format_datetime(outputs_by_dataset_id[datasets[i + 1].id].created_at),
+                    }
+                    for i in range(len(datasets) - 1)
+                ],
+                key=lambda x: (x["from"]["id"], x["to"]["id"]),
+            ),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": {},
+            "runs": {},
+            "operations": {},
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    ["direction", "start_dataset_id"],
+    [("DOWNSTREAM", 1), ("UPSTREAM", 3)],
+    ids=["DOWNSTREAM", "UPSTREAM"],
+)
+async def test_get_dataset_lineage_with_granularity_dataset_and_direction(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_with_depth: LineageResult,
+    mocked_user: MockedUser,
+    direction: str,
+    start_dataset_id,
+):
+    lineage = lineage_with_depth
+    # We need a middle dataset, which has inputs and outputs
+    lineage_dataset = lineage.datasets[start_dataset_id]
+    # If start dataset is d1 we should have this lineage: d0-d1-d2
+    datasets = lineage.datasets[1:4]
+    outputs_by_dataset_id = {output.dataset_id: output for output in lineage.outputs}
+
+    datasets = await enrich_datasets(datasets, async_session)
+    runs = await enrich_runs(lineage.runs, async_session)
+    since = min(run.created_at for run in runs)
+
+    response = await test_client.get(
+        "v1/datasets/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "start_node_id": lineage_dataset.id,
+            "granularity": "DATASET",
+            "direction": direction,
+            "depth": 2,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": {
+            "parents": [],
+            "symlinks": [],
+            "outputs": [],
+            "inputs": sorted(
+                [
+                    {
+                        "from": {"kind": "DATASET", "id": str(datasets[i].id)},
+                        "to": {"kind": "DATASET", "id": str(datasets[i + 1].id)},
+                        "num_bytes": None,
+                        "num_rows": None,
+                        "num_files": None,
+                        "schema": schema_to_json(outputs_by_dataset_id[datasets[i + 1].id].schema, "EXACT_MATCH"),
+                        "last_interaction_at": format_datetime(outputs_by_dataset_id[datasets[i + 1].id].created_at),
+                    }
+                    for i in range(len(datasets) - 1)
+                ],
+                key=lambda x: (x["from"]["id"], x["to"]["id"]),
+            ),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": {},
+            "runs": {},
+            "operations": {},
+        },
+    }
+
+
+async def test_get_dataset_lineage_with_granularity_dataset_and_depth(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_with_depth: LineageResult,
+    mocked_user: MockedUser,
+):
+    lineage = lineage_with_depth
+    # We need a middle dataset, which has inputs and outputs
+    lineage_dataset = lineage.datasets[1]
+    # If start dataset is d1 and depth = 2 we should have this lineage: d0-d1-d2-d3-d4
+    datasets = lineage.datasets
+    outputs_by_dataset_id = {output.dataset_id: output for output in lineage.outputs}
+
+    datasets = await enrich_datasets(datasets, async_session)
+    runs = await enrich_runs(lineage.runs, async_session)
+    since = min(run.created_at for run in runs)
+
+    response = await test_client.get(
+        "v1/datasets/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "start_node_id": lineage_dataset.id,
+            "granularity": "DATASET",
+            "depth": 3,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": {
+            "parents": [],
+            "symlinks": [],
+            "outputs": [],
+            "inputs": sorted(
+                [
+                    {
+                        "from": {"kind": "DATASET", "id": str(datasets[i].id)},
+                        "to": {"kind": "DATASET", "id": str(datasets[i + 1].id)},
+                        "num_bytes": None,
+                        "num_rows": None,
+                        "num_files": None,
+                        "schema": schema_to_json(outputs_by_dataset_id[datasets[i + 1].id].schema, "EXACT_MATCH"),
+                        "last_interaction_at": format_datetime(outputs_by_dataset_id[datasets[i + 1].id].created_at),
+                    }
+                    for i in range(len(datasets) - 1)
+                ],
+                key=lambda x: (x["from"]["id"], x["to"]["id"]),
+            ),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": {},
+            "runs": {},
+            "operations": {},
+        },
+    }
+
+
+async def test_get_dataset_lineage_with_granularity_dataset_and_symlinks(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_with_symlinks_dataset_granularity: LineageResult,
+    mocked_user: MockedUser,
+):
+    lineage = lineage_with_symlinks_dataset_granularity
+    # We need a middle symlink dataset, which has inputs and outputs
+    # If start dataset is ds2 and depth = 2 we should have this lineage: d1->ds2 d2->ds3 d3 -> ds4
+    datasets, symlink_datasets = lineage.datasets[:3], lineage.datasets[5:]
+    lineage_dataset = symlink_datasets[0]
+    dataset_pairs_ids = [(from_.id, to.id) for (from_, to) in zip(datasets, symlink_datasets)]
+
+    dataset_symlinks = lineage.dataset_symlinks[2:6]
+    outputs_by_dataset_id = {output.dataset_id: output for output in lineage.outputs}
+
+    datasets = await enrich_datasets(datasets + symlink_datasets, async_session)
+
+    runs = await enrich_runs(lineage.runs, async_session)
+    since = min(run.created_at for run in runs)
+
+    response = await test_client.get(
+        "v1/datasets/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "start_node_id": lineage_dataset.id,
+            "granularity": "DATASET",
+            "depth": 2,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": {
+            "parents": [],
+            "symlinks": symlinks_to_json(dataset_symlinks),
+            "outputs": [],
+            "inputs": sorted(
+                [
+                    {
+                        "from": {"kind": "DATASET", "id": str(from_id)},
+                        "to": {"kind": "DATASET", "id": str(to_id)},
+                        "num_bytes": None,
+                        "num_rows": None,
+                        "num_files": None,
+                        "schema": schema_to_json(outputs_by_dataset_id[to_id].schema, "EXACT_MATCH"),
+                        "last_interaction_at": format_datetime(outputs_by_dataset_id[to_id].created_at),
+                    }
+                    for from_id, to_id in dataset_pairs_ids
+                ],
+                key=lambda x: (x["from"]["id"], x["to"]["id"]),
+            ),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": {},
+            "runs": {},
+            "operations": {},
+        },
+    }
+
+
+async def test_get_dataset_lineage_with_granularity_dataset_and_until(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_with_depth: LineageResult,
+    mocked_user: MockedUser,
+):
+    lineage = lineage_with_depth
+    # We need a middle dataset, which has inputs and outputs
+    lineage_dataset = lineage.datasets[1]
+    # If start dataset is d1 and depth = 3 we should have this lineage: d0-d1-d2-d3-d4
+    # If we add until of operation between d2 and d3 we will have this lineage: d0-d1-d2
+    datasets = lineage.datasets[:3]
+    outputs_by_dataset_id = {output.dataset_id: output for output in lineage.outputs}
+
+    datasets = await enrich_datasets(datasets, async_session)
+    since = min(operation.created_at for operation in lineage.operations)
+    until = since + timedelta(seconds=1)
+
+    response = await test_client.get(
+        "v1/datasets/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "until": until.isoformat(),
+            "start_node_id": lineage_dataset.id,
+            "granularity": "DATASET",
+            "depth": 3,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": {
+            "parents": [],
+            "symlinks": [],
+            "outputs": [],
+            "inputs": sorted(
+                [
+                    {
+                        "from": {"kind": "DATASET", "id": str(datasets[i].id)},
+                        "to": {"kind": "DATASET", "id": str(datasets[i + 1].id)},
+                        "num_bytes": None,
+                        "num_rows": None,
+                        "num_files": None,
+                        "schema": schema_to_json(outputs_by_dataset_id[datasets[i + 1].id].schema, "EXACT_MATCH"),
+                        "last_interaction_at": format_datetime(outputs_by_dataset_id[datasets[i + 1].id].created_at),
+                    }
+                    for i in range(len(datasets) - 1)
+                ],
+                key=lambda x: (x["from"]["id"], x["to"]["id"]),
+            ),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets),
+            "jobs": {},
+            "runs": {},
+            "operations": {},
         },
     }
 

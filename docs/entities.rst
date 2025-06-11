@@ -275,15 +275,15 @@ Input relation
 
 Relation Dataset → Operation, describing the process of reading some data from specific table/folder by specific operation.
 
-It is also possible to aggregate all inputs of specific Dataset → Run or Dataset → Job interaction, by adjusting ``granularity`` option of Lineage graph.
+It is also possible to aggregate all inputs of specific Dataset → Run, Dataset → Job or Dataset -> Dataset by adjusting  interaction ``granularity`` option of Lineage graph.
 
 It contains following fields:
 
 - ``from: Dataset`` - data source.
-- ``to: Operation | Run | Job`` - data target.
-- ``num_rows: int | None`` - number of rows read from dataset. For ``granularity=JOB|RUN`` it is a sum of all read rows from this dataset.
-- ``num_bytes: int | None`` - number of bytes read from dataset. For ``granularity=JOB|RUN`` it is a sum of all read bytes from this dataset.
-- ``num_files: int | None`` - number of files read from dataset. For ``granularity=JOB|RUN`` it is a sum of all read files from this dataset.
+- ``to: Operation | Run | Job | Dataset`` - data target.
+- ``num_rows: int | None`` - number of rows read from dataset. For ``granularity=JOB|RUN`` it is a sum of all read rows from this dataset. For ``granularity=DATASET`` always ``None``.
+- ``num_bytes: int | None`` - number of bytes read from dataset. For ``granularity=JOB|RUN`` it is a sum of all read bytes from this dataset. For ``granularity=DATASET`` always ``None``.
+- ``num_files: int | None`` - number of files read from dataset. For ``granularity=JOB|RUN`` it is a sum of all read files from this dataset. For ``granularity=DATASET`` always ``None``.
 - ``schema: Schema | None`` - schema of input dataset. Usually contains only selected columns (projection).
 
 ``Schema`` object contains following fields
@@ -299,7 +299,7 @@ It contains following fields:
 - ``relevance_type: Enum`` - describes if this schema information is relevant:
 
   - ``EXACT_MATCH`` - returned for ``granularity=OPERATION``, as each input has at most one schema.
-  - ``LATEST_KNOWN`` - returned for ``granularity=JOB|RUN`` if there are multiple inputs for same dataset but with different schemas. In this case a schema of the most recent input is returned.
+  - ``LATEST_KNOWN`` - returned for ``granularity=JOB|RUN|DATASET`` if there are multiple inputs for same dataset but with different schemas. In this case a schema of the most recent input is returned.
 
 .. image:: quickstart/spark/dataset_downstream_lineage.png
 .. image:: quickstart/spark/dataset_upstream_lineage.png

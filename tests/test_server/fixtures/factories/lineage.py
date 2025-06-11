@@ -208,9 +208,10 @@ async def lineage_with_depth(
     # J1 -> R1 -> O1, D1 -> O1 -> D2
     # J2 -> R2 -> O2, D2 -> O2 -> D3
     # J3 -> R3 -> O3, D3 -> O3 -> D4
+    # J4 -> R4 -> O4, D4 -> O4 -> D5
 
-    num_datasets = 4
-    num_jobs = 3
+    num_datasets = 5
+    num_jobs = 4
     created_at = datetime.now(tz=UTC)
 
     lineage = LineageResult()
@@ -614,6 +615,8 @@ async def lineage_with_symlinks(
     # J2 -> R2 -> O2, D2 -> O2 -> D3S
     # J3 -> R3 -> O3, D3 -> O2 -> D4S
 
+    # TODO: This fixture create a different structure. (D1 -> O1 -> D1S). It must be fixed !
+
     lineage = LineageResult()
     created_at = datetime.now(tz=UTC)
     num_datasets = 4
@@ -690,6 +693,104 @@ async def lineage_with_symlinks(
                     "run_id": operation.run_id,
                     "job_id": job.id,
                     "dataset_id": symlink_datasets[i].id,
+                    "type": OutputType.APPEND,
+                    "schema_id": schema.id,
+                },
+            )
+            lineage.outputs.append(output)
+
+    yield lineage
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)
+
+
+@pytest_asyncio.fixture()
+async def lineage_with_symlinks_dataset_granularity(
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
+    user: User,
+) -> AsyncGenerator[LineageResult, None]:
+    # Three trees of J -> R -> O, connected to datasets via symlinks:
+    # J1 -> R1 -> O1, D1 -> O1 -> D2S
+    # J2 -> R2 -> O2, D2 -> O2 -> D3S
+    # J3 -> R3 -> O3, D3 -> O2 -> D4S
+
+    lineage = LineageResult()
+    created_at = datetime.now(tz=UTC)
+    num_datasets = 4
+    num_jobs = 3
+
+    async with async_session_maker() as async_session:
+        dataset_locations = [
+            await create_location(async_session, location_kwargs={"type": "hdfs"}) for _ in range(num_datasets)
+        ]
+        datasets = [await create_dataset(async_session, location_id=location.id) for location in dataset_locations]
+        lineage.datasets.extend(datasets)
+
+        symlink_locations = [
+            await create_location(async_session, location_kwargs={"type": "hive"}) for _ in range(num_datasets)
+        ]
+        symlink_datasets = [
+            await create_dataset(async_session, location_id=location.id) for location in symlink_locations
+        ]
+        lineage.datasets.extend(symlink_datasets)
+
+        # Make symlinks
+        for dataset, symlink_dataset in zip(datasets, symlink_datasets):
+            metastore = [await make_symlink(async_session, dataset, symlink_dataset, DatasetSymlinkType.METASTORE)]
+            lineage.dataset_symlinks.extend(metastore)
+
+            warehouse = [await make_symlink(async_session, symlink_dataset, dataset, DatasetSymlinkType.WAREHOUSE)]
+            lineage.dataset_symlinks.extend(warehouse)
+
+        schema = await create_schema(async_session)
+
+        # Make graphs
+        for i in range(num_jobs):
+            job_location = await create_location(async_session)
+            job_type = await create_job_type(async_session)
+            job = await create_job(async_session, location_id=job_location.id, job_type_id=job_type.id)
+            lineage.jobs.append(job)
+
+            run = await create_run(
+                async_session,
+                run_kwargs={
+                    "job_id": job.id,
+                    "started_by_user_id": user.id,
+                    "created_at": created_at + timedelta(seconds=i),
+                },
+            )
+            lineage.runs.append(run)
+
+            operation = await create_operation(
+                async_session,
+                operation_kwargs={
+                    "created_at": run.created_at + timedelta(seconds=0.2),
+                    "run_id": run.id,
+                },
+            )
+            lineage.operations.append(operation)
+
+            input = await create_input(
+                async_session,
+                input_kwargs={
+                    "created_at": operation.created_at,
+                    "operation_id": operation.id,
+                    "run_id": operation.run_id,
+                    "job_id": job.id,
+                    "dataset_id": datasets[i].id,
+                    "schema_id": schema.id,
+                },
+            )
+            lineage.inputs.append(input)
+            output = await create_output(
+                async_session,
+                output_kwargs={
+                    "created_at": operation.created_at,
+                    "operation_id": operation.id,
+                    "run_id": operation.run_id,
+                    "job_id": job.id,
+                    "dataset_id": symlink_datasets[i + 1].id,
                     "type": OutputType.APPEND,
                     "schema_id": schema.id,
                 },
