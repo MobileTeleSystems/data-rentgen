@@ -88,9 +88,9 @@ async def test_runs_handler_flink(
     assert run.started_by_user is None
     assert run.start_reason is None
     assert run.ended_at == datetime(2025, 4, 22, 8, 39, 53, 938068, tzinfo=timezone.utc)
-    assert run.external_id is None
-    assert run.running_log_url is None
-    assert run.persistent_log_url is None
+    assert run.external_id == "b825f524-49d6-4dd8-bffd-3e5742c528d0"
+    assert run.running_log_url == "http://localhost:18081/#/job/running/b825f524-49d6-4dd8-bffd-3e5742c528d0"
+    assert run.persistent_log_url == "http://localhost:18081/#/job/completed/b825f524-49d6-4dd8-bffd-3e5742c528d0"
 
     operation_query = select(Operation).order_by(Operation.id)
     operation_scalars = await async_session.scalars(operation_query)

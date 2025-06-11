@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 import pytest
+from packaging.version import Version
 from uuid6 import UUID
 
 from data_rentgen.consumer.extractors import extract_operation
@@ -16,6 +17,11 @@ from data_rentgen.consumer.openlineage.run import OpenLineageRun
 from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEvent,
     OpenLineageRunEventType,
+)
+from data_rentgen.consumer.openlineage.run_facets import (
+    OpenLineageFlinkJobDetailsRunFacet,
+    OpenLineageProcessingEngineRunFacet,
+    OpenLineageRunFacets,
 )
 from data_rentgen.dto import OperationDTO, OperationStatusDTO
 from data_rentgen.dto.job import JobDTO
@@ -45,6 +51,16 @@ def test_extractors_extract_operation_flink_job():
         ),
         run=OpenLineageRun(
             runId=run_id,
+            facets=OpenLineageRunFacets(
+                flink_job=OpenLineageFlinkJobDetailsRunFacet(
+                    jobId="b825f524-49d6-4dd8-bffd-3e5742c528d0",
+                ),
+                processing_engine=OpenLineageProcessingEngineRunFacet(
+                    version=Version("1.19.0"),
+                    name="flink",
+                    openlineageAdapterVersion=Version("1.34.0"),
+                ),
+            ),
         ),
     )
     assert extract_operation(operation) == OperationDTO(
@@ -63,6 +79,9 @@ def test_extractors_extract_operation_flink_job():
             status=RunStatusDTO.STARTED,
             started_at=now,
             ended_at=None,
+            external_id="b825f524-49d6-4dd8-bffd-3e5742c528d0",
+            running_log_url="http://localhost:18081/#/job/running/b825f524-49d6-4dd8-bffd-3e5742c528d0",
+            persistent_log_url="http://localhost:18081/#/job/completed/b825f524-49d6-4dd8-bffd-3e5742c528d0",
         ),
         name="myjob",
         type=OperationTypeDTO.STREAMING,
@@ -105,6 +124,16 @@ def test_extractors_extract_operation_flink_job_finished(
         ),
         run=OpenLineageRun(
             runId=run_id,
+            facets=OpenLineageRunFacets(
+                flink_job=OpenLineageFlinkJobDetailsRunFacet(
+                    jobId="b825f524-49d6-4dd8-bffd-3e5742c528d0",
+                ),
+                processing_engine=OpenLineageProcessingEngineRunFacet(
+                    version=Version("1.19.0"),
+                    name="flink",
+                    openlineageAdapterVersion=Version("1.34.0"),
+                ),
+            ),
         ),
     )
 
@@ -125,6 +154,9 @@ def test_extractors_extract_operation_flink_job_finished(
             status=RunStatusDTO(expected_status),
             started_at=None,
             ended_at=ended_at,
+            external_id="b825f524-49d6-4dd8-bffd-3e5742c528d0",
+            persistent_log_url="http://localhost:18081/#/job/completed/b825f524-49d6-4dd8-bffd-3e5742c528d0",
+            running_log_url="http://localhost:18081/#/job/running/b825f524-49d6-4dd8-bffd-3e5742c528d0",
         ),
         name="myjob",
         type=OperationTypeDTO.BATCH,
