@@ -460,15 +460,15 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_symlinks(
 ):
     lineage = lineage_with_symlinks_dataset_granularity
     # We need a middle symlink dataset, which has inputs and outputs
-    lineage_dataset = lineage.datasets[5]
+    # If start dataset is ds2 and depth = 2 we should have this lineage: d1->ds2 d2->ds3 d3 -> ds4
+    datasets, symlink_datasets = lineage.datasets[:3], lineage.datasets[5:]
+    lineage_dataset = symlink_datasets[0]
+    dataset_pairs_ids = [(from_.id, to.id) for (from_, to) in zip(datasets, symlink_datasets)]
 
-    # If start dataset is ds2 and depth = 2 we should have this lineage: d1->ds2 d2->ds3
-    datasets = lineage.datasets[:3] + lineage.datasets[5:]
-    dataset_pairs_ids = [(from_.id, to.id) for (from_, to) in zip(lineage.datasets[:3], lineage.datasets[5:])]
     dataset_symlinks = lineage.dataset_symlinks[2:6]
     outputs_by_dataset_id = {output.dataset_id: output for output in lineage.outputs}
 
-    datasets = await enrich_datasets(datasets, async_session)
+    datasets = await enrich_datasets(datasets + symlink_datasets, async_session)
 
     runs = await enrich_runs(lineage.runs, async_session)
     since = min(run.created_at for run in runs)
