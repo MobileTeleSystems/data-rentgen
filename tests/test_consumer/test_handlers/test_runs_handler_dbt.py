@@ -90,7 +90,7 @@ async def test_runs_handler_dbt(
     assert run.started_by_user is None
     assert run.start_reason is None
     assert run.ended_at == datetime(2025, 5, 20, 8, 27, 20, 413075, tzinfo=timezone.utc)
-    assert run.external_id is None
+    assert run.external_id == "93c69fcd-10d0-4639-a4f8-95be0da4476b"
     assert run.running_log_url is None
     assert run.persistent_log_url is None
 
@@ -200,7 +200,7 @@ async def test_runs_handler_dbt(
     assert kafka_output.type == OutputType.APPEND
     assert kafka_output.schema_id is None
     assert kafka_output.num_bytes is None
-    assert kafka_output.num_rows is None
+    assert kafka_output.num_rows == 2
     assert kafka_output.num_files is None
 
     column_lineage_query = select(ColumnLineage).order_by(ColumnLineage.id)

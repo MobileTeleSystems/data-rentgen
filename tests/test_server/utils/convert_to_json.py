@@ -64,7 +64,8 @@ def symlink_to_json(symlink: DatasetSymlink):
 
 def symlinks_to_json(symlinks: list[DatasetSymlink]):
     return [
-        symlink_to_json(symlink) for symlink in sorted(symlinks, key=lambda x: (x.from_dataset_id, x.to_dataset_id))
+        symlink_to_json(symlink)
+        for symlink in sorted(symlinks, key=lambda x: (str(x.from_dataset_id), str(x.to_dataset_id)))
     ]
 
 

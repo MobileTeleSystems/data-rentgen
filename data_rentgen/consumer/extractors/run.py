@@ -84,6 +84,10 @@ def enrich_run_identifiers(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
     if airflow_task_run_facet:
         run.external_id = airflow_task_run_facet.dagRun.run_id
         run.attempt = str(airflow_task_run_facet.taskInstance.try_number)
+
+    dbt_run_facet = event.run.facets.dbt_run
+    if dbt_run_facet:
+        run.external_id = dbt_run_facet.invocation_id
     return run
 
 
