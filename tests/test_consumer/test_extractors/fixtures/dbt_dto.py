@@ -61,6 +61,7 @@ def extracted_dbt_run(
         status=RunStatusDTO.SUCCEEDED,
         started_at=datetime(2025, 5, 20, 8, 26, 55, 524789, tzinfo=timezone.utc),
         ended_at=datetime(2025, 5, 20, 8, 27, 20, 413075, tzinfo=timezone.utc),
+        external_id="93c69fcd-10d0-4639-a4f8-95be0da4476b",
     )
 
 
@@ -140,4 +141,5 @@ def extracted_dbt_spark_output(
         type=OutputTypeDTO.APPEND,
         operation=extracted_dbt_operation,
         dataset=extracted_dbt_spark_target_dataset,
+        num_rows=2,
     )
