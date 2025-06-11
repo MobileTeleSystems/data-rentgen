@@ -12,6 +12,7 @@ from data_rentgen.consumer.openlineage.run_facets.base import OpenLineageRunFace
 
 def validate_version(value) -> RawVersion:
     if not isinstance(value, RawVersion):
+        value = value.replace("-SNAPSHOT", "")
         return RawVersion(value)
     return value
 
