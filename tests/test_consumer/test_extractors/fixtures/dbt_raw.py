@@ -13,6 +13,8 @@ from data_rentgen.consumer.openlineage.dataset_facets import (
     OpenLineageColumnLineageDatasetFacetFieldRef,
     OpenLineageDatasetFacets,
     OpenLineageDatasourceDatasetFacet,
+    OpenLineageOutputDatasetFacets,
+    OpenLineageOutputStatisticsOutputDatasetFacet,
     OpenLineageSchemaDatasetFacet,
     OpenLineageSchemaField,
 )
@@ -29,6 +31,7 @@ from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEventType,
 )
 from data_rentgen.consumer.openlineage.run_facets import (
+    OpenLineageDbtRunRunFacet,
     OpenLineageParentJob,
     OpenLineageParentRun,
     OpenLineageParentRunFacet,
@@ -108,6 +111,11 @@ def dbt_outputs() -> list[OpenLineageOutputDataset]:
                     },
                 ),
             ),
+            outputFacets=OpenLineageOutputDatasetFacets(
+                outputStatistics=OpenLineageOutputStatisticsOutputDatasetFacet(
+                    rowCount=2,
+                ),
+            ),
         ),
     ]
 
@@ -115,6 +123,7 @@ def dbt_outputs() -> list[OpenLineageOutputDataset]:
 @pytest.fixture
 def dbt_job_run_event_start() -> OpenLineageRunEvent:
     event_time = datetime(2025, 5, 20, 8, 26, 55, 524789, tzinfo=timezone.utc)
+    invocation_id = "93c69fcd-10d0-4639-a4f8-95be0da4476b"
     run_id = UUID("0196eccd-8aa4-7274-9116-824575596aaf")
     return OpenLineageRunEvent(
         eventType=OpenLineageRunEventType.START,
@@ -132,6 +141,9 @@ def dbt_job_run_event_start() -> OpenLineageRunEvent:
         ),
         run=OpenLineageRun(
             runId=run_id,
+            facets=OpenLineageRunFacets(
+                dbt_run=OpenLineageDbtRunRunFacet(invocation_id=invocation_id),
+            ),
         ),
     )
 
@@ -139,6 +151,7 @@ def dbt_job_run_event_start() -> OpenLineageRunEvent:
 @pytest.fixture
 def dbt_job_run_event_stop() -> OpenLineageRunEvent:
     event_time = datetime(2025, 5, 20, 8, 27, 20, 413075, tzinfo=timezone.utc)
+    invocation_id = "93c69fcd-10d0-4639-a4f8-95be0da4476b"
     run_id = UUID("0196eccd-8aa4-7274-9116-824575596aaf")
     return OpenLineageRunEvent(
         eventType=OpenLineageRunEventType.COMPLETE,
@@ -154,7 +167,12 @@ def dbt_job_run_event_stop() -> OpenLineageRunEvent:
                 ),
             ),
         ),
-        run=OpenLineageRun(runId=run_id),
+        run=OpenLineageRun(
+            runId=run_id,
+            facets=OpenLineageRunFacets(
+                dbt_run=OpenLineageDbtRunRunFacet(invocation_id=invocation_id),
+            ),
+        ),
     )
 
 
@@ -165,6 +183,7 @@ def dbt_model_run_event_start(
     dbt_model_sql_facet: OpenLineageSqlJobFacet,
 ) -> OpenLineageRunEvent:
     event_time = datetime(2025, 5, 20, 8, 27, 16, 601799, tzinfo=timezone.utc)
+    invocation_id = "93c69fcd-10d0-4639-a4f8-95be0da4476b"
     run_id = UUID("0196eccd-8aa4-7274-9116-824575596aaf")
     operation_id = UUID("0196eccd-ebdc-70e3-b532-6e66f541ba29")
     return OpenLineageRunEvent(
@@ -194,6 +213,7 @@ def dbt_model_run_event_start(
                         runId=run_id,
                     ),
                 ),
+                dbt_run=OpenLineageDbtRunRunFacet(invocation_id=invocation_id),
             ),
         ),
         inputs=dbt_inputs,
@@ -208,6 +228,7 @@ def dbt_model_run_event_stop(
     dbt_model_sql_facet: OpenLineageSqlJobFacet,
 ) -> OpenLineageRunEvent:
     event_time = datetime(2025, 5, 20, 8, 27, 18, 581235, tzinfo=timezone.utc)
+    invocation_id = "93c69fcd-10d0-4639-a4f8-95be0da4476b"
     run_id = UUID("0196eccd-8aa4-7274-9116-824575596aaf")
     operation_id = UUID("0196eccd-ebdc-70e3-b532-6e66f541ba29")
     return OpenLineageRunEvent(
@@ -237,6 +258,7 @@ def dbt_model_run_event_stop(
                         runId=run_id,
                     ),
                 ),
+                dbt_run=OpenLineageDbtRunRunFacet(invocation_id=invocation_id),
             ),
         ),
         inputs=dbt_inputs,
