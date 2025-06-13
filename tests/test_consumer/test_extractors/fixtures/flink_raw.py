@@ -16,6 +16,7 @@ from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEventType,
 )
 from data_rentgen.consumer.openlineage.run_facets import (
+    OpenLineageFlinkJobDetailsRunFacet,
     OpenLineageProcessingEngineRunFacet,
     OpenLineageRunFacets,
 )
@@ -45,7 +46,10 @@ def flink_job_run_event_start() -> OpenLineageRunEvent:
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("1.19.0"),
                     name="FLINK",
-                    openlineageAdapterVersion=Version("1.31.0"),
+                    openlineageAdapterVersion=Version("1.34.0"),
+                ),
+                flink_job=OpenLineageFlinkJobDetailsRunFacet(
+                    jobId="b825f524-49d6-4dd8-bffd-3e5742c528d0",
                 ),
             ),
         ),
@@ -76,7 +80,10 @@ def flink_job_run_event_stop() -> OpenLineageRunEvent:
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("1.19.0"),
                     name="FLINK",
-                    openlineageAdapterVersion=Version("1.31.0"),
+                    openlineageAdapterVersion=Version("1.34.0"),
+                ),
+                flink_job=OpenLineageFlinkJobDetailsRunFacet(
+                    jobId="b825f524-49d6-4dd8-bffd-3e5742c528d0",
                 ),
             ),
         ),

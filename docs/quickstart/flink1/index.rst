@@ -58,7 +58,7 @@ Setup
     :caption: openlineage.yml
 
     job:
-        namespace: http://some.host.fqdn:18081  # set namespace to match Flink address
+        namespace: http://some.host.name:18081  # set namespace to match Flink address
         name: flink_examples_stateful  # set job name
 
     transport:

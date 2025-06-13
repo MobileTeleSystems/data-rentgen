@@ -14,6 +14,7 @@ from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageAirflowDagRunFacet,
     OpenLineageAirflowDagRunType,
     OpenLineageAirflowTaskRunFacet,
+    OpenLineageFlinkJobDetailsRunFacet,
     OpenLineageParentRunFacet,
 )
 from data_rentgen.dto import RunDTO, RunStartReasonDTO, RunStatusDTO
@@ -84,6 +85,10 @@ def enrich_run_identifiers(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
     if airflow_task_run_facet:
         run.external_id = airflow_task_run_facet.dagRun.run_id
         run.attempt = str(airflow_task_run_facet.taskInstance.try_number)
+
+    flink_job_facet = event.run.facets.flink_job
+    if flink_job_facet:
+        run.external_id = flink_job_facet.jobId
     return run
 
 
@@ -152,6 +157,21 @@ def enrich_run_logs(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:  # noqa:
                 namespace,
                 airflow_task_run_facet,
             )
+
+    flink_job_facet = event.run.facets.flink_job
+    if flink_job_facet:
+        namespace = event.job.namespace
+        if not namespace.startswith("http"):
+            return run
+
+        run.running_log_url = get_flink_running_job_url(
+            namespace,
+            flink_job_facet,
+        )
+        run.persistent_log_url = get_flink_completed_job_url(
+            namespace,
+            flink_job_facet,
+        )
     return run
 
 
@@ -231,6 +251,24 @@ def get_airflow_2_x_task_log_url(
     )
     task_id = quote(airflow_task_run_facet.task.task_id)
     return f"{namespace}/log?&dag_id={dag_id}&task_id={task_id}&execution_date={execution_date}"
+
+
+def get_flink_running_job_url(
+    namespace: str,
+    flink_job_facet: OpenLineageFlinkJobDetailsRunFacet,
+) -> str:
+    base_url = namespace.rstrip("/")
+    job_id = flink_job_facet.jobId
+    return f"{base_url}/#/job/running/{job_id}"
+
+
+def get_flink_completed_job_url(
+    namespace: str,
+    flink_job_facet: OpenLineageFlinkJobDetailsRunFacet,
+) -> str:
+    base_url = namespace.rstrip("/")
+    job_id = flink_job_facet.jobId
+    return f"{base_url}/#/job/completed/{job_id}"
 
 
 def enrich_run_start_reason(run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:

@@ -59,15 +59,13 @@ Setup
 
     execution.job-status-changed-listeners: io.openlineage.flink.listener.OpenLineageJobStatusChangedListenerFactory  # capture job event
     execution.attached: true  # capture job stop events
+    execution.job-listener.openlineage.namespace: http://some.host.name:18081  # set namespace to match Flink address
+    execution.job-listener.openlineage.job-name: flink_examples_stateful  # set job name
 
 * Create ``openlineage.yml`` file with content like:
 
   .. code-block:: yaml
     :caption: openlineage.yml
-
-    job:
-        namespace: http://some.host.fqdn:18081  # set namespace to match Flink address
-        name: flink_examples_stateful  # set job name
 
     transport:
         type: kafka
