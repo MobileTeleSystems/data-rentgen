@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from uuid6 import UUID
 
-from data_rentgen.consumer.extractors import extract_run
+from data_rentgen.consumer.extractors.impl import SparkExtractor
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
@@ -65,7 +65,7 @@ def test_extractors_extract_run_spark_app_yarn():
             ),
         ),
     )
-    assert extract_run(run) == RunDTO(
+    assert SparkExtractor().extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(
             name="myjob",
@@ -117,7 +117,7 @@ def test_extractors_extract_run_spark_app_local():
         ),
     )
 
-    assert extract_run(run) == RunDTO(
+    assert SparkExtractor().extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(
             name="myjob",

@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from packaging.version import Version
 from uuid6 import UUID
 
-from data_rentgen.consumer.extractors import extract_run
+from data_rentgen.consumer.extractors.impl import FlinkExtractor
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
@@ -62,7 +62,7 @@ def test_extractors_extract_run_flink():
             ),
         ),
     )
-    assert extract_run(run) == RunDTO(
+    assert FlinkExtractor().extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(
             name="myjob",
@@ -102,7 +102,7 @@ def test_extractors_extract_run_flink_before_openlineage_1_34():
             runId=run_id,
         ),
     )
-    assert extract_run(run) == RunDTO(
+    assert FlinkExtractor().extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(
             name="myjob",

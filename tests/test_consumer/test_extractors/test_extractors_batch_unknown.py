@@ -1,6 +1,6 @@
 import pytest
 
-from data_rentgen.consumer.extractors.batch_extractor import BatchExtractor
+from data_rentgen.consumer.extractors import BatchExtractor
 from data_rentgen.consumer.openlineage.dataset import OpenLineageInputDataset, OpenLineageOutputDataset
 from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEvent,
@@ -97,7 +97,7 @@ def test_extractors_extract_batch_unknown_with_lineage(
     extracted_unknown_run: RunDTO,
     extracted_unknown_operation: OperationDTO,
     extracted_unknown_postgres_input: InputDTO,
-    extracted_unknown_hive_output: OutputDTO,
+    extracted_unknown_hdfs_output: OutputDTO,
     input_transformation,
 ):
     events = [
@@ -149,4 +149,4 @@ def test_extractors_extract_batch_unknown_with_lineage(
     # Both input & output schemas are the same
     assert extracted.schemas() == [extracted_dataset_schema]
     assert extracted.inputs() == [extracted_unknown_postgres_input]
-    assert extracted.outputs() == [extracted_unknown_hive_output]
+    assert extracted.outputs() == [extracted_unknown_hdfs_output]

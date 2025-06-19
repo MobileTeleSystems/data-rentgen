@@ -1,82 +1,74 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from __future__ import annotations
 
 from data_rentgen.consumer.extractors.batch_extraction_result import BatchExtractionResult
-from data_rentgen.consumer.extractors.column_lineage import extract_column_lineage
-from data_rentgen.consumer.extractors.input import extract_input
-from data_rentgen.consumer.extractors.operation import extract_operation
-from data_rentgen.consumer.extractors.output import extract_output
-from data_rentgen.consumer.extractors.run import extract_run
-from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
-from data_rentgen.dto import (
-    DatasetDTO,
+from data_rentgen.consumer.extractors.impl import (
+    AirflowDagExtractor,
+    AirflowTaskExtractor,
+    DbtExtractor,
+    ExtractorInterface,
+    FlinkExtractor,
+    SparkExtractor,
+    UnknownExtractor,
 )
+from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
 
 
 class BatchExtractor:
+    """
+    Try all extractors in the chain, convert events to a bunch of DTOs, and add them to BatchExtractionResult
+    """
+
     def __init__(self) -> None:
-        self.dataset_cache: dict[tuple[str, str], DatasetDTO] = {}
         self.result = BatchExtractionResult()
+        # extractors may have some state which should be preserver between method calls,
+        # so we need to initialize them in a constructor (not as a static field), and then reuse.
+        self.extractors_chain: list[ExtractorInterface] = [
+            SparkExtractor(),
+            AirflowDagExtractor(),
+            AirflowTaskExtractor(),
+            FlinkExtractor(),
+            DbtExtractor(),
+        ]
+
+    def get_extractor_impl(self, event: OpenLineageRunEvent) -> ExtractorInterface:
+        for extractor in self.extractors_chain:
+            if extractor.match(event):
+                return extractor
+        return UnknownExtractor()
 
     def add_events(self, events: list[OpenLineageRunEvent]) -> BatchExtractionResult:
         for event in events:
-            if self.is_operation(event):
-                self.extract_operation(event)
+            extractor = self.get_extractor_impl(event)
+            if extractor.is_operation(event):
+                self._add_operation(event, extractor)
             else:
-                self.extract_run(event)
+                self._add_run(event, extractor)
         return self.result
 
-    def is_operation(self, event: OpenLineageRunEvent) -> bool:
-        has_lineage = bool(event.inputs or event.outputs)
-
-        job_type_facet = event.job.facets.jobType
-        if not job_type_facet:
-            return has_lineage
-
-        if job_type_facet.integration == "SPARK":
-            return job_type_facet.jobType != "APPLICATION"
-
-        if job_type_facet.integration == "AIRFLOW":
-            return job_type_facet.jobType == "TASK"
-
-        if job_type_facet.integration == "FLINK":
-            return job_type_facet.jobType == "JOB"
-
-        if job_type_facet.integration == "DBT":
-            return job_type_facet.jobType != "JOB"  # MODEL, SNAPSHOT, TEST
-
-        return has_lineage
-
-    def extract_run(self, event: OpenLineageRunEvent) -> None:
-        run = extract_run(event)
+    def _add_run(self, event: OpenLineageRunEvent, extractor: ExtractorInterface):
+        run = extractor.extract_run(event)
         self.result.add_run(run)
 
-    def extract_operation(self, event: OpenLineageRunEvent) -> None:
-        operation = extract_operation(event)
+    def _add_operation(self, event: OpenLineageRunEvent, extractor: ExtractorInterface):
+        operation = extractor.extract_operation(event)
         self.result.add_operation(operation)
 
         for input_dataset in event.inputs:
-            input_dto, symlink_dtos = extract_input(operation, input_dataset)
-
+            input_dto, symlink_dtos = extractor.extract_input(operation, input_dataset)
             self.result.add_input(input_dto)
-            dataset_dto_cache_key = (input_dataset.namespace, input_dataset.name)
-            self.dataset_cache[dataset_dto_cache_key] = self.result.get_dataset(input_dto.dataset.unique_key)
 
             for symlink_dto in symlink_dtos:
                 self.result.add_dataset_symlink(symlink_dto)
 
         for output_dataset in event.outputs:
-            output_dto, symlink_dtos = extract_output(operation, output_dataset)
-
+            output_dto, symlink_dtos = extractor.extract_output(operation, output_dataset)
             self.result.add_output(output_dto)
-            dataset_dto_cache_key = (output_dataset.namespace, output_dataset.name)
-            self.dataset_cache[dataset_dto_cache_key] = self.result.get_dataset(output_dto.dataset.unique_key)
 
             for symlink_dto in symlink_dtos:
                 self.result.add_dataset_symlink(symlink_dto)
 
         for dataset in event.inputs + event.outputs:
-            column_lineage = extract_column_lineage(operation, dataset, self.dataset_cache)
+            column_lineage = extractor.extract_column_lineage(operation, dataset)
             for item in column_lineage:
                 self.result.add_column_lineage(item)

@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from uuid6 import UUID
 
-from data_rentgen.consumer.extractors import extract_run
+from data_rentgen.consumer.extractors.impl import DbtExtractor
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
@@ -48,7 +48,7 @@ def test_extractors_extract_run_job():
         ),
     )
 
-    assert extract_run(run) == RunDTO(
+    assert DbtExtractor().extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(
             name="dbt-run-demo_project",
@@ -99,7 +99,7 @@ def test_extractors_extract_run_job_openlineage_1_34_plus():
         ),
     )
 
-    assert extract_run(run) == RunDTO(
+    assert DbtExtractor().extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(
             name="dbt-run-demo_project",

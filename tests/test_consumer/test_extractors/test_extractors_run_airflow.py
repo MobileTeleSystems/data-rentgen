@@ -6,7 +6,7 @@ import pytest
 from packaging.version import Version
 from uuid6 import UUID
 
-from data_rentgen.consumer.extractors import extract_run
+from data_rentgen.consumer.extractors.impl import AirflowDagExtractor, AirflowTaskExtractor
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
@@ -78,7 +78,7 @@ def test_extractors_extract_run_airflow_dag_log_url_3_x_plus():
         ),
     )
 
-    assert extract_run(run) == RunDTO(
+    assert AirflowDagExtractor().extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(
             name="mydag",
@@ -139,7 +139,7 @@ def test_extractors_extract_run_airflow_dag_log_url_2_3_plus():
         ),
     )
 
-    assert extract_run(run) == RunDTO(
+    assert AirflowDagExtractor().extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(
             name="mydag",
@@ -202,7 +202,7 @@ def test_extractors_extract_run_airflow_dag_log_url_2_x():
         ),
     )
 
-    assert extract_run(run) == RunDTO(
+    assert AirflowDagExtractor().extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(
             name="mydag",
@@ -275,7 +275,7 @@ def test_extractors_extract_run_airflow_task_log_url_preserve_original():
         ),
     )
 
-    assert extract_run(run) == RunDTO(
+    assert AirflowTaskExtractor().extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(
             name="mydag.mytask",
@@ -345,7 +345,7 @@ def test_extractors_extract_run_airflow_task_log_url_3_x():
         ),
     )
 
-    assert extract_run(run) == RunDTO(
+    assert AirflowTaskExtractor().extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(
             name="mydag.mytask",
@@ -415,7 +415,7 @@ def test_extractors_extract_run_airflow_task_log_url_2_9_plus():
         ),
     )
 
-    assert extract_run(run) == RunDTO(
+    assert AirflowTaskExtractor().extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(
             name="mydag.mytask",
@@ -480,7 +480,7 @@ def test_extractors_extract_run_airflow_task_log_url_2_x():
         ),
     )
 
-    assert extract_run(run) == RunDTO(
+    assert AirflowTaskExtractor().extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(
             name="mydag.mytask",
@@ -552,7 +552,7 @@ def test_extractors_extract_run_airflow_dag_owner(owner: str, extracted_user: Us
         ),
     )
 
-    assert extract_run(run) == RunDTO(
+    assert AirflowDagExtractor().extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(
             name="mydag",
@@ -626,7 +626,7 @@ def test_extractors_extract_run_airflow_task_owner(owner: str, extracted_user: U
         ),
     )
 
-    assert extract_run(run) == RunDTO(
+    assert AirflowTaskExtractor().extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(
             name="mydag.mytask",
@@ -697,7 +697,7 @@ def test_extractors_extract_run_airflow_3_x_task_map_index():
         ),
     )
 
-    assert extract_run(run) == RunDTO(
+    assert AirflowTaskExtractor().extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(
             name="mydag.mytask_10",
@@ -763,7 +763,7 @@ def test_extractors_extract_run_airflow_2_x_task_map_index():
         ),
     )
 
-    assert extract_run(run) == RunDTO(
+    assert AirflowTaskExtractor().extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(
             name="mydag.mytask_10",

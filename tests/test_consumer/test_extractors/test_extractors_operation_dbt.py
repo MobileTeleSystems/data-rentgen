@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from uuid6 import UUID
 
-from data_rentgen.consumer.extractors import extract_operation
+from data_rentgen.consumer.extractors.impl import DbtExtractor
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
@@ -82,7 +82,7 @@ def test_extractors_extract_operation_model():
         ),
     )
 
-    assert extract_operation(run) == OperationDTO(
+    assert DbtExtractor().extract_operation(run) == OperationDTO(
         id=operation_id,
         run=RunDTO(
             id=run_id,

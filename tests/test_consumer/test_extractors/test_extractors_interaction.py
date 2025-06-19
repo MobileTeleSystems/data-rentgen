@@ -4,11 +4,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from data_rentgen.consumer.extractors import (
-    extract_input,
-    extract_output,
-    extract_schema,
-)
+from data_rentgen.consumer.extractors.generic import GenericExtractor
 from data_rentgen.consumer.openlineage.dataset import (
     OpenLineageDataset,
     OpenLineageInputDataset,
@@ -69,7 +65,7 @@ def test_extractors_extract_input_output_schema(dataset_type: type[OpenLineageDa
         ),
     )
 
-    assert extract_schema(dataset) == SchemaDTO(
+    assert GenericExtractor().extract_schema(dataset) == SchemaDTO(
         fields=[
             {"name": "dt"},  # all empty values are excluded
             {"name": "customer_id", "type": "decimal(20,0)", "description": "some"},  # spaces are trimmed
@@ -105,7 +101,7 @@ def test_extractors_extract_input_output_schema_no_fields(dataset_type: type[Ope
         ),
     )
 
-    assert extract_schema(dataset) is None
+    assert GenericExtractor().extract_schema(dataset) is None
 
 
 @pytest.mark.parametrize(
@@ -133,7 +129,7 @@ def test_extractors_extract_input(
     )
     operation_dto = Mock(spec=OperationDTO)
 
-    assert extract_input(operation_dto, input) == (
+    assert GenericExtractor().extract_input(operation_dto, input) == (
         InputDTO(
             operation=operation_dto,
             dataset=DatasetDTO(
@@ -195,9 +191,9 @@ def test_extractors_extract_output(
     )
     operation_dto = Mock(spec=OperationDTO)
 
-    assert extract_output(operation_dto, output) == (
+    assert GenericExtractor().extract_output(operation_dto, output) == (
         OutputDTO(
-            type=expected_type.value,
+            type=expected_type,
             operation=operation_dto,
             dataset=DatasetDTO(
                 name="/user/hive/warehouse/mydb.db/mytable",

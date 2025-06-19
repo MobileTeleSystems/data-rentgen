@@ -109,7 +109,7 @@ def test_extractors_extract_batch_airflow_with_lineage(
     extracted_dataset_schema: SchemaDTO,
     extracted_user: UserDTO,
     extracted_airflow_postgres_input: InputDTO,
-    extracted_airflow_hive_output: OutputDTO,
+    extracted_airflow_hdfs_output: OutputDTO,
     input_transformation,
 ):
     events = [
@@ -157,4 +157,4 @@ def test_extractors_extract_batch_airflow_with_lineage(
     # Both input & output schemas are the same
     assert extracted.schemas() == [extracted_dataset_schema]
     assert extracted.inputs() == [extracted_airflow_postgres_input]
-    assert extracted.outputs() == [extracted_airflow_hive_output]
+    assert extracted.outputs() == [extracted_airflow_hdfs_output]
