@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import pytest
 from uuid6 import UUID
 
-from data_rentgen.consumer.extractors import extract_operation
+from data_rentgen.consumer.extractors.impl import SparkExtractor
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
@@ -67,7 +67,7 @@ def test_extractors_extract_operation_spark_job_no_details():
             ),
         ),
     )
-    assert extract_operation(operation) == OperationDTO(
+    assert SparkExtractor().extract_operation(operation) == OperationDTO(
         id=operation_id,
         run=RunDTO(
             id=run_id,
@@ -152,7 +152,7 @@ def test_extractors_extract_operation_spark_job_with_details(
             ),
         ),
     )
-    assert extract_operation(operation) == OperationDTO(
+    assert SparkExtractor().extract_operation(operation) == OperationDTO(
         id=operation_id,
         run=RunDTO(
             id=run_id,
@@ -212,7 +212,7 @@ def test_extractors_extract_operation_spark_job_name_contains_newlines():
             ),
         ),
     )
-    assert extract_operation(operation) == OperationDTO(
+    assert SparkExtractor().extract_operation(operation) == OperationDTO(
         id=operation_id,
         run=RunDTO(
             id=run_id,
@@ -283,7 +283,8 @@ def test_extractors_extract_operation_spark_job_finished(
     )
 
     ended_at = now if expected_status != OperationStatusDTO.UNKNOWN else None
-    assert extract_operation(operation) == OperationDTO(
+
+    assert SparkExtractor().extract_operation(operation) == OperationDTO(
         id=operation_id,
         run=RunDTO(
             id=run_id,
@@ -347,7 +348,7 @@ def test_extractors_extract_operation_spark_job_sql_query():
             ),
         ),
     )
-    assert extract_operation(operation) == OperationDTO(
+    assert SparkExtractor().extract_operation(operation) == OperationDTO(
         id=operation_id,
         run=RunDTO(
             id=run_id,

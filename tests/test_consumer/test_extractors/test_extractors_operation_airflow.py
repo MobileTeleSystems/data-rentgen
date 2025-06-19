@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 
 from uuid6 import UUID
 
-from data_rentgen.consumer.extractors import extract_operation
+from data_rentgen.consumer.extractors.impl import AirflowTaskExtractor
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
@@ -74,7 +74,7 @@ def test_extractors_extract_operation_airflow():
         ),
     )
 
-    assert extract_operation(operation) == OperationDTO(
+    assert AirflowTaskExtractor().extract_operation(operation) == OperationDTO(
         id=run_id,
         run=RunDTO(
             id=run_id,
@@ -151,7 +151,7 @@ def test_extractors_extract_operation_airflow_task_group():
         ),
     )
 
-    assert extract_operation(operation) == OperationDTO(
+    assert AirflowTaskExtractor().extract_operation(operation) == OperationDTO(
         id=run_id,
         run=RunDTO(
             id=run_id,
@@ -228,7 +228,7 @@ def test_extractors_extract_operation_airflow_map_index():
         ),
     )
 
-    assert extract_operation(operation) == OperationDTO(
+    assert AirflowTaskExtractor().extract_operation(operation) == OperationDTO(
         id=run_id,
         run=RunDTO(
             id=run_id,

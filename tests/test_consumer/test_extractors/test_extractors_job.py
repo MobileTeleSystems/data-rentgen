@@ -1,4 +1,4 @@
-from data_rentgen.consumer.extractors import extract_job
+from data_rentgen.consumer.extractors.generic import GenericExtractor
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
@@ -20,7 +20,7 @@ def test_extractors_extract_job_spark_yarn():
             ),
         ),
     )
-    assert extract_job(job) == JobDTO(
+    assert GenericExtractor().extract_job(job) == JobDTO(
         name="myjob",
         location=LocationDTO(type="yarn", name="cluster", addresses={"yarn://cluster"}),
         type=JobTypeDTO(type="SPARK_APPLICATION"),
@@ -39,7 +39,7 @@ def test_extractors_extract_job_spark_local():
             ),
         ),
     )
-    assert extract_job(job) == JobDTO(
+    assert GenericExtractor().extract_job(job) == JobDTO(
         name="myjob",
         location=LocationDTO(type="host", name="some.host.com", addresses={"host://some.host.com"}),
         type=JobTypeDTO(type="SPARK_APPLICATION"),
@@ -58,7 +58,7 @@ def test_extractors_extract_job_airflow_dag():
             ),
         ),
     )
-    assert extract_job(job) == JobDTO(
+    assert GenericExtractor().extract_job(job) == JobDTO(
         name="mydag",
         location=LocationDTO(
             type="http",
@@ -81,7 +81,7 @@ def test_extractors_extract_job_airflow_task():
             ),
         ),
     )
-    assert extract_job(job) == JobDTO(
+    assert GenericExtractor().extract_job(job) == JobDTO(
         name="mydag.mytask",
         location=LocationDTO(
             type="http",
@@ -103,7 +103,7 @@ def test_extractors_extract_job_unknown():
             ),
         ),
     )
-    assert extract_job(job1) == JobDTO(
+    assert GenericExtractor().extract_job(job1) == JobDTO(
         name="myjob",
         type=JobTypeDTO(type="UNKNOWN"),
         location=LocationDTO(
@@ -124,7 +124,7 @@ def test_extractors_extract_job_unknown():
             ),
         ),
     )
-    assert extract_job(job2) == JobDTO(
+    assert GenericExtractor().extract_job(job2) == JobDTO(
         name="myjob",
         type=JobTypeDTO(type="UNKNOWN_SOMETHING"),
         location=LocationDTO(
@@ -137,7 +137,7 @@ def test_extractors_extract_job_unknown():
 
 def test_extractors_extract_job_no_job_type():
     job = OpenLineageJob(namespace="something", name="myjob")
-    assert extract_job(job) == JobDTO(
+    assert GenericExtractor().extract_job(job) == JobDTO(
         name="myjob",
         type=None,
         location=LocationDTO(

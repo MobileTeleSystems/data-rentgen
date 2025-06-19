@@ -1,11 +1,8 @@
 import pytest
 from uuid6 import UUID
 
-from data_rentgen.consumer.extractors.batch_extractor import BatchExtractor
-from data_rentgen.consumer.extractors.column_lineage import (
-    extract_column_lineage,
-    extract_dataset_column_relation_type,
-)
+from data_rentgen.consumer.extractors import BatchExtractor
+from data_rentgen.consumer.extractors.generic import GenericExtractor
 from data_rentgen.consumer.openlineage.dataset_facets import (
     OpenLineageColumnLineageDatasetFacet,
     OpenLineageColumnLineageDatasetFacetField,
@@ -28,7 +25,7 @@ def test_extractors_extract_dataset_column_relation_type_new_type():
     transformation = OpenLineageColumnLineageDatasetFacetFieldTransformation(
         type="SOME_NEW_TYPE",
     )
-    dataset_column_relation_type = extract_dataset_column_relation_type(transformation)
+    dataset_column_relation_type = GenericExtractor().extract_dataset_column_relation_type(transformation)
     assert dataset_column_relation_type == DatasetColumnRelationTypeDTO.UNKNOWN
 
 
@@ -37,7 +34,7 @@ def test_extractors_extract_dataset_column_relation_type_no_subtype(type):
     transformation = OpenLineageColumnLineageDatasetFacetFieldTransformation(
         type=type,
     )
-    dataset_column_relation_type = extract_dataset_column_relation_type(transformation)
+    dataset_column_relation_type = GenericExtractor().extract_dataset_column_relation_type(transformation)
     assert dataset_column_relation_type == DatasetColumnRelationTypeDTO.UNKNOWN
 
 
@@ -63,7 +60,7 @@ def test_extractors_extract_dataset_column_relation_type_masking(
         subtype=subtype,
         masking=True,
     )
-    dataset_column_relation_type = extract_dataset_column_relation_type(transformation)
+    dataset_column_relation_type = GenericExtractor().extract_dataset_column_relation_type(transformation)
     assert dataset_column_relation_type == expected_type
 
 
@@ -85,7 +82,7 @@ def test_extractors_extract_dataset_column_relation_type_without_masking(
         subtype=subtype,
         masking=False,
     )
-    dataset_column_relation_type = extract_dataset_column_relation_type(transformation)
+    dataset_column_relation_type = GenericExtractor().extract_dataset_column_relation_type(transformation)
     assert dataset_column_relation_type == expected_type
 
 
@@ -97,7 +94,7 @@ def test_extractors_extract_direct_column_lineage(
 ):
     operation = extracted_spark_operation
 
-    column_lineage = extract_column_lineage(
+    column_lineage = GenericExtractor().extract_column_lineage(
         operation,
         output_event_with_one_to_two_direct_column_lineage,
     )
@@ -132,7 +129,7 @@ def test_extractors_extract_legacy_indirect_column_lineage(
 ):
     operation = extracted_spark_operation
 
-    column_lineage = extract_column_lineage(
+    column_lineage = GenericExtractor().extract_column_lineage(
         operation,
         output_event_with_direct_and_legacy_indirect_column_lineage,
     )
@@ -179,7 +176,7 @@ def test_extractors_extract_column_lineage_without_transformations(
 ):
     operation = extracted_spark_operation
 
-    column_lineage = extract_column_lineage(
+    column_lineage = GenericExtractor().extract_column_lineage(
         operation,
         output_event_with_column_lineage_without_transformations,
     )
@@ -226,7 +223,7 @@ def test_extractors_extract_legacy_column_lineage(
 ):
     operation = extracted_spark_operation
 
-    column_lineage = extract_column_lineage(
+    column_lineage = GenericExtractor().extract_column_lineage(
         operation,
         output_event_with_legacy_column_lineage,
     )
@@ -273,7 +270,7 @@ def test_extractors_extract_indirect_column_lineage(
 ):
     operation = extracted_spark_operation
 
-    column_lineage = extract_column_lineage(
+    column_lineage = GenericExtractor().extract_column_lineage(
         operation,
         output_event_with_one_to_two_direct_and_indirect_column_lineage,
     )

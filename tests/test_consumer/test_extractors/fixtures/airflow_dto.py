@@ -126,15 +126,15 @@ def extracted_airflow_postgres_input(
 
 
 @pytest.fixture
-def extracted_airflow_hive_output(
+def extracted_airflow_hdfs_output(
     extracted_airflow_task_operation: OperationDTO,
-    extracted_hive_dataset: DatasetDTO,
+    extracted_hdfs_dataset: DatasetDTO,
     extracted_dataset_schema: SchemaDTO,
 ) -> OutputDTO:
     return OutputDTO(
         type=OutputTypeDTO.CREATE,
         operation=extracted_airflow_task_operation,
-        dataset=extracted_hive_dataset,
+        dataset=extracted_hdfs_dataset,
         schema=extracted_dataset_schema,
         num_rows=1_000_000,
         num_bytes=1000 * 1024 * 1024,

@@ -3,7 +3,7 @@ from datetime import datetime, timezone
 import pytest
 from uuid6 import UUID
 
-from data_rentgen.consumer.extractors.batch_extractor import BatchExtractor
+from data_rentgen.consumer.extractors import BatchExtractor
 from data_rentgen.consumer.openlineage.dataset import (
     OpenLineageInputDataset,
     OpenLineageOutputDataset,

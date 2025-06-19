@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import pytest
 from uuid6 import UUID
 
-from data_rentgen.consumer.extractors import extract_operation
+from data_rentgen.consumer.extractors.generic import GenericExtractor
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
@@ -58,7 +58,7 @@ def test_extractors_extract_operation_unknown():
             ),
         ),
     )
-    assert extract_operation(operation) == OperationDTO(
+    assert GenericExtractor().extract_operation(operation) == OperationDTO(
         id=run_id,
         run=RunDTO(
             id=run_id,
@@ -141,7 +141,8 @@ def test_extractors_extract_operation_unknown_finished(
     )
 
     ended_at = now if expected_status != OperationStatusDTO.UNKNOWN else None
-    assert extract_operation(operation) == OperationDTO(
+
+    assert GenericExtractor().extract_operation(operation) == OperationDTO(
         id=run_id,
         run=RunDTO(
             id=run_id,

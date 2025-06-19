@@ -1,6 +1,6 @@
 import pytest
 
-from data_rentgen.consumer.extractors.batch_extractor import BatchExtractor
+from data_rentgen.consumer.extractors import BatchExtractor
 from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEvent,
 )
