@@ -9,9 +9,7 @@ from data_rentgen.consumer.openlineage.dataset_facets import (
     OpenLineageSymlinkIdentifier,
 )
 from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
-from data_rentgen.dto import RunDTO
-from data_rentgen.dto.dataset import DatasetDTO
-from data_rentgen.dto.operation import OperationDTO
+from data_rentgen.dto import DatasetDTO, OperationDTO, RunDTO
 
 
 class DbtExtractor(GenericExtractor):

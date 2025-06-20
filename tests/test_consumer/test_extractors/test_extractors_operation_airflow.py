@@ -26,12 +26,17 @@ from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageAirflowTaskRunFacet,
     OpenLineageRunFacets,
 )
-from data_rentgen.dto import OperationDTO, OperationStatusDTO
-from data_rentgen.dto.job import JobDTO
-from data_rentgen.dto.job_type import JobTypeDTO
-from data_rentgen.dto.location import LocationDTO
-from data_rentgen.dto.operation import OperationTypeDTO
-from data_rentgen.dto.run import RunDTO, RunStartReasonDTO, RunStatusDTO
+from data_rentgen.dto import (
+    JobDTO,
+    JobTypeDTO,
+    LocationDTO,
+    OperationDTO,
+    OperationStatusDTO,
+    OperationTypeDTO,
+    RunDTO,
+    RunStartReasonDTO,
+    RunStatusDTO,
+)
 
 
 def test_extractors_extract_operation_airflow():

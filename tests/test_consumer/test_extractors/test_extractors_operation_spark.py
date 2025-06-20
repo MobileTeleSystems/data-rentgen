@@ -25,12 +25,15 @@ from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageRunFacets,
     OpenLineageSparkJobDetailsRunFacet,
 )
-from data_rentgen.dto import OperationDTO, OperationStatusDTO
-from data_rentgen.dto.job import JobDTO
-from data_rentgen.dto.location import LocationDTO
-from data_rentgen.dto.operation import OperationTypeDTO
-from data_rentgen.dto.run import RunDTO
-from data_rentgen.dto.sql_query import SQLQueryDTO
+from data_rentgen.dto import (
+    JobDTO,
+    LocationDTO,
+    OperationDTO,
+    OperationStatusDTO,
+    OperationTypeDTO,
+    RunDTO,
+    SQLQueryDTO,
+)
 
 
 def test_extractors_extract_operation_spark_job_no_details():

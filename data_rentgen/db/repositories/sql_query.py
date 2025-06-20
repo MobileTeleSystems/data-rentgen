@@ -7,7 +7,7 @@ from sqlalchemy import select
 from data_rentgen.db.models.sql_query import SQLQuery
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.uuid import generate_static_uuid
-from data_rentgen.dto.sql_query import SQLQueryDTO
+from data_rentgen.dto import SQLQueryDTO
 
 
 class SQLQueryRepository(Repository[SQLQuery]):

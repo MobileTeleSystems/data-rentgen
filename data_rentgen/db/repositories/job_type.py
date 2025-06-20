@@ -7,7 +7,7 @@ from sqlalchemy import (
 
 from data_rentgen.db.models import JobType
 from data_rentgen.db.repositories.base import Repository
-from data_rentgen.dto.job_type import JobTypeDTO
+from data_rentgen.dto import JobTypeDTO
 
 
 class JobTypeRepository(Repository[JobType]):

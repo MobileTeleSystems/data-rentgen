@@ -27,8 +27,8 @@ from data_rentgen.dto import (
     LocationDTO,
     RunDTO,
     RunStatusDTO,
+    UserDTO,
 )
-from data_rentgen.dto.user import UserDTO
 
 
 def test_extractors_extract_run_spark_app_yarn():

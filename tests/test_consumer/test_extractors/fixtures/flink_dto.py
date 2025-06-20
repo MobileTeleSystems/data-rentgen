@@ -7,6 +7,7 @@ from data_rentgen.dto import (
     DatasetDTO,
     InputDTO,
     JobDTO,
+    JobTypeDTO,
     LocationDTO,
     OperationDTO,
     OperationStatusDTO,
@@ -17,7 +18,6 @@ from data_rentgen.dto import (
     RunStatusDTO,
     SchemaDTO,
 )
-from data_rentgen.dto.job_type import JobTypeDTO
 
 
 @pytest.fixture

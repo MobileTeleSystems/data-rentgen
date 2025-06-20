@@ -23,12 +23,16 @@ from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageProcessingEngineRunFacet,
     OpenLineageRunFacets,
 )
-from data_rentgen.dto import OperationDTO, OperationStatusDTO
-from data_rentgen.dto.job import JobDTO
-from data_rentgen.dto.job_type import JobTypeDTO
-from data_rentgen.dto.location import LocationDTO
-from data_rentgen.dto.operation import OperationTypeDTO
-from data_rentgen.dto.run import RunDTO, RunStatusDTO
+from data_rentgen.dto import (
+    JobDTO,
+    JobTypeDTO,
+    LocationDTO,
+    OperationDTO,
+    OperationStatusDTO,
+    OperationTypeDTO,
+    RunDTO,
+    RunStatusDTO,
+)
 
 
 def test_extractors_extract_operation_flink_job():

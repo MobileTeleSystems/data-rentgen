@@ -7,7 +7,7 @@ from sqlalchemy import any_, or_, select
 
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
 from data_rentgen.db.repositories.base import Repository
-from data_rentgen.dto.dataset_symlink import DatasetSymlinkDTO
+from data_rentgen.dto import DatasetSymlinkDTO
 
 
 class DatasetSymlinkRepository(Repository[DatasetSymlink]):

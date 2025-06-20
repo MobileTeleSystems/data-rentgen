@@ -12,10 +12,7 @@ from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageAirflowDagRunType,
     OpenLineageAirflowTaskRunFacet,
 )
-from data_rentgen.dto import RunDTO
-from data_rentgen.dto.operation import OperationDTO
-from data_rentgen.dto.run import RunStartReasonDTO
-from data_rentgen.dto.user import UserDTO
+from data_rentgen.dto import OperationDTO, RunDTO, RunStartReasonDTO, UserDTO
 
 
 class AirflowTaskExtractor(GenericExtractor):

@@ -36,8 +36,8 @@ from data_rentgen.dto import (
     RunDTO,
     RunStartReasonDTO,
     RunStatusDTO,
+    UserDTO,
 )
-from data_rentgen.dto.user import UserDTO
 
 
 def test_extractors_extract_run_airflow_dag_log_url_3_x_plus():

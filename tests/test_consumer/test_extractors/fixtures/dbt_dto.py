@@ -16,9 +16,9 @@ from data_rentgen.dto import (
     OutputTypeDTO,
     RunDTO,
     RunStatusDTO,
+    SchemaDTO,
     SQLQueryDTO,
 )
-from data_rentgen.dto.schema import SchemaDTO
 
 
 @pytest.fixture

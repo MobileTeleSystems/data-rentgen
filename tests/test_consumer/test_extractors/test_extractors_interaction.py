@@ -21,10 +21,7 @@ from data_rentgen.consumer.openlineage.dataset_facets import (
     OpenLineageSchemaDatasetFacet,
     OpenLineageSchemaField,
 )
-from data_rentgen.dto import InputDTO, OutputDTO, OutputTypeDTO, SchemaDTO
-from data_rentgen.dto.dataset import DatasetDTO
-from data_rentgen.dto.location import LocationDTO
-from data_rentgen.dto.operation import OperationDTO
+from data_rentgen.dto import DatasetDTO, InputDTO, LocationDTO, OperationDTO, OutputDTO, OutputTypeDTO, SchemaDTO
 
 
 @pytest.mark.parametrize("dataset_type", [OpenLineageInputDataset, OpenLineageOutputDataset])
