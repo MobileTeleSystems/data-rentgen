@@ -39,17 +39,27 @@ def extracted_hdfs_location() -> LocationDTO:
 
 
 @pytest.fixture
-def extracted_hdfs_dataset(
+def extracted_hdfs_dataset1(
     extracted_hdfs_location: LocationDTO,
 ) -> DatasetDTO:
     return DatasetDTO(
         location=extracted_hdfs_location,
-        name="/user/hive/warehouse/mydb.db/mytable",
+        name="/user/hive/warehouse/mydb.db/mytable1",
     )
 
 
 @pytest.fixture
-def extracted_hive_location() -> LocationDTO:
+def extracted_hdfs_dataset2(
+    extracted_hdfs_location: LocationDTO,
+) -> DatasetDTO:
+    return DatasetDTO(
+        location=extracted_hdfs_location,
+        name="/user/hive/warehouse/mydb.db/mytable2",
+    )
+
+
+@pytest.fixture
+def extracted_hive_metastore_location() -> LocationDTO:
     return LocationDTO(
         type="hive",
         name="test-hadoop:9083",
@@ -58,35 +68,69 @@ def extracted_hive_location() -> LocationDTO:
 
 
 @pytest.fixture
-def extracted_hive_dataset(
-    extracted_hive_location: LocationDTO,
+def extracted_hive_dataset1(
+    extracted_hive_metastore_location: LocationDTO,
 ) -> DatasetDTO:
     return DatasetDTO(
-        location=extracted_hive_location,
-        name="mydb.mytable",
+        location=extracted_hive_metastore_location,
+        name="mydb.mytable1",
     )
 
 
 @pytest.fixture
-def extracted_hdfs_dataset_symlink(
-    extracted_hdfs_dataset: DatasetDTO,
-    extracted_hive_dataset: DatasetDTO,
+def extracted_hive_dataset2(
+    extracted_hive_metastore_location: LocationDTO,
+) -> DatasetDTO:
+    return DatasetDTO(
+        location=extracted_hive_metastore_location,
+        name="mydb.mytable2",
+    )
+
+
+@pytest.fixture
+def extracted_hdfs_dataset1_symlink(
+    extracted_hdfs_dataset1: DatasetDTO,
+    extracted_hive_dataset1: DatasetDTO,
 ) -> DatasetSymlinkDTO:
     return DatasetSymlinkDTO(
-        from_dataset=extracted_hdfs_dataset,
-        to_dataset=extracted_hive_dataset,
+        from_dataset=extracted_hdfs_dataset1,
+        to_dataset=extracted_hive_dataset1,
         type=DatasetSymlinkTypeDTO.METASTORE,
     )
 
 
 @pytest.fixture
-def extracted_hive_dataset_symlink(
-    extracted_hdfs_dataset: DatasetDTO,
-    extracted_hive_dataset: DatasetDTO,
+def extracted_hive_dataset1_symlink(
+    extracted_hdfs_dataset1: DatasetDTO,
+    extracted_hive_dataset1: DatasetDTO,
 ) -> DatasetSymlinkDTO:
     return DatasetSymlinkDTO(
-        from_dataset=extracted_hive_dataset,
-        to_dataset=extracted_hdfs_dataset,
+        from_dataset=extracted_hive_dataset1,
+        to_dataset=extracted_hdfs_dataset1,
+        type=DatasetSymlinkTypeDTO.WAREHOUSE,
+    )
+
+
+@pytest.fixture
+def extracted_hdfs_dataset2_symlink(
+    extracted_hdfs_dataset2: DatasetDTO,
+    extracted_hive_dataset2: DatasetDTO,
+) -> DatasetSymlinkDTO:
+    return DatasetSymlinkDTO(
+        from_dataset=extracted_hdfs_dataset2,
+        to_dataset=extracted_hive_dataset2,
+        type=DatasetSymlinkTypeDTO.METASTORE,
+    )
+
+
+@pytest.fixture
+def extracted_hive_dataset2_symlink(
+    extracted_hdfs_dataset2: DatasetDTO,
+    extracted_hive_dataset2: DatasetDTO,
+) -> DatasetSymlinkDTO:
+    return DatasetSymlinkDTO(
+        from_dataset=extracted_hive_dataset2,
+        to_dataset=extracted_hdfs_dataset2,
         type=DatasetSymlinkTypeDTO.WAREHOUSE,
     )
 

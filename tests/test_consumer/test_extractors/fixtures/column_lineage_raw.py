@@ -37,7 +37,7 @@ from data_rentgen.consumer.openlineage.run_facets import (
 def output_event_with_one_to_two_direct_column_lineage() -> OpenLineageOutputDataset:
     return OpenLineageOutputDataset(
         namespace="hdfs://test-hadoop:9820",
-        name="/user/hive/warehouse/mydb.db/mytable",
+        name="/user/hive/warehouse/mydb.db/mytable1",
         facets=OpenLineageDatasetFacets(
             columnLineage=OpenLineageColumnLineageDatasetFacet(
                 fields={
@@ -45,7 +45,7 @@ def output_event_with_one_to_two_direct_column_lineage() -> OpenLineageOutputDat
                         inputFields=[
                             OpenLineageColumnLineageDatasetFacetFieldRef(
                                 namespace="hive://test-hadoop:9083",
-                                name="mydb.mytable",
+                                name="mydb.mytable1",
                                 field="source_col_1",
                                 transformations=[
                                     OpenLineageColumnLineageDatasetFacetFieldTransformation(
@@ -56,7 +56,7 @@ def output_event_with_one_to_two_direct_column_lineage() -> OpenLineageOutputDat
                             ),
                             OpenLineageColumnLineageDatasetFacetFieldRef(
                                 namespace="hive://test-hadoop:9083",
-                                name="mydb.mytable",
+                                name="mydb.mytable1",
                                 field="source_col_2",
                                 transformations=[
                                     OpenLineageColumnLineageDatasetFacetFieldTransformation(
@@ -77,7 +77,7 @@ def output_event_with_one_to_two_direct_column_lineage() -> OpenLineageOutputDat
 def output_event_with_one_to_two_direct_and_indirect_column_lineage() -> OpenLineageOutputDataset:
     return OpenLineageOutputDataset(
         namespace="hdfs://test-hadoop:9820",
-        name="/user/hive/warehouse/mydb.db/mytable",
+        name="/user/hive/warehouse/mydb.db/mytable1",
         facets=OpenLineageDatasetFacets(
             columnLineage=OpenLineageColumnLineageDatasetFacet(
                 fields={
@@ -85,7 +85,7 @@ def output_event_with_one_to_two_direct_and_indirect_column_lineage() -> OpenLin
                         inputFields=[
                             OpenLineageColumnLineageDatasetFacetFieldRef(
                                 namespace="hive://test-hadoop:9083",
-                                name="mydb.mytable",
+                                name="mydb.mytable1",
                                 field="source_col_1",
                                 transformations=[
                                     OpenLineageColumnLineageDatasetFacetFieldTransformation(
@@ -96,7 +96,7 @@ def output_event_with_one_to_two_direct_and_indirect_column_lineage() -> OpenLin
                             ),
                             OpenLineageColumnLineageDatasetFacetFieldRef(
                                 namespace="hive://test-hadoop:9083",
-                                name="mydb.mytable",
+                                name="mydb.mytable1",
                                 field="source_col_2",
                                 transformations=[
                                     OpenLineageColumnLineageDatasetFacetFieldTransformation(
@@ -111,7 +111,7 @@ def output_event_with_one_to_two_direct_and_indirect_column_lineage() -> OpenLin
                 dataset=[
                     OpenLineageColumnLineageDatasetFacetFieldRef(
                         namespace="hive://test-hadoop:9083",
-                        name="mydb.mytable",
+                        name="mydb.mytable1",
                         field="source_col_2",
                         transformations=[
                             OpenLineageColumnLineageDatasetFacetFieldTransformation(
@@ -137,7 +137,7 @@ def output_event_with_direct_and_legacy_indirect_column_lineage() -> OpenLineage
     # https://github.com/OpenLineage/OpenLineage/pull/3098
     return OpenLineageOutputDataset(
         namespace="hdfs://test-hadoop:9820",
-        name="/user/hive/warehouse/mydb.db/mytable",
+        name="/user/hive/warehouse/mydb.db/mytable1",
         facets=OpenLineageDatasetFacets(
             columnLineage=OpenLineageColumnLineageDatasetFacet(
                 fields={
@@ -145,7 +145,7 @@ def output_event_with_direct_and_legacy_indirect_column_lineage() -> OpenLineage
                         inputFields=[
                             OpenLineageColumnLineageDatasetFacetFieldRef(
                                 namespace="hive://test-hadoop:9083",
-                                name="mydb.mytable",
+                                name="mydb.mytable1",
                                 field="source_col_1",
                                 transformations=[
                                     OpenLineageColumnLineageDatasetFacetFieldTransformation(
@@ -156,7 +156,7 @@ def output_event_with_direct_and_legacy_indirect_column_lineage() -> OpenLineage
                             ),
                             OpenLineageColumnLineageDatasetFacetFieldRef(
                                 namespace="hive://test-hadoop:9083",
-                                name="mydb.mytable",
+                                name="mydb.mytable1",
                                 field="source_col_2",
                                 transformations=[
                                     OpenLineageColumnLineageDatasetFacetFieldTransformation(
@@ -167,7 +167,7 @@ def output_event_with_direct_and_legacy_indirect_column_lineage() -> OpenLineage
                             ),
                             OpenLineageColumnLineageDatasetFacetFieldRef(
                                 namespace="hive://test-hadoop:9083",
-                                name="mydb.mytable",
+                                name="mydb.mytable1",
                                 field="source_col_4",
                                 transformations=[
                                     OpenLineageColumnLineageDatasetFacetFieldTransformation(
@@ -182,7 +182,7 @@ def output_event_with_direct_and_legacy_indirect_column_lineage() -> OpenLineage
                         inputFields=[
                             OpenLineageColumnLineageDatasetFacetFieldRef(
                                 namespace="hive://test-hadoop:9083",
-                                name="mydb.mytable",
+                                name="mydb.mytable1",
                                 field="source_col_3",
                                 transformations=[
                                     OpenLineageColumnLineageDatasetFacetFieldTransformation(
@@ -193,7 +193,7 @@ def output_event_with_direct_and_legacy_indirect_column_lineage() -> OpenLineage
                             ),
                             OpenLineageColumnLineageDatasetFacetFieldRef(
                                 namespace="hive://test-hadoop:9083",
-                                name="mydb.mytable",
+                                name="mydb.mytable1",
                                 field="source_col_2",
                                 transformations=[
                                     OpenLineageColumnLineageDatasetFacetFieldTransformation(
@@ -204,7 +204,7 @@ def output_event_with_direct_and_legacy_indirect_column_lineage() -> OpenLineage
                             ),
                             OpenLineageColumnLineageDatasetFacetFieldRef(
                                 namespace="hive://test-hadoop:9083",
-                                name="mydb.mytable",
+                                name="mydb.mytable1",
                                 field="source_col_4",
                                 transformations=[
                                     OpenLineageColumnLineageDatasetFacetFieldTransformation(
@@ -225,7 +225,7 @@ def output_event_with_direct_and_legacy_indirect_column_lineage() -> OpenLineage
 def output_event_with_column_lineage_without_transformations() -> OpenLineageOutputDataset:
     return OpenLineageOutputDataset(
         namespace="hdfs://test-hadoop:9820",
-        name="/user/hive/warehouse/mydb.db/mytable",
+        name="/user/hive/warehouse/mydb.db/mytable1",
         facets=OpenLineageDatasetFacets(
             columnLineage=OpenLineageColumnLineageDatasetFacet(
                 fields={
@@ -233,7 +233,7 @@ def output_event_with_column_lineage_without_transformations() -> OpenLineageOut
                         inputFields=[
                             OpenLineageColumnLineageDatasetFacetFieldRef(
                                 namespace="hive://test-hadoop:9083",
-                                name="mydb.mytable",
+                                name="mydb.mytable1",
                                 field="source_col_1",
                             ),
                         ],
@@ -242,7 +242,7 @@ def output_event_with_column_lineage_without_transformations() -> OpenLineageOut
                         inputFields=[
                             OpenLineageColumnLineageDatasetFacetFieldRef(
                                 namespace="hive://test-hadoop:9083",
-                                name="mydb.mytable",
+                                name="mydb.mytable1",
                                 field="source_col_3",
                             ),
                         ],
@@ -251,12 +251,12 @@ def output_event_with_column_lineage_without_transformations() -> OpenLineageOut
                 dataset=[
                     OpenLineageColumnLineageDatasetFacetFieldRef(
                         namespace="hive://test-hadoop:9083",
-                        name="mydb.mytable",
+                        name="mydb.mytable1",
                         field="source_col_2",
                     ),
                     OpenLineageColumnLineageDatasetFacetFieldRef(
                         namespace="hive://test-hadoop:9083",
-                        name="mydb.mytable",
+                        name="mydb.mytable1",
                         field="source_col_4",
                     ),
                 ],
@@ -271,7 +271,7 @@ def output_event_with_legacy_column_lineage() -> OpenLineageOutputDataset:
     # https://github.com/OpenLineage/OpenLineage/issues/2186
     return OpenLineageOutputDataset(
         namespace="hdfs://test-hadoop:9820",
-        name="/user/hive/warehouse/mydb.db/mytable",
+        name="/user/hive/warehouse/mydb.db/mytable1",
         facets=OpenLineageDatasetFacets(
             columnLineage=OpenLineageColumnLineageDatasetFacet(
                 fields={
@@ -279,7 +279,7 @@ def output_event_with_legacy_column_lineage() -> OpenLineageOutputDataset:
                         inputFields=[
                             OpenLineageColumnLineageDatasetFacetFieldRef(
                                 namespace="hive://test-hadoop:9083",
-                                name="mydb.mytable",
+                                name="mydb.mytable1",
                                 field="source_col_1",
                             ),
                         ],
@@ -290,7 +290,7 @@ def output_event_with_legacy_column_lineage() -> OpenLineageOutputDataset:
                         inputFields=[
                             OpenLineageColumnLineageDatasetFacetFieldRef(
                                 namespace="hive://test-hadoop:9083",
-                                name="mydb.mytable",
+                                name="mydb.mytable1",
                                 field="source_col_3",
                             ),
                         ],
@@ -301,12 +301,12 @@ def output_event_with_legacy_column_lineage() -> OpenLineageOutputDataset:
                         inputFields=[
                             OpenLineageColumnLineageDatasetFacetFieldRef(
                                 namespace="hive://test-hadoop:9083",
-                                name="mydb.mytable",
+                                name="mydb.mytable1",
                                 field="source_col_2",
                             ),
                             OpenLineageColumnLineageDatasetFacetFieldRef(
                                 namespace="hive://test-hadoop:9083",
-                                name="mydb.mytable",
+                                name="mydb.mytable1",
                                 field="source_col_4",
                             ),
                         ],
@@ -361,14 +361,14 @@ def get_run_event_with_column_lineage(
         inputs=[
             OpenLineageInputDataset(
                 namespace="postgres://192.168.1.1:5432",
-                name="mydb.myschema.mytable",
+                name="mydb.myschema.mytable1",
                 facets=OpenLineageDatasetFacets(),
             ),
         ],
         outputs=[
             OpenLineageOutputDataset(
                 namespace="hive://test-hadoop:9083",
-                name="mydb.mytable",
+                name="mydb.mytable1",
                 facets=OpenLineageDatasetFacets(columnLineage=column_lineage_facet),
             ),
         ],

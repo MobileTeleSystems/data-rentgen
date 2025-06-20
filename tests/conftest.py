@@ -13,6 +13,8 @@ pytest_plugins = [
     "tests.test_consumer.test_extractors.fixtures.dbt_dto",
     "tests.test_consumer.test_extractors.fixtures.flink_raw",
     "tests.test_consumer.test_extractors.fixtures.flink_dto",
+    "tests.test_consumer.test_extractors.fixtures.hive_raw",
+    "tests.test_consumer.test_extractors.fixtures.hive_dto",
     "tests.test_consumer.test_extractors.fixtures.spark_raw",
     "tests.test_consumer.test_extractors.fixtures.spark_dto",
     "tests.test_consumer.test_extractors.fixtures.airflow_raw",

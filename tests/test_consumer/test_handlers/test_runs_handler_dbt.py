@@ -70,11 +70,11 @@ async def test_runs_handler_dbt(
     jobs = job_scalars.all()
     assert len(jobs) == 1
     assert jobs[0].name == "dbt-run-demo_project"
+    assert jobs[0].type == "DBT_JOB"
     assert jobs[0].location.type == "local"
     assert jobs[0].location.name == "somehost"
     assert len(jobs[0].location.addresses) == 1
     assert jobs[0].location.addresses[0].url == "local://somehost"
-    assert jobs[0].type == "DBT_JOB"
 
     run_query = select(Run).order_by(Run.id).options(selectinload(Run.started_by_user))
     run_scalars = await async_session.scalars(run_query)

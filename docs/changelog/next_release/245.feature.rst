@@ -1,0 +1,7 @@
+Add support for Hive events.
+
+For now, OpenLineage produces only events for ``CREATE TABLE AS SELECT ...`` and ``INSERT INTO ... SELECT ...`` queries,
+but not for ``CREATE TABLE``, ``ALTER TABLE`` or others.
+
+Also, Hive integration sends events for session start, but not for session being stopped, so all Hive session runs remain in the ``STARTED`` status
+even if all queries are finished.

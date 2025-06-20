@@ -94,7 +94,7 @@ def spark_outputs() -> list[OpenLineageOutputDataset]:
     return [
         OpenLineageOutputDataset(
             namespace="hdfs://test-hadoop:9820",
-            name="/user/hive/warehouse/mydb.db/mytable",
+            name="/user/hive/warehouse/mydb.db/mytable1",
             facets=OpenLineageDatasetFacets(
                 lifecycleStateChange=OpenLineageLifecycleStateChangeDatasetFacet(
                     lifecycleStateChange=OpenLineageDatasetLifecycleStateChange.CREATE,
@@ -103,7 +103,7 @@ def spark_outputs() -> list[OpenLineageOutputDataset]:
                     identifiers=[
                         OpenLineageSymlinkIdentifier(
                             namespace="hive://test-hadoop:9083",
-                            name="mydb.mytable",
+                            name="mydb.mytable1",
                             type=OpenLineageSymlinkType.TABLE,
                         ),
                     ],
