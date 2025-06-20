@@ -114,8 +114,8 @@ async def test_runs_handler_hive(
     assert query_operation.id == UUID("0197833d-6cec-7609-a80f-8f4e0f8a5b1f")
     assert query_operation.created_at == datetime(2025, 6, 18, 13, 32, 10, 348000, tzinfo=timezone.utc)
     assert query_operation.run_id == session_run.id
-    assert query_operation.name == "CREATETABLE_AS_SELECT"
-    assert query_operation.description == "hive_20250618133205_44f7bc13-4538-42c7-a5be-8edb36c39a45"
+    assert query_operation.name == "hive_20250618133205_44f7bc13-4538-42c7-a5be-8edb36c39a45"
+    assert query_operation.description == "CREATETABLE_AS_SELECT"
     assert query_operation.type == OperationType.BATCH
     assert query_operation.status == OperationStatus.SUCCEEDED
     assert query_operation.started_at is None

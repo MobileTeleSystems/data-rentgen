@@ -78,8 +78,8 @@ def extracted_hive_operation(
     return OperationDTO(
         id=UUID("0197833d-6cec-7609-a80f-8f4e0f8a5b1f"),
         run=extracted_hive_run,
-        name="CREATETABLE_AS_SELECT",
-        description="hive_20250618133205_44f7bc13-4538-42c7-a5be-8edb36c39a45",
+        name="hive_20250618133205_44f7bc13-4538-42c7-a5be-8edb36c39a45",
+        description="CREATETABLE_AS_SELECT",
         type=OperationTypeDTO.BATCH,
         position=None,
         status=OperationStatusDTO.SUCCEEDED,

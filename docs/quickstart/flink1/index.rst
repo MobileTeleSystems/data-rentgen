@@ -20,7 +20,7 @@ Entity mapping
 Installation
 ------------
 
-* Add dependencies `openlineage-flink <https://mvnrepository.com/artifact/io.openlineage/openlineage-java>`_ and `kafka-clients <https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients>`_ to your Flink job:
+* Add dependencies `openlineage-flink <https://mvnrepository.com/artifact/io.openlineage/openlineage-flink>`_ and `kafka-clients <https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients>`_ to your Flink job:
 
   .. code-block:: groovy
     :caption: build.gradle
@@ -65,7 +65,7 @@ Setup
         type: kafka
         topicName: input.runs
         properties:
-            bootstrap.servers: localhost:9093
+            bootstrap.servers: broker:9092  # not using localhost in docker
             security.protocol: SASL_PLAINTEXT
             sasl.mechanism: SCRAM-SHA-256
             sasl.jaas.config: |

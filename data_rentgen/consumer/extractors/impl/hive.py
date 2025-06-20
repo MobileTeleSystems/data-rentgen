@@ -49,6 +49,10 @@ class HiveExtractor(GenericExtractor):
         if job_name.startswith(hive_query.operationName.lower() + "."):
             job_name = f"{hive_session.username}@{hive_session.clientIp}"
 
+        user: UserDTO | None = None
+        if hive_session.username not in ("anonymous", "hive"):
+            user = UserDTO(name=hive_session.username)
+
         return RunDTO(
             id=run_id,
             job=JobDTO(
@@ -56,12 +60,11 @@ class HiveExtractor(GenericExtractor):
                 location=self._extract_job_location(event.job),
                 type=JobTypeDTO(type="HIVE_SESSION"),
             ),
-            # if parent is set, this is actually a parent for the whole session
             parent_run=self.extract_parent_run(event.run.facets.parent) if event.run.facets.parent else None,
             started_at=hive_session.creationTime,
             status=RunStatusDTO.STARTED,  # Hive doesn't send events when session stops
             external_id=hive_session.sessionId,
-            user=UserDTO(name=hive_session.username),
+            user=user,
         )
 
     def extract_operation(self, event: OpenLineageRunEvent) -> OperationDTO:
@@ -71,8 +74,8 @@ class HiveExtractor(GenericExtractor):
         operation = OperationDTO(
             id=event.run.runId,
             run=run,
-            name=hive_query.operationName,
-            description=hive_query.queryId,
+            name=hive_query.queryId,
+            description=hive_query.operationName,
             type=self._extract_operation_type(event),
             sql_query=self._extract_sql_query(event),
         )

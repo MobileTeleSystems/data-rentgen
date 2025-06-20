@@ -71,7 +71,7 @@ Setup
         type: kafka
         topicName: input.runs
         properties:
-            bootstrap.servers: localhost:9093
+            bootstrap.servers: broker:9092  # not using localhost in docker
             security.protocol: SASL_PLAINTEXT
             sasl.mechanism: SCRAM-SHA-256
             sasl.jaas.config: |
