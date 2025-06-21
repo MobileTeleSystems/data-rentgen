@@ -45,16 +45,17 @@ class OperationType(str, Enum):
 class Operation(Base):
     __tablename__ = "operation"
     __table_args__ = (
-        PrimaryKeyConstraint("created_at", "id"),
+        # in most cases we filter rows by id, and sometimes by created_at
+        PrimaryKeyConstraint("id", "created_at"),
         {"postgresql_partition_by": "RANGE (created_at)"},
     )
 
+    id: Mapped[UUID] = mapped_column(SQL_UUID)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         doc="Timestamp component of UUID, used for table partitioning",
     )
-    id: Mapped[UUID] = mapped_column(SQL_UUID)
 
     run_id: Mapped[UUID] = mapped_column(
         SQL_UUID,

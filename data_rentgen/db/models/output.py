@@ -37,6 +37,7 @@ class OutputType(IntFlag):
 class Output(Base):
     __tablename__ = "output"
     __table_args__ = (
+        # in most cases we filter rows by created_at, and never by id
         PrimaryKeyConstraint("created_at", "id"),
         {"postgresql_partition_by": "RANGE (created_at)"},
     )
