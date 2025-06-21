@@ -22,6 +22,7 @@ from data_rentgen.db.models.schema import Schema
 class Input(Base):
     __tablename__ = "input"
     __table_args__ = (
+        # in most cases we filter rows by created_at, and never by id
         PrimaryKeyConstraint("created_at", "id"),
         {"postgresql_partition_by": "RANGE (created_at)"},
     )

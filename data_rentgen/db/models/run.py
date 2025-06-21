@@ -55,17 +55,18 @@ class RunStartReason(str, Enum):
 class Run(Base):
     __tablename__ = "run"
     __table_args__ = (
-        PrimaryKeyConstraint("created_at", "id"),
+        # in most cases we filter rows by id, and sometimes by created_at
+        PrimaryKeyConstraint("id", "created_at"),
         Index("ix__run__search_vector", "search_vector", postgresql_using="gin"),
         {"postgresql_partition_by": "RANGE (created_at)"},
     )
 
+    id: Mapped[UUID] = mapped_column(SQL_UUID)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         doc="Timestamp component of UUID, used for table partitioning",
     )
-    id: Mapped[UUID] = mapped_column(SQL_UUID)
 
     job_id: Mapped[int] = mapped_column(
         BigInteger,
