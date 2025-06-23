@@ -109,7 +109,7 @@ def extracted_hive_output(
     extracted_dataset_schema: SchemaDTO,
 ) -> OutputDTO:
     return OutputDTO(
-        type=OutputTypeDTO.APPEND,
+        type=OutputTypeDTO.CREATE,
         operation=extracted_hive_operation,
         dataset=extracted_hive_dataset2,
         schema=extracted_dataset_schema,

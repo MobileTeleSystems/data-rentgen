@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import cast
 
 from data_rentgen.consumer.extractors.generic import GenericExtractor
+from data_rentgen.consumer.openlineage.dataset import OpenLineageOutputDataset
 from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
 from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageHiveQueryInfoRunFacet,
@@ -15,6 +16,7 @@ from data_rentgen.dto import (
     JobDTO,
     JobTypeDTO,
     OperationDTO,
+    OutputTypeDTO,
     RunDTO,
     RunStatusDTO,
     UserDTO,
@@ -81,3 +83,21 @@ class HiveExtractor(GenericExtractor):
         )
         self._enrich_operation_status(operation, event)
         return operation
+
+    def _extract_output_type(
+        self,
+        operation: OperationDTO,
+        dataset: OpenLineageOutputDataset,
+    ) -> OutputTypeDTO:
+        match operation.description:
+            case None:
+                return OutputTypeDTO(0)
+            case value if value.startswith("CREATE"):
+                return OutputTypeDTO.CREATE
+            case value if value.startswith("ALTER"):
+                return OutputTypeDTO.ALTER
+            case value if value.startswith("DROP"):
+                return OutputTypeDTO.DROP
+            case value if value.startswith("TRUNCATE"):
+                return OutputTypeDTO.TRUNCATE
+        return OutputTypeDTO.APPEND

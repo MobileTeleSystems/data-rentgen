@@ -234,7 +234,7 @@ async def test_runs_handler_hive(
     assert hive_output.run_id == session_run.id
     assert hive_output.job_id == session_run.job_id
     assert hive_output.dataset_id == hive_target_table.id
-    assert hive_output.type == OutputType.APPEND
+    assert hive_output.type == OutputType.CREATE
     assert hive_output.schema_id == clickhouse_schema.id
     assert hive_output.num_bytes is None
     assert hive_output.num_rows is None
