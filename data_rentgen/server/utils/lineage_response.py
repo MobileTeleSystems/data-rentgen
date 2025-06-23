@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import TYPE_CHECKING, Any
 
+from data_rentgen.db.repositories.input import InputRow
+from data_rentgen.db.repositories.output import OutputRow
 from data_rentgen.server.schemas.v1 import (
     ColumnLineageInteractionTypeV1,
     DatasetResponseV1,
@@ -31,7 +33,6 @@ from data_rentgen.server.schemas.v1.lineage import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
     from uuid import UUID
 
     from data_rentgen.db.models.dataset import Dataset
@@ -39,9 +40,7 @@ if TYPE_CHECKING:
     from data_rentgen.db.models.operation import Operation
     from data_rentgen.db.models.run import Run
     from data_rentgen.db.repositories.column_lineage import ColumnLineageRow
-    from data_rentgen.db.repositories.input import InputRow
     from data_rentgen.db.repositories.io_dataset_relation import IODatasetRelationRow
-    from data_rentgen.db.repositories.output import OutputRow
     from data_rentgen.server.services.lineage import LineageServiceResult
 
 
@@ -232,6 +231,24 @@ def _get_indirect_column_lineage(column_lineage_by_source_target_id: dict[tuple,
     return sorted(relations, key=lambda x: (str(x.from_.id), str(x.to.id)))
 
 
+def _get_latest_io_schema(dataset, relations) -> DatasetSchemaV1 | None:
+    relations = [
+        relation for relation in relations if relation.dataset_id == dataset.id and relation.schema is not None
+    ]
+    if not relations:
+        return None
+    relations = sorted(relations, key=lambda relation: relation.created_at)
+    oldest_relation, newest_relation = relations[0], relations[-1]
+
+    dataset_schema = DatasetSchemaV1.model_validate(newest_relation.schema)
+    if oldest_relation.schema_id == newest_relation.schema_id:
+        dataset_schema.relevance_type = "EXACT_MATCH"
+    else:
+        dataset_schema.relevance_type = "LATEST_KNOWN"
+
+    return dataset_schema
+
+
 def _get_datasets(
     raw_datasets: dict[int, Dataset],
     outputs: dict[Any, OutputRow],
@@ -240,9 +257,7 @@ def _get_datasets(
     datasets: dict[str, DatasetResponseV1] = defaultdict()
     for dataset in raw_datasets.values():
         schema: DatasetSchemaV1 | None = None
-        schema = _get_latest_io_schema(dataset, outputs)
-        if not schema:
-            schema = _get_latest_io_schema(dataset, inputs)
+        schema = _get_latest_io_schema(dataset, outputs.values()) or _get_latest_io_schema(dataset, inputs.values())
         datasets[str(dataset.id)] = DatasetResponseV1(
             id=str(dataset.id),
             location=LocationResponseV1.model_validate(dataset.location),
@@ -253,99 +268,64 @@ def _get_datasets(
     return datasets
 
 
-def _get_latest_io_schema(dataset, relations: Mapping[Any, OutputRow | InputRow]) -> DatasetSchemaV1 | None:
-    oldest_relation, newest_relation = None, None
-    dataset_schema = None
-    for relation in relations.values():
-        if dataset.id == relation.dataset_id:
-            if (oldest_relation is None or relation.created_at <= oldest_relation.created_at) and relation.schema_id:
-                if oldest_relation and relation.created_at == oldest_relation.created_at:
-                    oldest_relation = max(oldest_relation, relation, key=lambda x: x.schema_id)  # type: ignore[assignment]
-                else:
-                    oldest_relation = relation
-            if (newest_relation is None or relation.created_at >= newest_relation.created_at) and relation.schema_id:
-                if newest_relation and relation.created_at == newest_relation.created_at:
-                    newest_relation = max(newest_relation, relation, key=lambda x: x.schema_id)  # type: ignore[assignment]
-                else:
-                    newest_relation = relation
-    if oldest_relation and newest_relation is None:
-        dataset_schema = DatasetSchemaV1.model_validate(oldest_relation.schema)
-    elif oldest_relation is None and newest_relation:
-        dataset_schema = DatasetSchemaV1.model_validate(newest_relation.schema)
-    elif oldest_relation and newest_relation:
-        dataset_schema = DatasetSchemaV1.model_validate(newest_relation.schema)
-        dataset_schema.relevance_type = (
-            "EXACT_MATCH" if oldest_relation.schema_id == newest_relation.schema_id else "LATEST_KNOWN"
+def _get_io_by_dataset(
+    io_relations: dict[tuple[int, int], IODatasetRelationRow],
+) -> tuple[dict[int, list], dict[int, list]]:
+    # Group inputs and outputs by dataset
+    outputs, inputs = defaultdict(list), defaultdict(list)
+    for (input_dataset_id, output_dataset_id), relation in io_relations.items():
+        outputs[output_dataset_id].append(
+            OutputRow(
+                created_at=relation.created_at,
+                operation_id=None,  # type: ignore[arg-type]
+                run_id=None,  # type: ignore[arg-type]
+                job_id=None,  # type: ignore[arg-type]
+                dataset_id=output_dataset_id,
+                schema_id=relation.output_schema_id,
+                schema=relation.output_schema,
+                schema_relevance_type=relation.output_schema_relevance_type,
+                num_bytes=None,
+                num_rows=None,
+                num_files=None,
+            ),
         )
-    else:
-        return None
-
-    return dataset_schema
+        inputs[input_dataset_id].append(
+            InputRow(
+                created_at=relation.created_at,
+                operation_id=None,  # type: ignore[arg-type]
+                run_id=None,  # type: ignore[arg-type]
+                job_id=None,  # type: ignore[arg-type]
+                dataset_id=input_dataset_id,
+                schema_id=relation.input_schema_id,
+                schema=relation.input_schema,
+                schema_relevance_type=relation.input_schema_relevance_type,
+                num_bytes=None,
+                num_rows=None,
+                num_files=None,
+            ),
+        )
+    return outputs, inputs
 
 
 def _get_datasets_with_dataset_granularity(
     raw_datasets: dict[int, Dataset],
     io_relations: dict[tuple[int, int], IODatasetRelationRow],
 ) -> dict[str, DatasetResponseV1]:
-    # TODO replace dicts in dataset_schemas_by_id by dataclasses or classes with method implement logic
-    dataset_schemas_by_id: dict[int, dict] = defaultdict()
-    for (input_dataset_id, output_dataset_id), relation in io_relations.items():
-        if dataset_schemas_by_id.get(input_dataset_id):
-            current_schema = dataset_schemas_by_id[input_dataset_id]
-            if current_schema["type"] == "input" and (relation.created_at > current_schema["created_at"]):
-                dataset_schemas_by_id[input_dataset_id] = {
-                    "type": "input",
-                    "created_at": relation.created_at,
-                    "schema": relation.input_schema,
-                    "relevance_type": "EXACT_MATCH"
-                    if relation.input_schema_id == current_schema["schema"].id
-                    else "LATEST_KNOWN",
-                }
-        else:
-            dataset_schemas_by_id[input_dataset_id] = {
-                "type": "input",
-                "created_at": relation.created_at,
-                "schema": relation.input_schema,
-                "relevance_type": "EXACT_MATCH",
-            }
-        if dataset_schemas_by_id.get(output_dataset_id):
-            current_schema = dataset_schemas_by_id[output_dataset_id]
-            if current_schema["type"] == "input":
-                dataset_schemas_by_id[output_dataset_id] = {
-                    "type": "output",
-                    "created_at": relation.created_at,
-                    "schema": relation.output_schema,
-                    "relevance_type": "EXACT_MATCH",
-                }
-            if current_schema["type"] == "output" and (relation.created_at > current_schema["created_at"]):
-                dataset_schemas_by_id[output_dataset_id] = {
-                    "type": "output",
-                    "created_at": relation.created_at,
-                    "schema": relation.output_schema,
-                    "relevance_type": "EXACT_MATCH"
-                    if relation.output_schema_id == current_schema["schema"].id
-                    else "LATEST_KNOWN",
-                }
-        else:
-            dataset_schemas_by_id[output_dataset_id] = {
-                "type": "output",
-                "created_at": relation.created_at,
-                "schema": relation.output_schema,
-                "relevance_type": "EXACT_MATCH",
-            }
-        datasets: dict[str, DatasetResponseV1] = defaultdict()
-        for dataset in raw_datasets.values():
-            schema = None
-            raw_schema = dataset_schemas_by_id.get(dataset.id, None)
-            if raw_schema:
-                schema = DatasetSchemaV1.model_validate(raw_schema["schema"])
-                schema.relevance_type = raw_schema["relevance_type"]
+    datasets: dict[str, DatasetResponseV1] = defaultdict()
 
-            datasets[str(dataset.id)] = DatasetResponseV1(
-                id=str(dataset.id),
-                location=LocationResponseV1.model_validate(dataset.location),
-                name=dataset.name,
-                format=dataset.format,
-                schema=schema,
-            )
+    outputs_by_dataset_id, inputs_by_dataset_id = _get_io_by_dataset(io_relations)
+
+    for dataset in raw_datasets.values():
+        schema: DatasetSchemaV1 | None = None
+        schema = _get_latest_io_schema(dataset, outputs_by_dataset_id[dataset.id]) or _get_latest_io_schema(
+            dataset,
+            inputs_by_dataset_id[dataset.id],
+        )
+        datasets[str(dataset.id)] = DatasetResponseV1(
+            id=str(dataset.id),
+            location=LocationResponseV1.model_validate(dataset.location),
+            name=dataset.name,
+            format=dataset.format,
+            schema=schema,
+        )
     return datasets

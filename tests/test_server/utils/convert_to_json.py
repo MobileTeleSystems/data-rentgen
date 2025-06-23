@@ -160,8 +160,13 @@ def locations_to_json(locations: list[Location]):
 
 
 def _get_dataset_schema(dataset: Dataset, outputs: list[OutputRow | Output], inputs: list[InputRow | Input]):
-    relations = sorted([*outputs, *inputs], key=lambda x: x.schema_id, reverse=True)
-    schema = next(relation.schema for relation in relations if relation.dataset_id == dataset.id)
+    outputs = sorted(outputs, key=lambda output: output.schema_id, reverse=True)
+    inputs = sorted(inputs, key=lambda input: input.schema_id, reverse=True)
+    schema = next((output.schema for output in outputs if output.dataset_id == dataset.id), None) or next(
+        (input.schema for input in inputs if input.dataset_id == dataset.id),
+        None,
+    )
+
     return schema_to_json(schema, "EXACT_MATCH")
 
 
