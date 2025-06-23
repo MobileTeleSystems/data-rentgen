@@ -1128,7 +1128,7 @@ class LineageService:
 
         return result
 
-    async def _dataset_lineage_with_dataset_granularity(
+    async def _dataset_lineage_with_dataset_granularity(  # noqa: C901, PLR0915
         self,
         datasets_by_id: dict[int, Dataset],
         dataset_symlinks_by_id: dict[tuple[int, int], DatasetSymlink],
@@ -1208,18 +1208,28 @@ class LineageService:
                 result.datasets.update(upstream_datasets_by_id)
                 result.dataset_symlinks.update(upstream_dataset_symlinks_by_id)
 
-            schema_ids = {relation.schema_id for relation in downstream_relations} | {
-                relation.schema_id for relation in upstream_relations
+            schema_ids = {
+                schema_id
+                for relation in downstream_relations
+                for schema_id in (relation.output_schema_id, relation.input_schema_id)
+            } | {
+                schema_id
+                for relation in upstream_relations
+                for schema_id in (relation.output_schema_id, relation.input_schema_id)
             }
 
             schemas = await self._uow.schema.list_by_ids(schema_ids)  # type: ignore[arg-type]
             schemas_by_id = {schema.id: schema for schema in schemas}
             for relation in downstream_relations:
-                if relation.schema_id is not None:
-                    relation.schema = schemas_by_id.get(relation.schema_id)
+                if relation.output_schema_id is not None:
+                    relation.output_schema = schemas_by_id.get(relation.output_schema_id)
+                if relation.input_schema_id is not None:
+                    relation.input_schema = schemas_by_id.get(relation.input_schema_id)
             for relation in upstream_relations:
-                if relation.schema_id is not None:
-                    relation.schema = schemas_by_id.get(relation.schema_id)
+                if relation.output_schema_id is not None:
+                    relation.output_schema = schemas_by_id.get(relation.output_schema_id)
+                if relation.input_schema_id is not None:
+                    relation.input_schema = schemas_by_id.get(relation.input_schema_id)
 
             result.io_dataset_relations.update(relations_by_id)
 

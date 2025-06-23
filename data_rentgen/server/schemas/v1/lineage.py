@@ -116,25 +116,6 @@ class LineageParentRelationV1(BaseModel):
     to: LineageEntityV1 = Field(description="End point of relation")
 
 
-class LineageIORelationSchemaFieldV1(BaseModel):
-    name: str
-    type: str | None = Field(default=None)
-    description: str | None = Field(default=None)
-    fields: list[LineageIORelationSchemaFieldV1] = Field(description="Nested fields", default_factory=list)
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class LineageIORelationSchemaV1(BaseModel):
-    id: str = Field(description="Schema id", coerce_numbers_to_str=True)
-    fields: list[LineageIORelationSchemaFieldV1] = Field(description="Schema fields")
-    relevance_type: Literal["EXACT_MATCH", "LATEST_KNOWN"] | None = Field(
-        description="Relevance of schema",
-        default="LATEST_KNOWN",
-    )
-    model_config = ConfigDict(from_attributes=True)
-
-
 class LineageInputRelationV1(BaseModel):
     from_: LineageEntityV1 = Field(description="Start point of relation", serialization_alias="from")
     to: LineageEntityV1 = Field(description="End point of relation")
@@ -142,12 +123,6 @@ class LineageInputRelationV1(BaseModel):
     num_bytes: int | None = Field(description="Number of bytes", examples=[42], default=None)
     num_rows: int | None = Field(description="Number of rows", examples=[42], default=None)
     num_files: int | None = Field(description="Number of files", examples=[42], default=None)
-    i_schema: LineageIORelationSchemaV1 | None = Field(
-        description="Schema",
-        default=None,
-        # pydantic models have reserved "schema" attribute, using alias
-        serialization_alias="schema",
-    )
 
 
 class OutputTypeV1(IntFlag):
@@ -177,12 +152,6 @@ class LineageOutputRelationV1(BaseModel):
     num_bytes: int | None = Field(description="Number of bytes", examples=[42], default=None)
     num_rows: int | None = Field(description="Number of rows", examples=[42], default=None)
     num_files: int | None = Field(description="Number of files", examples=[42], default=None)
-    o_schema: LineageIORelationSchemaV1 | None = Field(
-        description="Schema",
-        default=None,
-        # pydantic models have reserved "schema" attribute, using alias
-        serialization_alias="schema",
-    )
 
     @field_serializer("types")
     def serialize_types(self, types: list[OutputTypeV1], _info):
