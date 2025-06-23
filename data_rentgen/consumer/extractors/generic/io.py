@@ -66,7 +66,7 @@ class IOExtractorMixin(ABC):
         result = OutputDTO(
             operation=operation,
             dataset=resolved_dataset_dto,
-            type=self._extract_output_type(dataset),
+            type=self._extract_output_type(operation, dataset),
             schema=self.extract_schema(dataset),
         )
         if dataset.outputFacets.outputStatistics:
@@ -76,7 +76,11 @@ class IOExtractorMixin(ABC):
 
         return result, symlinks
 
-    def _extract_output_type(self, dataset: OpenLineageDataset) -> OutputTypeDTO:
+    def _extract_output_type(
+        self,
+        operation: OperationDTO,
+        dataset: OpenLineageOutputDataset,
+    ) -> OutputTypeDTO:
         if dataset.facets.lifecycleStateChange:
             return OutputTypeDTO[dataset.facets.lifecycleStateChange.lifecycleStateChange]
         return OutputTypeDTO.APPEND

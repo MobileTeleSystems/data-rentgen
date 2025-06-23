@@ -16,6 +16,7 @@ See basic installation instruction & dedicated pages for each integration.
     install
     spark/index
     airflow/index
+    hive/index
     flink1/index
     flink2/index
     dbt/index

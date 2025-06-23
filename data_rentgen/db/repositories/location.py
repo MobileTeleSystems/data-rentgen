@@ -33,7 +33,7 @@ class LocationRepository(Repository[Location]):
             result = await self._get(location)
 
         if not result:
-            return await self._create(location)
+            result = await self._create(location)
 
         await self._update_addresses(result, location)
         return result

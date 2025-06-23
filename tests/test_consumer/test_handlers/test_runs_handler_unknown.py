@@ -71,11 +71,11 @@ async def test_runs_handler_unknown(
 
     job = jobs[0]
     assert job.name == "somejob"
+    assert job.type == "UNKNOWN_SOMETHING"
     assert job.location.type == "unknown"
     assert job.location.name == "unknown"
     assert len(job.location.addresses) == 1
     assert job.location.addresses[0].url == "unknown://unknown"
-    assert job.type == "UNKNOWN_SOMETHING"
 
     run_query = select(Run).order_by(Run.id).options(selectinload(Run.started_by_user))
     run_scalars = await async_session.scalars(run_query)

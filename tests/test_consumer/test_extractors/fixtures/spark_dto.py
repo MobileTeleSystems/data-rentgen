@@ -89,13 +89,13 @@ def extracted_spark_postgres_input(
 @pytest.fixture
 def extracted_spark_hive_output(
     extracted_spark_operation: OperationDTO,
-    extracted_hive_dataset: DatasetDTO,
+    extracted_hive_dataset1: DatasetDTO,
     extracted_dataset_schema: SchemaDTO,
 ) -> OutputDTO:
     return OutputDTO(
         type=OutputTypeDTO.CREATE,
         operation=extracted_spark_operation,
-        dataset=extracted_hive_dataset,
+        dataset=extracted_hive_dataset1,
         schema=extracted_dataset_schema,
         num_rows=1_000_000,
         num_bytes=1000 * 1024 * 1024,

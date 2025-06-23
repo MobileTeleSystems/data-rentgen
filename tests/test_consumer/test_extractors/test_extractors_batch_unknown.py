@@ -85,13 +85,13 @@ def test_extractors_extract_batch_unknown_with_lineage(
     hdfs_output_with_stats: OpenLineageOutputDataset,
     extracted_postgres_location: LocationDTO,
     extracted_hdfs_location: LocationDTO,
-    extracted_hive_location: LocationDTO,
+    extracted_hive_metastore_location: LocationDTO,
     extracted_unknown_run_location: LocationDTO,
     extracted_postgres_dataset: DatasetDTO,
-    extracted_hdfs_dataset: DatasetDTO,
-    extracted_hive_dataset: DatasetDTO,
-    extracted_hdfs_dataset_symlink: DatasetSymlinkDTO,
-    extracted_hive_dataset_symlink: DatasetSymlinkDTO,
+    extracted_hdfs_dataset1: DatasetDTO,
+    extracted_hive_dataset1: DatasetDTO,
+    extracted_hdfs_dataset1_symlink: DatasetSymlinkDTO,
+    extracted_hive_dataset1_symlink: DatasetSymlinkDTO,
     extracted_dataset_schema: SchemaDTO,
     extracted_unknown_job: JobDTO,
     extracted_unknown_run: RunDTO,
@@ -125,7 +125,7 @@ def test_extractors_extract_batch_unknown_with_lineage(
 
     assert extracted.locations() == [
         extracted_hdfs_location,
-        extracted_hive_location,
+        extracted_hive_metastore_location,
         extracted_unknown_run_location,
         extracted_postgres_location,
     ]
@@ -136,14 +136,14 @@ def test_extractors_extract_batch_unknown_with_lineage(
     assert not extracted.users()
 
     assert extracted.datasets() == [
-        extracted_hdfs_dataset,
-        extracted_hive_dataset,
+        extracted_hdfs_dataset1,
+        extracted_hive_dataset1,
         extracted_postgres_dataset,
     ]
 
     assert extracted.dataset_symlinks() == [
-        extracted_hdfs_dataset_symlink,
-        extracted_hive_dataset_symlink,
+        extracted_hdfs_dataset1_symlink,
+        extracted_hive_dataset1_symlink,
     ]
 
     # Both input & output schemas are the same

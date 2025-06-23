@@ -8,6 +8,7 @@ from data_rentgen.consumer.extractors.impl import (
     DbtExtractor,
     ExtractorInterface,
     FlinkExtractor,
+    HiveExtractor,
     SparkExtractor,
     UnknownExtractor,
 )
@@ -27,6 +28,7 @@ class BatchExtractor:
             SparkExtractor(),
             AirflowDagExtractor(),
             AirflowTaskExtractor(),
+            HiveExtractor(),
             FlinkExtractor(),
             DbtExtractor(),
         ]

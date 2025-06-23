@@ -68,10 +68,122 @@ def postgres_input() -> OpenLineageInputDataset:
 
 
 @pytest.fixture
+def hive_input() -> OpenLineageInputDataset:
+    return OpenLineageInputDataset(
+        namespace="hive://test-hadoop:9083",
+        name="mydb.mytable1",
+        facets=OpenLineageDatasetFacets(
+            symlinks=OpenLineageSymlinksDatasetFacet(
+                identifiers=[
+                    OpenLineageSymlinkIdentifier(
+                        namespace="hdfs://test-hadoop:9820",
+                        name="/user/hive/warehouse/mydb.db/mytable1",
+                        type=OpenLineageSymlinkType.LOCATION,
+                    ),
+                ],
+            ),
+            schema=OpenLineageSchemaDatasetFacet(
+                fields=[
+                    OpenLineageSchemaField(
+                        name="dt",
+                        type="timestamp",
+                        description="Business date",
+                    ),
+                    OpenLineageSchemaField(
+                        name="customer_id",
+                        type="decimal(20,0)",
+                    ),
+                    OpenLineageSchemaField(name="total_spent", type="float"),
+                    OpenLineageSchemaField(
+                        name="phones",
+                        type="array",
+                        fields=[
+                            OpenLineageSchemaField(
+                                name="_element",
+                                type="string",
+                            ),
+                        ],
+                    ),
+                    OpenLineageSchemaField(
+                        name="address",
+                        type="struct",
+                        fields=[
+                            OpenLineageSchemaField(
+                                name="street",
+                                type="string",
+                            ),
+                            OpenLineageSchemaField(name="city", type="string"),
+                            OpenLineageSchemaField(name="state", type="string"),
+                            OpenLineageSchemaField(name="zip", type="string"),
+                        ],
+                    ),
+                ],
+            ),
+        ),
+    )
+
+
+@pytest.fixture
+def hive_output() -> OpenLineageOutputDataset:
+    return OpenLineageOutputDataset(
+        namespace="hive://test-hadoop:9083",
+        name="mydb.mytable2",
+        facets=OpenLineageDatasetFacets(
+            symlinks=OpenLineageSymlinksDatasetFacet(
+                identifiers=[
+                    OpenLineageSymlinkIdentifier(
+                        namespace="hdfs://test-hadoop:9820",
+                        name="/user/hive/warehouse/mydb.db/mytable2",
+                        type=OpenLineageSymlinkType.LOCATION,
+                    ),
+                ],
+            ),
+            schema=OpenLineageSchemaDatasetFacet(
+                fields=[
+                    OpenLineageSchemaField(
+                        name="dt",
+                        type="timestamp",
+                        description="Business date",
+                    ),
+                    OpenLineageSchemaField(
+                        name="customer_id",
+                        type="decimal(20,0)",
+                    ),
+                    OpenLineageSchemaField(name="total_spent", type="float"),
+                    OpenLineageSchemaField(
+                        name="phones",
+                        type="array",
+                        fields=[
+                            OpenLineageSchemaField(
+                                name="_element",
+                                type="string",
+                            ),
+                        ],
+                    ),
+                    OpenLineageSchemaField(
+                        name="address",
+                        type="struct",
+                        fields=[
+                            OpenLineageSchemaField(
+                                name="street",
+                                type="string",
+                            ),
+                            OpenLineageSchemaField(name="city", type="string"),
+                            OpenLineageSchemaField(name="state", type="string"),
+                            OpenLineageSchemaField(name="zip", type="string"),
+                        ],
+                    ),
+                ],
+            ),
+        ),
+    )
+
+
+@pytest.fixture
 def hdfs_output() -> OpenLineageOutputDataset:
     return OpenLineageOutputDataset(
         namespace="hdfs://test-hadoop:9820",
-        name="/user/hive/warehouse/mydb.db/mytable",
+        name="/user/hive/warehouse/mydb.db/mytable1",
         facets=OpenLineageDatasetFacets(
             lifecycleStateChange=OpenLineageLifecycleStateChangeDatasetFacet(
                 lifecycleStateChange=OpenLineageDatasetLifecycleStateChange.CREATE,
@@ -80,7 +192,7 @@ def hdfs_output() -> OpenLineageOutputDataset:
                 identifiers=[
                     OpenLineageSymlinkIdentifier(
                         namespace="hive://test-hadoop:9083",
-                        name="mydb.mytable",
+                        name="mydb.mytable1",
                         type=OpenLineageSymlinkType.TABLE,
                     ),
                 ],

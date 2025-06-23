@@ -17,6 +17,8 @@ from data_rentgen.consumer.openlineage.run_facets.dbt_run import OpenLineageDbtR
 from data_rentgen.consumer.openlineage.run_facets.flink_job import (
     OpenLineageFlinkJobDetailsRunFacet,
 )
+from data_rentgen.consumer.openlineage.run_facets.hive_query import OpenLineageHiveQueryInfoRunFacet
+from data_rentgen.consumer.openlineage.run_facets.hive_session import OpenLineageHiveSessionInfoRunFacet
 from data_rentgen.consumer.openlineage.run_facets.parent_run import (
     OpenLineageParentJob,
     OpenLineageParentRun,
@@ -69,3 +71,5 @@ class OpenLineageRunFacets(OpenLineageBase):
     airflowDagRun: OpenLineageAirflowDagRunFacet | None = None
     dbt_run: OpenLineageDbtRunRunFacet | None = None
     flink_job: OpenLineageFlinkJobDetailsRunFacet | None = None
+    hive_query: OpenLineageHiveQueryInfoRunFacet | None = None
+    hive_session: OpenLineageHiveSessionInfoRunFacet | None = None

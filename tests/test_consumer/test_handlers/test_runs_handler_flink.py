@@ -68,11 +68,11 @@ async def test_runs_handler_flink(
     jobs = job_scalars.all()
     assert len(jobs) == 1
     assert jobs[0].name == "insert-into_default_catalog.default_database.kafka_output"
+    assert jobs[0].type == "FLINK_JOB"
     assert jobs[0].location.type == "http"
     assert jobs[0].location.name == "localhost:18081"
     assert len(jobs[0].location.addresses) == 1
     assert jobs[0].location.addresses[0].url == "http://localhost:18081"
-    assert jobs[0].type == "FLINK_JOB"
 
     run_query = select(Run).order_by(Run.id).options(selectinload(Run.started_by_user))
     run_scalars = await async_session.scalars(run_query)

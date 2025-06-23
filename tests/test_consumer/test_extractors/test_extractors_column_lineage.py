@@ -88,8 +88,8 @@ def test_extractors_extract_dataset_column_relation_type_without_masking(
 
 def test_extractors_extract_direct_column_lineage(
     extracted_spark_operation,
-    extracted_hive_dataset,
-    extracted_hdfs_dataset,
+    extracted_hive_dataset1,
+    extracted_hdfs_dataset1,
     output_event_with_one_to_two_direct_column_lineage,
 ):
     operation = extracted_spark_operation
@@ -101,8 +101,8 @@ def test_extractors_extract_direct_column_lineage(
     assert column_lineage == [
         ColumnLineageDTO(
             operation=operation,
-            source_dataset=extracted_hive_dataset,
-            target_dataset=extracted_hdfs_dataset,
+            source_dataset=extracted_hive_dataset1,
+            target_dataset=extracted_hdfs_dataset1,
             dataset_column_relations=[
                 DatasetColumnRelationDTO(
                     type=DatasetColumnRelationTypeDTO.AGGREGATION,
@@ -123,8 +123,8 @@ def test_extractors_extract_direct_column_lineage(
 
 def test_extractors_extract_legacy_indirect_column_lineage(
     extracted_spark_operation,
-    extracted_hive_dataset,
-    extracted_hdfs_dataset,
+    extracted_hive_dataset1,
+    extracted_hdfs_dataset1,
     output_event_with_direct_and_legacy_indirect_column_lineage,
 ):
     operation = extracted_spark_operation
@@ -136,8 +136,8 @@ def test_extractors_extract_legacy_indirect_column_lineage(
     assert column_lineage == [
         ColumnLineageDTO(
             operation=operation,
-            source_dataset=extracted_hive_dataset,
-            target_dataset=extracted_hdfs_dataset,
+            source_dataset=extracted_hive_dataset1,
+            target_dataset=extracted_hdfs_dataset1,
             dataset_column_relations=[
                 DatasetColumnRelationDTO(
                     type=DatasetColumnRelationTypeDTO.AGGREGATION,
@@ -170,8 +170,8 @@ def test_extractors_extract_legacy_indirect_column_lineage(
 
 def test_extractors_extract_column_lineage_without_transformations(
     extracted_spark_operation,
-    extracted_hive_dataset,
-    extracted_hdfs_dataset,
+    extracted_hive_dataset1,
+    extracted_hdfs_dataset1,
     output_event_with_column_lineage_without_transformations,
 ):
     operation = extracted_spark_operation
@@ -183,8 +183,8 @@ def test_extractors_extract_column_lineage_without_transformations(
     assert column_lineage == [
         ColumnLineageDTO(
             operation=operation,
-            source_dataset=extracted_hive_dataset,
-            target_dataset=extracted_hdfs_dataset,
+            source_dataset=extracted_hive_dataset1,
+            target_dataset=extracted_hdfs_dataset1,
             dataset_column_relations=[
                 DatasetColumnRelationDTO(
                     type=DatasetColumnRelationTypeDTO.UNKNOWN,
@@ -217,8 +217,8 @@ def test_extractors_extract_column_lineage_without_transformations(
 
 def test_extractors_extract_legacy_column_lineage(
     extracted_spark_operation,
-    extracted_hive_dataset,
-    extracted_hdfs_dataset,
+    extracted_hive_dataset1,
+    extracted_hdfs_dataset1,
     output_event_with_legacy_column_lineage,
 ):
     operation = extracted_spark_operation
@@ -230,8 +230,8 @@ def test_extractors_extract_legacy_column_lineage(
     assert column_lineage == [
         ColumnLineageDTO(
             operation=operation,
-            source_dataset=extracted_hive_dataset,
-            target_dataset=extracted_hdfs_dataset,
+            source_dataset=extracted_hive_dataset1,
+            target_dataset=extracted_hdfs_dataset1,
             dataset_column_relations=[
                 DatasetColumnRelationDTO(
                     type=DatasetColumnRelationTypeDTO.IDENTITY,
@@ -264,8 +264,8 @@ def test_extractors_extract_legacy_column_lineage(
 
 def test_extractors_extract_indirect_column_lineage(
     extracted_spark_operation,
-    extracted_hive_dataset,
-    extracted_hdfs_dataset,
+    extracted_hive_dataset1,
+    extracted_hdfs_dataset1,
     output_event_with_one_to_two_direct_and_indirect_column_lineage,
 ):
     operation = extracted_spark_operation
@@ -277,8 +277,8 @@ def test_extractors_extract_indirect_column_lineage(
     assert column_lineage == [
         ColumnLineageDTO(
             operation=operation,
-            source_dataset=extracted_hive_dataset,
-            target_dataset=extracted_hdfs_dataset,
+            source_dataset=extracted_hive_dataset1,
+            target_dataset=extracted_hdfs_dataset1,
             dataset_column_relations=[
                 DatasetColumnRelationDTO(
                     type=DatasetColumnRelationTypeDTO.AGGREGATION,
@@ -305,7 +305,7 @@ def test_extractors_extract_indirect_column_lineage(
 
 def test_extractors_extract_column_lineage_operations_with_same_lineage(
     extracted_postgres_dataset: DatasetDTO,
-    extracted_hive_dataset: DatasetDTO,
+    extracted_hive_dataset1: DatasetDTO,
 ):
     column_lineage_facet = OpenLineageColumnLineageDatasetFacet(
         fields={
@@ -358,7 +358,7 @@ def test_extractors_extract_column_lineage_operations_with_same_lineage(
         ColumnLineageDTO(
             operation=get_spark_operation_dto(first_operation_id),
             source_dataset=extracted_postgres_dataset,
-            target_dataset=extracted_hive_dataset,
+            target_dataset=extracted_hive_dataset1,
             dataset_column_relations=[
                 DatasetColumnRelationDTO(
                     type=DatasetColumnRelationTypeDTO.AGGREGATION,
@@ -377,7 +377,7 @@ def test_extractors_extract_column_lineage_operations_with_same_lineage(
         ColumnLineageDTO(
             operation=get_spark_operation_dto(second_operation_id),
             source_dataset=extracted_postgres_dataset,
-            target_dataset=extracted_hive_dataset,
+            target_dataset=extracted_hive_dataset1,
             dataset_column_relations=[
                 DatasetColumnRelationDTO(
                     type=DatasetColumnRelationTypeDTO.AGGREGATION,
@@ -398,7 +398,7 @@ def test_extractors_extract_column_lineage_operations_with_same_lineage(
 
 def test_extractors_extract_column_lineage_operations_with_transformation_on_same_column(
     extracted_postgres_dataset,
-    extracted_hive_dataset,
+    extracted_hive_dataset1,
 ):
     column_lineage_first_facet = OpenLineageColumnLineageDatasetFacet(
         fields={
@@ -459,7 +459,7 @@ def test_extractors_extract_column_lineage_operations_with_transformation_on_sam
         ColumnLineageDTO(
             operation=get_spark_operation_dto(first_operation_id),
             source_dataset=extracted_postgres_dataset,
-            target_dataset=extracted_hive_dataset,
+            target_dataset=extracted_hive_dataset1,
             dataset_column_relations=[
                 DatasetColumnRelationDTO(
                     type=DatasetColumnRelationTypeDTO.AGGREGATION,
@@ -472,7 +472,7 @@ def test_extractors_extract_column_lineage_operations_with_transformation_on_sam
         ColumnLineageDTO(
             operation=get_spark_operation_dto(second_operation_id),
             source_dataset=extracted_postgres_dataset,
-            target_dataset=extracted_hive_dataset,
+            target_dataset=extracted_hive_dataset1,
             dataset_column_relations=[
                 DatasetColumnRelationDTO(
                     type=DatasetColumnRelationTypeDTO.AGGREGATION | DatasetColumnRelationTypeDTO.TRANSFORMATION,

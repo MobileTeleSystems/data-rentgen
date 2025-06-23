@@ -33,7 +33,14 @@ What is Data.Rentgen?
 
 Data.Rentgen is a Data Motion Lineage service, compatible with `OpenLineage <https://openlineage.io/>`_ specification.
 
-**Note**: service is under active development, and is not ready to use yet.
+Currently we support consuming lineage from:
+  * Apache Spark
+  * Apache Airflow
+  * Apache Hive
+  * Apache Flink
+  * dbt
+
+**Note**: service is under active development, so it doesn't have stable API for now.
 
 Goals
 -----
@@ -61,8 +68,7 @@ Non-goals
 Limitations
 -----------
 
-* For now, only Apache Spark, Apache Airflow, Apache Flink and DBT are supported as lineage event sources.
-  OpenLineage also supports Hive, Trino and other lineage sources. DataRentgen support may be added later.
+* OpenLineage have integrations with Trino, Debezium and some other lineage sources. DataRentgen support may be added later.
 * Unlike Marquez, DataRentgen parses only limited set of facets send by OpenLineage, and doesn't store custom facets. This can be changed in future.
 
 .. documentation
