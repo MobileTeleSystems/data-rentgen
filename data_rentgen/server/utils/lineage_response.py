@@ -231,7 +231,7 @@ def _get_indirect_column_lineage(column_lineage_by_source_target_id: dict[tuple,
     return sorted(relations, key=lambda x: (str(x.from_.id), str(x.to.id)))
 
 
-def _get_latest_io_schema(dataset, relations) -> DatasetSchemaV1 | None:
+def _get_latest_io_schema(dataset: Dataset, relations: list[OutputRow | InputRow]) -> DatasetSchemaV1 | None:
     relations = [
         relation for relation in relations if relation.dataset_id == dataset.id and relation.schema is not None
     ]
@@ -257,7 +257,10 @@ def _get_datasets(
     datasets: dict[str, DatasetResponseV1] = defaultdict()
     for dataset in raw_datasets.values():
         schema: DatasetSchemaV1 | None = None
-        schema = _get_latest_io_schema(dataset, outputs.values()) or _get_latest_io_schema(dataset, inputs.values())
+        schema = _get_latest_io_schema(dataset, list(outputs.values())) or _get_latest_io_schema(
+            dataset,
+            list(inputs.values()),
+        )
         datasets[str(dataset.id)] = DatasetResponseV1(
             id=str(dataset.id),
             location=LocationResponseV1.model_validate(dataset.location),
