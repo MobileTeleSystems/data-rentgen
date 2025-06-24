@@ -14,6 +14,7 @@ from tests.test_server.utils.convert_to_json import (
     format_datetime,
     inputs_to_json,
     jobs_to_json,
+    location_to_json,
     operation_parents_to_json,
     operations_to_json,
     outputs_to_json,
@@ -131,7 +132,7 @@ async def test_get_dataset_lineage_with_granularity_run(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json([dataset]),
+            "datasets": datasets_to_json([dataset], outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": {},
@@ -184,7 +185,7 @@ async def test_get_dataset_lineage_with_granularity_job(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json([dataset]),
+            "datasets": datasets_to_json([dataset], outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": {},
             "operations": {},
@@ -254,7 +255,7 @@ async def test_get_dataset_lineage_with_granularity_operation(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json([dataset]),
+            "datasets": datasets_to_json([dataset], outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": operations_to_json(operations),
@@ -303,7 +304,6 @@ async def test_get_dataset_lineage_with_granularity_dataset(
                         "num_bytes": None,
                         "num_rows": None,
                         "num_files": None,
-                        "schema": schema_to_json(outputs_by_dataset_id[datasets[i + 1].id].schema, "EXACT_MATCH"),
                         "last_interaction_at": format_datetime(outputs_by_dataset_id[datasets[i + 1].id].created_at),
                     }
                     for i in range(len(datasets) - 1)
@@ -314,7 +314,16 @@ async def test_get_dataset_lineage_with_granularity_dataset(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": {
+                str(dataset.id): {
+                    "id": str(dataset.id),
+                    "format": dataset.format,
+                    "name": dataset.name,
+                    "location": location_to_json(dataset.location),
+                    "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
+                }
+                for dataset in datasets
+            },
             "jobs": {},
             "runs": {},
             "operations": {},
@@ -372,7 +381,6 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_direction(
                         "num_bytes": None,
                         "num_rows": None,
                         "num_files": None,
-                        "schema": schema_to_json(outputs_by_dataset_id[datasets[i + 1].id].schema, "EXACT_MATCH"),
                         "last_interaction_at": format_datetime(outputs_by_dataset_id[datasets[i + 1].id].created_at),
                     }
                     for i in range(len(datasets) - 1)
@@ -383,7 +391,16 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_direction(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": {
+                str(dataset.id): {
+                    "id": str(dataset.id),
+                    "format": dataset.format,
+                    "name": dataset.name,
+                    "location": location_to_json(dataset.location),
+                    "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
+                }
+                for dataset in datasets
+            },
             "jobs": {},
             "runs": {},
             "operations": {},
@@ -433,7 +450,6 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_depth(
                         "num_bytes": None,
                         "num_rows": None,
                         "num_files": None,
-                        "schema": schema_to_json(outputs_by_dataset_id[datasets[i + 1].id].schema, "EXACT_MATCH"),
                         "last_interaction_at": format_datetime(outputs_by_dataset_id[datasets[i + 1].id].created_at),
                     }
                     for i in range(len(datasets) - 1)
@@ -444,7 +460,16 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_depth(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": {
+                str(dataset.id): {
+                    "id": str(dataset.id),
+                    "format": dataset.format,
+                    "name": dataset.name,
+                    "location": location_to_json(dataset.location),
+                    "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
+                }
+                for dataset in datasets
+            },
             "jobs": {},
             "runs": {},
             "operations": {},
@@ -498,7 +523,6 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_symlinks(
                         "num_bytes": None,
                         "num_rows": None,
                         "num_files": None,
-                        "schema": schema_to_json(outputs_by_dataset_id[to_id].schema, "EXACT_MATCH"),
                         "last_interaction_at": format_datetime(outputs_by_dataset_id[to_id].created_at),
                     }
                     for from_id, to_id in dataset_pairs_ids
@@ -509,7 +533,16 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_symlinks(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": {
+                str(dataset.id): {
+                    "id": str(dataset.id),
+                    "format": dataset.format,
+                    "name": dataset.name,
+                    "location": location_to_json(dataset.location),
+                    "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
+                }
+                for dataset in datasets
+            },
             "jobs": {},
             "runs": {},
             "operations": {},
@@ -561,7 +594,6 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_until(
                         "num_bytes": None,
                         "num_rows": None,
                         "num_files": None,
-                        "schema": schema_to_json(outputs_by_dataset_id[datasets[i + 1].id].schema, "EXACT_MATCH"),
                         "last_interaction_at": format_datetime(outputs_by_dataset_id[datasets[i + 1].id].created_at),
                     }
                     for i in range(len(datasets) - 1)
@@ -572,7 +604,16 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_until(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": {
+                str(dataset.id): {
+                    "id": str(dataset.id),
+                    "format": dataset.format,
+                    "name": dataset.name,
+                    "location": location_to_json(dataset.location),
+                    "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
+                }
+                for dataset in datasets
+            },
             "jobs": {},
             "runs": {},
             "operations": {},
@@ -629,7 +670,7 @@ async def test_get_dataset_lineage_with_direction_downstream(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json([dataset]),
+            "datasets": datasets_to_json([dataset], inputs=inputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": {},
@@ -687,7 +728,7 @@ async def test_get_dataset_lineage_with_direction_upstream(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json([dataset]),
+            "datasets": datasets_to_json([dataset], outputs=outputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": {},
@@ -756,7 +797,7 @@ async def test_get_dataset_lineage_with_until(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json([dataset]),
+            "datasets": datasets_to_json([dataset], outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": {},
@@ -854,7 +895,7 @@ async def test_get_dataset_lineage_with_depth(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": {},
@@ -939,7 +980,7 @@ async def test_get_dataset_lineage_with_depth_and_granularity_job(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": {},
             "operations": {},
@@ -1045,7 +1086,7 @@ async def test_get_dataset_lineage_with_depth_and_granularity_operation(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": operations_to_json(operations),
@@ -1099,7 +1140,7 @@ async def test_get_dataset_lineage_with_depth_ignore_cycles(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, lineage.outputs, lineage.inputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": {},
@@ -1183,7 +1224,7 @@ async def test_get_dataset_lineage_with_depth_ignore_unrelated_datasets(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": {},
@@ -1262,7 +1303,7 @@ async def test_get_dataset_lineage_with_symlink(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": {},
@@ -1329,7 +1370,7 @@ async def test_get_dataset_lineage_with_symlink_without_input_output(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json([dataset]),
+            "datasets": datasets_to_json([dataset], outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": {},
@@ -1349,11 +1390,13 @@ async def test_get_dataset_lineage_unmergeable_schema_and_output_type(
 
     # make every input and output a different schema -> grouping by Run returns None.
     # make every output a different type -> grouping by Run returns None.
+    response_schema = None
     for raw_input in lineage.inputs:
         schema = await create_schema(async_session)
         raw_input.schema_id = schema.id
         raw_input.schema = schema
         await async_session.merge(raw_input)
+    response_schema = schema if dataset_index == 0 else response_schema
 
     output_types = list(OutputType)
     for i, raw_output in enumerate(lineage.outputs):
@@ -1362,6 +1405,7 @@ async def test_get_dataset_lineage_unmergeable_schema_and_output_type(
         raw_output.schema = schema
         raw_output.type = output_types[i % len(output_types)]
         await async_session.merge(raw_output)
+    response_schema = schema if dataset_index == 1 else response_schema
 
     await async_session.commit()
 
@@ -1410,7 +1454,15 @@ async def test_get_dataset_lineage_unmergeable_schema_and_output_type(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json([dataset]),
+            "datasets": {
+                str(dataset.id): {
+                    "id": str(dataset.id),
+                    "format": dataset.format,
+                    "name": dataset.name,
+                    "location": location_to_json(dataset.location),
+                    "schema": schema_to_json(response_schema, "LATEST_KNOWN"),
+                },
+            },
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": {},
@@ -1521,6 +1573,103 @@ async def test_get_dataset_lineage_empty_io_stats_and_schema(
             "datasets": datasets_to_json([dataset]),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
+            "operations": {},
+        },
+    }
+
+
+async def test_get_dataset_lineage_with_granularity_dataset_without_output_schema(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_with_depth: LineageResult,
+    mocked_user: MockedUser,
+):
+    lineage = lineage_with_depth
+
+    # delete output schema for operation 01
+    output = lineage.outputs[0]
+    output.schema_id = None
+    output.schema = None
+    await async_session.merge(output)
+    await async_session.commit()
+
+    response_schema = await create_schema(async_session)
+    # Add new schema to O2 input. It should be different from all others
+    input_ = lineage.inputs[1]
+    input_.schema_id = response_schema.id
+    input_.schema = response_schema
+    await async_session.merge(input_)
+    await async_session.commit()
+
+    # dasate which has only input schema
+    lineage_dataset = lineage.datasets[1]
+    datasets = lineage.datasets[:3]
+    outputs_by_dataset_id = {output.dataset_id: output for output in lineage.outputs}
+
+    runs = await enrich_runs(lineage.runs, async_session)
+    [lineage_dataset] = await enrich_datasets([lineage_dataset], async_session)
+    datasets = await enrich_datasets(datasets, async_session)
+
+    since = min(run.created_at for run in runs)
+    response = await test_client.get(
+        "v1/datasets/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "start_node_id": lineage_dataset.id,
+            "granularity": "DATASET",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": {
+            "parents": [],
+            "symlinks": [],
+            "outputs": [],
+            "inputs": sorted(
+                [
+                    {
+                        "from": {"kind": "DATASET", "id": str(datasets[i].id)},
+                        "to": {"kind": "DATASET", "id": str(datasets[i + 1].id)},
+                        "num_bytes": None,
+                        "num_rows": None,
+                        "num_files": None,
+                        "last_interaction_at": format_datetime(outputs_by_dataset_id[datasets[i + 1].id].created_at),
+                    }
+                    for i in range(len(datasets) - 1)
+                ],
+                key=lambda x: (x["from"]["id"], x["to"]["id"]),
+            ),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
+        },
+        "nodes": {
+            "datasets": {
+                str(lineage_dataset.id): {
+                    "id": str(lineage_dataset.id),
+                    "format": lineage_dataset.format,
+                    "name": lineage_dataset.name,
+                    "location": location_to_json(lineage_dataset.location),
+                    "schema": schema_to_json(response_schema, "EXACT_MATCH"),
+                },
+                str(datasets[0].id): {
+                    "id": str(datasets[0].id),
+                    "format": datasets[0].format,
+                    "name": datasets[0].name,
+                    "location": location_to_json(datasets[0].location),
+                    "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
+                },
+                str(datasets[2].id): {
+                    "id": str(datasets[2].id),
+                    "format": datasets[2].format,
+                    "name": datasets[2].name,
+                    "location": location_to_json(datasets[2].location),
+                    "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
+                },
+            },
+            "jobs": {},
+            "runs": {},
             "operations": {},
         },
     }

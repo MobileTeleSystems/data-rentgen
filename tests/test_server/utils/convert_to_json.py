@@ -92,17 +92,12 @@ def input_to_json(input: InputRow | Input, granularity: Literal["OPERATION", "RU
     else:
         to = {"kind": "JOB", "id": str(input.job_id)}
 
-    if isinstance(input, Input):
-        schema_relevance_type = "EXACT_MATCH" if input.schema else None
-    else:
-        schema_relevance_type = input.schema_relevance_type if input.schema_relevance_type else None
     return {
         "from": {"kind": "DATASET", "id": str(input.dataset_id)},
         "to": to,
         "num_bytes": input.num_bytes,
         "num_rows": input.num_rows,
         "num_files": input.num_files,
-        "schema": schema_to_json(input.schema, schema_relevance_type) if input.schema else None,
         "last_interaction_at": format_datetime(input.created_at),
     }
 
@@ -124,10 +119,8 @@ def output_to_json(output: OutputRow | Output, granularity: Literal["OPERATION",
         from_ = {"kind": "JOB", "id": str(output.job_id)}
 
     if isinstance(output, Output):
-        schema_relevance_type = "EXACT_MATCH" if output.schema else None
         types = [output.type.name]
     else:
-        schema_relevance_type = output.schema_relevance_type if output.schema_relevance_type else None
         types = [type_.name for type_ in OutputTypeV1 if type_ & output.types_combined]
     return {
         "from": from_,
@@ -136,7 +129,6 @@ def output_to_json(output: OutputRow | Output, granularity: Literal["OPERATION",
         "num_bytes": output.num_bytes,
         "num_rows": output.num_rows,
         "num_files": output.num_files,
-        "schema": schema_to_json(output.schema, schema_relevance_type) if output.schema else None,
         "last_interaction_at": format_datetime(output.created_at),
     }
 
@@ -167,17 +159,44 @@ def locations_to_json(locations: list[Location]):
     return {str(location.id): location_to_json(location) for location in locations}
 
 
-def dataset_to_json(dataset: Dataset):
+def _get_dataset_schema(dataset: Dataset, outputs: list[OutputRow | Output], inputs: list[InputRow | Input]):
+    outputs = sorted(outputs, key=lambda output: output.schema_id, reverse=True)
+    inputs = sorted(inputs, key=lambda input: input.schema_id, reverse=True)
+    schema = next((output.schema for output in outputs if output.dataset_id == dataset.id), None) or next(
+        (input.schema for input in inputs if input.dataset_id == dataset.id),
+        None,
+    )
+
+    return schema_to_json(schema, "EXACT_MATCH")
+
+
+def dataset_to_json(
+    dataset: Dataset,
+    outputs: list[OutputRow | Output] | None = None,
+    inputs: list[InputRow | Input] | None = None,
+):
+    schema = None
+    if outputs or inputs:
+        schema = _get_dataset_schema(dataset, outputs, inputs)
     return {
         "id": str(dataset.id),
         "format": dataset.format,
         "name": dataset.name,
         "location": location_to_json(dataset.location),
+        "schema": schema,
     }
 
 
-def datasets_to_json(datasets: list[Dataset]):
-    return {str(dataset.id): dataset_to_json(dataset) for dataset in datasets}
+def datasets_to_json(
+    datasets: list[Dataset],
+    outputs: list[OutputRow | Output] | None = None,
+    inputs: list[InputRow | Input] | None = None,
+):
+    if inputs is None:
+        inputs = []
+    if outputs is None:
+        outputs = []
+    return {str(dataset.id): dataset_to_json(dataset, outputs, inputs) for dataset in datasets}
 
 
 def job_to_json(job: Job):

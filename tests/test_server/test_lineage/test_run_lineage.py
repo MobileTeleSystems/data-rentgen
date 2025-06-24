@@ -164,7 +164,7 @@ async def test_get_run_lineage_simple(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json([job]),
             "runs": runs_to_json([run]),
             "operations": {},
@@ -229,7 +229,7 @@ async def test_get_run_lineage_with_granularity_operation(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json([job]),
             "runs": runs_to_json([run]),
             "operations": operations_to_json(operations),
@@ -282,7 +282,7 @@ async def test_get_run_lineage_with_direction_downstream(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs),
             "jobs": jobs_to_json([job]),
             "runs": runs_to_json([run]),
             "operations": {},
@@ -335,7 +335,7 @@ async def test_get_run_lineage_with_direction_upstream(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, inputs=inputs),
             "jobs": jobs_to_json([job]),
             "runs": runs_to_json([run]),
             "operations": {},
@@ -399,7 +399,7 @@ async def test_get_run_lineage_with_until(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json([job]),
             "runs": runs_to_json([run]),
             "operations": {},
@@ -496,7 +496,7 @@ async def test_get_run_lineage_with_depth(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": {},
@@ -608,7 +608,7 @@ async def test_get_run_lineage_with_depth_and_granularity_operation(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": operations_to_json(operations),
@@ -661,7 +661,7 @@ async def test_get_run_lineage_with_depth_ignore_cycles(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, lineage.outputs, lineage.inputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": {},
@@ -746,7 +746,7 @@ async def test_get_run_lineage_with_depth_ignore_unrelated_datasets(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": {},
@@ -814,7 +814,7 @@ async def test_get_run_lineage_with_symlinks(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json([job]),
             "runs": runs_to_json([run]),
             "operations": {},
@@ -875,7 +875,7 @@ async def test_get_run_lineage_with_symlink_without_input_output(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json([job]),
             "runs": runs_to_json([run]),
             "operations": {},
@@ -952,7 +952,7 @@ async def test_get_run_lineage_unmergeable_inputs_and_outputs(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json([job]),
             "runs": runs_to_json([run]),
             "operations": {},
@@ -1105,7 +1105,7 @@ async def test_get_run_lineage_with_combined_output_types(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json([dataset]),
+            "datasets": datasets_to_json([dataset], outputs=outputs),
             "jobs": jobs_to_json([job]),
             "runs": runs_to_json([run]),
             "operations": {},

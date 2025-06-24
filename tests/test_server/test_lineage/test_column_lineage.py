@@ -10,6 +10,7 @@ from tests.test_server.utils.convert_to_json import (
     format_datetime,
     inputs_to_json,
     jobs_to_json,
+    location_to_json,
     operation_parents_to_json,
     operations_to_json,
     outputs_to_json,
@@ -81,7 +82,7 @@ async def test_dataset_lineage_with_empty_column_lineage(
             "indirect_column_lineage": [],
         },
         "nodes": {
-            "datasets": datasets_to_json([dataset]),
+            "datasets": datasets_to_json([dataset], outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": {},
@@ -173,7 +174,7 @@ async def test_operation_lineage_include_columns_with_combined_transformations(
             ],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json([job]),
             "runs": runs_to_json([run]),
             "operations": operations_to_json([operation]),
@@ -266,7 +267,7 @@ async def test_run_lineage_include_columns_with_combined_transformations(
             ],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json([job]),
             "runs": runs_to_json([run]),
             "operations": {},
@@ -354,7 +355,7 @@ async def test_job_lineage_include_columns_with_combined_transformations(
             ],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json([job]),
             "runs": {},
             "operations": {},
@@ -478,7 +479,7 @@ async def test_dataset_lineage_include_columns_with_depth(
             ],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": {},
@@ -594,7 +595,7 @@ async def test_get_dataset_lineage_include_columns_with_depth_and_granularity_jo
             ],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": {},
             "operations": {},
@@ -731,7 +732,7 @@ async def test_get_dataset_lineage_include_columns_with_depth_and_granularity_op
             ],
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": operations_to_json(operations),
@@ -903,7 +904,7 @@ async def test_operation_lineage_include_columns_with_depth(
             ),
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": operations_to_json(operations),
@@ -1061,7 +1062,7 @@ async def test_run_lineage_include_columns_with_depth(
             ),
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": runs_to_json(runs),
             "operations": {},
@@ -1210,7 +1211,7 @@ async def test_job_lineage_include_columns_with_depth(
             ),
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": datasets_to_json(datasets, outputs, inputs),
             "jobs": jobs_to_json(jobs),
             "runs": {},
             "operations": {},
@@ -1260,7 +1261,6 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_column_lineage(
                         "num_bytes": None,
                         "num_rows": None,
                         "num_files": None,
-                        "schema": schema_to_json(outputs_by_dataset_id[datasets[i + 1].id].schema, "EXACT_MATCH"),
                         "last_interaction_at": format_datetime(outputs_by_dataset_id[datasets[i + 1].id].created_at),
                     }
                     for i in range(len(datasets) - 1)
@@ -1335,7 +1335,16 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_column_lineage(
             ),
         },
         "nodes": {
-            "datasets": datasets_to_json(datasets),
+            "datasets": {
+                str(dataset.id): {
+                    "id": str(dataset.id),
+                    "format": dataset.format,
+                    "name": dataset.name,
+                    "location": location_to_json(dataset.location),
+                    "schema": schema_to_json(lineage.outputs[0].schema, "EXACT_MATCH"),
+                }
+                for dataset in datasets
+            },
             "jobs": {},
             "runs": {},
             "operations": {},

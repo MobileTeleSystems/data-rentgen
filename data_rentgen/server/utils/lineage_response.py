@@ -1,20 +1,16 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
+from __future__ import annotations
 
 from collections import defaultdict
-from typing import Any
-from uuid import UUID
+from typing import TYPE_CHECKING, Any
 
-from data_rentgen.db.models.dataset_symlink import DatasetSymlink
-from data_rentgen.db.models.operation import Operation
-from data_rentgen.db.models.run import Run
-from data_rentgen.db.repositories.column_lineage import ColumnLineageRow
 from data_rentgen.db.repositories.input import InputRow
-from data_rentgen.db.repositories.io_dataset_relation import IODatasetRelationRow
 from data_rentgen.db.repositories.output import OutputRow
 from data_rentgen.server.schemas.v1 import (
     ColumnLineageInteractionTypeV1,
     DatasetResponseV1,
+    DatasetSchemaV1,
     DirectLineageColumnRelationV1,
     IndirectLineageColumnRelationV1,
     JobResponseV1,
@@ -27,19 +23,29 @@ from data_rentgen.server.schemas.v1 import (
     LineageResponseV1,
     LineageSourceColumnV1,
     LineageSymlinkRelationV1,
+    LocationResponseV1,
     OperationResponseV1,
     OutputTypeV1,
     RunResponseV1,
 )
 from data_rentgen.server.schemas.v1.lineage import (
-    LineageIORelationSchemaV1,
     LineageRelationsResponseV1,
 )
-from data_rentgen.server.services.lineage import LineageServiceResult
+
+if TYPE_CHECKING:
+    from uuid import UUID
+
+    from data_rentgen.db.models.dataset import Dataset
+    from data_rentgen.db.models.dataset_symlink import DatasetSymlink
+    from data_rentgen.db.models.operation import Operation
+    from data_rentgen.db.models.run import Run
+    from data_rentgen.db.repositories.column_lineage import ColumnLineageRow
+    from data_rentgen.db.repositories.io_dataset_relation import IODatasetRelationRow
+    from data_rentgen.server.services.lineage import LineageServiceResult
 
 
 def build_lineage_response(lineage: LineageServiceResult) -> LineageResponseV1:
-    datasets = {str(dataset.id): DatasetResponseV1.model_validate(dataset) for dataset in lineage.datasets.values()}
+    datasets = _get_datasets(lineage.datasets, lineage.outputs, lineage.inputs)
     jobs = {str(job.id): JobResponseV1.model_validate(job) for job in lineage.jobs.values()}
     runs = {run.id: RunResponseV1.model_validate(run) for run in lineage.runs.values()}
     operations = {op.id: OperationResponseV1.model_validate(op) for op in lineage.operations.values()}
@@ -63,7 +69,7 @@ def build_lineage_response(lineage: LineageServiceResult) -> LineageResponseV1:
 
 
 def build_lineage_response_with_dataset_granularity(lineage: LineageServiceResult) -> LineageResponseV1:
-    datasets = {str(dataset.id): DatasetResponseV1.model_validate(dataset) for dataset in lineage.datasets.values()}
+    datasets = _get_datasets_with_dataset_granularity(lineage.datasets, lineage.io_dataset_relations)
     return LineageResponseV1(
         nodes=LineageNodesResponseV1(datasets=datasets),
         relations=LineageRelationsResponseV1(
@@ -129,10 +135,7 @@ def _get_input_relations(inputs: dict[Any, InputRow]) -> list[LineageInputRelati
             num_bytes=input_.num_bytes,
             num_rows=input_.num_rows,
             num_files=input_.num_files,
-            i_schema=LineageIORelationSchemaV1.model_validate(input_.schema) if input_.schema else None,
         )
-        if relation.i_schema:
-            relation.i_schema.relevance_type = input_.schema_relevance_type
         relations.append(relation)
 
     return sorted(relations, key=lambda x: (x.to.kind, str(x.from_.id), str(x.to.id)))
@@ -156,10 +159,7 @@ def _get_output_relations(outputs: dict[Any, OutputRow]) -> list[LineageOutputRe
             num_bytes=output.num_bytes,
             num_rows=output.num_rows,
             num_files=output.num_files,
-            o_schema=LineageIORelationSchemaV1.model_validate(output.schema) if output.schema else None,
         )
-        if relation.o_schema:
-            relation.o_schema.relevance_type = output.schema_relevance_type
         relations.append(relation)
 
     return sorted(relations, key=lambda x: (x.from_.kind, str(x.from_.id), str(x.to.id)))
@@ -174,11 +174,8 @@ def _get_input_relations_with_dataset_granularity(
             from_=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(relation.in_dataset_id)),
             to=LineageEntityV1(kind=LineageEntityKindV1.DATASET, id=str(relation.out_dataset_id)),
             last_interaction_at=relation.created_at,
-            i_schema=LineageIORelationSchemaV1.model_validate(relation.schema) if relation.schema else None,
         )
 
-        if input_.i_schema:
-            input_.i_schema.relevance_type = relation.schema_relevance_type
         relations.append(input_)
     return sorted(relations, key=lambda x: (str(x.from_.id), str(x.to.id)))
 
@@ -232,3 +229,106 @@ def _get_indirect_column_lineage(column_lineage_by_source_target_id: dict[tuple,
             column_lineage_relation.fields = fields
             relations.append(column_lineage_relation)
     return sorted(relations, key=lambda x: (str(x.from_.id), str(x.to.id)))
+
+
+def _get_latest_io_schema(dataset: Dataset, relations: list[OutputRow | InputRow]) -> DatasetSchemaV1 | None:
+    relations = [
+        relation for relation in relations if relation.dataset_id == dataset.id and relation.schema is not None
+    ]
+    if not relations:
+        return None
+    relations = sorted(relations, key=lambda relation: relation.created_at)
+    oldest_relation, newest_relation = relations[0], relations[-1]
+
+    dataset_schema = DatasetSchemaV1.model_validate(newest_relation.schema)
+    if oldest_relation.schema_id == newest_relation.schema_id:
+        dataset_schema.relevance_type = "EXACT_MATCH"
+    else:
+        dataset_schema.relevance_type = "LATEST_KNOWN"
+
+    return dataset_schema
+
+
+def _get_datasets(
+    raw_datasets: dict[int, Dataset],
+    outputs: dict[Any, OutputRow],
+    inputs: dict[Any, InputRow],
+) -> dict[str, DatasetResponseV1]:
+    datasets: dict[str, DatasetResponseV1] = defaultdict()
+    for dataset in raw_datasets.values():
+        schema: DatasetSchemaV1 | None = None
+        schema = _get_latest_io_schema(dataset, list(outputs.values())) or _get_latest_io_schema(
+            dataset,
+            list(inputs.values()),
+        )
+        datasets[str(dataset.id)] = DatasetResponseV1(
+            id=str(dataset.id),
+            location=LocationResponseV1.model_validate(dataset.location),
+            name=dataset.name,
+            format=dataset.format,
+            schema=schema,
+        )
+    return datasets
+
+
+def _get_io_by_dataset(
+    io_relations: dict[tuple[int, int], IODatasetRelationRow],
+) -> tuple[dict[int, list], dict[int, list]]:
+    # Group inputs and outputs by dataset
+    outputs, inputs = defaultdict(list), defaultdict(list)
+    for (input_dataset_id, output_dataset_id), relation in io_relations.items():
+        outputs[output_dataset_id].append(
+            OutputRow(
+                created_at=relation.created_at,
+                operation_id=None,  # type: ignore[arg-type]
+                run_id=None,  # type: ignore[arg-type]
+                job_id=None,  # type: ignore[arg-type]
+                dataset_id=output_dataset_id,
+                schema_id=relation.output_schema_id,
+                schema=relation.output_schema,
+                schema_relevance_type=relation.output_schema_relevance_type,
+                num_bytes=None,
+                num_rows=None,
+                num_files=None,
+            ),
+        )
+        inputs[input_dataset_id].append(
+            InputRow(
+                created_at=relation.created_at,
+                operation_id=None,  # type: ignore[arg-type]
+                run_id=None,  # type: ignore[arg-type]
+                job_id=None,  # type: ignore[arg-type]
+                dataset_id=input_dataset_id,
+                schema_id=relation.input_schema_id,
+                schema=relation.input_schema,
+                schema_relevance_type=relation.input_schema_relevance_type,
+                num_bytes=None,
+                num_rows=None,
+                num_files=None,
+            ),
+        )
+    return outputs, inputs
+
+
+def _get_datasets_with_dataset_granularity(
+    raw_datasets: dict[int, Dataset],
+    io_relations: dict[tuple[int, int], IODatasetRelationRow],
+) -> dict[str, DatasetResponseV1]:
+    datasets: dict[str, DatasetResponseV1] = defaultdict()
+
+    outputs_by_dataset_id, inputs_by_dataset_id = _get_io_by_dataset(io_relations)
+
+    for dataset in raw_datasets.values():
+        schema: DatasetSchemaV1 | None = None
+        schema = _get_latest_io_schema(dataset, outputs_by_dataset_id[dataset.id]) or _get_latest_io_schema(
+            dataset,
+            inputs_by_dataset_id[dataset.id],
+        )
+        datasets[str(dataset.id)] = DatasetResponseV1(
+            id=str(dataset.id),
+            location=LocationResponseV1.model_validate(dataset.location),
+            name=dataset.name,
+            format=dataset.format,
+            schema=schema,
+        )
+    return datasets
