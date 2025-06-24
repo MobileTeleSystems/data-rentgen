@@ -3,7 +3,7 @@
 
 from collections.abc import Collection
 
-from sqlalchemy import any_, or_, select
+from sqlalchemy import BindParameter, any_, bindparam, or_, select
 
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
 from data_rentgen.db.repositories.base import Repository
@@ -27,13 +27,14 @@ class DatasetSymlinkRepository(Repository[DatasetSymlink]):
         if not dataset_ids:
             return []
 
+        param: BindParameter[list[int]] = bindparam("dataset_ids")
         query = select(DatasetSymlink).where(
             or_(
-                DatasetSymlink.from_dataset_id == any_(list(dataset_ids)),  # type: ignore[arg-type]
-                DatasetSymlink.to_dataset_id == any_(list(dataset_ids)),  # type: ignore[arg-type]
+                DatasetSymlink.from_dataset_id == any_(param),
+                DatasetSymlink.to_dataset_id == any_(param),
             ),
         )
-        scalars = await self._session.scalars(query)
+        scalars = await self._session.scalars(query, {"dataset_ids": list(dataset_ids)})
         return list(scalars.all())
 
     async def _get(self, dataset_symlink: DatasetSymlinkDTO) -> DatasetSymlink | None:

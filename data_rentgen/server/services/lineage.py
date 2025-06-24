@@ -82,7 +82,7 @@ class LineageService:
     def __init__(self, uow: Annotated[UnitOfWork, Depends()]):
         self._uow = uow
 
-    async def get_lineage_by_jobs(  # noqa: C901, PLR0912, PLR0915
+    async def get_lineage_by_jobs(  # noqa: C901, PLR0912
         self,
         start_node_ids: Collection[int],
         direction: LineageDirectionV1,
@@ -225,10 +225,8 @@ class LineageService:
         else:
             # datasets and symlinks will be populated by nested call
             dataset_ids = upstream_dataset_ids | downstream_dataset_ids
-            datasets = await self._uow.dataset.list_by_ids(dataset_ids)
-
-            extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(dataset_ids, ids_to_skip)
-            datasets.extend(extra_datasets)
+            extra_dataset_ids, dataset_symlinks = await self._resolve_dataset_ids_via_symlink(dataset_ids, ids_to_skip)
+            datasets = await self._uow.dataset.list_by_ids(dataset_ids | extra_dataset_ids)
 
             result.datasets = {dataset.id: dataset for dataset in datasets}
             result.dataset_symlinks = {
@@ -430,10 +428,8 @@ class LineageService:
             )
         else:
             dataset_ids = upstream_dataset_ids | downstream_dataset_ids
-            datasets = await self._uow.dataset.list_by_ids(dataset_ids)
-
-            extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(dataset_ids, ids_to_skip)
-            datasets.extend(extra_datasets)
+            extra_dataset_ids, dataset_symlinks = await self._resolve_dataset_ids_via_symlink(dataset_ids, ids_to_skip)
+            datasets = await self._uow.dataset.list_by_ids(dataset_ids | extra_dataset_ids)
 
             result.datasets = {dataset.id: dataset for dataset in datasets}
             result.dataset_symlinks = {
@@ -594,13 +590,8 @@ class LineageService:
             )
         else:
             dataset_ids = upstream_dataset_ids | downstream_dataset_ids
-            datasets = await self._uow.dataset.list_by_ids(dataset_ids)
-
-            extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(
-                dataset_ids,
-                ids_to_skip,
-            )
-            datasets.extend(extra_datasets)
+            extra_dataset_ids, dataset_symlinks = await self._resolve_dataset_ids_via_symlink(dataset_ids, ids_to_skip)
+            datasets = await self._uow.dataset.list_by_ids(dataset_ids | extra_dataset_ids)
 
             result.datasets = {dataset.id: dataset for dataset in datasets}
             result.dataset_symlinks = {
@@ -671,7 +662,8 @@ class LineageService:
 
         # Threat dataset symlinks like they are specified in `start_node_ids`
         ids_to_skip = ids_to_skip or IdsToSkip()
-        extra_datasets, dataset_symlinks = await self._extend_datasets_with_symlinks(datasets_by_id, ids_to_skip)
+        extra_dataset_ids, dataset_symlinks = await self._resolve_dataset_ids_via_symlink(datasets_by_id, ids_to_skip)
+        extra_datasets = await self._uow.dataset.list_by_ids(extra_dataset_ids)
         datasets.extend(extra_datasets)
 
         datasets_by_id.update({dataset.id: dataset for dataset in extra_datasets})
@@ -758,23 +750,21 @@ class LineageService:
             )
         return result
 
-    async def _extend_datasets_with_symlinks(
+    async def _resolve_dataset_ids_via_symlink(
         self,
         dataset_ids: Collection[int],
         ids_to_skip: IdsToSkip | None = None,
-    ) -> tuple[list[Dataset], list[DatasetSymlink]]:
+    ) -> tuple[set[int], list[DatasetSymlink]]:
         # For now return all symlinks regardless of direction
         dataset_symlinks = await self._uow.dataset_symlink.list_by_dataset_ids(dataset_ids)
 
         ids_to_skip = ids_to_skip or IdsToSkip()
         dataset_ids_from_symlinks = {dataset_symlink.from_dataset_id for dataset_symlink in dataset_symlinks}
         dataset_ids_to_symlinks = {dataset_symlink.to_dataset_id for dataset_symlink in dataset_symlinks}
-        dataset_ids_to_load = (
+        new_dataset_ids = (
             (dataset_ids_from_symlinks | dataset_ids_to_symlinks) - set(dataset_ids) - ids_to_skip.datasets
         )
-
-        datasets_from_symlinks = await self._uow.dataset.list_by_ids(dataset_ids_to_load)
-        return datasets_from_symlinks, dataset_symlinks
+        return new_dataset_ids, dataset_symlinks
 
     async def _dataset_lineage_with_operation_granularity(
         self,
@@ -1128,7 +1118,7 @@ class LineageService:
 
         return result
 
-    async def _dataset_lineage_with_dataset_granularity(  # noqa: C901, PLR0915
+    async def _dataset_lineage_with_dataset_granularity(  # noqa: C901, PLR0915, PLR0912
         self,
         datasets_by_id: dict[int, Dataset],
         dataset_symlinks_by_id: dict[tuple[int, int], DatasetSymlink],
@@ -1142,102 +1132,113 @@ class LineageService:
             datasets=datasets_by_id,
             dataset_symlinks=dataset_symlinks_by_id,
         )
-        layer_dataset_ids = {
-            "downstream": set(datasets_by_id.keys()),
-            "upstream": set(datasets_by_id.keys()),
-        }
+        all_dataset_ids = set(datasets_by_id.keys())
+        next_level_downstream_dataset_ids = all_dataset_ids.copy()
+        next_level_upstream_dataset_ids = all_dataset_ids.copy()
+
+        level = 0
         while depth:
+            if not next_level_downstream_dataset_ids and not next_level_upstream_dataset_ids:
+                break
+            if logger.isEnabledFor(logging.INFO):
+                logger.info(
+                    "[Level %d] Get lineage by datasets %r, with direction %s, since %s, until %s",
+                    level,
+                    sorted(next_level_downstream_dataset_ids | next_level_upstream_dataset_ids),
+                    direction,
+                    since,
+                    until,
+                )
+
             relations_by_id = {}
-            downstream_relations, upstream_relations = [], []
-            downstream_dataset_ids, upstream_dataset_ids = set(), set()
+            symlinks_by_id = {}
 
             if direction in {LineageDirectionV1.DOWNSTREAM, LineageDirectionV1.BOTH}:
                 downstream_relations = await self._uow.io_dataset_relation.get_relations(
-                    layer_dataset_ids["downstream"],
+                    next_level_downstream_dataset_ids,
                     since=since,
                     until=until,
                     direction="DOWNSTREAM",
                 )
+                next_level_downstream_dataset_ids = {
+                    relation.out_dataset_id for relation in downstream_relations
+                } - all_dataset_ids
+
+                downstream_extra_dataset_ids, downstream_dataset_symlinks = await self._resolve_dataset_ids_via_symlink(
+                    next_level_downstream_dataset_ids,
+                )
+                next_level_downstream_dataset_ids |= downstream_extra_dataset_ids
+
                 relations_by_id.update(
                     {(relation.in_dataset_id, relation.out_dataset_id): relation for relation in downstream_relations},
                 )
-
-                downstream_dataset_ids = {relation.out_dataset_id for relation in downstream_relations}
-                downstream_datasets = await self._uow.dataset.list_by_ids(downstream_dataset_ids)  # type: ignore[arg-type]
-                downstream_datasets_by_id = {dataset.id: dataset for dataset in downstream_datasets}
-                downstream_extra_datasets, downstream_dataset_symlinks = await self._extend_datasets_with_symlinks(
-                    downstream_datasets_by_id,
+                symlinks_by_id.update(
+                    {
+                        (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
+                        for dataset_symlink in downstream_dataset_symlinks
+                    },
                 )
-                downstream_dataset_ids = downstream_dataset_ids | {dataset.id for dataset in downstream_extra_datasets}
-                downstream_datasets.extend(downstream_extra_datasets)
-                downstream_datasets_by_id.update({dataset.id: dataset for dataset in downstream_extra_datasets})
-                downstream_dataset_symlinks_by_id = {
-                    (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
-                    for dataset_symlink in downstream_dataset_symlinks
-                }
-
-                result.datasets.update(downstream_datasets_by_id)
-                result.dataset_symlinks.update(downstream_dataset_symlinks_by_id)
 
             if direction in {LineageDirectionV1.UPSTREAM, LineageDirectionV1.BOTH}:
                 upstream_relations = await self._uow.io_dataset_relation.get_relations(
-                    layer_dataset_ids["upstream"],
+                    next_level_upstream_dataset_ids,
                     since=since,
                     until=until,
                     direction="UPSTREAM",
                 )
+                next_level_upstream_dataset_ids = {
+                    relation.in_dataset_id for relation in upstream_relations
+                } - all_dataset_ids
+
+                upstream_extra_dataset_ids, upstream_dataset_symlinks = await self._resolve_dataset_ids_via_symlink(
+                    next_level_upstream_dataset_ids,
+                )
+                next_level_upstream_dataset_ids |= upstream_extra_dataset_ids
 
                 relations_by_id.update(
                     {(relation.in_dataset_id, relation.out_dataset_id): relation for relation in upstream_relations},
                 )
-
-                upstream_dataset_ids = {relation.in_dataset_id for relation in upstream_relations}
-                upstream_datasets = await self._uow.dataset.list_by_ids(upstream_dataset_ids)  # type: ignore[arg-type]
-                upstream_datasets_by_id = {dataset.id: dataset for dataset in upstream_datasets}
-                upstream_extra_datasets, upstream_dataset_symlinks = await self._extend_datasets_with_symlinks(
-                    upstream_datasets_by_id,
+                symlinks_by_id.update(
+                    {
+                        (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
+                        for dataset_symlink in upstream_dataset_symlinks
+                    },
                 )
-                upstream_dataset_ids = upstream_dataset_ids | {dataset.id for dataset in upstream_extra_datasets}
-                upstream_datasets.extend(upstream_extra_datasets)
-                upstream_datasets_by_id.update({dataset.id: dataset for dataset in upstream_extra_datasets})
-                upstream_dataset_symlinks_by_id = {
-                    (dataset_symlink.from_dataset_id, dataset_symlink.to_dataset_id): dataset_symlink
-                    for dataset_symlink in upstream_dataset_symlinks
-                }
 
-                result.datasets.update(upstream_datasets_by_id)
-                result.dataset_symlinks.update(upstream_dataset_symlinks_by_id)
+            if logger.isEnabledFor(logging.INFO):
+                logger.info(
+                    "[Level %d] Found %d datasets, %d dataset symlinks, %d IO relations",
+                    level,
+                    len(next_level_upstream_dataset_ids | next_level_downstream_dataset_ids),
+                    len(relations_by_id),
+                    len(symlinks_by_id),
+                )
 
-            schema_ids = {
-                schema_id
-                for relation in downstream_relations
-                for schema_id in (relation.output_schema_id, relation.input_schema_id)
-            } | {
-                schema_id
-                for relation in upstream_relations
-                for schema_id in (relation.output_schema_id, relation.input_schema_id)
-            }
-
-            schemas = await self._uow.schema.list_by_ids(schema_ids)  # type: ignore[arg-type]
-            schemas_by_id = {schema.id: schema for schema in schemas}
-            for relation in downstream_relations:
-                if relation.output_schema_id is not None:
-                    relation.output_schema = schemas_by_id.get(relation.output_schema_id)
-                if relation.input_schema_id is not None:
-                    relation.input_schema = schemas_by_id.get(relation.input_schema_id)
-            for relation in upstream_relations:
-                if relation.output_schema_id is not None:
-                    relation.output_schema = schemas_by_id.get(relation.output_schema_id)
-                if relation.input_schema_id is not None:
-                    relation.input_schema = schemas_by_id.get(relation.input_schema_id)
+            all_dataset_ids |= next_level_upstream_dataset_ids
+            all_dataset_ids |= next_level_downstream_dataset_ids
 
             result.io_dataset_relations.update(relations_by_id)
-
+            result.dataset_symlinks.update(symlinks_by_id)
             depth -= 1
-            layer_dataset_ids = {
-                "downstream": downstream_dataset_ids,
-                "upstream": upstream_dataset_ids,
-            }
+            level += 1
+
+        datasets = await self._uow.dataset.list_by_ids(all_dataset_ids)
+        result.datasets.update({dataset.id: dataset for dataset in datasets})
+
+        schema_ids: set[int] = set()
+        for relation in result.io_dataset_relations.values():
+            if relation.input_schema_id is not None:
+                schema_ids.add(relation.input_schema_id)
+            if relation.output_schema_id is not None:
+                schema_ids.add(relation.output_schema_id)
+
+        schemas = await self._uow.schema.list_by_ids(schema_ids)
+        schemas_by_id = {schema.id: schema for schema in schemas}
+        for relation in result.io_dataset_relations.values():
+            if relation.input_schema_id is not None:
+                relation.input_schema = schemas_by_id.get(relation.input_schema_id)
+            if relation.output_schema_id is not None:
+                relation.output_schema = schemas_by_id.get(relation.output_schema_id)
 
         if include_column_lineage:
             column_lineage_result = await self._uow.column_lineage.list_by_dataset_pairs(
@@ -1246,12 +1247,8 @@ class LineageService:
                 until,
             )
             column_lineage_relations: dict[tuple[int, int], list[ColumnLineageRow]] = defaultdict(list)
-            for columns_relation in column_lineage_result:
-                column_lineage_relations[
-                    (columns_relation.source_dataset_id, columns_relation.target_dataset_id)
-                ].append(
-                    columns_relation,
-                )
+            for item in column_lineage_result:
+                column_lineage_relations[(item.source_dataset_id, item.target_dataset_id)].append(item)
             result.column_lineage.update(column_lineage_relations)
         return result
 
