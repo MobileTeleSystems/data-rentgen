@@ -1576,3 +1576,100 @@ async def test_get_dataset_lineage_empty_io_stats_and_schema(
             "operations": {},
         },
     }
+
+
+async def test_get_dataset_lineage_with_granularity_dataset_without_output_schema(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_with_depth: LineageResult,
+    mocked_user: MockedUser,
+):
+    lineage = lineage_with_depth
+
+    # delete output schema for operation 01
+    output = lineage.outputs[0]
+    output.schema_id = None
+    output.schema = None
+    await async_session.merge(output)
+    await async_session.commit()
+
+    response_schema = await create_schema(async_session)
+    # Add new schema to O2 input. It should be different from all others
+    input_ = lineage.inputs[1]
+    input_.schema_id = response_schema.id
+    input_.schema = response_schema
+    await async_session.merge(input_)
+    await async_session.commit()
+
+    # dasate which has only input schema
+    lineage_dataset = lineage.datasets[1]
+    datasets = lineage.datasets[:3]
+    outputs_by_dataset_id = {output.dataset_id: output for output in lineage.outputs}
+
+    runs = await enrich_runs(lineage.runs, async_session)
+    [lineage_dataset] = await enrich_datasets([lineage_dataset], async_session)
+    datasets = await enrich_datasets(datasets, async_session)
+
+    since = min(run.created_at for run in runs)
+    response = await test_client.get(
+        "v1/datasets/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "start_node_id": lineage_dataset.id,
+            "granularity": "DATASET",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": {
+            "parents": [],
+            "symlinks": [],
+            "outputs": [],
+            "inputs": sorted(
+                [
+                    {
+                        "from": {"kind": "DATASET", "id": str(datasets[i].id)},
+                        "to": {"kind": "DATASET", "id": str(datasets[i + 1].id)},
+                        "num_bytes": None,
+                        "num_rows": None,
+                        "num_files": None,
+                        "last_interaction_at": format_datetime(outputs_by_dataset_id[datasets[i + 1].id].created_at),
+                    }
+                    for i in range(len(datasets) - 1)
+                ],
+                key=lambda x: (x["from"]["id"], x["to"]["id"]),
+            ),
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
+        },
+        "nodes": {
+            "datasets": {
+                str(lineage_dataset.id): {
+                    "id": str(lineage_dataset.id),
+                    "format": lineage_dataset.format,
+                    "name": lineage_dataset.name,
+                    "location": location_to_json(lineage_dataset.location),
+                    "schema": schema_to_json(response_schema, "EXACT_MATCH"),
+                },
+                str(datasets[0].id): {
+                    "id": str(datasets[0].id),
+                    "format": datasets[0].format,
+                    "name": datasets[0].name,
+                    "location": location_to_json(datasets[0].location),
+                    "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
+                },
+                str(datasets[2].id): {
+                    "id": str(datasets[2].id),
+                    "format": datasets[2].format,
+                    "name": datasets[2].name,
+                    "location": location_to_json(datasets[2].location),
+                    "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
+                },
+            },
+            "jobs": {},
+            "runs": {},
+            "operations": {},
+        },
+    }
