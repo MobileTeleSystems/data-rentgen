@@ -19,6 +19,7 @@ from data_rentgen.utils.uuid import generate_incremental_uuid, generate_static_u
 
 @dataclass
 class ColumnLineageDTO:
+    created_at: datetime
     operation: OperationDTO
     source_dataset: DatasetDTO
     target_dataset: DatasetDTO
@@ -48,10 +49,6 @@ class ColumnLineageDTO:
         ]
         return generate_incremental_uuid(self.created_at, ".".join(id_components))
 
-    @property
-    def created_at(self) -> datetime:
-        return self.operation.created_at
-
     @cached_property
     def fingerprint(self) -> UUID:
         id_components = sorted((*item.unique_key, item.type) for item in self.column_relations)
@@ -60,6 +57,7 @@ class ColumnLineageDTO:
 
     def merge(self, new: ColumnLineageDTO) -> ColumnLineageDTO:
         return ColumnLineageDTO(
+            created_at=min([new.created_at, self.created_at]),
             operation=self.operation.merge(new.operation),
             source_dataset=self.source_dataset.merge(new.source_dataset),
             target_dataset=self.target_dataset.merge(new.target_dataset),

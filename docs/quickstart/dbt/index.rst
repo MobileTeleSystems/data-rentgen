@@ -9,7 +9,7 @@ Requirements
 ------------
 
 * `dbt <https://www.getdbt.com/>`_ 1.3 or higher
-* OpenLineage 1.19.0 or higher, recommended 1.33.0+
+* OpenLineage 1.19.0 or higher, recommended 1.34.0+
 
 Entity mapping
 --------------
@@ -23,7 +23,7 @@ Install
 
 .. code:: console
 
-    $ pip install "openlineage-dbt>=1.33.0" "openlineage-python[kafka]>=1.33.0" zstd
+    $ pip install "openlineage-dbt>=1.34.0" "openlineage-python[kafka]>=1.34.0" zstd
 
 Setup
 -----

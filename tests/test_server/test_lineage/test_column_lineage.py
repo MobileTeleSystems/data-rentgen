@@ -1,3 +1,4 @@
+from datetime import timedelta
 from http import HTTPStatus
 
 import pytest
@@ -25,7 +26,7 @@ from tests.test_server.utils.merge import merge_io_by_jobs, merge_io_by_runs
 pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]
 
 
-async def test_dataset_lineage_with_empty_column_lineage(
+async def test_get_dataset_lineage_with_empty_column_lineage(
     test_client: AsyncClient,
     async_session: AsyncSession,
     duplicated_lineage_with_column_lineage: LineageResult,
@@ -90,7 +91,7 @@ async def test_dataset_lineage_with_empty_column_lineage(
     }
 
 
-async def test_operation_lineage_include_columns_with_combined_transformations(
+async def test_get_operation_lineage_include_columns_with_combined_transformations(
     test_client: AsyncClient,
     async_session: AsyncSession,
     duplicated_lineage_with_column_lineage: LineageResult,
@@ -182,7 +183,7 @@ async def test_operation_lineage_include_columns_with_combined_transformations(
     }
 
 
-async def test_run_lineage_include_columns_with_combined_transformations(
+async def test_get_run_lineage_include_columns_with_combined_transformations(
     test_client: AsyncClient,
     async_session: AsyncSession,
     duplicated_lineage_with_column_lineage: LineageResult,
@@ -275,7 +276,7 @@ async def test_run_lineage_include_columns_with_combined_transformations(
     }
 
 
-async def test_job_lineage_include_columns_with_combined_transformations(
+async def test_get_job_lineage_include_columns_with_combined_transformations(
     test_client: AsyncClient,
     async_session: AsyncSession,
     duplicated_lineage_with_column_lineage: LineageResult,
@@ -363,7 +364,7 @@ async def test_job_lineage_include_columns_with_combined_transformations(
     }
 
 
-async def test_dataset_lineage_include_columns_with_depth(
+async def test_get_dataset_lineage_include_columns_with_depth_and_granularity_run(
     test_client: AsyncClient,
     async_session: AsyncSession,
     lineage_with_depth_and_with_column_lineage: LineageResult,
@@ -740,7 +741,7 @@ async def test_get_dataset_lineage_include_columns_with_depth_and_granularity_op
     }
 
 
-async def test_operation_lineage_include_columns_with_depth(
+async def test_get_operation_lineage_include_columns_with_depth(
     test_client: AsyncClient,
     async_session: AsyncSession,
     lineage_with_depth_and_with_column_lineage: LineageResult,
@@ -912,7 +913,7 @@ async def test_operation_lineage_include_columns_with_depth(
     }
 
 
-async def test_run_lineage_include_columns_with_depth(
+async def test_get_run_lineage_include_columns_with_depth(
     test_client: AsyncClient,
     async_session: AsyncSession,
     lineage_with_depth_and_with_column_lineage: LineageResult,
@@ -1070,7 +1071,7 @@ async def test_run_lineage_include_columns_with_depth(
     }
 
 
-async def test_job_lineage_include_columns_with_depth(
+async def test_get_job_lineage_include_columns_with_depth(
     test_client: AsyncClient,
     async_session: AsyncSession,
     lineage_with_depth_and_with_column_lineage: LineageResult,
@@ -1324,6 +1325,147 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_column_lineage(
                             {
                                 "field": "indirect_source_column",
                                 "last_used_at": format_datetime(lineage.operations[1].created_at),
+                                "types": [
+                                    "JOIN",
+                                ],
+                            },
+                        ],
+                    },
+                ],
+                key=lambda x: (x["from"]["id"], x["to"]["id"]),
+            ),
+        },
+        "nodes": {
+            "datasets": {
+                str(dataset.id): {
+                    "id": str(dataset.id),
+                    "format": dataset.format,
+                    "name": dataset.name,
+                    "location": location_to_json(dataset.location),
+                    "schema": schema_to_json(lineage.outputs[0].schema, "EXACT_MATCH"),
+                }
+                for dataset in datasets
+            },
+            "jobs": {},
+            "runs": {},
+            "operations": {},
+        },
+    }
+
+
+async def test_get_dataset_lineage_with_granularity_dataset_and_column_lineage_for_long_running_operations(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_for_long_running_operations_with_column_lineage: LineageResult,
+    mocked_user: MockedUser,
+):
+    lineage = lineage_for_long_running_operations_with_column_lineage
+    # We need a middle dataset, which has inputs and outputs
+    lineage_dataset = lineage.datasets[1]
+    # If start dataset is d1 we should have this lineage: d0-d1-d2
+    datasets = lineage.datasets[:3]
+    outputs_by_dataset_id = {output.dataset_id: output for output in lineage.outputs}
+
+    datasets = await enrich_datasets(datasets, async_session)
+    runs = await enrich_runs(lineage.runs, async_session)
+    since = min(run.created_at for run in runs)
+
+    response = await test_client.get(
+        "v1/datasets/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "start_node_id": lineage_dataset.id,
+            "granularity": "DATASET",
+            "include_column_lineage": True,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": {
+            "parents": [],
+            "symlinks": [],
+            "outputs": [],
+            "inputs": sorted(
+                [
+                    {
+                        "from": {"kind": "DATASET", "id": str(datasets[i].id)},
+                        "to": {"kind": "DATASET", "id": str(datasets[i + 1].id)},
+                        "num_bytes": None,
+                        "num_rows": None,
+                        "num_files": None,
+                        "last_interaction_at": format_datetime(outputs_by_dataset_id[datasets[i + 1].id].created_at),
+                    }
+                    for i in range(len(datasets) - 1)
+                ],
+                key=lambda x: (x["from"]["id"], x["to"]["id"]),
+            ),
+            "direct_column_lineage": sorted(
+                [
+                    {
+                        "from": {"id": str(lineage.datasets[0].id), "kind": "DATASET"},
+                        "to": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                        "fields": {
+                            "direct_target_column": [
+                                {
+                                    "field": "direct_source_column",
+                                    "last_used_at": format_datetime(
+                                        lineage.operations[0].created_at + timedelta(hours=2),
+                                    ),
+                                    "types": [
+                                        "AGGREGATION",
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                    {
+                        "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                        "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
+                        "fields": {
+                            "direct_target_column": [
+                                {
+                                    "field": "direct_source_column",
+                                    "last_used_at": format_datetime(
+                                        lineage.operations[1].created_at + timedelta(hours=2),
+                                    ),
+                                    "types": [
+                                        "AGGREGATION",
+                                    ],
+                                },
+                            ],
+                        },
+                    },
+                ],
+                key=lambda x: (x["from"]["id"], x["to"]["id"]),
+            ),
+            "indirect_column_lineage": sorted(
+                [
+                    {
+                        "from": {"id": str(lineage.datasets[0].id), "kind": "DATASET"},
+                        "to": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                        "fields": [
+                            {
+                                "field": "indirect_source_column",
+                                "last_used_at": format_datetime(
+                                    lineage.operations[0].created_at + timedelta(hours=2),
+                                ),
+                                "types": [
+                                    "JOIN",
+                                ],
+                            },
+                        ],
+                    },
+                    {
+                        "from": {"id": str(lineage.datasets[1].id), "kind": "DATASET"},
+                        "to": {"id": str(lineage.datasets[2].id), "kind": "DATASET"},
+                        "fields": [
+                            {
+                                "field": "indirect_source_column",
+                                "last_used_at": format_datetime(
+                                    lineage.operations[1].created_at + timedelta(hours=2),
+                                ),
                                 "types": [
                                     "JOIN",
                                 ],

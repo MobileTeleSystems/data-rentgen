@@ -993,3 +993,75 @@ async def test_get_job_lineage_empty_io_stats_and_schema(
             "operations": {},
         },
     }
+
+
+async def test_get_job_lineage_for_long_running_operations(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_for_long_running_operations: LineageResult,
+    mocked_user: MockedUser,
+):
+    lineage = lineage_for_long_running_operations
+
+    job = lineage.jobs[0]
+
+    # use only latest IO for each operation+dataset
+    raw_inputs = [input for input in lineage.inputs if input.job_id == job.id]
+    latest_inputs = {}
+    for input in raw_inputs:
+        index = (input.operation_id, input.dataset_id)
+        existing = latest_inputs.get(index)
+        if not existing or input.created_at > existing.created_at:
+            latest_inputs[index] = input
+    inputs = list(latest_inputs.values())
+    assert inputs
+
+    raw_outputs = [output for output in lineage.outputs if output.job_id == job.id]
+    latest_outputs = {}
+    for output in raw_outputs:
+        index = (output.operation_id, input.dataset_id)
+        existing = latest_outputs.get(index)
+        if not existing or output.created_at > existing.created_at:
+            latest_outputs[index] = output
+    outputs = list(latest_outputs.values())
+    assert outputs
+
+    dataset_ids = {input.dataset_id for input in inputs} | {output.dataset_id for output in outputs}
+    datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
+    assert datasets
+
+    run = next(run for run in lineage.runs if run.job_id == job.id)
+
+    datasets = await enrich_datasets(datasets, async_session)
+    [job] = await enrich_jobs([job], async_session)
+
+    response = await test_client.get(
+        "v1/jobs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": run.created_at.isoformat(),
+            "start_node_id": job.id,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": {
+            "parents": [],
+            "symlinks": [],
+            "inputs": [
+                *inputs_to_json(merge_io_by_jobs(inputs), granularity="JOB"),
+            ],
+            "outputs": [
+                *outputs_to_json(merge_io_by_jobs(outputs), granularity="JOB"),
+            ],
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets, outputs, inputs),
+            "jobs": jobs_to_json([job]),
+            "runs": {},
+            "operations": {},
+        },
+    }

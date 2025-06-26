@@ -1,0 +1,11 @@
+Improve storing lineage data for long running operations.
+
+Previously if operation was running for a long time (more than a day, Flink streaming jobs can easily run for months or years),
+and lineage was fetched for last day, there was no Flink job/run/operation in the graph.
+This is because we created input/output/column lineage at operation start,
+and ``RUNNING`` events of the same operation (checkpoints) were just updating the same row statistics.
+
+Now we create new input/output/column lineage row for checkpoints events as well.
+But only one row for each hour since operation was started, as increasing number of rows slows down lineage graph resolution.
+
+For short-lived operations (most of batch operations take less than hour) behavior remains unchanged.

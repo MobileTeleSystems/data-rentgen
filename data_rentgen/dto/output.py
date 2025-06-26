@@ -29,6 +29,7 @@ class OutputTypeDTO(IntFlag):
 
 @dataclass
 class OutputDTO:
+    created_at: datetime
     operation: OperationDTO
     dataset: DatasetDTO
     type: OutputTypeDTO
@@ -55,10 +56,6 @@ class OutputDTO:
         ]
         return generate_incremental_uuid(self.created_at, ".".join(id_components))
 
-    @property
-    def created_at(self) -> datetime:
-        return self.operation.created_at
-
     def merge(self, new: OutputDTO) -> OutputDTO:
         schema: SchemaDTO | None
         if self.schema and new.schema:  # noqa: SIM108
@@ -67,6 +64,7 @@ class OutputDTO:
             schema = new.schema or self.schema
 
         return OutputDTO(
+            created_at=min([new.created_at, self.created_at]),
             operation=self.operation.merge(new.operation),
             dataset=self.dataset.merge(new.dataset),
             type=self.type,

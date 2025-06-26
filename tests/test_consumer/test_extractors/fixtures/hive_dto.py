@@ -96,6 +96,7 @@ def extracted_hive_input(
     extracted_dataset_schema: SchemaDTO,
 ) -> InputDTO:
     return InputDTO(
+        created_at=extracted_hive_operation.created_at,
         operation=extracted_hive_operation,
         dataset=extracted_hive_dataset1,
         schema=extracted_dataset_schema,
@@ -109,6 +110,7 @@ def extracted_hive_output(
     extracted_dataset_schema: SchemaDTO,
 ) -> OutputDTO:
     return OutputDTO(
+        created_at=extracted_hive_operation.created_at,
         type=OutputTypeDTO.CREATE,
         operation=extracted_hive_operation,
         dataset=extracted_hive_dataset2,

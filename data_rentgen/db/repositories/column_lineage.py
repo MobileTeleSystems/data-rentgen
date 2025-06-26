@@ -105,14 +105,9 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
         if not operation_ids:
             return []
 
-        # Output created_at is always the same as operation's created_at
-        # do not use `tuple_(Output.created_at, Output.operation_id).in_(...),
-        # as this is too complex filter for Postgres to make an optimal query plan
-        min_created_at = extract_timestamp_from_uuid(min(operation_ids))
-        max_created_at = extract_timestamp_from_uuid(max(operation_ids))
         where = [
-            ColumnLineage.created_at >= min_created_at,
-            ColumnLineage.created_at <= max_created_at,
+            # ColumnLineage created_at cannot be below operation's created_at.
+            ColumnLineage.created_at >= extract_timestamp_from_uuid(min(operation_ids)),
             ColumnLineage.operation_id == any_(list(operation_ids)),  # type: ignore[arg-type]
             ColumnLineage.source_dataset_id == any_(list(source_dataset_ids)),  # type: ignore[arg-type]
             ColumnLineage.target_dataset_id == any_(list(target_dataset_ids)),  # type: ignore[arg-type]

@@ -43,16 +43,19 @@ class ExtractorInterface(Protocol):
         self,
         operation: OperationDTO,
         dataset: OpenLineageInputDataset,
+        event: OpenLineageRunEvent,
     ) -> tuple[InputDTO, list[DatasetSymlinkDTO]]: ...
 
     def extract_output(
         self,
         operation: OperationDTO,
         dataset: OpenLineageOutputDataset,
+        event: OpenLineageRunEvent,
     ) -> tuple[OutputDTO, list[DatasetSymlinkDTO]]: ...
 
     def extract_column_lineage(
         self,
         operation: OperationDTO,
         output_dataset: OpenLineageDataset,
+        event: OpenLineageRunEvent,
     ) -> list[ColumnLineageDTO]: ...

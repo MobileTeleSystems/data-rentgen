@@ -1673,3 +1673,173 @@ async def test_get_dataset_lineage_with_granularity_dataset_without_output_schem
             "operations": {},
         },
     }
+
+
+async def test_get_dataset_lineage_for_long_running_operations_with_granularity_run(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_for_long_running_operations: LineageResult,
+    mocked_user: MockedUser,
+):
+    lineage = lineage_for_long_running_operations
+
+    # We need a middle dataset, which has inputs and outputs
+    dataset = lineage.datasets[1]
+
+    # use only latest IO for each operation+dataset
+    raw_inputs = [input for input in lineage.inputs if input.dataset_id == dataset.id]
+    latest_inputs = {}
+    for input in raw_inputs:
+        index = (input.operation_id, input.dataset_id)
+        existing = latest_inputs.get(index)
+        if not existing or input.created_at > existing.created_at:
+            latest_inputs[index] = input
+    inputs = list(latest_inputs.values())
+    assert inputs
+
+    raw_outputs = [output for output in lineage.outputs if output.dataset_id == dataset.id]
+    latest_outputs = {}
+    for output in raw_outputs:
+        index = (output.operation_id, input.dataset_id)
+        existing = latest_outputs.get(index)
+        if not existing or output.created_at > existing.created_at:
+            latest_outputs[index] = output
+    outputs = list(latest_outputs.values())
+    assert outputs
+
+    run_ids = {input.run_id for input in inputs} | {output.run_id for output in outputs}
+    runs = [run for run in lineage.runs if run.id in run_ids]
+    assert runs
+
+    job_ids = {run.job_id for run in runs}
+    jobs = [job for job in lineage.jobs if job.id in job_ids]
+    assert jobs
+
+    [dataset] = await enrich_datasets([dataset], async_session)
+    jobs = await enrich_jobs(jobs, async_session)
+    runs = await enrich_runs(runs, async_session)
+
+    response = await test_client.get(
+        "v1/datasets/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": runs[0].created_at.isoformat(),
+            "start_node_id": dataset.id,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": {
+            "parents": run_parents_to_json(runs),
+            "symlinks": [],
+            "inputs": [
+                *inputs_to_json(merge_io_by_jobs(inputs), granularity="JOB"),
+                *inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
+            ],
+            "outputs": [
+                *outputs_to_json(merge_io_by_jobs(outputs), granularity="JOB"),
+                *outputs_to_json(merge_io_by_runs(outputs), granularity="RUN"),
+            ],
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
+        },
+        "nodes": {
+            "datasets": datasets_to_json([dataset], outputs, inputs),
+            "jobs": jobs_to_json(jobs),
+            "runs": runs_to_json(runs),
+            "operations": {},
+        },
+    }
+
+
+async def test_get_dataset_lineage_for_long_running_operations_with_granularity_dataset(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    lineage_for_long_running_operations: LineageResult,
+    mocked_user: MockedUser,
+):
+    lineage = lineage_for_long_running_operations
+
+    # We need a middle dataset, which has inputs and outputs
+    lineage_dataset = lineage.datasets[1]
+    # Include D1 -> D2 -> D3
+    datasets = lineage.datasets[:3]
+
+    dataset_ids = {dataset.id for dataset in datasets}
+
+    # use only latest IO for each operation+dataset
+    raw_inputs = [input for input in lineage.inputs if input.dataset_id in dataset_ids]
+    latest_inputs = {}
+    for input in raw_inputs:
+        index = (input.operation_id, input.dataset_id)
+        existing = latest_inputs.get(index)
+        if not existing or input.created_at > existing.created_at:
+            latest_inputs[index] = input
+    inputs = list(latest_inputs.values())
+    assert inputs
+
+    raw_outputs = [output for output in lineage.outputs if output.dataset_id in dataset_ids]
+    latest_outputs = {}
+    for output in raw_outputs:
+        index = (output.operation_id, input.dataset_id)
+        existing = latest_outputs.get(index)
+        if not existing or output.created_at > existing.created_at:
+            latest_outputs[index] = output
+    outputs = list(latest_outputs.values())
+    assert outputs
+
+    outputs_by_dataset_id = {output.dataset_id: output for output in outputs}
+
+    run_ids = {input.run_id for input in inputs} | {output.run_id for output in outputs}
+    runs = [run for run in lineage.runs if run.id in run_ids]
+    assert runs
+
+    job_ids = {run.job_id for run in runs}
+    jobs = [job for job in lineage.jobs if job.id in job_ids]
+    assert jobs
+
+    datasets = await enrich_datasets(datasets, async_session)
+    jobs = await enrich_jobs(jobs, async_session)
+    runs = await enrich_runs(runs, async_session)
+
+    response = await test_client.get(
+        "v1/datasets/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": runs[0].created_at.isoformat(),
+            "start_node_id": lineage_dataset.id,
+            "granularity": "DATASET",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": {
+            "parents": [],
+            "symlinks": [],
+            "inputs": sorted(
+                [
+                    {
+                        "from": {"kind": "DATASET", "id": str(datasets[i].id)},
+                        "to": {"kind": "DATASET", "id": str(datasets[i + 1].id)},
+                        "num_bytes": None,
+                        "num_rows": None,
+                        "num_files": None,
+                        "last_interaction_at": format_datetime(outputs_by_dataset_id[datasets[i + 1].id].created_at),
+                    }
+                    for i in range(len(datasets) - 1)
+                ],
+                key=lambda x: (x["from"]["id"], x["to"]["id"]),
+            ),
+            "outputs": [],
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
+        },
+        "nodes": {
+            "datasets": datasets_to_json(datasets, outputs, inputs),
+            "jobs": {},
+            "runs": {},
+            "operations": {},
+        },
+    }

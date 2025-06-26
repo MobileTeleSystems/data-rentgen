@@ -9,7 +9,7 @@ Requirements
 ------------
 
 * `Apache Flink <https://flink.apache.org/>`_ 2.x
-* OpenLineage 1.31.0 or higher, recommended 1.33.0+
+* OpenLineage 1.31.0 or higher, recommended 1.34.0+
 
 Entity mapping
 --------------
@@ -66,6 +66,10 @@ Setup
 
   .. code-block:: yaml
     :caption: openlineage.yml
+
+    # Send RUNNING event every 1 hour.
+    # Using default interval (1 minute) just floods Kafka with useless RUNNING events.
+    trackingIntervalInSeconds: 600
 
     transport:
         type: kafka

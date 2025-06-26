@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 from unittest.mock import Mock
 
 import pytest
@@ -21,6 +22,7 @@ from data_rentgen.consumer.openlineage.dataset_facets import (
     OpenLineageSchemaDatasetFacet,
     OpenLineageSchemaField,
 )
+from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
 from data_rentgen.dto import DatasetDTO, InputDTO, LocationDTO, OperationDTO, OutputDTO, OutputTypeDTO, SchemaDTO
 
 
@@ -124,11 +126,14 @@ def test_extractors_extract_input(
             ),
         ),
     )
-    operation_dto = Mock(spec=OperationDTO)
+    operation = Mock(spec=OperationDTO)
+    event = Mock(spec=OpenLineageRunEvent)
+    operation.created_at = event.eventTime = datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
 
-    assert GenericExtractor().extract_input(operation_dto, input) == (
+    assert GenericExtractor().extract_input(operation, input, event) == (
         InputDTO(
-            operation=operation_dto,
+            created_at=operation.created_at,
+            operation=operation,
             dataset=DatasetDTO(
                 name="/user/hive/warehouse/mydb.db/mytable",
                 location=LocationDTO(
@@ -140,6 +145,37 @@ def test_extractors_extract_input(
             num_rows=row_count,
             num_bytes=byte_count,
             num_files=file_count,
+        ),
+        [],
+    )
+
+
+def test_extractors_extract_input_for_long_operations():
+    input_ = OpenLineageInputDataset(
+        namespace="hdfs://test-hadoop:9820",
+        name="/user/hive/warehouse/mydb.db/mytable",
+    )
+
+    # operation was created long time ago
+    operation = Mock(spec=OperationDTO)
+    operation.created_at = datetime(2024, 7, 5, tzinfo=timezone.utc)
+
+    event = Mock(spec=OpenLineageRunEvent)
+    event.eventTime = datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
+
+    assert GenericExtractor().extract_input(operation, input_, event) == (
+        InputDTO(
+            # count only whole hours since operation was created
+            created_at=operation.created_at + timedelta(hours=9),
+            operation=operation,
+            dataset=DatasetDTO(
+                name="/user/hive/warehouse/mydb.db/mytable",
+                location=LocationDTO(
+                    type="hdfs",
+                    name="test-hadoop:9820",
+                    addresses={"hdfs://test-hadoop:9820"},
+                ),
+            ),
         ),
         [],
     )
@@ -163,7 +199,7 @@ def test_extractors_extract_input(
         (None, None, None),
     ],
 )
-def test_extractors_extract_output(
+def test_extractors_extract_output_batch(
     lifecycle_state_change: OpenLineageDatasetLifecycleStateChange,
     expected_type: OutputTypeDTO,
     row_count: int | None,
@@ -186,12 +222,15 @@ def test_extractors_extract_output(
             ),
         ),
     )
-    operation_dto = Mock(spec=OperationDTO)
+    operation = Mock(spec=OperationDTO)
+    event = Mock(spec=OpenLineageRunEvent)
+    operation.created_at = event.eventTime = datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
 
-    assert GenericExtractor().extract_output(operation_dto, output) == (
+    assert GenericExtractor().extract_output(operation, output, event) == (
         OutputDTO(
+            created_at=operation.created_at,
             type=expected_type,
-            operation=operation_dto,
+            operation=operation,
             dataset=DatasetDTO(
                 name="/user/hive/warehouse/mydb.db/mytable",
                 location=LocationDTO(
@@ -203,6 +242,38 @@ def test_extractors_extract_output(
             num_rows=row_count,
             num_bytes=byte_count,
             num_files=file_count,
+        ),
+        [],
+    )
+
+
+def test_extractors_extract_output_for_long_running_operations():
+    output = OpenLineageOutputDataset(
+        namespace="hdfs://test-hadoop:9820",
+        name="/user/hive/warehouse/mydb.db/mytable",
+    )
+
+    # operation is streaming and created long time ago
+    operation = Mock(spec=OperationDTO)
+    operation.created_at = datetime(2024, 7, 5, tzinfo=timezone.utc)
+
+    event = Mock(spec=OpenLineageRunEvent)
+    event.eventTime = datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
+
+    assert GenericExtractor().extract_output(operation, output, event) == (
+        OutputDTO(
+            # count only whole hours since operation was created
+            created_at=operation.created_at + timedelta(hours=9),
+            type=OutputTypeDTO.APPEND,
+            operation=operation,
+            dataset=DatasetDTO(
+                name="/user/hive/warehouse/mydb.db/mytable",
+                location=LocationDTO(
+                    type="hdfs",
+                    name="test-hadoop:9820",
+                    addresses={"hdfs://test-hadoop:9820"},
+                ),
+            ),
         ),
         [],
     )

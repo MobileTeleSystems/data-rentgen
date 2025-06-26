@@ -15,6 +15,7 @@ from data_rentgen.utils.uuid import generate_incremental_uuid
 
 @dataclass
 class InputDTO:
+    created_at: datetime
     operation: OperationDTO
     dataset: DatasetDTO
     schema: SchemaDTO | None = None
@@ -40,10 +41,6 @@ class InputDTO:
         ]
         return generate_incremental_uuid(self.created_at, ".".join(id_components))
 
-    @property
-    def created_at(self) -> datetime:
-        return self.operation.created_at
-
     def merge(self, new: InputDTO) -> InputDTO:
         schema: SchemaDTO | None
         if self.schema and new.schema:  # noqa: SIM108
@@ -52,6 +49,7 @@ class InputDTO:
             schema = new.schema or self.schema
 
         return InputDTO(
+            created_at=min([new.created_at, self.created_at]),
             operation=self.operation.merge(new.operation),
             dataset=self.dataset.merge(new.dataset),
             schema=schema,

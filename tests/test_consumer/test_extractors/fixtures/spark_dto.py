@@ -80,6 +80,7 @@ def extracted_spark_postgres_input(
     extracted_dataset_schema: SchemaDTO,
 ) -> InputDTO:
     return InputDTO(
+        created_at=extracted_spark_operation.created_at,
         operation=extracted_spark_operation,
         dataset=extracted_postgres_dataset,
         schema=extracted_dataset_schema,
@@ -93,6 +94,7 @@ def extracted_spark_hive_output(
     extracted_dataset_schema: SchemaDTO,
 ) -> OutputDTO:
     return OutputDTO(
+        created_at=extracted_spark_operation.created_at,
         type=OutputTypeDTO.CREATE,
         operation=extracted_spark_operation,
         dataset=extracted_hive_dataset1,

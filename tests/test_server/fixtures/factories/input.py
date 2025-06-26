@@ -19,8 +19,8 @@ def input_factory(**kwargs) -> Input:
     data = {
         "id": input_id,
         "created_at": extract_timestamp_from_uuid(input_id),
-        "operation_id": generate_new_uuid(),
-        "run_id": generate_new_uuid(),
+        "operation_id": generate_new_uuid(created_at),
+        "run_id": generate_new_uuid(created_at),
         "job_id": randint(0, 10000000),
         "dataset_id": randint(0, 10000000),
         "schema_id": randint(0, 10000000),

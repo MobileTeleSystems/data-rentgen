@@ -75,6 +75,7 @@ def extracted_unknown_postgres_input(
     extracted_dataset_schema: SchemaDTO,
 ) -> InputDTO:
     return InputDTO(
+        created_at=extracted_unknown_operation.created_at,
         operation=extracted_unknown_operation,
         dataset=extracted_postgres_dataset,
         schema=extracted_dataset_schema,
@@ -88,6 +89,7 @@ def extracted_unknown_hdfs_output(
     extracted_dataset_schema: SchemaDTO,
 ) -> OutputDTO:
     return OutputDTO(
+        created_at=extracted_unknown_operation.created_at,
         type=OutputTypeDTO.CREATE,
         operation=extracted_unknown_operation,
         dataset=extracted_hdfs_dataset1,

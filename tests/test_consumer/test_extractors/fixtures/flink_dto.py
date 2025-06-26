@@ -82,6 +82,7 @@ def extracted_flink_postgres_input(
     extracted_dataset_schema: SchemaDTO,
 ) -> InputDTO:
     return InputDTO(
+        created_at=extracted_flink_job_operation.created_at,
         operation=extracted_flink_job_operation,
         dataset=extracted_postgres_dataset,
         schema=extracted_dataset_schema,
@@ -95,6 +96,7 @@ def extracted_flink_kafka_output(
     extracted_dataset_schema: SchemaDTO,
 ) -> OutputDTO:
     return OutputDTO(
+        created_at=extracted_flink_job_operation.created_at,
         type=OutputTypeDTO.APPEND,
         operation=extracted_flink_job_operation,
         dataset=extracted_kafka_dataset,

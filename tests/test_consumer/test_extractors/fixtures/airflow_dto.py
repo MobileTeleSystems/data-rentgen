@@ -119,6 +119,7 @@ def extracted_airflow_postgres_input(
     extracted_dataset_schema: SchemaDTO,
 ) -> InputDTO:
     return InputDTO(
+        created_at=extracted_airflow_task_operation.created_at,
         operation=extracted_airflow_task_operation,
         dataset=extracted_postgres_dataset,
         schema=extracted_dataset_schema,
@@ -132,6 +133,7 @@ def extracted_airflow_hdfs_output(
     extracted_dataset_schema: SchemaDTO,
 ) -> OutputDTO:
     return OutputDTO(
+        created_at=extracted_airflow_task_operation.created_at,
         type=OutputTypeDTO.CREATE,
         operation=extracted_airflow_task_operation,
         dataset=extracted_hdfs_dataset1,

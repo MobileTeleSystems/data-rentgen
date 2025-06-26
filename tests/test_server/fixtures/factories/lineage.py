@@ -836,7 +836,7 @@ async def lineage_with_unconnected_symlinks(
 async def duplicated_lineage_with_column_lineage(
     async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     duplicated_lineage: LineageResult,
-) -> AsyncGenerator[AsyncSession, None]:
+) -> AsyncGenerator[LineageResult, None]:
     # At this fixture we add column lineage to check relation types aggregation on different levels.
     # O0 will have two direct and indirect (IDENTITY, TRANSFORMATION and FILTER, JOIN) relations for same source-target columns.
     # O1 will have same source-target column as O0 but another relations type(TRANSFORMATION_MASKING and GROUP_BY).
@@ -904,7 +904,7 @@ async def duplicated_lineage_with_column_lineage(
 async def lineage_with_depth_and_with_column_lineage(
     async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     lineage_with_depth: LineageResult,
-) -> AsyncGenerator[AsyncSession, None]:
+) -> AsyncGenerator[LineageResult, None]:
     # Three trees of J -> R -> O, connected via datasets:
     # J1 -> R1 -> O1, D1 -> O1 -> D2
     # J2 -> R2 -> O2, D2 -> O2 -> D3
@@ -913,10 +913,9 @@ async def lineage_with_depth_and_with_column_lineage(
     # Each Operation will have same column lineage.
     # So we can test not only depths but also same lineage for different operations, runs and jobs
 
-    num_jobs = 3
     lineage = lineage_with_depth
     async with async_session_maker() as async_session:
-        for i in range(num_jobs):
+        for i in range(len(lineage.jobs)):
             # Direct
             await create_column_relation(
                 async_session,
@@ -961,7 +960,7 @@ async def lineage_with_depth_and_with_column_lineage(
 async def lineage_with_different_dataset_interactions(
     async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     user: User,
-):
+) -> AsyncGenerator[LineageResult, None]:
     # Tree J -> R -> O0...03, interacting with the same dataset multiple times with different operations types:
     # J0 -> R0 -> O0, O0 -> D1
     # J0 -> R0 -> O1, O1 -> D1
@@ -1022,6 +1021,149 @@ async def lineage_with_different_dataset_interactions(
             for operation, type_ in zip(operations, [OutputType.OVERWRITE, OutputType.TRUNCATE, OutputType.DROP])
         ]
         lineage.outputs.extend(outputs)
+
+    yield lineage
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)
+
+
+@pytest_asyncio.fixture()
+async def lineage_for_long_running_operations(
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
+    user: User,
+) -> AsyncGenerator[LineageResult, None]:
+    # Three trees of J -> R -> O, but each operation+dataset produced multiple inputs/outputs:
+    # J1 -> R1 -> O1, D1 -> O1 -> D2
+    # J2 -> R2 -> O2, D2 -> O2 -> D3
+    # J3 -> R3 -> O3, D3 -> O2 -> D4
+
+    lineage = LineageResult()
+    created_at = datetime.now(tz=UTC)
+    num_datasets = 4
+    num_jobs = 3
+    num_io = 10
+
+    async with async_session_maker() as async_session:
+        dataset_locations = [
+            await create_location(async_session, location_kwargs={"type": "hdfs"}) for _ in range(num_datasets)
+        ]
+        datasets = [await create_dataset(async_session, location_id=location.id) for location in dataset_locations]
+        lineage.datasets.extend(datasets)
+
+        schema = await create_schema(async_session)
+
+        # Make graphs
+        for i in range(num_jobs):
+            job_location = await create_location(async_session)
+            job_type = await create_job_type(async_session)
+            job = await create_job(async_session, location_id=job_location.id, job_type_id=job_type.id)
+            lineage.jobs.append(job)
+
+            run = await create_run(
+                async_session,
+                run_kwargs={
+                    "job_id": job.id,
+                    "started_by_user_id": user.id,
+                    "created_at": created_at + timedelta(seconds=i),
+                },
+            )
+            lineage.runs.append(run)
+
+            operation = await create_operation(
+                async_session,
+                operation_kwargs={
+                    "created_at": run.created_at + timedelta(seconds=0.2),
+                    "run_id": run.id,
+                },
+            )
+            lineage.operations.append(operation)
+
+            for io in range(num_io):
+                input_ = await create_input(
+                    async_session,
+                    input_kwargs={
+                        "created_at": operation.created_at + timedelta(hours=io),
+                        "operation_id": operation.id,
+                        "run_id": run.id,
+                        "job_id": job.id,
+                        "dataset_id": datasets[i].id,
+                        "schema_id": schema.id,
+                        "num_files": io,
+                        "num_rows": io,
+                        "num_bytes": io,
+                    },
+                )
+                lineage.inputs.append(input_)
+
+                output = await create_output(
+                    async_session,
+                    output_kwargs={
+                        "created_at": operation.created_at + timedelta(hours=io),
+                        "operation_id": operation.id,
+                        "run_id": run.id,
+                        "job_id": job.id,
+                        "dataset_id": datasets[i + 1].id,
+                        "type": OutputType.APPEND,
+                        "schema_id": schema.id,
+                        "num_files": io,
+                        "num_rows": io,
+                        "num_bytes": io,
+                    },
+                )
+                lineage.outputs.append(output)
+
+    yield lineage
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)
+
+
+@pytest_asyncio.fixture()
+async def lineage_for_long_running_operations_with_column_lineage(
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
+    lineage_for_long_running_operations: LineageResult,
+) -> AsyncGenerator[LineageResult, None]:
+    # Same as lineage_for_long_running_operations, but with column lineage
+    lineage = lineage_for_long_running_operations
+    num_io = 3
+
+    async with async_session_maker() as async_session:
+        for i in range(len(lineage.jobs)):
+            # Direct
+            await create_column_relation(
+                async_session,
+                fingerprint=generate_static_uuid(f"job_{i}"),
+                column_relation_kwargs={
+                    "type": DatasetColumnRelationType.AGGREGATION.value,
+                    "source_column": "direct_source_column",
+                    "target_column": "direct_target_column",
+                },
+            )
+            # Indirect
+            await create_column_relation(
+                async_session,
+                fingerprint=generate_static_uuid(f"job_{i}"),
+                column_relation_kwargs={
+                    "type": DatasetColumnRelationType.JOIN.value,
+                    "source_column": "indirect_source_column",
+                    "target_column": None,
+                },
+            )
+
+            for io in range(num_io):
+                await create_column_lineage(
+                    async_session,
+                    column_lineage_kwargs={
+                        "created_at": lineage.operations[i].created_at + timedelta(hours=io),
+                        "operation_id": lineage.operations[i].id,
+                        "run_id": lineage.runs[i].id,
+                        "job_id": lineage.jobs[i].id,
+                        "source_dataset_id": lineage.datasets[i].id,
+                        "target_dataset_id": lineage.datasets[i + 1].id,
+                        "fingerprint": generate_static_uuid(f"job_{i}"),
+                    },
+                )
 
     yield lineage
 
