@@ -9,7 +9,7 @@ Requirements
 ------------
 
 * `Apache Flink <https://flink.apache.org/>`_ 1.x
-* OpenLineage 1.31.0 or higher, recommended 1.33.0+
+* OpenLineage 1.31.0 or higher, recommended 1.34.0+
 
 Entity mapping
 --------------
@@ -25,7 +25,7 @@ Installation
   .. code-block:: groovy
     :caption: build.gradle
 
-    implementation "io.openlineage:openlineage-flink:1.33.0"
+    implementation "io.openlineage:openlineage-flink:1.34.0"
     implementation "org.apache.kafka:kafka-clients:3.9.0"
 
 * Register ``OpenLineageFlinkJobListener`` in the code of your Flink job:
@@ -60,6 +60,10 @@ Setup
     job:
         namespace: http://some.host.name:18081  # set namespace to match Flink address
         name: flink_examples_stateful  # set job name
+
+    # Send RUNNING event every 1 hour.
+    # Using default interval (1 minute) just floods Kafka with useless RUNNING events.
+    trackingIntervalInSeconds: 3600
 
     transport:
         type: kafka

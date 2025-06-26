@@ -11,7 +11,8 @@ from data_rentgen.utils.uuid import extract_timestamp_from_uuid, generate_new_uu
 from tests.test_server.fixtures.factories.base import random_string
 
 if TYPE_CHECKING:
-    from sqlalchemy import UUID
+    from uuid import UUID
+
     from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -49,7 +50,7 @@ def column_lineage_factory(**kwargs) -> ColumnLineage:
     column_lineage_id = generate_new_uuid(created_at)
     data = {
         "id": column_lineage_id,
-        "created_at": extract_timestamp_from_uuid(column_lineage_id),
+        "created_at": created_at or extract_timestamp_from_uuid(column_lineage_id),
         "operation_id": generate_new_uuid(created_at),
         "run_id": generate_new_uuid(created_at),
         "job_id": randint(0, 10000000),

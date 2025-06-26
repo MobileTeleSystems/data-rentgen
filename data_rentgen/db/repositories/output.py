@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import Literal
 from uuid import UUID
 
-from sqlalchemy import ColumnElement, Row, any_, func, literal_column, select
+from sqlalchemy import ColumnElement, Row, Select, any_, func, literal_column, select
 from sqlalchemy.dialects.postgresql import insert
 
 from data_rentgen.db.models import Output, OutputType, Schema
@@ -43,6 +43,7 @@ class OutputRepository(Repository[Output]):
         statement = insert_statement.on_conflict_do_update(
             index_elements=[Output.created_at, Output.id],
             set_={
+                "type": new_row.type.op("|")(Output.type),
                 "num_bytes": func.greatest(new_row.num_bytes, Output.num_bytes),
                 "num_rows": func.greatest(new_row.num_rows, Output.num_rows),
                 "num_files": func.greatest(new_row.num_files, Output.num_files),
@@ -77,14 +78,11 @@ class OutputRepository(Repository[Output]):
         if not operation_ids:
             return []
 
-        # Output created_at is always the same as operation's created_at
+        # Output created_at cannot be before operation's created_at
         # do not use `tuple_(Output.created_at, Output.operation_id).in_(...),
         # as this is too complex filter for Postgres to make an optimal query plan
-        min_created_at = extract_timestamp_from_uuid(min(operation_ids))
-        max_created_at = extract_timestamp_from_uuid(max(operation_ids))
         where = [
-            Output.created_at >= min_created_at,
-            Output.created_at <= max_created_at,
+            Output.created_at >= extract_timestamp_from_uuid(min(operation_ids)),
             Output.operation_id == any_(list(operation_ids)),  # type: ignore[arg-type]
         ]
 
@@ -102,7 +100,6 @@ class OutputRepository(Repository[Output]):
 
         min_run_created_at = extract_timestamp_from_uuid(min(run_ids))
         min_created_at = max(min_run_created_at, since.astimezone(timezone.utc))
-
         where = [
             Output.created_at >= min_created_at,
             Output.run_id == any_(list(run_ids)),  # type: ignore[arg-type]
@@ -150,52 +147,63 @@ class OutputRepository(Repository[Output]):
 
         return await self._get_outputs(where, granularity)
 
+    def _get_base_query(
+        self,
+        where: Collection[ColumnElement],
+    ) -> Select:
+        # For operation.type=STREAMING, there can be multiple outputs for same operation+dataset+schema,
+        # so we also need deduplication here
+        unique_ids = [Output.job_id, Output.run_id, Output.operation_id, Output.dataset_id]
+        order_by = [Output.created_at, Output.schema_id]
+
+        # Avoid sorting multiple times by different keys for performance reason,
+        # instead reuse the same window expression
+        def window(expr, order_by=None):
+            return expr.over(partition_by=unique_ids, order_by=order_by)
+
+        return (
+            select(
+                *unique_ids,
+                window(func.max(Output.created_at)).label("created_at"),
+                window(func.max(Output.num_bytes)).label("num_bytes"),
+                window(func.max(Output.num_rows)).label("num_rows"),
+                window(func.max(Output.num_files)).label("num_files"),
+                window(func.bit_or(Output.type)).label("type"),
+                window(func.first_value(Output.schema_id), order_by).label("oldest_schema_id"),
+                window(func.last_value(Output.schema_id), order_by).label("newest_schema_id"),
+            )
+            .distinct(*unique_ids)
+            .where(*where)
+        )
+
     async def _get_outputs(
         self,
         where: Collection[ColumnElement],
         granularity: Literal["JOB", "RUN", "OPERATION"],
     ) -> list[OutputRow]:
+        base_query = self._get_base_query(where).subquery()
         if granularity == "OPERATION":
-            # return Output as-is
-            simple_query = select(Output).where(*where)
-            result = await self._session.scalars(simple_query)
-            return [
-                OutputRow(
-                    created_at=row.created_at,
-                    operation_id=row.operation_id,
-                    run_id=row.run_id,
-                    job_id=row.job_id,
-                    dataset_id=row.dataset_id,
-                    num_bytes=row.num_bytes,
-                    num_rows=row.num_rows,
-                    num_files=row.num_files,
-                    schema_id=row.schema_id,
-                    schema_relevance_type="EXACT_MATCH" if row.schema_id else None,
-                    types_combined=row.type,
-                )
-                for row in result.all()
-            ]
-
-        # return an aggregated Output
-        if granularity == "RUN":
-            partition_by = [Output.run_id, Output.job_id, Output.dataset_id]
-            base_query = (
-                select(
-                    Output,
-                    func.first_value(Output.schema_id)
-                    .over(partition_by=partition_by, order_by=[Output.created_at, Output.schema_id])
-                    .label("oldest_schema_id"),
-                    func.last_value(Output.schema_id)
-                    .over(partition_by=partition_by, order_by=[Output.created_at, Output.schema_id])
-                    .label("newest_schema_id"),
-                )
-                .where(*where)
-                .cte()
-            )
-
             query = select(
-                func.max(base_query.c.created_at).label("created_at"),
-                literal_column("NULL").label("id"),
+                func.max(base_query.c.created_at).label("max_created_at"),
+                base_query.c.operation_id,
+                base_query.c.run_id,
+                base_query.c.job_id,
+                base_query.c.dataset_id,
+                func.sum(base_query.c.num_bytes).label("sum_num_bytes"),
+                func.sum(base_query.c.num_rows).label("sum_num_rows"),
+                func.sum(base_query.c.num_files).label("sum_num_files"),
+                func.bit_or(base_query.c.type).label("types_combined"),
+                func.min(base_query.c.oldest_schema_id).label("min_schema_id"),
+                func.max(base_query.c.newest_schema_id).label("max_schema_id"),
+            ).group_by(
+                base_query.c.operation_id,
+                base_query.c.run_id,
+                base_query.c.job_id,
+                base_query.c.dataset_id,
+            )
+        elif granularity == "RUN":
+            query = select(
+                func.max(base_query.c.created_at).label("max_created_at"),
                 literal_column("NULL").label("operation_id"),
                 base_query.c.run_id,
                 base_query.c.job_id,
@@ -212,24 +220,8 @@ class OutputRepository(Repository[Output]):
                 base_query.c.dataset_id,
             )
         else:
-            partition_by = [Output.job_id, Output.dataset_id]
-            base_query = (
-                select(
-                    Output,
-                    func.first_value(Output.schema_id)
-                    .over(partition_by=partition_by, order_by=[Output.created_at, Output.schema_id])
-                    .label("oldest_schema_id"),
-                    func.last_value(Output.schema_id)
-                    .over(partition_by=partition_by, order_by=[Output.created_at, Output.schema_id])
-                    .label("newest_schema_id"),
-                )
-                .where(*where)
-                .cte()
-            )
-
             query = select(
-                func.max(base_query.c.created_at).label("created_at"),
-                literal_column("NULL").label("id"),
+                func.max(base_query.c.created_at).label("max_created_at"),
                 literal_column("NULL").label("operation_id"),
                 literal_column("NULL").label("run_id"),
                 base_query.c.job_id,
@@ -244,6 +236,7 @@ class OutputRepository(Repository[Output]):
                 base_query.c.job_id,
                 base_query.c.dataset_id,
             )
+
         query_result = await self._session.execute(query)
         results = []
         for row in query_result.all():
@@ -254,7 +247,7 @@ class OutputRepository(Repository[Output]):
                 schema_relevance_type = None
             results.append(
                 OutputRow(
-                    created_at=row.created_at,
+                    created_at=row.max_created_at,
                     operation_id=row.operation_id,
                     run_id=row.run_id,
                     job_id=row.job_id,
@@ -262,9 +255,9 @@ class OutputRepository(Repository[Output]):
                     num_bytes=row.sum_num_bytes,
                     num_rows=row.sum_num_rows,
                     num_files=row.sum_num_files,
+                    types_combined=row.types_combined,
                     schema_id=row.max_schema_id,
                     schema_relevance_type=schema_relevance_type,
-                    types_combined=row.types_combined,
                 ),
             )
         return results
@@ -273,27 +266,20 @@ class OutputRepository(Repository[Output]):
         if not operation_ids:
             return {}
 
-        # Input created_at is always the same as operation's created_at
-        # do not use `tuple_(Input.created_at, Input.operation_id).in_(...),
-        # as this is too complex filter for Postgres to make an optimal query plan
-        min_created_at = extract_timestamp_from_uuid(min(operation_ids))
-        max_created_at = extract_timestamp_from_uuid(max(operation_ids))
+        where = [
+            # Output created_at cannot be before operation's created_at
+            Output.created_at >= extract_timestamp_from_uuid(min(operation_ids)),
+            Output.operation_id == any_(list(operation_ids)),  # type: ignore[arg-type]
+        ]
 
-        query = (
-            select(
-                Output.operation_id.label("operation_id"),
-                func.count(Output.dataset_id.distinct()).label("total_datasets"),
-                func.sum(Output.num_bytes).label("total_bytes"),
-                func.sum(Output.num_rows).label("total_rows"),
-                func.sum(Output.num_files).label("total_files"),
-            )
-            .where(
-                Output.created_at >= min_created_at,
-                Output.created_at <= max_created_at,
-                Output.operation_id == any_(list(operation_ids)),  # type: ignore[arg-type]
-            )
-            .group_by(Output.operation_id)
-        )
+        base_query = self._get_base_query(where).subquery()
+        query = select(
+            base_query.c.operation_id.label("operation_id"),
+            func.count(base_query.c.dataset_id.distinct()).label("total_datasets"),
+            func.sum(base_query.c.num_bytes).label("total_bytes"),
+            func.sum(base_query.c.num_rows).label("total_rows"),
+            func.sum(base_query.c.num_files).label("total_files"),
+        ).group_by(base_query.c.operation_id)
 
         query_result = await self._session.execute(query)
         return {row.operation_id: row for row in query_result.all()}
@@ -303,21 +289,19 @@ class OutputRepository(Repository[Output]):
             return {}
 
         # unlike list_by_run_ids, we need to get all statistics for specific runs, regardless of time range
-        min_created_at = extract_timestamp_from_uuid(min(run_ids))
-        query = (
-            select(
-                Output.run_id.label("run_id"),
-                func.count(Output.dataset_id.distinct()).label("total_datasets"),
-                func.sum(Output.num_bytes).label("total_bytes"),
-                func.sum(Output.num_rows).label("total_rows"),
-                func.sum(Output.num_files).label("total_files"),
-            )
-            .where(
-                Output.created_at >= min_created_at,
-                Output.run_id == any_(list(run_ids)),  # type: ignore[arg-type]
-            )
-            .group_by(Output.run_id)
-        )
+        where = [
+            Output.created_at >= extract_timestamp_from_uuid(min(run_ids)),
+            Output.run_id == any_(list(run_ids)),  # type: ignore[arg-type]
+        ]
+
+        base_query = self._get_base_query(where).subquery()
+        query = select(
+            base_query.c.run_id.label("run_id"),
+            func.count(base_query.c.dataset_id.distinct()).label("total_datasets"),
+            func.sum(base_query.c.num_bytes).label("total_bytes"),
+            func.sum(base_query.c.num_rows).label("total_rows"),
+            func.sum(base_query.c.num_files).label("total_files"),
+        ).group_by(base_query.c.run_id)
 
         query_result = await self._session.execute(query)
         return {row.run_id: row for row in query_result.all()}

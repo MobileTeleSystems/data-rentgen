@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+from datetime import timedelta
+
 from data_rentgen.consumer.extractors.generic.column_lineage import ColumnLineageExtractorMixin
 from data_rentgen.consumer.extractors.generic.dataset import DatasetExtractorMixin
 from data_rentgen.consumer.extractors.generic.io import IOExtractorMixin
@@ -28,3 +30,7 @@ class GenericExtractor(
 
     Designed to be inherited by implementation-specific classes.
     """
+
+    def __init__(self, io_time_resolution: timedelta = timedelta(hours=1)):
+        super().__init__()
+        self.io_time_resolution = io_time_resolution

@@ -9,7 +9,7 @@ Requirements
 ------------
 
 * `Apache Airflow <https://airflow.apache.org/>`_ 2.x or 3.x
-* OpenLineage 1.19.0 or higher, recommended 1.33.0+
+* OpenLineage 1.19.0 or higher, recommended 1.34.0+
 * OpenLineage integration for Airflow (see below)
 
 Entity mapping
@@ -27,13 +27,13 @@ Install
 
   .. code:: console
 
-    $ pip install "apache-airflow-providers-openlineage>=2.3.0" "openlineage-python[kafka]>=1.33.0" zstd
+    $ pip install "apache-airflow-providers-openlineage>=2.3.0" "openlineage-python[kafka]>=1.34.0" zstd
 
 * For Airflow 2.1.x-2.6.x, use `OpenLineage integration for Airflow <https://openlineage.io/docs/integrations/airflow/>`_ 1.19.0 or higher
 
   .. code:: console
 
-    $ pip install "openlineage-airflow>=1.33.0" "openlineage-python[kafka]>=1.33.0" zstd
+    $ pip install "openlineage-airflow>=1.34.0" "openlineage-python[kafka]>=1.34.0" zstd
 
 Setup
 -----

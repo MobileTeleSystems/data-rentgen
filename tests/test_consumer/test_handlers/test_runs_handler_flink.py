@@ -200,7 +200,7 @@ async def test_runs_handler_flink(
         },
     ]
 
-    input_query = select(Input).order_by(Input.dataset_id)
+    input_query = select(Input).order_by(Input.dataset_id, Input.created_at)
     input_scalars = await async_session.scalars(input_query)
     inputs = input_scalars.all()
     assert len(inputs) == 1
@@ -216,7 +216,7 @@ async def test_runs_handler_flink(
     assert kafka_input.num_rows is None
     assert kafka_input.num_files is None
 
-    output_query = select(Output).order_by(Output.dataset_id)
+    output_query = select(Output).order_by(Output.dataset_id, Output.created_at)
     output_scalars = await async_session.scalars(output_query)
     outputs = output_scalars.all()
     assert len(outputs) == 1

@@ -116,6 +116,7 @@ def extracted_dbt_spark_input(
     extracted_dbt_spark_source_schema: SchemaDTO,
 ) -> InputDTO:
     return InputDTO(
+        created_at=extracted_dbt_operation.created_at,
         operation=extracted_dbt_operation,
         dataset=extracted_dbt_spark_source_dataset,
         schema=extracted_dbt_spark_source_schema,
@@ -138,6 +139,7 @@ def extracted_dbt_spark_output(
     extracted_dbt_spark_target_dataset: DatasetDTO,
 ) -> OutputDTO:
     return OutputDTO(
+        created_at=extracted_dbt_operation.created_at,
         type=OutputTypeDTO.APPEND,
         operation=extracted_dbt_operation,
         dataset=extracted_dbt_spark_target_dataset,

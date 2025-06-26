@@ -9,7 +9,7 @@ Requirements
 ------------
 
 * `Apache Spark <https://spark.apache.org/>`_ 3.x or higher
-* OpenLineage 1.23.0 or higher, recommended 1.33.0+
+* OpenLineage 1.23.0 or higher, recommended 1.34.0+
 
 Entity mapping
 --------------
@@ -62,7 +62,7 @@ Via OpenLineage config file
         # install OpenLineage integration and Kafka client
         .config(
             "spark.jars.packages",
-            "io.openlineage:openlineage-spark_2.12:1.33.0,org.apache.kafka:kafka-clients:3.9.0",
+            "io.openlineage:openlineage-spark_2.12:1.34.0,org.apache.kafka:kafka-clients:3.9.0",
         )
         .config(
             "spark.extraListeners", "io.openlineage.spark.agent.OpenLineageSparkListener"
@@ -90,7 +90,7 @@ Add OpenLineage integration package, setup ``OpenLineageSparkListener`` in Spark
         # install OpenLineage integration and Kafka client
         .config(
             "spark.jars.packages",
-            "io.openlineage:openlineage-spark_2.12:1.33.0,org.apache.kafka:kafka-clients:3.9.0",
+            "io.openlineage:openlineage-spark_2.12:1.34.0,org.apache.kafka:kafka-clients:3.9.0",
         )
         .config(
             "spark.extraListeners", "io.openlineage.spark.agent.OpenLineageSparkListener"

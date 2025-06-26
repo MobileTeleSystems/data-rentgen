@@ -19,8 +19,8 @@ def output_factory(**kwargs) -> Output:
     data = {
         "id": output_id,
         "created_at": extract_timestamp_from_uuid(output_id),
-        "operation_id": generate_new_uuid(),
-        "run_id": generate_new_uuid(),
+        "operation_id": generate_new_uuid(created_at),
+        "run_id": generate_new_uuid(created_at),
         "job_id": randint(0, 10000000),
         "dataset_id": randint(0, 10000000),
         "type": choice(list(OutputType)),

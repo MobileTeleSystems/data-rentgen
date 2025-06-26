@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections import defaultdict
+from datetime import datetime
 
 from data_rentgen.consumer.openlineage.dataset import (
     OpenLineageDataset,
@@ -14,6 +15,7 @@ from data_rentgen.consumer.openlineage.dataset_facets import (
     OpenLineageColumnLineageDatasetFacetFieldTransformation,
     OpenLineageSymlinkIdentifier,
 )
+from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
 from data_rentgen.dto import (
     ColumnLineageDTO,
     DatasetColumnRelationDTO,
@@ -49,6 +51,10 @@ class ColumnLineageExtractorMixin(ABC):
         self._dataset_ref_to_dto_cache: dict[tuple[str, str], DatasetDTO] = {}
 
     @abstractmethod
+    def extract_io_created_at(self, operation: OperationDTO, event: OpenLineageRunEvent) -> datetime:
+        pass
+
+    @abstractmethod
     def _extract_dataset_ref(
         self,
         dataset: OpenLineageDataset | OpenLineageColumnLineageDatasetFacetFieldRef | OpenLineageSymlinkIdentifier,
@@ -71,6 +77,7 @@ class ColumnLineageExtractorMixin(ABC):
         self,
         operation: OperationDTO,
         output_dataset: OpenLineageDataset,
+        event: OpenLineageRunEvent,
     ) -> list[ColumnLineageDTO]:
         """
         Extract ColumnLineageDTO from output dataset, and bound to operation
@@ -140,9 +147,12 @@ class ColumnLineageExtractorMixin(ABC):
                 else:
                     dataset_column_relation[column_relation_key] = column_relation
 
+        created_at = self.extract_io_created_at(operation, event)
+
         # merge results into DTO objects
         return [
             ColumnLineageDTO(
+                created_at=created_at,
                 operation=operation,
                 source_dataset=datasets[source_dataset_dto_key],
                 target_dataset=datasets[output_dataset_dto_key],
