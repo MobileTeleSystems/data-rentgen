@@ -6,10 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, IntEnum
+from functools import cached_property
 from uuid import UUID
 
 from data_rentgen.dto.run import RunDTO
 from data_rentgen.dto.sql_query import SQLQueryDTO
+from data_rentgen.utils.uuid import extract_timestamp_from_uuid
 
 
 class OperationTypeDTO(str, Enum):
@@ -52,12 +54,17 @@ class OperationDTO:
     def unique_key(self) -> tuple:
         return (self.id,)
 
+    @cached_property
+    def created_at(self) -> datetime:
+        return extract_timestamp_from_uuid(self.id)
+
     def merge(self, new: OperationDTO) -> OperationDTO:
         sql_query: SQLQueryDTO | None
         if self.sql_query and new.sql_query:
             sql_query = self.sql_query.merge(new.sql_query)
         else:
             sql_query = new.sql_query or self.sql_query
+
         return OperationDTO(
             id=self.id,
             run=self.run.merge(new.run),

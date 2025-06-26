@@ -11,11 +11,10 @@ from sqlalchemy.dialects.postgresql import insert
 
 from data_rentgen.db.models import Input, Schema
 from data_rentgen.db.repositories.base import Repository
-from data_rentgen.db.utils.uuid import (
-    extract_timestamp_from_uuid,
-    generate_incremental_uuid,
-)
 from data_rentgen.dto import InputDTO
+from data_rentgen.utils.uuid import (
+    extract_timestamp_from_uuid,
+)
 
 
 @dataclass
@@ -34,20 +33,6 @@ class InputRow:
 
 
 class InputRepository(Repository[Input]):
-    def get_id(self, input_: InputDTO) -> UUID:
-        # `created_at' field of input should be the same as operation's,
-        # to avoid scanning all partitions and speed up queries
-        created_at = extract_timestamp_from_uuid(input_.operation.id)
-
-        # instead of using UniqueConstraint on multiple fields, one of which (schema_id) can be NULL,
-        # use them to calculate unique id
-        id_components = [
-            str(input_.operation.id),
-            str(input_.dataset.id),
-            str(input_.schema.id) if input_.schema else "",
-        ]
-        return generate_incremental_uuid(created_at, ".".join(id_components))
-
     async def create_or_update_bulk(self, inputs: list[InputDTO]) -> None:
         if not inputs:
             return
@@ -67,18 +52,18 @@ class InputRepository(Repository[Input]):
             statement,
             [
                 {
-                    "id": self.get_id(input_),
-                    "created_at": extract_timestamp_from_uuid(input_.operation.id),
-                    "operation_id": input_.operation.id,
-                    "run_id": input_.operation.run.id,
-                    "job_id": input_.operation.run.job.id,  # type: ignore[arg-type]
-                    "dataset_id": input_.dataset.id,  # type: ignore[arg-type]
-                    "schema_id": input_.schema.id if input_.schema else None,
-                    "num_bytes": input_.num_bytes,
-                    "num_rows": input_.num_rows,
-                    "num_files": input_.num_files,
+                    "id": item.generate_id(),
+                    "created_at": item.created_at,
+                    "operation_id": item.operation.id,
+                    "run_id": item.operation.run.id,
+                    "job_id": item.operation.run.job.id,  # type: ignore[arg-type]
+                    "dataset_id": item.dataset.id,  # type: ignore[arg-type]
+                    "schema_id": item.schema.id if item.schema else None,
+                    "num_bytes": item.num_bytes,
+                    "num_rows": item.num_rows,
+                    "num_files": item.num_files,
                 }
-                for input_ in inputs
+                for item in inputs
             ],
         )
 

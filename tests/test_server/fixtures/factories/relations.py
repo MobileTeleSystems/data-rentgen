@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import ColumnLineage, DatasetColumnRelation, DatasetColumnRelationType
-from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid, generate_static_uuid
+from data_rentgen.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid, generate_static_uuid
 from tests.test_server.fixtures.factories.base import random_string
 
 if TYPE_CHECKING:

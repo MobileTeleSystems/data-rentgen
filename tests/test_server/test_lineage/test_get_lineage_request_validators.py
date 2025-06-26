@@ -4,7 +4,7 @@ from http import HTTPStatus
 import pytest
 from httpx import AsyncClient
 
-from data_rentgen.db.utils.uuid import generate_new_uuid
+from data_rentgen.utils.uuid import generate_new_uuid
 from tests.fixtures.mocks import MockedUser
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio, pytest.mark.lineage]

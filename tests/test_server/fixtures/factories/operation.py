@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Callable
 import pytest_asyncio
 
 from data_rentgen.db.models import Operation, OperationStatus, OperationType, Run
-from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
+from data_rentgen.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
 from tests.test_server.fixtures.factories.base import random_datetime, random_string
 from tests.test_server.fixtures.factories.sql_query import create_sql_query
 from tests.test_server.utils.delete import clean_db

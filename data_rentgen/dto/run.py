@@ -6,10 +6,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime
 from enum import Enum, IntEnum
+from functools import cached_property
 from uuid import UUID
 
 from data_rentgen.dto.job import JobDTO
 from data_rentgen.dto.user import UserDTO
+from data_rentgen.utils.uuid import extract_timestamp_from_uuid
 
 
 class RunStatusDTO(IntEnum):
@@ -46,6 +48,10 @@ class RunDTO:
     @property
     def unique_key(self) -> tuple:
         return (self.id,)
+
+    @cached_property
+    def created_at(self) -> datetime:
+        return extract_timestamp_from_uuid(self.id)
 
     def merge(self, new: RunDTO) -> RunDTO:
         parent_run: RunDTO | None

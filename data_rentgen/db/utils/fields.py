@@ -4,7 +4,7 @@ import json
 from typing import Any
 from uuid import UUID
 
-from data_rentgen.db.utils.uuid import generate_static_uuid
+from data_rentgen.utils.uuid import generate_static_uuid
 
 
 def get_fields_digest(fields: Any) -> UUID:

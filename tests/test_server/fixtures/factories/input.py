@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Input
-from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
+from data_rentgen.utils.uuid import extract_timestamp_from_uuid, generate_new_uuid
 
 if TYPE_CHECKING:
     from sqlalchemy.ext.asyncio import AsyncSession
