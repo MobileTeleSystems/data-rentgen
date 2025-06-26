@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from uuid6 import uuid7
 
 from data_rentgen.db.models.run import Run
-from data_rentgen.db.utils.uuid import generate_new_uuid
+from data_rentgen.utils.uuid import generate_new_uuid
 from tests.fixtures.mocks import MockedUser
 from tests.test_server.utils.convert_to_json import run_to_json
 from tests.test_server.utils.enrich import enrich_runs

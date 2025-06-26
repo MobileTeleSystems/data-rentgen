@@ -20,23 +20,21 @@ from sqlalchemy.orm import selectinload
 from data_rentgen.db.models import Job, Run, RunStartReason, RunStatus
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.search import make_tsquery, ts_match, ts_rank
-from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid
 from data_rentgen.dto import PaginationDTO, RunDTO
+from data_rentgen.utils.uuid import extract_timestamp_from_uuid
 
 
 class RunRepository(Repository[Run]):
     async def create_or_update(self, run: RunDTO) -> Run:
-        # avoid calculating created_at twice
-        created_at = extract_timestamp_from_uuid(run.id)
-        result = await self._get(created_at, run.id)
+        result = await self._get(run)
         if not result:
             # try one more time, but with lock acquired.
             # if another worker already created the same row, just use it. if not - create with holding the lock.
             await self._lock(run.id)
-            result = await self._get(created_at, run.id)
+            result = await self._get(run)
 
         if not result:
-            return await self._create(created_at, run)
+            return await self._create(run)
         return await self._update(result, run)
 
     async def paginate(
@@ -119,13 +117,11 @@ class RunRepository(Repository[Run]):
             return []
         # do not use `tuple_(Run.created_at, Run.id).in_(...),
         # as this is too complex filter for Postgres to make an optimal query plan
-        min_created_at = extract_timestamp_from_uuid(min(run_ids))
-        max_created_at = extract_timestamp_from_uuid(max(run_ids))
         query = (
             select(Run)
             .where(
-                Run.created_at >= min_created_at,
-                Run.created_at <= max_created_at,
+                Run.created_at >= extract_timestamp_from_uuid(min(run_ids)),
+                Run.created_at <= extract_timestamp_from_uuid(max(run_ids)),
                 Run.id == any_(list(run_ids)),  # type: ignore[arg-type]
             )
             .options(selectinload(Run.started_by_user))
@@ -149,17 +145,13 @@ class RunRepository(Repository[Run]):
         result = await self._session.scalars(query)
         return list(result.all())
 
-    async def _get(self, created_at: datetime, run_id: UUID) -> Run | None:
-        query = select(Run).where(Run.id == run_id, Run.created_at == created_at)
+    async def _get(self, run: RunDTO) -> Run | None:
+        query = select(Run).where(Run.id == run.id, Run.created_at == run.created_at)
         return await self._session.scalar(query)
 
-    async def _create(
-        self,
-        created_at: datetime,
-        run: RunDTO,
-    ) -> Run:
+    async def _create(self, run: RunDTO) -> Run:
         result = Run(
-            created_at=created_at,
+            created_at=run.created_at,
             id=run.id,
             job_id=run.job.id,
             status=RunStatus(run.status),

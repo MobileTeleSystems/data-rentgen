@@ -10,8 +10,8 @@ from sqlalchemy.dialects.postgresql import insert
 
 from data_rentgen.db.models import Operation, OperationStatus, OperationType
 from data_rentgen.db.repositories.base import Repository
-from data_rentgen.db.utils.uuid import extract_timestamp_from_uuid
 from data_rentgen.dto import OperationDTO, PaginationDTO
+from data_rentgen.utils.uuid import extract_timestamp_from_uuid
 
 
 class OperationRepository(Repository[Operation]):
@@ -125,13 +125,12 @@ class OperationRepository(Repository[Operation]):
     async def list_by_ids(self, operation_ids: Collection[UUID]) -> list[Operation]:
         if not operation_ids:
             return []
-        # do not use `tuple_(Operation.created_at, Operation.id).in_(...),
+
+        # Do not use `tuple_(Operation.created_at, Operation.id).in_(...),
         # as this is too complex filter for Postgres to make an optimal query plan
-        min_created_at = extract_timestamp_from_uuid(min(operation_ids))
-        max_created_at = extract_timestamp_from_uuid(max(operation_ids))
         query = select(Operation).where(
-            Operation.created_at >= min_created_at,
-            Operation.created_at <= max_created_at,
+            Operation.created_at >= extract_timestamp_from_uuid(min(operation_ids)),
+            Operation.created_at <= extract_timestamp_from_uuid(max(operation_ids)),
             Operation.id == any_(list(operation_ids)),  # type: ignore[arg-type]
         )
         result = await self._session.scalars(query)

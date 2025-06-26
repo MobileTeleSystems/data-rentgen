@@ -145,21 +145,21 @@ async def test_runs_handler_unknown(
     dataset_symlinks = dataset_symlink_scalars.all()
     assert len(dataset_symlinks) == 0
 
-    schema_query = select(Schema).order_by(Schema.id)
+    schema_query = select(Schema).order_by(Schema.digest)
     schema_scalars = await async_session.scalars(schema_query)
     schemas = schema_scalars.all()
     assert len(schemas) == 2
 
-    hive_schema = schemas[0]
-    assert hive_schema.fields == [
-        {"name": "dt", "type": "timestamp", "description": "Business date"},
+    clickhouse_schema = schemas[0]
+    assert clickhouse_schema.fields == [
+        {"name": "dt", "type": "timestamp"},
         {"name": "customer_id", "type": "decimal(20,0)"},
         {"name": "total_spent", "type": "float"},
     ]
 
-    clickhouse_schema = schemas[1]
-    assert clickhouse_schema.fields == [
-        {"name": "dt", "type": "timestamp"},
+    hive_schema = schemas[1]
+    assert hive_schema.fields == [
+        {"name": "dt", "type": "timestamp", "description": "Business date"},
         {"name": "customer_id", "type": "decimal(20,0)"},
         {"name": "total_spent", "type": "float"},
     ]

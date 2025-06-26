@@ -1,6 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
-from data_rentgen.db.utils.uuid import (
+from data_rentgen.utils.uuid import (
     generate_incremental_uuid,
     generate_new_uuid,
     generate_static_uuid,

@@ -143,7 +143,7 @@ async def test_runs_handler_flink(
     dataset_symlinks = dataset_symlink_scalars.all()
     assert len(dataset_symlinks) == 0
 
-    schema_query = select(Schema).order_by(Schema.id)
+    schema_query = select(Schema).order_by(Schema.digest)
     schema_scalars = await async_session.scalars(schema_query)
     schemas = schema_scalars.all()
     assert len(schemas) == 2

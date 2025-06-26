@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import DatasetColumnRelationType, DatasetSymlinkType, Job, User
 from data_rentgen.db.models.output import OutputType
-from data_rentgen.db.utils.uuid import generate_static_uuid
+from data_rentgen.utils.uuid import generate_static_uuid
 from tests.test_server.fixtures.factories.dataset import create_dataset, make_symlink
 from tests.test_server.fixtures.factories.input import create_input
 from tests.test_server.fixtures.factories.job import create_job

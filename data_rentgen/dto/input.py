@@ -4,11 +4,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from uuid import UUID
 
 from data_rentgen.dto.dataset import DatasetDTO
 from data_rentgen.dto.operation import OperationDTO
 from data_rentgen.dto.schema import SchemaDTO
+from data_rentgen.utils.uuid import generate_incremental_uuid
 
 
 @dataclass
@@ -19,16 +21,28 @@ class InputDTO:
     num_rows: int | None = None
     num_bytes: int | None = None
     num_files: int | None = None
-    # id is generated using other ids combination
-    id: UUID | None = None
 
     @property
     def unique_key(self) -> tuple:
         return (
             self.operation.unique_key,
             self.dataset.unique_key,
-            (self.schema.unique_key if self.schema else None),
         )
+
+    def generate_id(self) -> UUID:
+        # Instead of using UniqueConstraint on multiple fields, one of which (schema_id) can be NULL,
+        # use them to calculate unique id.
+        # This property could be accessed only after all nested ids are fetched from DB
+        id_components = [
+            str(self.operation.id),
+            str(self.dataset.id),
+            str(self.schema.id) if self.schema else "",
+        ]
+        return generate_incremental_uuid(self.created_at, ".".join(id_components))
+
+    @property
+    def created_at(self) -> datetime:
+        return self.operation.created_at
 
     def merge(self, new: InputDTO) -> InputDTO:
         schema: SchemaDTO | None
@@ -44,5 +58,4 @@ class InputDTO:
             num_rows=max(filter(None, [new.num_rows, self.num_rows]), default=None),
             num_bytes=max(filter(None, [new.num_bytes, self.num_bytes]), default=None),
             num_files=max(filter(None, [new.num_files, self.num_files]), default=None),
-            id=new.id or self.id,
         )

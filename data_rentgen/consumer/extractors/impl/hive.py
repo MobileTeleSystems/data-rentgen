@@ -11,7 +11,6 @@ from data_rentgen.consumer.openlineage.run_facets import (
     OpenLineageHiveQueryInfoRunFacet,
     OpenLineageHiveSessionInfoRunFacet,
 )
-from data_rentgen.db.utils.uuid import generate_incremental_uuid
 from data_rentgen.dto import (
     JobDTO,
     JobTypeDTO,
@@ -21,6 +20,7 @@ from data_rentgen.dto import (
     RunStatusDTO,
     UserDTO,
 )
+from data_rentgen.utils.uuid import generate_incremental_uuid
 
 
 class HiveExtractor(GenericExtractor):
