@@ -34,11 +34,12 @@ What is Data.Rentgen?
 Data.Rentgen is a Data Motion Lineage service, compatible with `OpenLineage <https://openlineage.io/>`_ specification.
 
 Currently we support consuming lineage from:
-  * Apache Spark
-  * Apache Airflow
-  * Apache Hive
-  * Apache Flink
-  * dbt
+
+* Apache Spark
+* Apache Airflow
+* Apache Hive
+* Apache Flink
+* dbt
 
 **Note**: service is under active development, so it doesn't have stable API for now.
 
@@ -47,7 +48,7 @@ Goals
 
 * Collect lineage events produced by OpenLineage clients & integrations.
 * Store operation-grained events for better detalization (instead of job grained `Marquez <https://marquezproject.ai/>`_).
-* Provide API for fetching job/run ↔ dataset lineage, not dataset ↔ dataset lineage (like `Datahub <https://datahubproject.io/>`_ and `OpenMetadata <https://open-metadata.org/>`_).
+* Provide API for fetching both job/run ↔ dataset lineage and dataset ↔ dataset lineage.
 
 Features
 --------
@@ -55,14 +56,14 @@ Features
 * Support consuming large amounts of lineage events, use Apache Kafka as event buffer.
 * Store data in tables partitioned by event timestamp, to speed up lineage graph resolution.
 * Lineage graph is build with user-specified time boundaries (unlike Marquez where lineage is build only for last job run).
-* Lineage graph can be build with different granularity. e.g. merge all individual Spark operations into Spark applicationId or Spark applicationName.
+* Lineage graph can be build with different granularity. e.g. merge all individual Spark commands into Spark applicationId or Spark applicationName.
 * Column-level lineage support.
 * Authentication support.
 
 Non-goals
 ---------
 
-* This is **not** a Data Catalog, DataRentgen doesn't track dataset schema change, owner and so on. Use Datahub or OpenMetadata instead.
+* This is **not** a Data Catalog. DataRentgen doesn't track dataset schema change, owner and so on. Use `Datahub <https://datahubproject.io/>`_ or `OpenMetadata <https://open-metadata.org/>`_ instead.
 * Static Data Lineage like view → table is not supported.
 
 Limitations
