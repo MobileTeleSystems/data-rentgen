@@ -9,7 +9,7 @@ This script is designed to manage PostgreSQL table partitions by providing funct
  usage: python3 -m data_rentgen.db.scripts.clean_partitions --command truncate --keep-after $(date -v2m '+%Y-%m-%d')
 
 
-The ``clean_partitions.py`` script helps automate the cleanup of old PostgreSQL table partitions based on a specified keep-after date. It supports different commands for dry runs, detaching partitions, removing data, and truncating partitions.
+The ``clean_partitions.py`` script helps automate the cleanup of old table partitions based on a specified keep-after date. It supports different commands for dry runs, detaching partitions, removing data, and truncating partitions.
 It's automatically inditifies partitioned tables and their granularity.
 
 Arguments
