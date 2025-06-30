@@ -58,7 +58,7 @@ python-dateutil = {version = "^2.9.0.post0", optional = true}
 fastapi = {version = "^0.115.6", optional = true}
 starlette = {version = ">=0.41.2,<0.47.0", optional = true}
 starlette-exporter = {version = "^0.23.0", optional = true}
-uvicorn = {version = "^0.34.0", optional = true}
+uvicorn = {version = ">=0.34,<0.36", optional = true}
 asyncpg = {version = "^0.30.0", optional = true}
 asgi-correlation-id = {version = "^4.3.4", optional = true}
 faststream = {extras = ["kafka", "cli"], version = "^0.5.42", optional = true}
