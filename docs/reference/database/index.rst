@@ -31,6 +31,10 @@ By default, it creates monthly partitions, for current and next month. This can 
 This script should run on schedule, depending on partitions granularity.
 Scheduling can be done by adding a dedicated entry to `crontab <https://help.ubuntu.com/community/CronHowto>`_.
 
+
+It's strongly recommended also to setup cleaning data in old partitions :ref:`clean-partitions-cli`.
+Scheduling setup is same is for creating of partitions.
+
 Analytic views
 ---------------
 
@@ -105,6 +109,17 @@ With Docker
   .. code:: text
 
     0 0 * * * docker exec data-rentgen-server-1 "python -m data_rentgen.db.scripts.refresh_analytic_views"
+
+* Add cleaning partitions script to crontab:
+
+.. code:: console
+
+    $ crontab -e
+
+  .. code:: text
+
+    0 0 * * * docker exec data-rentgen-server-1 "python -m data_rentgen.db.scripts.clean_partitions command truncate --keep-after $(date -v2m '+%Y-%m-%d')"
+
 
 
 Without Docker
@@ -182,6 +197,18 @@ Without Docker
     # read settings from .env file, and run script using a specific venv with all required dependencies
     0 0 * * * /bin/bash -c "source /some/.env && /some/.venv/bin/python -m data_rentgen.db.scripts.refresh_analytic_views"
 
+* Add partitions cleaning script to crontab, to run every day:
+
+  .. code:: console
+
+    $ crontab -e
+
+  .. code:: text
+
+    # read settings from .env file, and run script using a specific venv with all required dependencies
+    0 0 * * * /bin/bash -c "source /some/.env && /some/.venv/bin/python -m data_rentgen.db.scripts.clean_partitions command truncate --keep-after $(date -v2m '+%Y-%m-%d')"
+
+
 See also
 --------
 
@@ -191,4 +218,5 @@ See also
     configuration
     partitions_cli
     analytic_views_cli
+    clean_data_cli
     structure
