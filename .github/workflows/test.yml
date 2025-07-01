@@ -64,7 +64,7 @@ jobs:
 
       - name: Remove Partitions
         run: |
-          make db-clean-partitions ARGS="remove_data --keep-after $(date -v1d '+%Y-%m-%d')"
+          make db-clean-partitions ARGS="remove_data --keep-after $(date --date='yesterday' '+%Y-%m-%d')"
 
       - name: Dump DB logs on failure
         if: failure()
