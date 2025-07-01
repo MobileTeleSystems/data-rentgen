@@ -62,6 +62,10 @@ jobs:
           mkdir -p reports/
           make test-ci
 
+      - name: Remove Partitions
+        run: |
+          make db-clean-partitions ARGS="remove_data --keep-after $(date -v1d '+%Y-%m-%d')"
+
       - name: Dump DB logs on failure
         if: failure()
         uses: jwalton/gh-docker-logs@v2

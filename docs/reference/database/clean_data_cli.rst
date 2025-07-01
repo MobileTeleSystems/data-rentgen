@@ -6,7 +6,7 @@ This script is designed to manage PostgreSQL table partitions by providing funct
 
 ::
 
- usage: python3 -m data_rentgen.db.scripts.clean_partitions command truncate --keep-after 2025-01-01
+ usage: python3 -m data_rentgen.db.scripts.clean_partitions truncate --keep-after 2025-01-01
 
 
 The ``clean_partitions.py`` script helps automate the cleanup of old table partitions based on a specified keep-after date. It supports different commands for dry runs, detaching partitions, removing data, and truncating partitions.
@@ -39,25 +39,25 @@ Examples
 
 1. Perform a Dry Run (default):
 
-::
+.. code::shel
 
-    python3 -m data_rentgen.db.scripts.clean_partitions command dry_run --keep-after 2024-01-01
+    python3 -m data_rentgen.db.scripts.clean_partitions dry_run --keep-after 2024-01-01
 
 This command will log which partitions would be affected if you were to clean up partitions older than January 1, 2024, without making any changes to your database.
 
 2. Detach Partitions Older Than a Specific Date:
 
-::
+.. code::shel
 
-    python3 -m data_rentgen.db.scripts.clean_partitions command detach_partitions --keep-after 2024-01-01
+    python3 -m data_rentgen.db.scripts.clean_partitions detach_partitions --keep-after 2024-01-01
 
 This will detach all partitions created before January 1, 2024, from their parent tables. The detached tables will still exist with their data.
 
 3. Remove Data and Drop Partitions Older Than a Specific Date:
 
-::
+.. code::shel
 
-    python3 -m data_rentgen.db.scripts.clean_partitions command remove_data --keep-after 2024-01-01
+    python3 -m data_rentgen.db.scripts.clean_partitions remove_data --keep-after 2024-01-01
 
 This will detach and then **drop all partitions** created before January 1, 2024, permanently deleting their data.
 
@@ -65,8 +65,8 @@ This will detach and then **drop all partitions** created before January 1, 2024
 
 This option is preferred with streaming ``Jobs``
 
-::
+.. code::shel
 
-    python3 -m data_rentgen.db.scripts.clean_partitions command truncate --keep-after 2023-01-01
+    python3 -m data_rentgen.db.scripts.clean_partitions truncate --keep-after 2024-01-01
 
-This will delete all rows from partitions created before January 1, 2023, but will keep the empty partition tables.
+This will delete all rows from partitions created before January 1, 2024, but will keep the empty partition tables.

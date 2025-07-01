@@ -118,7 +118,8 @@ With Docker
 
   .. code:: text
 
-    0 0 * * * docker exec data-rentgen-server-1 "python -m data_rentgen.db.scripts.clean_partitions command truncate --keep-after $(date -v2m '+%Y-%m-%d')"
+    # Remove partitions older than 1 year
+    0 0 * * * docker exec data-rentgen-server-1 "python -m data_rentgen.db.scripts.clean_partitions truncate --keep-after $(date -v1y '+%Y-%m-%d')"
 
 
 
@@ -205,8 +206,9 @@ Without Docker
 
   .. code:: text
 
-    # read settings from .env file, and run script using a specific venv with all required dependencies
-    0 0 * * * /bin/bash -c "source /some/.env && /some/.venv/bin/python -m data_rentgen.db.scripts.clean_partitions command truncate --keep-after $(date -v2m '+%Y-%m-%d')"
+    # Read settings from .env file, and run script using a specific venv with all required dependencies
+    # Remove partitions older than 1 year
+    0 0 * * * /bin/bash -c "source /some/.env && /some/.venv/bin/python -m data_rentgen.db.scripts.clean_partitions truncate --keep-after $(date -v1y '+%Y-%m-%d')"
 
 
 See also
