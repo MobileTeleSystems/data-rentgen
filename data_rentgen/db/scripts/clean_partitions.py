@@ -100,7 +100,12 @@ async def get_partitioned_tables(session: AsyncSession) -> dict[str, list[TableP
     for (tabel_name,) in table_names:
         granularity: Literal["year", "month", "day"] = "year"
         match = re.search(PARTITION_GRANULARITY_PATERN, tabel_name)
+
+        if not match:
+            continue
+
         (name, year, month, day) = match.groups()  # type: ignore[union-attr]
+
         if name not in PARTITIONED_TABLES:
             continue
         year = int(year)
