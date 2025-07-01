@@ -32,7 +32,7 @@ This script should run on schedule, depending on partitions granularity.
 Scheduling can be done by adding a dedicated entry to `crontab <https://help.ubuntu.com/community/CronHowto>`_.
 
 
-It's strongly recommended also to setup cleaning data in old partitions :ref:`clean-partitions-cli`.
+It's strongly recommended also to add old partitions cleanup script to cron :ref:`clean-partitions-cli`.
 Scheduling setup is same is for creating of partitions.
 
 Analytic views

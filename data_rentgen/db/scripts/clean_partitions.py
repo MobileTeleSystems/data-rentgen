@@ -46,11 +46,12 @@ class Command(str, Enum):
 
 def get_parser() -> ArgumentParser:
     parser = ArgumentParser(
-        usage="python3 -m data_rentgen.db.scripts.clean_partitions command truncate --keep-after $(date -v2m '+%Y-%m-%d')",  # noqa: E501
+        usage="python3 -m data_rentgen.db.scripts.clean_partitions command truncate --keep-after 2025-01-01",
         description="Truncate or detach partitions, before provided date.",
     )
     parser.add_argument(
         "command",
+        type=Command,
         choices=[item.value for item in Command],
         default=Command.DRY_RUN.value,
         nargs="?",
@@ -59,7 +60,7 @@ def get_parser() -> ArgumentParser:
     parser.add_argument(
         "--keep-after",
         type=isoparse,
-        default=(datetime.now(tz=UTC) - relativedelta(days=1)),
+        default=(datetime.now(tz=UTC) - relativedelta(years=1)),
         nargs="?",
         help="Partitions with data before this date will be considered for cleanup",
     )
@@ -67,13 +68,13 @@ def get_parser() -> ArgumentParser:
 
 
 @dataclass()
-class Partition:
+class TabelPartitions:
     partitions: list[date] = field(default_factory=list)
     granularity: Literal["year", "month", "day"] = field(default="year")
 
 
-async def get_partitioned_tables(session: AsyncSession) -> dict[str, Partition] | None:
-    tables: dict[str, Partition] = defaultdict(Partition)
+async def get_partitioned_tables(session: AsyncSession) -> dict[str, TabelPartitions] | None:
+    tables: dict[str, TabelPartitions] = defaultdict(TabelPartitions)
     query = text(
         "select c.relname as table_name from pg_class c where c.relispartition = True and c.relkind = 'r' order by c.relname",  # noqa: E501
     )
@@ -103,14 +104,14 @@ async def get_partitioned_tables(session: AsyncSession) -> dict[str, Partition] 
     return tables
 
 
-def get_partitions(tables: dict[str, Partition], end_date: date):
+def get_partitions(tables: dict[str, TabelPartitions], end_date: date):
     for table_name, value in tables.items():
         partitions_to_remove = [partition for partition in value.partitions if partition < end_date]
         tables[table_name].partitions = partitions_to_remove
     return tables
 
 
-def get_query(tables: dict[str, Partition], query_type: str):
+def get_query(tables: dict[str, TabelPartitions], query_type: str):
     queries = []
     query_template = ""
     match query_type:
@@ -132,9 +133,9 @@ def get_query(tables: dict[str, Partition], query_type: str):
     return queries
 
 
-def show_removing_partitions(tables: dict[str, Partition]):
+def show_removing_partitions(tables: dict[str, TabelPartitions]):
     for table_name, value in tables.items():
-        logger.info("Removing next partitions for table: %s", table_name)
+        logger.info("Partitions to remove from table: %s", table_name)
         partitions_names = " ".join(
             [
                 f"{table_name}_{partition.strftime(granularity_output_format[value.granularity])}"
@@ -144,32 +145,31 @@ def show_removing_partitions(tables: dict[str, Partition]):
         logger.info(partitions_names)
 
 
-async def detach_partitions(tables: dict[str, Partition], session: AsyncSession):
+async def detach_partitions(tables: dict[str, TabelPartitions], session: AsyncSession):
     partitions_to_detach = get_query(tables, "detach")
     for query in partitions_to_detach:
-        logger.info("Detach partitions with query: %s", query)
+        logger.debug("Detach partitions with query: %s", query)
         await session.execute(text(query))
         await session.commit()
 
 
-async def remove_data(tables: dict[str, Partition], session: AsyncSession):
+async def remove_data(tables: dict[str, TabelPartitions], session: AsyncSession):
     partitions_to_remove = get_query(tables, "remove")
     for query in partitions_to_remove:
-        logger.info("Remove table with query: %s", query)
+        logger.debug("Remove table with query: %s", query)
         await session.execute(text(query))
         await session.commit()
 
 
-async def truncate_data(tables: dict[str, Partition], session: AsyncSession):
+async def truncate_data(tables: dict[str, TabelPartitions], session: AsyncSession):
     partitions_to_truncate = get_query(tables, "truncate")
     for query in partitions_to_truncate:
-        logger.info("Truncate partition with query: %s", query)
+        logger.debug("Truncate partition with query: %s", query)
         await session.execute(text(query))
         await session.commit()
 
 
 async def main(args: list[str]) -> None:
-    setup_logging(LoggingSettings())
     parser = get_parser()
     params = parser.parse_args(args)
     logger.info("Starting clean partition script with params: %s", params)
@@ -200,4 +200,5 @@ async def main(args: list[str]) -> None:
 
 
 if __name__ == "__main__":
+    setup_logging(LoggingSettings())
     asyncio.run(main(sys.argv[1:]))

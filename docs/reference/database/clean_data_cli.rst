@@ -6,7 +6,7 @@ This script is designed to manage PostgreSQL table partitions by providing funct
 
 ::
 
- usage: python3 -m data_rentgen.db.scripts.clean_partitions --command truncate --keep-after $(date -v2m '+%Y-%m-%d')
+ usage: python3 -m data_rentgen.db.scripts.clean_partitions command truncate --keep-after 2025-01-01
 
 
 The ``clean_partitions.py`` script helps automate the cleanup of old table partitions based on a specified keep-after date. It supports different commands for dry runs, detaching partitions, removing data, and truncating partitions.
@@ -21,16 +21,16 @@ Arguments
     * Description:
         * ``dry_run``: Logs the names of partitions that would be affected by the cleanup without executing any SQL commands.
 
-        * ``detach_partitions``: Generates and executes ``ALTER TABLE ... DETACH PARTITION ...`` commands for identified old partitions. This makes the partitions independent tables but keeps their data.
+        * ``detach_partitions``: Generates and executes ``ALTER TABLE ... DETACH PARTITION ...`` commands for identified old partitions. This keeps partition data intact, but consumer & server will have no access to these partitions.
 
         * ``remove_data``: First detaches partitions, then generates and executes ``DROP TABLE ...`` commands, permanently deleting the partition tables and their data.
 
-        * ``truncate``: Generates and executes ``TRUNCATE TABLE ...`` commands, removing all rows from the identified old partition tables but keeping the table structure. **This option is preferred if you have streaming data**.
+        * ``truncate``: Generates and executes ``TRUNCATE TABLE ...`` commands, removing all rows from the identified old partition tables but keeping the table structure. **This option is preferred if you have streaming operations, g.e. Flink or Spark Streaming jobs**.
 
 * ``--keep-after``: (Optional) The cut-off date for partitions. Partitions with data before this date will be considered for cleanup.
     * Type: Date (e.g., ``YYYY-MM-DD``). The script uses isoparse for parsing, so various ISO formats are supported.
 
-    * Default: The current date - 1 day.
+    * Default: The current date - 1 year.
 
     * Description: Only partitions whose date components are strictly before this specified date will be processed taking into account granularity of the table.
 
@@ -57,7 +57,7 @@ This will detach all partitions created before January 1, 2024, from their paren
 
 ::
 
-    python3 -m data_rentgen.db.scripts.clean_partitions command remove_data --keep-after 2024-06-01
+    python3 -m data_rentgen.db.scripts.clean_partitions command remove_data --keep-after 2024-01-01
 
 This will detach and then **drop all partitions** created before January 1, 2024, permanently deleting their data.
 
