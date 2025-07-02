@@ -61,8 +61,10 @@ db-partitions: ##@DB Create partitions
 db-clean-partitions: ##@DB Clean partitions
 	${POETRY} run python -m data_rentgen.db.scripts.clean_partitions $(ARGS)
 
+db-clean-partitions-ci: ##@DB Clean partitions in CI
+	${POETRY} run python -m data_rentgen.db.scripts.clean_partitions $(ARGS)
 db-views: ##@DB Create views
-	${POETRY} run python -m data_rentgen.db.scripts.refresh_analytic_views $(ARGS)
+	${POETRY} run coveratge run python -m data_rentgen.db.scripts.refresh_analytic_views $(ARGS)
 
 broker: broker-start ##@Broker Prepare broker (in docker)
 
