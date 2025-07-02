@@ -66,6 +66,7 @@ jobs:
         run: |
           make db-cleanup-partitions-ci ARGS="dry_run --keep-after $(date --date='yesterday' '+%Y-%m-%d')"
           make db-cleanup-partitions-ci ARGS="truncate --keep-after $(date --date='yesterday' '+%Y-%m-%d')"
+          make db-cleanup-partitions-ci ARGS="detach --keep-after $(date --date='-6month' '+%Y-%m-%d')"
           make db-cleanup-partitions-ci ARGS="drop --keep-after $(date --date='yesterday' '+%Y-%m-%d')"
 
       - name: Dump DB logs on failure

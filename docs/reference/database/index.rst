@@ -37,7 +37,7 @@ Scheduling setup is same is for creating of partitions.
 Analytic views
 ---------------
 
-Along with migrations few analytics views are created. These are managed by :ref:`refress-analytic-views-cli`,
+Along with migrations few analytics views are created. These are managed by :ref:`refresh-analytic-views-cli`,
 and should be executed by schedule.
 
 Requirements

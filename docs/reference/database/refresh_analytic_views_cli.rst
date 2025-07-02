@@ -1,4 +1,4 @@
-.. _refress-analytic-views-cli:
+.. _refresh-analytic-views-cli:
 
 CLI for refreshing analytic views
 =================================
