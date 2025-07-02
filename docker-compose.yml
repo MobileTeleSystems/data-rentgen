@@ -17,13 +17,22 @@ services:
   db-migration:
     image: mtsrus/data-rentgen:${VERSION:-latest}
     command: |
-      python -m data_rentgen.db.migrations upgrade head && python -m data_rentgen.db.scripts.create_partitions
+      python -m data_rentgen.db.migrations upgrade head
     env_file: .env.docker
     depends_on:
       db:
         condition: service_healthy
 
-  db-views:
+  db-create-partitions:
+    image: mtsrus/data-rentgen:${VERSION:-latest}
+    command: |
+      python -m data_rentgen.db.scripts.create_partitions
+    env_file: .env.docker
+    depends_on:
+      db-migration:
+        condition: service_completed_successfully
+
+  db-refresh-views:
     image: mtsrus/data-rentgen:${VERSION:-latest}
     command: |
       python -m data_rentgen.db.scripts.refresh_analytic_views
@@ -31,6 +40,33 @@ services:
     depends_on:
       db-migration:
         condition: service_completed_successfully
+    profiles:
+      - analytics
+      - all
+
+  db-cleanup-partitions:
+    image: mtsrus/data-rentgen:${VERSION:-latest}
+    command: |
+      python -m data_rentgen.db.scripts.cleanup_partitions truncate --keep-after $(date --date='-1year' '+%Y-%m-%d')
+    env_file: .env.docker
+    depends_on:
+      db-migration:
+        condition: service_completed_successfully
+    profiles:
+      - cleanup
+      - all
+
+  db-seed:
+    image: mtsrus/data-rentgen:${VERSION:-latest}
+    command: |
+      python -m data_rentgen.db.scripts.seed
+    env_file: .env.docker
+    depends_on:
+      db-migration:
+        condition: service_completed_successfully
+    profiles:
+      - seed
+      - all
 
   server:
     image: mtsrus/data-rentgen:${VERSION:-latest}

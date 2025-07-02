@@ -10,11 +10,13 @@ from sqlalchemy import (
     Select,
     SQLColumnExpression,
     any_,
+    bindparam,
     desc,
     func,
     select,
     union,
 )
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import selectinload
 
 from data_rentgen.db.models import Job, Run, RunStartReason, RunStatus
@@ -197,3 +199,55 @@ class RunRepository(Repository[Run]):
 
         await self._session.flush([existing])
         return existing
+
+    async def create_or_update_bulk(self, runs: list[RunDTO]) -> None:
+        # used only by db seed script
+        if not runs:
+            return
+
+        data = [
+            {
+                "created_at": run.created_at,
+                "id": run.id,
+                "job_id": run.job.id,
+                "status": RunStatus(run.status),
+                "parent_run_id": run.parent_run.id if run.parent_run else None,
+                "started_at": run.started_at,
+                "started_by_user_id": run.user.id if run.user else None,
+                "start_reason": RunStartReason(run.start_reason) if run.start_reason else None,
+                "ended_at": run.ended_at,
+                "external_id": run.external_id,
+                "attempt": run.attempt,
+                "persistent_log_url": run.persistent_log_url,
+                "running_log_url": run.running_log_url,
+            }
+            for run in runs
+        ]
+
+        statement = insert(Run).values(
+            created_at=bindparam("created_at"),
+            id=bindparam("id"),
+            job_id=bindparam("job_id"),
+            status=bindparam("status"),
+            parent_run_id=bindparam("parent_run_id"),
+            started_at=bindparam("started_at"),
+            started_by_user_id=bindparam("started_by_user_id"),
+            start_reason=bindparam("start_reason"),
+            ended_at=bindparam("ended_at"),
+        )
+        statement = statement.on_conflict_do_update(
+            index_elements=[Run.created_at, Run.id],
+            set_={
+                "status": func.greatest(statement.excluded.status, Run.status),
+                "parent_run_id": func.coalesce(statement.excluded.parent_run_id, Run.parent_run_id),
+                "started_at": func.coalesce(statement.excluded.started_at, Run.started_at),
+                "started_by_user_id": func.coalesce(statement.excluded.started_by_user_id, Run.started_by_user_id),
+                "start_reason": func.coalesce(statement.excluded.start_reason, Run.start_reason),
+                "ended_at": func.coalesce(statement.excluded.ended_at, Run.ended_at),
+                "external_id": func.coalesce(statement.excluded.external_id, Run.external_id),
+                "attempt": func.coalesce(statement.excluded.attempt, Run.attempt),
+                "persistent_log_url": func.coalesce(statement.excluded.persistent_log_url, Run.persistent_log_url),
+                "running_log_url": func.coalesce(statement.excluded.running_log_url, Run.running_log_url),
+            },
+        )
+        await self._session.execute(statement, data)

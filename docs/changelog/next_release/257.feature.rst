@@ -1,0 +1,1 @@
+Added ``data_rentgen.db.seed`` script which creates example data in database.

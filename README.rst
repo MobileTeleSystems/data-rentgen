@@ -85,25 +85,15 @@ Screenshots
 Lineage graph
 ~~~~~~~~~~~~~
 
-Dataset downstream lineage
+Dataset lineage
 
-.. image:: docs/quickstart/spark/dataset_downstream_lineage.png
-    :alt: Dataset downstream lineage graph
+.. image:: docs/quickstart/spark/dataset_lineage.png
+    :alt: Dataset lineage
 
-Dataset upstream lineage
+Column-level lineage
 
-.. image:: docs/quickstart/spark/dataset_upstream_lineage.png
-    :alt: Dataset upstream lineage graph
-
-Direct column-level lineage
-
-.. image:: docs/quickstart/spark/dataset_direct_column_lineage.png
-    :alt: Dataset direct column-level lineage graph
-
-Inirect column-level lineage
-
-.. image:: docs/quickstart/spark/dataset_indirect_column_lineage.png
-    :alt: Dataset indirect column-level lineage graph
+.. image:: docs/quickstart/spark/dataset_column_lineage.png
+    :alt: Dataset column-level lineage graph
 
 Datasets
 ~~~~~~~~
@@ -129,11 +119,17 @@ Spark run
 .. image:: docs/quickstart/spark/run_details.png
     :alt: Spark run details
 
-Spark operation
+Spark command
 ~~~~~~~~~~~~~~~
 
 .. image:: docs/quickstart/spark/operation_details.png
-    :alt: Spark operation details
+    :alt: Spark command details
+
+Hive query
+~~~~~~~~~~
+
+.. image:: docs/quickstart/hive/operation_details.png
+    :alt: Hive query details
 
 Airflow DagRun
 ~~~~~~~~~~~~~~~

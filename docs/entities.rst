@@ -140,10 +140,7 @@ It contains following fields:
   - ``DBT_JOB``
   - ``UNKNOWN``
 
-.. image:: quickstart/spark/job_list.png
-.. image:: quickstart/airflow/job_list.png
-.. image:: quickstart/flink1/job_list.png
-.. image:: quickstart/dbt/job_list.png
+.. image:: quickstart/job_list.png
 
 User
 ~~~~
@@ -301,13 +298,12 @@ It contains following fields:
   - ``EXACT_MATCH`` - returned for ``granularity=OPERATION``, as each input has at most one schema.
   - ``LATEST_KNOWN`` - returned for ``granularity=JOB|RUN|DATASET`` if there are multiple inputs for same dataset but with different schemas. In this case a schema of the most recent input is returned.
 
-.. image:: quickstart/spark/dataset_downstream_lineage.png
-.. image:: quickstart/spark/dataset_upstream_lineage.png
+.. image:: quickstart/spark/dataset_lineage.png
 
 Output relation
 ~~~~~~~~~~~~~~~
 
-Relation Operation → Dataset, describing the process of writing some data to specific table/folder by specific Spark operation, or table/folder metadata changes.
+Relation Operation → Dataset, describing the process of writing some data to specific table/folder by specific Spark command, or table/folder metadata changes.
 
 It is also possible to aggregate all outputs of specific Run → Dataset or Job → Dataset combination, by adjusting ``granularity`` option of Lineage graph.
 
@@ -347,8 +343,7 @@ It contains following fields:
   - ``EXACT_MATCH`` - returned for ``granularity=OPERATION``, as each output has at most one schema.
   - ``LATEST_KNOWN`` - returned for ``granularity=JOB|RUN`` if there are multiple outputs for same dataset but with different schemas. In this case a schema of the most recent output is returned.
 
-.. image:: quickstart/spark/dataset_downstream_lineage.png
-.. image:: quickstart/spark/dataset_upstream_lineage.png
+.. image:: quickstart/spark/dataset_lineage.png
 
 Direct Column Lineage relation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

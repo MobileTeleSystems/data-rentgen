@@ -95,6 +95,11 @@ Run details
 
 .. image:: ./run_details.png
 
+Run lineage
+~~~~~~~~~~~
+
+.. image:: ./run_lineage.png
+
 Operation details
 ~~~~~~~~~~~~~~~~~
 

@@ -154,13 +154,8 @@ Lineage will be send to Data.Rentgen automatically by ``OpenLineageSparkListener
 See results
 -----------
 
-Browse frontend pages `Datasets <http://localhost:3000/datasets>`_ and `Jobs <http://localhost:3000/jobs>`_
+Browse frontend page `Jobs <http://localhost:3000/jobs>`_
 to see what information was extracted by OpenLineage & DataRentgen.
-
-Dataset list page
-~~~~~~~~~~~~~~~~~
-
-.. image:: ../dataset_list.png
 
 Job list page
 ~~~~~~~~~~~~~
@@ -185,25 +180,9 @@ Operation details page
 Dataset level lineage
 ~~~~~~~~~~~~~~~~~~~~~
 
-Downstream
+.. image:: ./dataset_lineage.png
 
-.. image:: ./dataset_downstream_lineage.png
-
-Upstream
-
-.. image:: ./dataset_upstream_lineage.png
-
-Symlink
-
-.. image:: ./dataset_symlink_lineage.png
-
-Direct column-level lineage
-
-.. image:: ./dataset_direct_column_lineage.png
-
-Inirect column-level lineage
-
-.. image:: ./dataset_indirect_column_lineage.png
+.. image:: ./dataset_column_lineage.png
 
 Job level lineage
 ~~~~~~~~~~~~~~~~~

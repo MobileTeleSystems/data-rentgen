@@ -57,6 +57,7 @@ There are *extra* dependencies (included into package as optional):
 * ``backend``
 * ``client-sync``
 * ``postgres``
+* ``seed``
 
 And *groups* (not included into package, used locally and in CI):
 
@@ -88,11 +89,11 @@ How to
 Run development instance locally
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Start DB container:
+Start DB container & seed database with some examples:
 
 .. code:: bash
 
-    make db broker
+    make db db-seed
 
 Then start development server:
 
@@ -108,7 +109,7 @@ To start developlment consumer, open a new terminal window/tab, and run:
 
 .. code:: bash
 
-    make dev-consumer
+    make broker dev-consumer
 
 Working with migrations
 ~~~~~~~~~~~~~~~~~~~~~~~
