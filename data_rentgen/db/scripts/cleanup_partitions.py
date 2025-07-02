@@ -32,12 +32,21 @@ logger = logging.getLogger(__name__)
 PARTITION_GRANULARITY_PATERN = re.compile(r"(\w+)_y(\d{4})(?:_m(\d{1,2})(?:_d(\d{1,2}))?)?")
 
 PARTITIONED_TABLES = [
-    Run.__tablename__ + "%",
-    Operation.__tablename__ + "%",
-    Input.__tablename__ + "%",
-    Output.__tablename__ + "%",
-    ColumnLineage.__tablename__ + "%",
+    Run.__tablename__,
+    Operation.__tablename__,
+    Input.__tablename__,
+    Output.__tablename__,
+    ColumnLineage.__tablename__,
 ]
+
+POSTGRES_GET_PARTITIONS_QUERY = (
+    "SELECT relname as table_name "
+    "FROM pg_class "
+    "WHERE relname like ANY(:table_prefixes) "
+    "AND relispartition = True "
+    "AND relkind = 'r' "
+    "ORDER BY relname"
+)
 
 granularity_output_format = {
     "year": "_y%Y",
@@ -48,30 +57,30 @@ granularity_output_format = {
 
 class Command(str, Enum):
     DRY_RUN = "dry_run"
-    DETATCH_PARTITIONS = "detach_partitions"
-    REMOVE_DATA = "remove_data"
+    DETACH = "detach"
     TRUNCATE = "truncate"
+    DROP = "drop"
 
 
 def get_parser() -> ArgumentParser:
     parser = ArgumentParser(
-        usage="python3 -m data_rentgen.db.scripts.clean_partitions truncate --keep-after 2025-01-01",
+        usage="python3 -m data_rentgen.db.scripts.cleanup_partitions truncate --keep-after 2025-01-01",
         description="Truncate or detach partitions, before provided date.",
     )
     parser.add_argument(
         "command",
         type=Command,
         choices=[item.value for item in Command],
-        default=Command.DRY_RUN.value,
+        default=Command.DRY_RUN,
         nargs="?",
-        help="Operation mode",
+        help="Command",
     )
     parser.add_argument(
         "--keep-after",
         type=isoparse,
         default=(datetime.now(tz=UTC) - relativedelta(years=1)),
         nargs="?",
-        help="Partitions with data before this date will be considered for cleanup",
+        help="Select partitions where all data is before this date",
     )
     return parser
 
@@ -79,18 +88,18 @@ def get_parser() -> ArgumentParser:
 @dataclass()
 class TablePartition:
     name: str
-    date: date
+    begin_date: date
     granularity: Literal["year", "month", "day"] = field(default="year")
 
     @property
     def qualified_name(self):
-        return self.name + self.date.strftime(granularity_output_format[self.granularity])
+        return self.name + self.begin_date.strftime(granularity_output_format[self.granularity])
 
 
 async def get_partitioned_tables(session: AsyncSession) -> dict[str, list[TablePartition]]:
     tables: dict[str, list[TablePartition]] = defaultdict(list)
-    query = "select c.relname as table_name from pg_class c where c.relname like ANY(:table_prefixes) and c.relispartition = True and c.relkind = 'r' order by c.relname"  # noqa: E501
-    result = await session.execute(text(query), {"table_prefixes": PARTITIONED_TABLES})
+    table_prefixes = [table_name + "%" for table_name in PARTITIONED_TABLES]
+    result = await session.execute(text(POSTGRES_GET_PARTITIONS_QUERY), {"table_prefixes": table_prefixes})
     table_names = result.all()
     if not table_names:
         logger.info("There is no partitioned tables")
@@ -99,12 +108,10 @@ async def get_partitioned_tables(session: AsyncSession) -> dict[str, list[TableP
     for (tabel_name,) in table_names:
         granularity: Literal["year", "month", "day"] = "year"
         match = re.search(PARTITION_GRANULARITY_PATERN, tabel_name)
-
         if not match:
             continue
 
         (name, year, month, day) = match.groups()  # type: ignore[union-attr]
-
         year = int(year)
         if month:
             month = int(month)
@@ -116,98 +123,111 @@ async def get_partitioned_tables(session: AsyncSession) -> dict[str, list[TableP
             granularity = "day"
         else:
             day = 1
-        tables[name].append(TablePartition(name=name, date=date(year, month, day), granularity=granularity))
+
+        tables[name].append(TablePartition(name=name, begin_date=date(year, month, day), granularity=granularity))
     return tables
 
 
-def get_partitions(tables: dict[str, list[TablePartition]], end_date: date) -> dict[str, list[TablePartition]]:
-    tables_to_remove: dict[str, list[TablePartition]] = defaultdict(list)
-    for table_name, partitions in tables.items():
-        tables_to_remove[table_name].extend(partition for partition in partitions if partition.date < end_date)
-    return tables_to_remove
+def get_tables_partitions(tables: dict[str, list[TablePartition]], keep_after: date) -> dict[str, list[TablePartition]]:
+    return {
+        table_name: [partition for partition in partitions if partition.begin_date < keep_after]
+        for table_name, partitions in tables.items()
+    }
 
 
-def get_query(tables: dict[str, list[TablePartition]], query_type: str) -> list[str]:
-    queries = []
-    query_template = ""
-    match query_type:
-        case "detach":
+def get_queries(tables: dict[str, list[TablePartition]], command: Command) -> list[str]:
+    match command:
+        case Command.DETACH:
             query_template = "ALTER TABLE {table_name} DETACH PARTITION {qualified_name};"
-        case "remove":
+        case Command.DROP:
             query_template = "DROP TABLE {qualified_name};"
-        case "truncate":
+        case Command.TRUNCATE:
             query_template = "TRUNCATE TABLE {qualified_name};"
-    for table_name, partitions in tables.items():
-        if not partitions:
-            logger.info("No partitions of %s to %s", table_name, query_type)
-            continue
-        queries_per_table = [
-            query_template.format(
-                table_name=table_name,
-                qualified_name=partition.qualified_name,
-            )
-            for partition in partitions
-        ]
-        queries.extend(queries_per_table)
-    return queries
+        case _:
+            return []
 
-
-def show_removing_partitions(tables: dict[str, list[TablePartition]]):
-    for table_name, partitions in tables.items():
-        logger.info("Partitions to remove from table: %s", table_name)
-        partitions_names = " ".join(
-            [partition.qualified_name for partition in partitions],
+    return [
+        query_template.format(
+            table_name=table_name,
+            qualified_name=partition.qualified_name,
         )
-        logger.info(partitions_names)
+        for table_name, partitions in tables.items()
+        for partition in partitions
+    ]
+
+
+def print_partitions(tables: dict[str, list[TablePartition]]):
+    for table_name, partitions in tables.items():
+        logger.info("  Partitions of table %r", table_name)
+        for partition in partitions:
+            logger.info("    %s", partition.qualified_name)
 
 
 async def detach_partitions(tables: dict[str, list[TablePartition]], session: AsyncSession):
-    partitions_to_detach = get_query(tables, "detach")
-    for query in partitions_to_detach:
+    queries = get_queries(tables, Command.DETACH)
+    if not queries:
+        logger.info("No partitions to detach!")
+        return
+
+    logger.info("Detaching partitions...")
+    for query in queries:
         logger.debug("Detach partitions with query: %s", query)
         await session.execute(text(query))
         await session.commit()
+    logger.info("  Done!")
 
 
-async def remove_data(tables: dict[str, list[TablePartition]], session: AsyncSession):
-    partitions_to_remove = get_query(tables, "remove")
-    for query in partitions_to_remove:
+async def drop_partitions(tables: dict[str, list[TablePartition]], session: AsyncSession):
+    queries = get_queries(tables, Command.DROP)
+    if not queries:
+        logger.info("No partitions to drop!")
+        return
+
+    logger.info("Dropping partitions...")
+    for query in queries:
         logger.debug("Remove table with query: %s", query)
         await session.execute(text(query))
         await session.commit()
+    logger.info("  Done!")
 
 
-async def truncate_data(tables: dict[str, list[TablePartition]], session: AsyncSession):
-    partitions_to_truncate = get_query(tables, "truncate")
-    for query in partitions_to_truncate:
+async def truncate_partitions(tables: dict[str, list[TablePartition]], session: AsyncSession):
+    queries = get_queries(tables, Command.TRUNCATE)
+    if not queries:
+        logger.info("No partitions to truncate!")
+        return
+
+    logger.info("Truncating partitions...")
+    for query in get_queries(tables, Command.TRUNCATE):
         logger.debug("Truncate partition with query: %s", query)
         await session.execute(text(query))
         await session.commit()
+    logger.info("  Done!")
 
 
 async def main(args: list[str]) -> None:
     parser = get_parser()
     params = parser.parse_args(args)
-    logger.info("Starting clean partition script with params: %s", params)
-    end_date = params.keep_after.date()
+    logger.debug("Starting cleanup partition script with params: %s", params)
+    keep_after = params.keep_after.date()
     db_settings = DatabaseSettings()  # type: ignore[call-arg]
     session_factory = create_session_factory(db_settings)
     async with session_factory() as session:
         tables = await get_partitioned_tables(session)
-        tables_to_remove = get_partitions(tables, end_date)  # type: ignore[arg-type]
+        tables_to_remove = get_tables_partitions(tables, keep_after)  # type: ignore[arg-type]
+
+        logger.info("Partitions matching --keep-after %s:", keep_after)
+        print_partitions(tables_to_remove)
         match params.command:
-            case "dry_run":
-                show_removing_partitions(tables_to_remove)
-            case "detach_partitions":
-                logger.info("Detach partitions starting from: %s", end_date)
+            case Command.DRY_RUN:
+                pass
+            case Command.DETACH:
                 await detach_partitions(tables_to_remove, session)
-            case "remove_data":
-                logger.info("Remove data from partitions starting from: %s", end_date)
+            case Command.DROP:
                 await detach_partitions(tables_to_remove, session)
-                await remove_data(tables_to_remove, session)
-            case "truncate":
-                logger.info("Truncate partitions starting from: %s", end_date)
-                await truncate_data(tables_to_remove, session)
+                await drop_partitions(tables_to_remove, session)
+            case Command.TRUNCATE:
+                await truncate_partitions(tables_to_remove, session)
             case _:
                 logger.error("No such command: %s", params.command)
 

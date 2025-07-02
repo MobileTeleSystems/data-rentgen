@@ -31,14 +31,13 @@ By default, it creates monthly partitions, for current and next month. This can 
 This script should run on schedule, depending on partitions granularity.
 Scheduling can be done by adding a dedicated entry to `crontab <https://help.ubuntu.com/community/CronHowto>`_.
 
-
 It's strongly recommended also to add old partitions cleanup script to cron :ref:`clean-partitions-cli`.
 Scheduling setup is same is for creating of partitions.
 
 Analytic views
 ---------------
 
-Along with migrations few analytics views are created. These are managed by :ref:`refres-analytic-views-cli`,
+Along with migrations few analytics views are created. These are managed by :ref:`refress-analytic-views-cli`,
 and should be executed by schedule.
 
 Requirements
@@ -110,7 +109,7 @@ With Docker
 
     0 0 * * * docker exec data-rentgen-server-1 "python -m data_rentgen.db.scripts.refresh_analytic_views"
 
-* Add cleaning partitions script to crontab:
+* Add partitions cleanup script to crontab:
 
 .. code:: console
 
@@ -119,7 +118,7 @@ With Docker
   .. code:: text
 
     # Remove partitions older than 1 year
-    0 0 * * * docker exec data-rentgen-server-1 "python -m data_rentgen.db.scripts.clean_partitions truncate --keep-after $(date -v1y '+%Y-%m-%d')"
+    0 0 * * * docker exec data-rentgen-server-1 "python -m data_rentgen.db.scripts.cleanup_partitions truncate --keep-after $(date -v1y '+%Y-%m-%d')"
 
 
 
@@ -198,7 +197,7 @@ Without Docker
     # read settings from .env file, and run script using a specific venv with all required dependencies
     0 0 * * * /bin/bash -c "source /some/.env && /some/.venv/bin/python -m data_rentgen.db.scripts.refresh_analytic_views"
 
-* Add partitions cleaning script to crontab, to run every day:
+* Add partitions cleanup script to crontab, to run every day:
 
   .. code:: console
 
@@ -208,7 +207,7 @@ Without Docker
 
     # Read settings from .env file, and run script using a specific venv with all required dependencies
     # Remove partitions older than 1 year
-    0 0 * * * /bin/bash -c "source /some/.env && /some/.venv/bin/python -m data_rentgen.db.scripts.clean_partitions truncate --keep-after $(date -v1y '+%Y-%m-%d')"
+    0 0 * * * /bin/bash -c "source /some/.env && /some/.venv/bin/python -m data_rentgen.db.scripts.cleanup_partitions truncate --keep-after $(date -v1y '+%Y-%m-%d')"
 
 
 See also
@@ -218,7 +217,7 @@ See also
     :maxdepth: 1
 
     configuration
-    partitions_cli
-    analytic_views_cli
-    clean_data_cli
+    create_partitions_cli
+    cleanup_partitions_cli
+    refresh_analytic_views_cli
     structure

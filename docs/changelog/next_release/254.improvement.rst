@@ -1,1 +1,1 @@
-Add ``clean_partitions.py`` script to automate the cleanup of old table partitions.
+Add ``cleanup_partitions.py`` script to automate the cleanup of old table partitions.

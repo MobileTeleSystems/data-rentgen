@@ -62,9 +62,11 @@ jobs:
           mkdir -p reports/
           make test-ci
 
-      - name: Remove Partitions
+      - name: Test remove Partitions
         run: |
-          make db-clean-partitions-ci ARGS="remove_data --keep-after $(date --date='yesterday' '+%Y-%m-%d')"
+          make db-cleanup-partitions-ci ARGS="dry_run --keep-after $(date --date='yesterday' '+%Y-%m-%d')"
+          make db-cleanup-partitions-ci ARGS="truncate --keep-after $(date --date='yesterday' '+%Y-%m-%d')"
+          make db-cleanup-partitions-ci ARGS="drop --keep-after $(date --date='yesterday' '+%Y-%m-%d')"
 
       - name: Dump DB logs on failure
         if: failure()
