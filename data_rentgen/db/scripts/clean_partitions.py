@@ -31,13 +31,13 @@ logger = logging.getLogger(__name__)
 
 PARTITION_GRANULARITY_PATERN = re.compile(r"(\w+)_y(\d{4})(?:_m(\d{1,2})(?:_d(\d{1,2}))?)?")
 
-PARTITIONED_TABLES = (
-    Run.__tablename__,
-    Operation.__tablename__,
-    Input.__tablename__,
-    Output.__tablename__,
-    ColumnLineage.__tablename__,
-)
+PARTITIONED_TABLES = [
+    Run.__tablename__ + "%",
+    Operation.__tablename__ + "%",
+    Input.__tablename__ + "%",
+    Output.__tablename__ + "%",
+    ColumnLineage.__tablename__ + "%",
+]
 
 granularity_output_format = {
     "year": "_y%Y",
@@ -87,15 +87,14 @@ class TablePartition:
         return self.name + self.date.strftime(granularity_output_format[self.granularity])
 
 
-async def get_partitioned_tables(session: AsyncSession) -> dict[str, list[TablePartition]] | None:
+async def get_partitioned_tables(session: AsyncSession) -> dict[str, list[TablePartition]]:
     tables: dict[str, list[TablePartition]] = defaultdict(list)
-    query = "select c.relname as table_name from pg_class c where c.relispartition = True and c.relkind = 'r' order by c.relname"  # noqa: E501
-    query = query.format(partitioned_tables=PARTITIONED_TABLES)
-    result = await session.execute(text(query))
+    query = "select c.relname as table_name from pg_class c where c.relname like ANY(:table_prefixes) and c.relispartition = True and c.relkind = 'r' order by c.relname"  # noqa: E501
+    result = await session.execute(text(query), {"table_prefixes": PARTITIONED_TABLES})
     table_names = result.all()
     if not table_names:
         logger.info("There is no partitioned tables")
-        return tables
+        return {}
     # parse tabel_names
     for (tabel_name,) in table_names:
         granularity: Literal["year", "month", "day"] = "year"
@@ -106,8 +105,6 @@ async def get_partitioned_tables(session: AsyncSession) -> dict[str, list[TableP
 
         (name, year, month, day) = match.groups()  # type: ignore[union-attr]
 
-        if name not in PARTITIONED_TABLES:
-            continue
         year = int(year)
         if month:
             month = int(month)
