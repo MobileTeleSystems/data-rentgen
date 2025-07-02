@@ -39,7 +39,7 @@ Examples
 
 1. Perform a Dry Run (default):
 
-.. code::shel
+.. code:: shell
 
     python3 -m data_rentgen.db.scripts.clean_partitions dry_run --keep-after 2024-01-01
 
@@ -47,7 +47,7 @@ This command will log which partitions would be affected if you were to clean up
 
 2. Detach Partitions Older Than a Specific Date:
 
-.. code::shel
+.. code:: shell
 
     python3 -m data_rentgen.db.scripts.clean_partitions detach_partitions --keep-after 2024-01-01
 
@@ -55,7 +55,7 @@ This will detach all partitions created before January 1, 2024, from their paren
 
 3. Remove Data and Drop Partitions Older Than a Specific Date:
 
-.. code::shel
+.. code:: shell
 
     python3 -m data_rentgen.db.scripts.clean_partitions remove_data --keep-after 2024-01-01
 
@@ -65,7 +65,7 @@ This will detach and then **drop all partitions** created before January 1, 2024
 
 This option is preferred with streaming ``Jobs``
 
-.. code::shel
+.. code:: shell
 
     python3 -m data_rentgen.db.scripts.clean_partitions truncate --keep-after 2024-01-01
 
