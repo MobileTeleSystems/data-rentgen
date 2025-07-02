@@ -62,6 +62,10 @@ jobs:
           mkdir -p reports/
           make test-ci
 
+      - name: Test database seed script
+        run: |
+          make db-seed-ci
+
       - name: Test remove Partitions
         run: |
           make db-cleanup-partitions-ci ARGS="dry_run --keep-after $(date --date='yesterday' '+%Y-%m-%d')"

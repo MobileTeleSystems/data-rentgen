@@ -37,7 +37,7 @@ venv-cleanup: ##@Env Cleanup venv
 
 venv-install: ##@Env Install requirements to venv
 	${POETRY} config virtualenvs.create false
-	${POETRY} install --no-root --extras server --extras consumer --extras postgres --with dev,test,docs $(ARGS)
+	${POETRY} install --no-root --extras server --extras consumer --extras postgres --extras seed --with dev,test,docs $(ARGS)
 	${PIP} install --no-deps sphinx-plantuml
 
 
@@ -65,6 +65,12 @@ db-cleanup-partitions-ci: ##@DB Clean partitions in CI
 	${POETRY} run python -m data_rentgen.db.scripts.cleanup_partitions $(ARGS)
 db-views: ##@DB Create views
 	${POETRY} run coveratge run python -m data_rentgen.db.scripts.refresh_analytic_views $(ARGS)
+
+db-seed: ##@DB Seed database with random data
+	${POETRY} run python -m data_rentgen.db.scripts.seed $(ARGS)
+
+db-seed-ci: ##@DB Seed database with random data for CI
+	${POETRY} run coverage run -m data_rentgen.db.scripts.seed $(ARGS)
 
 broker: broker-start ##@Broker Prepare broker (in docker)
 

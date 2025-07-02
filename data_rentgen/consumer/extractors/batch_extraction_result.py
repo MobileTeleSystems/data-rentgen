@@ -277,3 +277,45 @@ class BatchExtractionResult:
 
     def users(self) -> list[UserDTO]:
         return list(map(self.get_user, sorted(self._users)))
+
+    def merge(self, other: BatchExtractionResult) -> BatchExtractionResult:  # noqa: C901, PLR0912
+        for location in other.locations():
+            self.add_location(location)
+
+        for dataset in other.datasets():
+            self.add_dataset(dataset)
+
+        for dataset_symlink in other.dataset_symlinks():
+            self.add_dataset_symlink(dataset_symlink)
+
+        for job_type in other.job_types():
+            self.add_job_type(job_type)
+
+        for job in other.jobs():
+            self.add_job(job)
+
+        for run in other.runs():
+            self.add_run(run)
+
+        for operation in other.operations():
+            self.add_operation(operation)
+
+        for input_ in other.inputs():
+            self.add_input(input_)
+
+        for output in other.outputs():
+            self.add_output(output)
+
+        for column_lineage in other.column_lineage():
+            self.add_column_lineage(column_lineage)
+
+        for schema in other.schemas():
+            self.add_schema(schema)
+
+        for sql_query in other.sql_queries():
+            self.add_sql_query(sql_query)
+
+        for user in other.users():
+            self.add_user(user)
+
+        return self
