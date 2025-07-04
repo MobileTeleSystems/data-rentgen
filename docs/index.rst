@@ -7,11 +7,23 @@
 
 .. toctree::
     :maxdepth: 2
-    :caption: Overview
+    :caption: Quickstart
     :hidden:
 
-    quickstart/index
-    entities
+    install
+    entities/index
+
+.. toctree::
+    :maxdepth: 2
+    :caption: Integrations
+    :hidden:
+
+    integrations/spark/index
+    integrations/airflow/index
+    integrations/flink1/index
+    integrations/flink2/index
+    integrations/hive/index
+    integrations/dbt/index
 
 .. toctree::
     :maxdepth: 2
@@ -51,60 +63,70 @@ Screenshots
 Lineage graph
 ~~~~~~~~~~~~~
 
-Dataset lineage
+Dataset-level lineage graph
 
-.. image:: quickstart/spark/dataset_lineage.png
-    :alt: Dataset lineage
+.. image:: entities/dataset_lineage.png
+    :alt: Dataset-level lineage graph
 
-Column-level lineage
+Dataset column-level lineage graph
 
-.. image:: quickstart/spark/dataset_column_lineage.png
+.. image:: entities/dataset_column_lineage.png
     :alt: Dataset column-level lineage graph
+
+Job-level lineage graph
+
+.. image:: entities/job_lineage.png
+    :alt: Job-level lineage graph
+
+Run-level lineage graph
+
+.. image:: entities/run_lineage.png
+    :alt: Job-level lineage graph
 
 Datasets
 ~~~~~~~~
 
-.. image:: quickstart/dataset_list.png
+.. image:: entities/dataset_list.png
     :alt: Datasets list
 
 Runs
 ~~~~
 
-.. image:: quickstart/run_list.png
+.. image:: entities/run_list.png
     :alt: Runs list
 
 Spark application
 ~~~~~~~~~~~~~~~~~
 
-.. image:: quickstart/spark/job_details.png
+.. image:: integrations/spark/job_details.png
     :alt: Spark application details
 
 Spark run
 ~~~~~~~~~
 
-.. image:: quickstart/spark/run_details.png
+.. image:: integrations/spark/run_details.png
     :alt: Spark run details
 
 Spark command
 ~~~~~~~~~~~~~~~
 
-.. image:: quickstart/spark/operation_details.png
+.. image:: integrations/spark/operation_details.png
     :alt: Spark command details
 
 Hive query
 ~~~~~~~~~~
 
-.. image:: quickstart/hive/operation_details.png
+.. image:: integrations/hive/operation_details.png
     :alt: Hive query details
 
 Airflow DagRun
 ~~~~~~~~~~~~~~~
 
-.. image:: quickstart/airflow/dag_run_details.png
+.. image:: integrations/airflow/dag_run_details.png
     :alt: Airflow DagRun details
 
 Airflow TaskInstance
 ~~~~~~~~~~~~~~~~~~~~~
 
-.. image:: quickstart/airflow/task_run_details.png
+.. image:: integrations/airflow/task_run_details.png
     :alt: Airflow TaskInstance details

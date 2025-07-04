@@ -16,11 +16,11 @@ Copy ``docker-compose.yml`` and ``.env.docker`` from this repo:
 
 .. dropdown:: ``docker-compose.yml``
 
-    .. literalinclude:: ../../docker-compose.yml
+    .. literalinclude:: ../docker-compose.yml
 
 .. dropdown:: ``.env.docker``
 
-    .. literalinclude:: ../../.env.docker
+    .. literalinclude:: ../.env.docker
 
 
 Then start containers using ``docker-compose``:

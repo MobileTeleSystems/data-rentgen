@@ -71,7 +71,7 @@ It contains following fields:
 
   - ``url: str`` - alternative address, in URL form.
 
-.. image:: quickstart/location_list.png
+.. image:: location_list.png
 
 Location addresses
 ^^^^^^^^^^^^^^^^^^
@@ -102,14 +102,49 @@ Examples:
 - ``postgres://some.host.name:5432`` + ``mydb.myschema.mytable`` - table inside a Postgres instance.
 - ``hdfs://some-cluster`` + ``/app/warehouse/hive/managed/myschema.db/mytable`` - folder inside a HDFS cluster.
 
-It contains following fields:
+Note that all information Data.Rentgen has was actually reported by ETL jobs, and not by database. There are no database integrations.
+
+For example, Spark command read something from PostgreSQL object ``public.dataset_name``. This can be a table, a view, a foreign table - *we don't know*.
+
+That's why the information about datasets is very limited:
 
 - ``id: int`` - internal unique identifier.
 - ``location: Location`` - Location where data is actually stored in, like RDMBS instance or cluster.
 - ``name: str`` - qualified name of Dataset, like ``mydb.myschema.mytable`` or ``/app/warehouse/hive/managed/myschema.df/mytable``
 - ``format: str | None`` - data format used in this dataset, like ``parquet``, ``avro``.
+- ``schema: Schema | None`` - schema of dataset.
 
-.. image:: quickstart/dataset_list.png
+.. image:: dataset_list.png
+
+Dataset schema
+^^^^^^^^^^^^^^
+
+Schema only exists as a part of some interaction, like Spark application written some dataframe to ORC file,
+or Flink fetched some data from PostgreSQL table.
+
+Also, there can be multiple schemas of dataset:
+
+* If dataset is an input, it may contain only *selected* columns. We call this schema projection.
+* If dataset is an output, the schema field usually represents actual table columns. Except ``DEFAULT`` or ``COMPUTED`` columns.
+* If dataset is both input and output, we prefer using the output schema, because it has more information (like column types).
+
+It contains following fields:
+
+- ``id: int`` - internal unique identifier.
+- ``fields: list[SchemaField]``:
+
+  - ``name: str`` - column name
+  - ``type: str | None`` - column type, if any.
+    Note that this is types in ETL engine (Spark, Flink, etc), and not types of source (Postgres, Clickhouse).
+  - ``description: str | None`` - column description/comment, if any.
+  - ``fields: list[SchemaField]`` - if column contain nested fields (e.g. ``struct``, ``array``, ``map``).
+
+- ``relevance_type: Enum`` - describes if this schema information is relevant:
+
+  - ``EXACT_MATCH`` - returned if all interactions with this dataset used only one schema.
+  - ``LATEST_KNOWN`` - if there are multiple interactions with this dataset, but with different schemas. In this case a schema of the most recent interaction is returned.
+
+.. image:: dataset_schema.png
 
 Job
 ~~~
@@ -140,7 +175,7 @@ It contains following fields:
   - ``DBT_JOB``
   - ``UNKNOWN``
 
-.. image:: quickstart/job_list.png
+.. image:: job_list.png
 
 User
 ~~~~
@@ -191,10 +226,10 @@ It contains following fields:
 - ``running_log_url: str | None`` - external URL there specific Run information could be found (e.g. Spark UI).
 - ``persistent_log_url: str | None`` - external URL there specific Run logs could be found (e.g. Spark History server, Airflow Web UI).
 
-.. image:: quickstart/run_list.png
-.. image:: quickstart/spark/run_details.png
-.. image:: quickstart/airflow/dag_run_details.png
-.. image:: quickstart/airflow/task_run_details.png
+.. image:: run_list.png
+.. image:: ../integrations/spark/run_details.png
+.. image:: ../integrations/airflow/dag_run_details.png
+.. image:: ../integrations/airflow/task_run_details.png
 
 Operation
 ~~~~~~~~~
@@ -222,7 +257,7 @@ It contains following fields:
 - ``description: str | None`` - operation description, e.g. Spark job ``jobDescription`` field, Airflow Operator name.
 - ``sql_query: str | None`` - SQL query executed by this operation, if any.
 
-.. image:: quickstart/spark/operation_details.png
+.. image:: ../integrations/dbt/operation_details.png
 
 Relations
 ---------
@@ -248,7 +283,7 @@ It contains following fields:
     Currently, OpenLineage sends only symlinks ``HDFS location → Hive table`` which `do not exist in the real world <https://github.com/OpenLineage/OpenLineage/issues/2718#issuecomment-2134746258>`_.
     Message consumer automatically adds a reverse symlink ``Hive table → HDFS location`` to simplify building lineage graph, but this is temporary solution.
 
-.. image:: quickstart/spark/dataset_symlink_lineage.png
+.. image:: dataset_symlinks.png
 
 Parent Relation
 ~~~~~~~~~~~~~~~
@@ -265,7 +300,7 @@ It contains following fields:
 - ``from: Job | Run`` - parent entity.
 - ``to: Run | Operation`` - child entity.
 
-.. image:: quickstart/spark/operation_lineage.png
+.. image:: parent.png
 
 Input relation
 ~~~~~~~~~~~~~~
@@ -281,24 +316,8 @@ It contains following fields:
 - ``num_rows: int | None`` - number of rows read from dataset. For ``granularity=JOB|RUN`` it is a sum of all read rows from this dataset. For ``granularity=DATASET`` always ``None``.
 - ``num_bytes: int | None`` - number of bytes read from dataset. For ``granularity=JOB|RUN`` it is a sum of all read bytes from this dataset. For ``granularity=DATASET`` always ``None``.
 - ``num_files: int | None`` - number of files read from dataset. For ``granularity=JOB|RUN`` it is a sum of all read files from this dataset. For ``granularity=DATASET`` always ``None``.
-- ``schema: Schema | None`` - schema of input dataset. Usually contains only selected columns (projection).
 
-``Schema`` object contains following fields
-
-- ``id: int`` - internal of a schema, used as unique identifier.
-- ``fields: list[SchemaField]``:
-
-  - ``name: str`` - column name
-  - ``type: str | None`` - column type, if any.
-  - ``description: str | None`` - column description/comment, if any.
-  - ``fields: list[SchemaField]`` - if column contain nested fields (e.g. ``struct``, ``array``, ``map``).
-
-- ``relevance_type: Enum`` - describes if this schema information is relevant:
-
-  - ``EXACT_MATCH`` - returned for ``granularity=OPERATION``, as each input has at most one schema.
-  - ``LATEST_KNOWN`` - returned for ``granularity=JOB|RUN|DATASET`` if there are multiple inputs for same dataset but with different schemas. In this case a schema of the most recent input is returned.
-
-.. image:: quickstart/spark/dataset_lineage.png
+.. image:: input.png
 
 Output relation
 ~~~~~~~~~~~~~~~
@@ -326,24 +345,8 @@ It contains following fields:
 - ``num_rows: int | None`` - number of rows written from dataset. For ``granularity=JOB|RUN`` it is a sum of all written rows to this dataset.
 - ``num_bytes: int | None`` - number of bytes written from dataset. For ``granularity=JOB|RUN`` it is a sum of all written bytes to this dataset.
 - ``num_files: int | None`` - number of files written from dataset. For ``granularity=JOB|RUN`` it is a sum of all written files to this dataset.
-- ``schema: Schema | None`` - schema of output dataset.
 
-``Schema`` object contains following fields
-
-- ``id: int`` - internal of a schema, used as unique identifier.
-- ``fields: list[SchemaField]``:
-
-  - ``name: str`` - column name
-  - ``type: str | None`` - column type, if any.
-  - ``description: str | None`` - column description/comment, if any.
-  - ``fields: list[SchemaField]`` - if column contain nested fields (e.g. ``struct``, ``array``, ``map``).
-
-- ``relevance_type: Enum`` - describes if this schema information is relevant:
-
-  - ``EXACT_MATCH`` - returned for ``granularity=OPERATION``, as each output has at most one schema.
-  - ``LATEST_KNOWN`` - returned for ``granularity=JOB|RUN`` if there are multiple outputs for same dataset but with different schemas. In this case a schema of the most recent output is returned.
-
-.. image:: quickstart/spark/dataset_lineage.png
+.. image:: output.png
 
 Direct Column Lineage relation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -362,9 +365,9 @@ Relation Dataset columns → Dataset columns, describing how each target dataset
     - ``TRANSFORMATION_MASKING`` - some masking function is applied to column value, e.g. ``SELECT hash(source_column) AS target_column``
     - ``AGGREGATION`` - some non-masking aggregation function is applied to column value, e.g. ``SELECT max(source_column) AS target_column``
     - ``AGGREGATION_MASKING`` - some masking aggregation function is applied to column value, e.g. ``SELECT count(DISTINCT source_column) AS target_column``
-    - ``UNKNOWN`` - some unknown transformation
+    - ``UNKNOWN`` - some unknown transformation type.
 
-.. image:: quickstart/spark/dataset_direct_column_lineage.png
+.. image:: direct_column_lineage.png
 
 Indirect Column Lineage relation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -384,6 +387,6 @@ Relation Dataset columns → Dataset, describing how the entire target dataset i
     - ``SORT`` - column is used in ``ORDER BY`` clause, e.g. ``SELECT * FROM source_dataset ORDER BY source_column``
     - ``WINDOW`` - column is used in ``WINDOW`` clause, e.g. ``SELECT max(*) OVER (source_column) AS target_column``
     - ``CONDITIONAL`` - column is used in ``CASE`` or ``IF`` clause, e.g. ``SELECT CASE source_column THEN 1 WHEN 'abc' ELSE 'cde' END AS target_column``
-    - ``UNKNOWN`` - some unknown transformation
+    - ``UNKNOWN`` - some unknown transformation type.
 
-.. image:: quickstart/spark/dataset_indirect_column_lineage.png
+.. image:: indirect_column_lineage.png

@@ -85,60 +85,70 @@ Screenshots
 Lineage graph
 ~~~~~~~~~~~~~
 
-Dataset lineage
+Dataset-level lineage graph
 
-.. image:: docs/quickstart/spark/dataset_lineage.png
-    :alt: Dataset lineage
+.. image:: docs/entities/dataset_lineage.png
+    :alt: Dataset-level lineage graph
 
-Column-level lineage
+Dataset column-level lineage graph
 
-.. image:: docs/quickstart/spark/dataset_column_lineage.png
+.. image:: docs/entities/dataset_column_lineage.png
     :alt: Dataset column-level lineage graph
+
+Job-level lineage graph
+
+.. image:: docs/entities/job_lineage.png
+    :alt: Job-level lineage graph
+
+Run-level lineage graph
+
+.. image:: docs/entities/run_lineage.png
+    :alt: Job-level lineage graph
 
 Datasets
 ~~~~~~~~
 
-.. image:: docs/quickstart/dataset_list.png
+.. image:: docs/entities/dataset_list.png
     :alt: Datasets list
 
 Runs
 ~~~~
 
-.. image:: docs/quickstart/run_list.png
+.. image:: docs/entities/run_list.png
     :alt: Runs list
 
 Spark application
 ~~~~~~~~~~~~~~~~~
 
-.. image:: docs/quickstart/spark/job_details.png
+.. image:: docs/integrations/spark/job_details.png
     :alt: Spark application details
 
 Spark run
 ~~~~~~~~~
 
-.. image:: docs/quickstart/spark/run_details.png
+.. image:: docs/integrations/spark/run_details.png
     :alt: Spark run details
 
 Spark command
 ~~~~~~~~~~~~~~~
 
-.. image:: docs/quickstart/spark/operation_details.png
+.. image:: docs/integrations/spark/operation_details.png
     :alt: Spark command details
 
 Hive query
 ~~~~~~~~~~
 
-.. image:: docs/quickstart/hive/operation_details.png
+.. image:: docs/integrations/hive/operation_details.png
     :alt: Hive query details
 
 Airflow DagRun
 ~~~~~~~~~~~~~~~
 
-.. image:: docs/quickstart/airflow/dag_run_details.png
+.. image:: docs/integrations/airflow/dag_run_details.png
     :alt: Airflow DagRun details
 
 Airflow TaskInstance
 ~~~~~~~~~~~~~~~~~~~~~
 
-.. image:: docs/quickstart/airflow/task_run_details.png
+.. image:: docs/integrations/airflow/task_run_details.png
     :alt: Airflow TaskInstance details
