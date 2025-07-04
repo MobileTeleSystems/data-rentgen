@@ -122,12 +122,6 @@ jobs:
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
-      - name: Cache pip
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-python-${{ env.DEFAULT_PYTHON }}-coverage
-
       - name: Upgrade pip
         run: python -m pip install --upgrade pip setuptools wheel
 
