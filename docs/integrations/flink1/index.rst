@@ -14,7 +14,7 @@ Requirements
 Limitations
 -----------
 
-* Only application mode (``standalone-job``) is supported, but not session mode (``jobmanager``): `https://github.com/OpenLineage/OpenLineage/issues/2150 <OpenLineage issue>`_
+* Only ``standalone-job`` (application mode) is supported, but not ``jobmanager`` (session mode): `https://github.com/OpenLineage/OpenLineage/issues/2150 <OpenLineage issue>`_
 
 Entity mapping
 --------------
@@ -102,7 +102,7 @@ At the end, this should look like this (see `Official documentation <https://nig
             image: flink:1.20.1-scala_2.12-java11
             ports:
             - "18081:8081"
-            # only application mode is supported, but not session mode
+            # only standalone-job is supported
             command: standalone-job --job-classname my.awesome.FlinkStatefulApplication
             volumes:
             - ./artifacts/:/opt/flink/usrlib/  # path to you Flink Job .jar files

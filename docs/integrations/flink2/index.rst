@@ -104,7 +104,7 @@ At the end, this should look like this (see `Official documentation <https://nig
             image: flink:2.0.0-scala_2.12-java11
             ports:
             - "18081:8081"
-            # supported both application and session modes
+            # supported both standalone-job and jobmanager
             command: standalone-job --job-classname my.awesome.FlinkStatefulApplication
             volumes:
             - ./artifacts/:/opt/flink/usrlib/  # path to you Flink Job .jar files, if using standalone-job
