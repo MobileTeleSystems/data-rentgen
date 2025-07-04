@@ -27,6 +27,8 @@ Limitations
   * ``LOAD DATA``, ``EXPORT``, ``IMPORT``.
   * ``SELECT`` data directly to JDBC client.
 
+* Hive sends events when user session started, but not when stopped. So all Hive sessions in Data.Rentgen are in ``STARTED`` status.
+
 Entity mapping
 --------------
 
