@@ -143,14 +143,12 @@ async def test_runs_handler_dbt(
     assert input_table.location.name == "localhost:10000"
     assert len(input_table.location.addresses) == 1
     assert input_table.location.addresses[0].url == "spark://localhost:10000"
-    assert input_table.format is None
 
     assert output_table.name == "demo_schema.target_table"
     assert output_table.location.type == "spark"
     assert output_table.location.name == "localhost:10000"
     assert len(output_table.location.addresses) == 1
     assert output_table.location.addresses[0].url == "spark://localhost:10000"
-    assert output_table.format is None
 
     dataset_symlink_query = select(DatasetSymlink).order_by(DatasetSymlink.type)
     dataset_symlink_scalars = await async_session.scalars(dataset_symlink_query)

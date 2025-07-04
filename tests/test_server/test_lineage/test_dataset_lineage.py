@@ -317,7 +317,6 @@ async def test_get_dataset_lineage_with_granularity_dataset(
             "datasets": {
                 str(dataset.id): {
                     "id": str(dataset.id),
-                    "format": dataset.format,
                     "name": dataset.name,
                     "location": location_to_json(dataset.location),
                     "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
@@ -394,7 +393,6 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_direction(
             "datasets": {
                 str(dataset.id): {
                     "id": str(dataset.id),
-                    "format": dataset.format,
                     "name": dataset.name,
                     "location": location_to_json(dataset.location),
                     "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
@@ -463,7 +461,6 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_depth(
             "datasets": {
                 str(dataset.id): {
                     "id": str(dataset.id),
-                    "format": dataset.format,
                     "name": dataset.name,
                     "location": location_to_json(dataset.location),
                     "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
@@ -536,7 +533,6 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_symlinks(
             "datasets": {
                 str(dataset.id): {
                     "id": str(dataset.id),
-                    "format": dataset.format,
                     "name": dataset.name,
                     "location": location_to_json(dataset.location),
                     "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
@@ -607,7 +603,6 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_until(
             "datasets": {
                 str(dataset.id): {
                     "id": str(dataset.id),
-                    "format": dataset.format,
                     "name": dataset.name,
                     "location": location_to_json(dataset.location),
                     "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
@@ -1457,7 +1452,6 @@ async def test_get_dataset_lineage_unmergeable_schema_and_output_type(
             "datasets": {
                 str(dataset.id): {
                     "id": str(dataset.id),
-                    "format": dataset.format,
                     "name": dataset.name,
                     "location": location_to_json(dataset.location),
                     "schema": schema_to_json(response_schema, "LATEST_KNOWN"),
@@ -1648,21 +1642,18 @@ async def test_get_dataset_lineage_with_granularity_dataset_without_output_schem
             "datasets": {
                 str(lineage_dataset.id): {
                     "id": str(lineage_dataset.id),
-                    "format": lineage_dataset.format,
                     "name": lineage_dataset.name,
                     "location": location_to_json(lineage_dataset.location),
                     "schema": schema_to_json(response_schema, "EXACT_MATCH"),
                 },
                 str(datasets[0].id): {
                     "id": str(datasets[0].id),
-                    "format": datasets[0].format,
                     "name": datasets[0].name,
                     "location": location_to_json(datasets[0].location),
                     "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
                 },
                 str(datasets[2].id): {
                     "id": str(datasets[2].id),
-                    "format": datasets[2].format,
                     "name": datasets[2].name,
                     "location": location_to_json(datasets[2].location),
                     "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),

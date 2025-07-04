@@ -180,7 +180,6 @@ def dataset_to_json(
         schema = _get_dataset_schema(dataset, outputs, inputs)
     return {
         "id": str(dataset.id),
-        "format": dataset.format,
         "name": dataset.name,
         "location": location_to_json(dataset.location),
         "schema": schema,

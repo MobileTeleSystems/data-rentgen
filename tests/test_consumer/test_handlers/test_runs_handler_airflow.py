@@ -180,7 +180,6 @@ async def test_runs_handler_airflow(
     assert input_table.location.name == "postgres:5432"
     assert len(input_table.location.addresses) == 1
     assert input_table.location.addresses[0].url == "postgres://postgres:5432"
-    assert input_table.format is None
 
     output_table = datasets[0]
     assert output_table.name == "food_delivery.public.popular_orders_day_of_week"
@@ -188,7 +187,6 @@ async def test_runs_handler_airflow(
     assert output_table.location.name == "postgres:5432"
     assert len(output_table.location.addresses) == 1
     assert output_table.location.addresses[0].url == "postgres://postgres:5432"
-    assert output_table.format is None
 
     dataset_symlink_query = select(DatasetSymlink).order_by(DatasetSymlink.type)
     dataset_symlink_scalars = await async_session.scalars(dataset_symlink_query)

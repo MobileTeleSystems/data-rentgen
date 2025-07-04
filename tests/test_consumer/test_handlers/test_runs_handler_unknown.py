@@ -131,14 +131,12 @@ async def test_runs_handler_unknown(
     assert clickhouse_table.location.name == "localhost:8123"
     assert len(clickhouse_table.location.addresses) == 1
     assert clickhouse_table.location.addresses[0].url == "clickhouse://localhost:8123"
-    assert clickhouse_table.format is None
 
     assert hive_table.name == "mydatabase.source_table"
     assert hive_table.location.type == "hive"
     assert hive_table.location.name == "test-hadoop:9083"
     assert len(hive_table.location.addresses) == 1
     assert hive_table.location.addresses[0].url == "hive://test-hadoop:9083"
-    assert hive_table.format is None
 
     dataset_symlink_query = select(DatasetSymlink).order_by(DatasetSymlink.type)
     dataset_symlink_scalars = await async_session.scalars(dataset_symlink_query)

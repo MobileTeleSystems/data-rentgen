@@ -129,14 +129,12 @@ async def test_runs_handler_flink(
     assert input_topic.location.name == "kafka-host1:9092"
     assert len(input_topic.location.addresses) == 1
     assert input_topic.location.addresses[0].url == "kafka://kafka-host1:9092"
-    assert input_topic.format is None
 
     assert output_topic.name == "output_topic"
     assert output_topic.location.type == "kafka"
     assert output_topic.location.name == "kafka-host2:9092"
     assert len(output_topic.location.addresses) == 1
     assert output_topic.location.addresses[0].url == "kafka://kafka-host2:9092"
-    assert output_topic.format is None
 
     dataset_symlink_query = select(DatasetSymlink).order_by(DatasetSymlink.type)
     dataset_symlink_scalars = await async_session.scalars(dataset_symlink_query)

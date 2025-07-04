@@ -144,28 +144,24 @@ async def test_runs_handler_hive(
     assert hive_source_table.location.name == "test-hadoop:9083"
     assert len(hive_source_table.location.addresses) == 1
     assert hive_source_table.location.addresses[0].url == "hive://test-hadoop:9083"
-    assert hive_source_table.format is None
 
     assert hive_target_table.name == "mydatabase.target_table"
     assert hive_target_table.location.type == "hive"
     assert hive_target_table.location.name == "test-hadoop:9083"
     assert len(hive_target_table.location.addresses) == 1
     assert hive_target_table.location.addresses[0].url == "hive://test-hadoop:9083"
-    assert hive_target_table.format is None
 
     assert hdfs_source_path.name == "/user/hive/warehouse/mydatabase.db/source_table"
     assert hdfs_source_path.location.type == "hdfs"
     assert hdfs_source_path.location.name == "test-hadoop:9820"
     assert len(hdfs_source_path.location.addresses) == 1
     assert hdfs_source_path.location.addresses[0].url == "hdfs://test-hadoop:9820"
-    assert hdfs_source_path.format is None
 
     assert hdfs_target_path.name == "/user/hive/warehouse/mydatabase.db/target_table"
     assert hdfs_target_path.location.type == "hdfs"
     assert hdfs_target_path.location.name == "test-hadoop:9820"
     assert len(hdfs_target_path.location.addresses) == 1
     assert hdfs_target_path.location.addresses[0].url == "hdfs://test-hadoop:9820"
-    assert hdfs_target_path.format is None
 
     dataset_symlink_query = select(DatasetSymlink).order_by(DatasetSymlink.type)
     dataset_symlink_scalars = await async_session.scalars(dataset_symlink_query)
