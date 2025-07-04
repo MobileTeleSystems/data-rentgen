@@ -42,18 +42,20 @@ jobs:
 
       - name: Install poetry
         uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          virtualenvs-path: .venv
 
-      - name: Cache poetry
+      - name: Load cached venv
+        id: cached-poetry-dependencies
         uses: actions/cache@v4
         with:
-          path: ~/.cache/pypoetry
-          key: ${{ runner.os }}-python-${{ env.DEFAULT_PYTHON }}-test-${{ hashFiles('**/poetry.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-python-${{ env.DEFAULT_PYTHON }}-test-${{ hashFiles('**/poetry.lock') }}
-            ${{ runner.os }}-python-${{ env.DEFAULT_PYTHON }}-test-
-            ${{ runner.os }}-python-
+          path: .venv
+          key: venv-${{ runner.os }}-${{ env.DEFAULT_PYTHON }}-${{ hashFiles('**/poetry.lock') }}
 
       - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: |
           make venv
 
@@ -72,6 +74,10 @@ jobs:
           make db-cleanup-partitions-ci ARGS="truncate --keep-after $(date --date='yesterday' '+%Y-%m-%d')"
           make db-cleanup-partitions-ci ARGS="detach --keep-after $(date --date='-6month' '+%Y-%m-%d')"
           make db-cleanup-partitions-ci ARGS="drop --keep-after $(date --date='yesterday' '+%Y-%m-%d')"
+
+      - name: Generate OpenAPI Schema
+        run: |
+          make docs-openapi
 
       - name: Dump DB logs on failure
         if: failure()

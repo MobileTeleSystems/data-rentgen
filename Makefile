@@ -4,8 +4,11 @@ include .env.local
 
 VERSION = develop
 VENV = .venv
+PYTHON = ${VENV}/bin/python
 PIP = ${VENV}/bin/pip
 POETRY = ${VENV}/bin/poetry
+PYTEST = ${VENV}/bin/pytest
+COVERAGE = ${VENV}/bin/coverage
 
 # Fix docker build and docker compose build using different backends
 COMPOSE_DOCKER_CLI_BUILD = 1
@@ -27,10 +30,9 @@ help: ##@Help Show this help
 
 
 
-venv: venv-cleanup venv-install##@Env Init venv and install poetry dependencies
+venv: venv-init venv-install##@Env Init venv and install poetry dependencies
 
-venv-cleanup: ##@Env Cleanup venv
-	@rm -rf .venv || true
+venv-init: ##@Env Init venv
 	python -m venv ${VENV}
 	${PIP} install -U setuptools wheel pip
 	${PIP} install poetry poetry-bumpversion
@@ -47,30 +49,30 @@ db-start: ##@DB Start database
 	docker compose -f docker-compose.yml up -d --wait db $(DOCKER_COMPOSE_ARGS)
 
 db-revision: ##@DB Generate migration file
-	${POETRY} run python -m data_rentgen.db.migrations revision --autogenerate $(ARGS)
+	${PYTHON} -m data_rentgen.db.migrations revision --autogenerate $(ARGS)
 
 db-upgrade: ##@DB Run migrations to head
-	${POETRY} run python -m data_rentgen.db.migrations upgrade head $(ARGS)
+	${PYTHON} -m data_rentgen.db.migrations upgrade head $(ARGS)
 
 db-downgrade: ##@DB Downgrade head migration
-	${POETRY} run python -m data_rentgen.db.migrations downgrade head-1 $(ARGS)
+	${PYTHON} -m data_rentgen.db.migrations downgrade head-1 $(ARGS)
 
 db-partitions: ##@DB Create partitions
-	${POETRY} run python -m data_rentgen.db.scripts.create_partitions --start 2024-07-01
+	${PYTHON} -m data_rentgen.db.scripts.create_partitions --start 2024-07-01
 
 db-cleanup-partitions: ##@DB Clean partitions
-	${POETRY} run python -m data_rentgen.db.scripts.cleanup_partitions $(ARGS)
+	${PYTHON} -m data_rentgen.db.scripts.cleanup_partitions $(ARGS)
 
 db-cleanup-partitions-ci: ##@DB Clean partitions in CI
-	${POETRY} run python -m data_rentgen.db.scripts.cleanup_partitions $(ARGS)
+	${PYTHON} -m data_rentgen.db.scripts.cleanup_partitions $(ARGS)
 db-views: ##@DB Create views
 	${POETRY} run coveratge run python -m data_rentgen.db.scripts.refresh_analytic_views $(ARGS)
 
 db-seed: ##@DB Seed database with random data
-	${POETRY} run python -m data_rentgen.db.scripts.seed $(ARGS)
+	${PYTHON} -m data_rentgen.db.scripts.seed $(ARGS)
 
 db-seed-ci: ##@DB Seed database with random data for CI
-	${POETRY} run coverage run -m data_rentgen.db.scripts.seed $(ARGS)
+	${COVERAGE} run -m data_rentgen.db.scripts.seed $(ARGS)
 
 broker: broker-start ##@Broker Prepare broker (in docker)
 
@@ -79,13 +81,13 @@ broker-start: ##Broker Start broker
 
 
 test: test-db test-broker ##@Test Run tests
-	${POETRY} run pytest $(PYTEST_ARGS)
+	${PYTEST} $(PYTEST_ARGS)
 
 test-lineage: test-db ##@Test Run linege tests
-	${POETRY} run pytest -m lineage $(PYTEST_ARGS)
+	${PYTEST} -m lineage $(PYTEST_ARGS)
 
 test-server: test-db ##@Test Run server tests
-	${POETRY} run pytest -m server $(PYTEST_ARGS)
+	${PYTEST} -m server $(PYTEST_ARGS)
 
 test-db: test-db-start db-upgrade db-partitions ##@TestDB Prepare database (in docker)
 
@@ -98,10 +100,10 @@ test-broker-start: ##@TestBroker Start broker
 	docker compose -f docker-compose.test.yml up -d --wait broker $(DOCKER_COMPOSE_ARGS)
 
 test-ci: test-db test-broker ##@Test Run CI tests
-	${POETRY} run coverage run -m pytest $(PYTEST_ARGS)
+	${COVERAGE} run -m pytest $(PYTEST_ARGS)
 
 test-check-fixtures: ##@Test Check declared fixtures
-	${POETRY} run pytest --dead-fixtures $(PYTEST_ARGS)
+	${PYTEST} --dead-fixtures $(PYTEST_ARGS)
 
 test-cleanup: ##@Test Cleanup tests dependencies
 	docker compose -f docker-compose.test.yml --profile all down --remove-orphans $(ARGS)
@@ -109,10 +111,10 @@ test-cleanup: ##@Test Cleanup tests dependencies
 
 
 dev-server: db-start ##@Application Run development server (without docker)
-	${POETRY} run python -m data_rentgen.server --host 0.0.0.0 --port 8000 $(ARGS)
+	${PYTHON} -m data_rentgen.server --host 0.0.0.0 --port 8000 $(ARGS)
 
 dev-consumer: db-start broker-start ##@Application Run development broker (without docker)
-	${POETRY} run python -m data_rentgen.consumer --host 0.0.0.0 --port 8001 $(ARGS)
+	${PYTHON} -m data_rentgen.consumer --host 0.0.0.0 --port 8001 $(ARGS)
 
 prod-build: ##@Application Build docker image
 	docker build --progress=plain --network=host -t mtsrus/data-rentgen:develop -f ./docker/Dockerfile $(ARGS) .
@@ -140,4 +142,4 @@ docs-cleanup: ##@Docs Cleanup docs
 docs-fresh: docs-cleanup docs-build ##@Docs Cleanup & build docs
 
 docs-openapi: ##@Docs Generate OpenAPI schema
-	python -m data_rentgen.server.scripts.export_openapi_schema docs/_static/openapi.json
+	${PYTHON} -m data_rentgen.server.scripts.export_openapi_schema docs/_static/openapi.json
