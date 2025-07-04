@@ -3,12 +3,12 @@
 include .env.local
 
 VERSION = develop
-VENV = .venv
-PYTHON = ${VENV}/bin/python
-PIP = ${VENV}/bin/pip
-POETRY = ${VENV}/bin/poetry
-PYTEST = ${VENV}/bin/pytest
-COVERAGE = ${VENV}/bin/coverage
+VIRTUAL_ENV ?= .venv
+PYTHON = ${VIRTUAL_ENV}/bin/python
+PIP = ${VIRTUAL_ENV}/bin/pip
+POETRY = ${VIRTUAL_ENV}/bin/poetry
+PYTEST = ${VIRTUAL_ENV}/bin/pytest
+COVERAGE = ${VIRTUAL_ENV}/bin/coverage
 
 # Fix docker build and docker compose build using different backends
 COMPOSE_DOCKER_CLI_BUILD = 1
@@ -33,7 +33,7 @@ help: ##@Help Show this help
 venv: venv-init venv-install##@Env Init venv and install poetry dependencies
 
 venv-init: ##@Env Init venv
-	python -m venv ${VENV}
+	python -m venv ${VIRTUAL_ENV}
 	${PIP} install -U setuptools wheel pip
 	${PIP} install poetry poetry-bumpversion
 
