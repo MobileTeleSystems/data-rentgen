@@ -11,6 +11,11 @@ Requirements
 * `Apache Flink <https://flink.apache.org/>`_ 1.x
 * OpenLineage 1.31.0 or higher, recommended 1.34.0+
 
+Limitations
+-----------
+
+* Only application mode (``standalone-job``) is supported, but not session mode (``jobmanager``): `https://github.com/OpenLineage/OpenLineage/issues/2150 <OpenLineage issue>`_
+
 Entity mapping
 --------------
 
@@ -45,7 +50,7 @@ Installation
 Setup
 -----
 
-* Modify ``JobManager`` configuration to include:
+* Modify Flink ``config.yaml`` to include:
 
   .. code-block:: yaml
     :caption: config.yaml
@@ -81,11 +86,39 @@ Setup
             compression.type: zstd
             acks: all
 
-* Pass path to config file via ``OPENLINEAGE_CONFIG`` environment variable of ``JobManager``:
+* Pass path to config file via ``OPENLINEAGE_CONFIG`` environment variable of ``jobmanager``:
 
   .. code:: ini
 
     OPENLINEAGE_CONFIG=/path/to/openlineage.yml
+
+At the end, this should look like this (see `Official documentation <https://nightlies.apache.org/flink/flink-docs-release-1.20/docs/deployment/resource-providers/standalone/docker/>`_):
+
+.. code-block:: yaml
+    :caption: docker-compose.yml
+
+    services:
+        jobmanager:
+            image: flink:1.20.1-scala_2.12-java11
+            ports:
+            - "18081:8081"
+            # only application mode is supported, but not session mode
+            command: standalone-job --job-classname my.awesome.FlinkStatefulApplication
+            volumes:
+            - ./artifacts/:/opt/flink/usrlib/  # path to you Flink Job .jar files
+            - ./config.yaml:/opt/flink/conf/config.yaml
+            - ./openlineage.yml:/opt/flink/conf/openlineage.yml
+            environment:
+            - OPENLINEAGE_CONFIG=/path/to/openlineage.yml
+
+        taskmanager:
+            image: flink:1.20.1-scala_2.12-java11
+            depends_on:
+            - jobmanager
+            command: taskmanager
+            volumes:
+            - ./artifacts/:/opt/flink/usrlib/  # path to you Flink Job .jar files
+            - ./config.yaml:/opt/flink/conf/config.yaml
 
 Collect and send lineage
 ------------------------

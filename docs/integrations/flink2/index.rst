@@ -20,7 +20,7 @@ Entity mapping
 Installation
 ------------
 
-* Download these jars and place then in ``/path/to/jars/`` directory:
+* Download these jars and place then in ``openlineage/jars/`` directory:
 
   * `openlineage-java <https://mvnrepository.com/artifact/io.openlineage/openlineage-java>`_
   * `openlineage-flink <https://mvnrepository.com/artifact/io.openlineage/openlineage-flink>`_
@@ -31,7 +31,7 @@ Installation
 
   .. code:: ini
 
-      CLASSPATH=/path/to/jars/
+      CLASSPATH=/path/to/openlineage/jars/
 
 * Configure Flink ``JobManager`` to load these dependencies using its own ClassLoader:
 
@@ -52,11 +52,12 @@ Installation
 Setup
 -----
 
-* Add ``OpenLineageJobStatusChangedListenerFactory`` to Flink config:
+* Add ``OpenLineageJobStatusChangedListenerFactory`` to Flink ``config.yaml``:
 
   .. code-block:: yaml
     :caption: config.yaml
 
+    classloader.parent-first-patterns.additional: ["io.openlineage.", "org.apache.kafka.","com.github.luben."]
     execution.job-status-changed-listeners: io.openlineage.flink.listener.OpenLineageJobStatusChangedListenerFactory  # capture job event
     execution.attached: true  # capture job stop events
     execution.job-listener.openlineage.namespace: http://some.host.name:18081  # set namespace to match Flink address
@@ -87,11 +88,41 @@ Setup
             compression.type: zstd
             acks: all
 
-* Pass path to config file via ``OPENLINEAGE_CONFIG`` environment variable of ``JobManager``:
+* Pass path to config file via ``OPENLINEAGE_CONFIG`` environment variable of ``jobmanager``:
 
   .. code:: ini
 
     OPENLINEAGE_CONFIG=/path/to/openlineage.yml
+
+At the end, this should look like this (see `Official documentation <https://nightlies.apache.org/flink/flink-docs-release-2.0/docs/deployment/resource-providers/standalone/docker/>`_):
+
+.. code-block:: yaml
+    :caption: docker-compose.yml
+
+    services:
+        jobmanager:
+            image: flink:2.0.0-scala_2.12-java11
+            ports:
+            - "18081:8081"
+            # supported both application and session modes
+            command: standalone-job --job-classname my.awesome.FlinkStatefulApplication
+            volumes:
+            - ./artifacts/:/opt/flink/usrlib/  # path to you Flink Job .jar files, if using standalone-job
+            - ./config.yaml:/opt/flink/conf/config.yaml
+            - ./openlineage/jars/:/opt/flink/usrlib/openlineage/
+            - ./openlineage.yml:/opt/flink/conf/openlineage.yml
+            environment:
+            - CLASSPATH=/opt/flink/usrlib/openlineage/
+
+        taskmanager:
+            image: flink:2.0.0-scala_2.12-java11
+            depends_on:
+            - jobmanager
+            command: taskmanager
+            volumes:
+            - ./artifacts/:/opt/flink/usrlib/  # path to you Flink Job .jar files, if using standalone-job
+            - ./config.yaml:/opt/flink/conf/config.yaml
+
 
 Collect and send lineage
 ------------------------
