@@ -208,7 +208,7 @@ def clickhouse_to_hive(
                 SELECT id, user, timestamp, value, CAST(timestamp AS DATE) AS business_dt, 'clickhouse' as source
                 FROM user_metrics
                 """,
-            ),
+            ).strip(),
         ),
     )
     input_ = InputDTO(
@@ -287,7 +287,7 @@ def postgres_to_hive(
                 SELECT id, user, timestamp, value, timestamp::date AS business_dt, 'postres' as source
                 FROM user_metrics
                 """,
-            ),
+            ).strip(),
         ),
     )
     input_ = InputDTO(

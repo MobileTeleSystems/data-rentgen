@@ -249,7 +249,7 @@ def raw_to_mart(
                 GROUP BY raw_data.user
                 ORDER BY raw_data.business_dt, raw_data.source, timestamp
                 """,
-            ),
+            ).strip(),
         ),
     )
     input1 = InputDTO(

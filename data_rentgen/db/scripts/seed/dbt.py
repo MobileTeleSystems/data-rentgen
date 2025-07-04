@@ -152,7 +152,7 @@ def dbt_raw_to_mart(
                     ) as value
                 FROM raw_data
                 """,  # noqa: S608
-            ),
+            ).strip(),
         ),
     )
     input_ = InputDTO(

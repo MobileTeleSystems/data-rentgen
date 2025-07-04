@@ -163,7 +163,7 @@ def load_ref_user_info(
                 LOAD DATA LOCAL INPATH '/app/sandbox/user_info.csv'
                 OVERWRITE INTO TABLE ref.user_info
                 """,
-            ),
+            ).strip(),
         ),
     )
     input_ = InputDTO(
