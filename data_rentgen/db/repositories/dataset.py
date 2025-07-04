@@ -35,7 +35,7 @@ class DatasetRepository(Repository[Dataset]):
 
         if not result:
             return await self._create(dataset)
-        return await self._update(result, dataset)
+        return result
 
     async def paginate(
         self,
@@ -126,14 +126,7 @@ class DatasetRepository(Repository[Dataset]):
         return await self._session.scalar(statement)
 
     async def _create(self, dataset: DatasetDTO) -> Dataset:
-        result = Dataset(location_id=dataset.location.id, name=dataset.name, format=dataset.format)
+        result = Dataset(location_id=dataset.location.id, name=dataset.name)
         self._session.add(result)
         await self._session.flush([result])
         return result
-
-    async def _update(self, existing: Dataset, new: DatasetDTO) -> Dataset:
-        # almost of fields are immutable, so we can avoid UPDATE statements if row is unchanged
-        if new.format:
-            existing.format = new.format
-            await self._session.flush([existing])
-        return existing

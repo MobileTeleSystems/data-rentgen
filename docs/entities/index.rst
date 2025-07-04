@@ -111,7 +111,6 @@ That's why the information about datasets is very limited:
 - ``id: int`` - internal unique identifier.
 - ``location: Location`` - Location where data is actually stored in, like RDMBS instance or cluster.
 - ``name: str`` - qualified name of Dataset, like ``mydb.myschema.mytable`` or ``/app/warehouse/hive/managed/myschema.df/mytable``
-- ``format: str | None`` - data format used in this dataset, like ``parquet``, ``avro``.
 - ``schema: Schema | None`` - schema of dataset.
 
 .. image:: dataset_list.png

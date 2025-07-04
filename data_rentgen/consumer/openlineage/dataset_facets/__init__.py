@@ -34,9 +34,6 @@ from data_rentgen.consumer.openlineage.dataset_facets.schema import (
     OpenLineageSchemaDatasetFacet,
     OpenLineageSchemaField,
 )
-from data_rentgen.consumer.openlineage.dataset_facets.storage import (
-    OpenLineageStorageDatasetFacet,
-)
 from data_rentgen.consumer.openlineage.dataset_facets.symlinks import (
     OpenLineageSymlinkIdentifier,
     OpenLineageSymlinksDatasetFacet,
@@ -61,7 +58,6 @@ __all__ = [
     "OpenLineageOutputStatisticsOutputDatasetFacet",
     "OpenLineageSchemaDatasetFacet",
     "OpenLineageSchemaField",
-    "OpenLineageStorageDatasetFacet",
     "OpenLineageSymlinkIdentifier",
     "OpenLineageSymlinkType",
     "OpenLineageSymlinksDatasetFacet",
@@ -77,7 +73,6 @@ class OpenLineageDatasetFacets(OpenLineageBase):
     dataSource: OpenLineageDatasourceDatasetFacet | None = None
     lifecycleStateChange: OpenLineageLifecycleStateChangeDatasetFacet | None = None
     datasetSchema: OpenLineageSchemaDatasetFacet | None = Field(default=None, alias="schema")
-    storage: OpenLineageStorageDatasetFacet | None = None
     symlinks: OpenLineageSymlinksDatasetFacet | None = None
     columnLineage: OpenLineageColumnLineageDatasetFacet | None = None
 

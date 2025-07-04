@@ -9,7 +9,6 @@ from data_rentgen.consumer.openlineage.dataset import (
 )
 from data_rentgen.consumer.openlineage.dataset_facets import (
     OpenLineageColumnLineageDatasetFacetFieldRef,
-    OpenLineageStorageDatasetFacet,
     OpenLineageSymlinkIdentifier,
     OpenLineageSymlinkType,
 )
@@ -29,9 +28,7 @@ class DatasetExtractorMixin:
         """
         Extract DatasetDTO from input or output OpenLineageDataset
         """
-        dataset_dto = self._extract_dataset_ref(dataset)
-        dataset_dto.format = self._extract_dataset_format(dataset)
-        return dataset_dto
+        return self._extract_dataset_ref(dataset)
 
     def _extract_dataset_ref(
         self,
@@ -62,16 +59,6 @@ class DatasetExtractorMixin:
             name=hosts[0],
             addresses={f"{scheme}://{host}" for host in hosts},
         )
-
-    def _extract_dataset_format(self, dataset: OpenLineageDataset) -> str | None:
-        match dataset.facets.storage:
-            case OpenLineageStorageDatasetFacet(storageLayer="default", fileFormat=file_format):
-                # See https://github.com/OpenLineage/OpenLineage/issues/2770
-                return file_format
-            case OpenLineageStorageDatasetFacet(storageLayer=storage_layer):
-                return storage_layer
-            case _:
-                return None
 
     def extract_dataset_and_symlinks(self, dataset: OpenLineageDataset) -> tuple[DatasetDTO, list[DatasetSymlinkDTO]]:
         symlink_identifiers = dataset.facets.symlinks.identifiers if dataset.facets.symlinks else []

@@ -39,11 +39,6 @@ class Dataset(Base):
         nullable=False,
         doc="Dataset name, e.g. table name or filesystem path",
     )
-    format: Mapped[str | None] = mapped_column(
-        String(32),
-        nullable=True,
-        doc="Data format, if any",
-    )
 
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,

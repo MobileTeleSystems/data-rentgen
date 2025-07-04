@@ -37,7 +37,6 @@ Database structure
         ----
         * location_id: bigint <<FK>>
         * name: varchar(256)
-        format: varchar(256) null
         search_vector: tsvector
     }
 

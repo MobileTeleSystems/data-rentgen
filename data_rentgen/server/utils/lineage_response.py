@@ -265,7 +265,6 @@ def _get_datasets(
             id=str(dataset.id),
             location=LocationResponseV1.model_validate(dataset.location),
             name=dataset.name,
-            format=dataset.format,
             schema=schema,
         )
     return datasets
@@ -328,7 +327,6 @@ def _get_datasets_with_dataset_granularity(
             id=str(dataset.id),
             location=LocationResponseV1.model_validate(dataset.location),
             name=dataset.name,
-            format=dataset.format,
             schema=schema,
         )
     return datasets

@@ -12,7 +12,6 @@ from data_rentgen.dto.location import LocationDTO
 class DatasetDTO:
     location: LocationDTO
     name: str
-    format: str | None = None
     id: int | None = field(default=None, compare=False)
 
     @property
@@ -20,13 +19,12 @@ class DatasetDTO:
         return (self.location.unique_key, self.name)
 
     def merge(self, new: DatasetDTO) -> DatasetDTO:
-        if self.location is new.location and new.id is None and new.format == self.format:
+        if self.location is new.location and new.id is None:
             # datasets aren't changed that much, reuse them if possible
             return self
 
         return DatasetDTO(
             location=self.location.merge(new.location),
             name=self.name,
-            format=new.format or self.format,
             id=new.id or self.id,
         )

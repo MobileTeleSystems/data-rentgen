@@ -1,5 +1,3 @@
-import pytest
-
 from data_rentgen.consumer.extractors.generic import GenericExtractor
 from data_rentgen.consumer.extractors.impl import DbtExtractor, FlinkExtractor, SparkExtractor
 from data_rentgen.consumer.openlineage.dataset import (
@@ -7,7 +5,6 @@ from data_rentgen.consumer.openlineage.dataset import (
 )
 from data_rentgen.consumer.openlineage.dataset_facets import (
     OpenLineageDatasetFacets,
-    OpenLineageStorageDatasetFacet,
     OpenLineageSymlinkIdentifier,
     OpenLineageSymlinksDatasetFacet,
     OpenLineageSymlinkType,
@@ -97,40 +94,6 @@ def test_extractors_extract_dataset_hdfs_with_table_symlink():
         DatasetSymlinkDTO(from_dataset=hdfs_dataset, to_dataset=hive_dataset, type=DatasetSymlinkTypeDTO.METASTORE),
         DatasetSymlinkDTO(from_dataset=hive_dataset, to_dataset=hdfs_dataset, type=DatasetSymlinkTypeDTO.WAREHOUSE),
     ]
-
-
-@pytest.mark.parametrize(
-    ["storage_layer", "file_format", "expected_format"],
-    [
-        ("default", "parquet", "parquet"),
-        ("iceberg", "parquet", "iceberg"),
-        ("iceberg", "", "iceberg"),
-        ("delta", "parquet", "delta"),
-    ],
-)
-def test_extractors_extract_dataset_hdfs_with_format(storage_layer: str, file_format: str, expected_format: str):
-    dataset = OpenLineageDataset(
-        namespace="hdfs://test-hadoop:9820",
-        name="/user/hive/warehouse/mydb.db/mytable",
-        facets=OpenLineageDatasetFacets(
-            storage=OpenLineageStorageDatasetFacet(
-                storageLayer=storage_layer,
-                fileFormat=file_format,
-            ),
-        ),
-    )
-
-    dataset_dto, symlinks_dto = GenericExtractor().extract_dataset_and_symlinks(dataset)
-    assert dataset_dto == DatasetDTO(
-        location=LocationDTO(
-            type="hdfs",
-            name="test-hadoop:9820",
-            addresses={"hdfs://test-hadoop:9820"},
-        ),
-        name="/user/hive/warehouse/mydb.db/mytable",
-        format=expected_format,
-    )
-    assert symlinks_dto == []
 
 
 def test_extractors_extract_dataset_s3():

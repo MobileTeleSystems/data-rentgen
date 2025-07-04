@@ -63,7 +63,6 @@ DATASETS = {
     "file_sandbox_raw_user_info": DatasetDTO(
         name="/app/sandbox/user_info.csv",
         location=LOCATIONS["file"],
-        format="csv",
     ),
     "hive_ref_user_info": DatasetDTO(
         name="ref.user_info",
