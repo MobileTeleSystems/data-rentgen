@@ -166,10 +166,6 @@ replace = '_raw_version = "{new_version}"'
 search = 'ver = Version.parse("{current_version}")'
 replace = 'ver = Version.parse("{new_version}")'
 
-[tool.poetry_bumpversion.file."docs/install.rst"]
-search = 'VERSION={current_version}'
-replace = 'VERSION={new_version}'
-
 [tool.pytest.ini_options]
 markers = [
     "server: tests for server (require running database)",

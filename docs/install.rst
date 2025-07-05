@@ -27,10 +27,12 @@ Then start containers using ``docker-compose``:
 
 .. code:: console
 
-    $ VERSION=0.3.1 docker compose --profile all up -d --wait
+    $ VERSION=latest docker compose --profile all up -d --wait
 
 ``docker-compose`` will download required images, create containers and start them in a proper order.
 Options can be set via ``.env.docker`` file or ``environment`` section in ``docker-compose.yml``.
+
+``VERSION`` is a tag of docker image. You can find all available tags `here <https://hub.docker.com/r/mtsrus/data-rentgen/tags>`_.
 
 Access Data.Rentgen
 ^^^^^^^^^^^^^^^^^^^
