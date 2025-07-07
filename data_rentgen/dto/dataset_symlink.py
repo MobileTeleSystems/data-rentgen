@@ -29,9 +29,7 @@ class DatasetSymlinkDTO:
         return (self.from_dataset.unique_key, self.to_dataset.unique_key, self.type)
 
     def merge(self, new: DatasetSymlinkDTO) -> DatasetSymlinkDTO:
-        return DatasetSymlinkDTO(
-            from_dataset=self.from_dataset.merge(new.from_dataset),
-            to_dataset=self.to_dataset.merge(new.to_dataset),
-            type=self.type,
-            id=new.id or self.id,
-        )
+        self.from_dataset.merge(new.from_dataset)
+        self.to_dataset.merge(new.to_dataset)
+        self.id = new.id or self.id
+        return self

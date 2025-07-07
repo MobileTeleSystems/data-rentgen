@@ -24,7 +24,7 @@ from data_rentgen.dto import DatasetDTO, PaginationDTO
 
 
 class DatasetRepository(Repository[Dataset]):
-    async def create_or_update(self, dataset: DatasetDTO) -> Dataset:
+    async def get_or_create(self, dataset: DatasetDTO) -> Dataset:
         result = await self._get(dataset)
 
         if not result:

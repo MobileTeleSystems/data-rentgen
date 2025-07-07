@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Protocol
 
 from data_rentgen.consumer.openlineage.dataset import (
-    OpenLineageDataset,
     OpenLineageInputDataset,
     OpenLineageOutputDataset,
 )
@@ -56,6 +55,6 @@ class ExtractorInterface(Protocol):
     def extract_column_lineage(
         self,
         operation: OperationDTO,
-        output_dataset: OpenLineageDataset,
+        output_dataset: OpenLineageOutputDataset,
         event: OpenLineageRunEvent,
     ) -> list[ColumnLineageDTO]: ...

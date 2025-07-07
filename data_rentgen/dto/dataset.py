@@ -19,12 +19,6 @@ class DatasetDTO:
         return (self.location.unique_key, self.name)
 
     def merge(self, new: DatasetDTO) -> DatasetDTO:
-        if self.location is new.location and new.id is None:
-            # datasets aren't changed that much, reuse them if possible
-            return self
-
-        return DatasetDTO(
-            location=self.location.merge(new.location),
-            name=self.name,
-            id=new.id or self.id,
-        )
+        self.location.merge(new.location)
+        self.id = new.id or self.id
+        return self
