@@ -57,19 +57,20 @@ class OutputDTO:
         return generate_incremental_uuid(self.created_at, ".".join(id_components))
 
     def merge(self, new: OutputDTO) -> OutputDTO:
-        schema: SchemaDTO | None
-        if self.schema and new.schema:  # noqa: SIM108
-            schema = self.schema.merge(new.schema)
-        else:
-            schema = new.schema or self.schema
+        self.operation.merge(new.operation)
+        self.dataset.merge(new.dataset)
 
-        return OutputDTO(
-            created_at=min([new.created_at, self.created_at]),
-            operation=self.operation.merge(new.operation),
-            dataset=self.dataset.merge(new.dataset),
-            type=self.type,
-            schema=schema,
-            num_rows=max(filter(None, [new.num_rows, self.num_rows]), default=None),
-            num_bytes=max(filter(None, [new.num_bytes, self.num_bytes]), default=None),
-            num_files=max(filter(None, [new.num_files, self.num_files]), default=None),
-        )
+        if self.schema and new.schema:
+            self.schema.merge(new.schema)
+        else:
+            self.schema = new.schema or self.schema
+
+        if not new.type.value & self.type.value:
+            # IntFlag.__or__ is slow, avoid calling it if not needed
+            self.type |= new.type
+
+        self.created_at = min([new.created_at, self.created_at])
+        self.num_rows = max(filter(None, [new.num_rows, self.num_rows]), default=None)
+        self.num_bytes = max(filter(None, [new.num_bytes, self.num_bytes]), default=None)
+        self.num_files = max(filter(None, [new.num_files, self.num_files]), default=None)
+        return self

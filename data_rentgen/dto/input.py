@@ -42,18 +42,16 @@ class InputDTO:
         return generate_incremental_uuid(self.created_at, ".".join(id_components))
 
     def merge(self, new: InputDTO) -> InputDTO:
-        schema: SchemaDTO | None
-        if self.schema and new.schema:  # noqa: SIM108
-            schema = self.schema.merge(new.schema)
-        else:
-            schema = new.schema or self.schema
+        self.operation.merge(new.operation)
+        self.dataset.merge(new.dataset)
 
-        return InputDTO(
-            created_at=min([new.created_at, self.created_at]),
-            operation=self.operation.merge(new.operation),
-            dataset=self.dataset.merge(new.dataset),
-            schema=schema,
-            num_rows=max(filter(None, [new.num_rows, self.num_rows]), default=None),
-            num_bytes=max(filter(None, [new.num_bytes, self.num_bytes]), default=None),
-            num_files=max(filter(None, [new.num_files, self.num_files]), default=None),
-        )
+        if self.schema and new.schema:
+            self.schema.merge(new.schema)
+        else:
+            self.schema = new.schema or self.schema
+
+        self.created_at = min([new.created_at, self.created_at])
+        self.num_rows = max(filter(None, [new.num_rows, self.num_rows]), default=None)
+        self.num_bytes = max(filter(None, [new.num_bytes, self.num_bytes]), default=None)
+        self.num_files = max(filter(None, [new.num_files, self.num_files]), default=None)
+        return self

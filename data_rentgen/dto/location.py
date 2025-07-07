@@ -17,13 +17,6 @@ class LocationDTO:
         return (self.type, self.name)
 
     def merge(self, new: LocationDTO) -> LocationDTO:
-        if new.id is None and new.addresses.issubset(self.addresses):
-            # locations aren't changed that much, reuse them if possible
-            return self
-
-        return LocationDTO(
-            type=self.type,
-            name=self.name,
-            addresses=self.addresses | new.addresses,
-            id=new.id or self.id,
-        )
+        self.addresses |= new.addresses
+        self.id = new.id or self.id
+        return self

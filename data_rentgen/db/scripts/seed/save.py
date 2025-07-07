@@ -27,12 +27,12 @@ async def save_to_db(
 
         logger.debug("Creating datasets")
         for dataset_dto in data.datasets():
-            dataset = await unit_of_work.dataset.create_or_update(dataset_dto)
+            dataset = await unit_of_work.dataset.get_or_create(dataset_dto)
             dataset_dto.id = dataset.id
 
         logger.debug("Creating symlinks")
         for dataset_symlink_dto in data.dataset_symlinks():
-            dataset_symlink = await unit_of_work.dataset_symlink.create_or_update(dataset_symlink_dto)
+            dataset_symlink = await unit_of_work.dataset_symlink.get_or_create(dataset_symlink_dto)
             dataset_symlink_dto.id = dataset_symlink.id
 
         logger.debug("Creating job types")

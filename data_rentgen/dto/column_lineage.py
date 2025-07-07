@@ -11,7 +11,6 @@ from uuid import UUID
 from data_rentgen.dto.dataset import DatasetDTO
 from data_rentgen.dto.dataset_column_relation import (
     DatasetColumnRelationDTO,
-    merge_dataset_column_relations,
 )
 from data_rentgen.dto.operation import OperationDTO
 from data_rentgen.utils.uuid import generate_incremental_uuid, generate_static_uuid
@@ -23,15 +22,26 @@ class ColumnLineageDTO:
     operation: OperationDTO
     source_dataset: DatasetDTO
     target_dataset: DatasetDTO
-    dataset_column_relations: InitVar[list[DatasetColumnRelationDTO]]
-    _dataset_column_relations: list[DatasetColumnRelationDTO] = field(default_factory=list, init=False)
+    dataset_column_relations: InitVar[list[DatasetColumnRelationDTO]] = []  # noqa: RUF008
+    _dataset_column_relations: dict[tuple, DatasetColumnRelationDTO] = field(default_factory=dict, init=False)
 
     def __post_init__(self, dataset_column_relations: list[DatasetColumnRelationDTO]):
-        self._dataset_column_relations = merge_dataset_column_relations(dataset_column_relations)
+        self._dataset_column_relations = {item.unique_key: item for item in dataset_column_relations}
 
     @property
     def column_relations(self) -> list[DatasetColumnRelationDTO]:
-        return self._dataset_column_relations
+        return list(self._dataset_column_relations.values())
+
+    def add_dataset_column_relation(self, relation: DatasetColumnRelationDTO):
+        key = relation.unique_key
+        existing_relation = self._dataset_column_relations.get(key)
+        if existing_relation:
+            existing_relation.merge(relation)
+        else:
+            self._dataset_column_relations[key] = relation
+
+    def has_relations(self) -> bool:
+        return bool(self._dataset_column_relations)
 
     @property
     def unique_key(self) -> tuple:
@@ -56,10 +66,10 @@ class ColumnLineageDTO:
         return generate_static_uuid(",".join(str_components))
 
     def merge(self, new: ColumnLineageDTO) -> ColumnLineageDTO:
-        return ColumnLineageDTO(
-            created_at=min([new.created_at, self.created_at]),
-            operation=self.operation.merge(new.operation),
-            source_dataset=self.source_dataset.merge(new.source_dataset),
-            target_dataset=self.target_dataset.merge(new.target_dataset),
-            dataset_column_relations=self.column_relations + new.column_relations,
-        )
+        self.created_at = min([new.created_at, self.created_at])
+        self.operation.merge(new.operation)
+        self.source_dataset.merge(new.source_dataset)
+        self.target_dataset.merge(new.target_dataset)
+        for column_relation in new._dataset_column_relations.values():
+            self.add_dataset_column_relation(column_relation)
+        return self

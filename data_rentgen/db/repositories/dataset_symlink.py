@@ -11,17 +11,14 @@ from data_rentgen.dto import DatasetSymlinkDTO
 
 
 class DatasetSymlinkRepository(Repository[DatasetSymlink]):
-    async def create_or_update(self, dataset_symlink: DatasetSymlinkDTO) -> DatasetSymlink:
+    async def get_or_create(self, dataset_symlink: DatasetSymlinkDTO) -> DatasetSymlink:
         result = await self._get(dataset_symlink)
         if not result:
             # try one more time, but with lock acquired.
             # if another worker already created the same row, just use it. if not - create with holding the lock.
             await self._lock(dataset_symlink.from_dataset.id, dataset_symlink.to_dataset.id)
-            result = await self._get(dataset_symlink)
-
-        if not result:
-            return await self._create(dataset_symlink)
-        return await self._update(result, dataset_symlink)
+            result = await self._get(dataset_symlink) or await self._create(dataset_symlink)
+        return result
 
     async def list_by_dataset_ids(self, dataset_ids: Collection[int]) -> list[DatasetSymlink]:
         if not dataset_ids:
@@ -53,9 +50,3 @@ class DatasetSymlinkRepository(Repository[DatasetSymlink]):
         self._session.add(result)
         await self._session.flush([result])
         return result
-
-    async def _update(self, existing: DatasetSymlink, new: DatasetSymlinkDTO) -> DatasetSymlink:
-        # almost of fields are immutable, so we can avoid UPDATE statements if row is unchanged
-        existing.type = DatasetSymlinkType(new.type)
-        await self._session.flush([existing])
-        return existing

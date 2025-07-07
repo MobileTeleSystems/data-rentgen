@@ -25,10 +25,5 @@ class SchemaDTO:
         return generate_static_uuid(json.dumps(self.fields, sort_keys=True))
 
     def merge(self, new: SchemaDTO) -> SchemaDTO:
-        if new.id is None:
-            return self
-
-        return SchemaDTO(
-            fields=self.fields,
-            id=new.id or self.id,
-        )
+        self.id = new.id or self.id
+        return self

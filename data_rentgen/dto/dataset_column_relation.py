@@ -5,7 +5,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import IntFlag
-from uuid import UUID
 
 
 class DatasetColumnRelationTypeDTO(IntFlag):
@@ -35,8 +34,6 @@ class DatasetColumnRelationDTO:
     source_column: str
     target_column: str | None = None
     # id is generated using other ids combination
-    fingerprint: UUID | None = None
-    # description is always "", see io.openlineage.spark.agent.lifecycle.plan.column.TransformationInfo
 
     @property
     def unique_key(self) -> tuple:
@@ -46,26 +43,9 @@ class DatasetColumnRelationDTO:
         )
 
     def merge(self, new: DatasetColumnRelationDTO) -> DatasetColumnRelationDTO:
-        if new.fingerprint is None and new.type.value & self.type.value:
+        if new.type.value & self.type.value:
+            # IntFlag.__or__ is slow, avoid calling it if not needed
             return self
 
-        return DatasetColumnRelationDTO(
-            source_column=self.source_column,
-            target_column=self.target_column,
-            type=self.type | new.type,
-            fingerprint=new.fingerprint or self.fingerprint,
-        )
-
-
-def merge_dataset_column_relations(
-    relations: list[DatasetColumnRelationDTO],
-) -> list[DatasetColumnRelationDTO]:
-    result: dict[tuple, DatasetColumnRelationDTO] = {}
-    for relation in relations:
-        if relation.unique_key in result:
-            existing_relation = result[relation.unique_key]
-            result[relation.unique_key] = existing_relation.merge(relation)
-        else:
-            result[relation.unique_key] = relation
-
-    return sorted(result.values(), key=lambda item: item.unique_key)
+        self.type |= new.type
+        return self

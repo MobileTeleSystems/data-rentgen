@@ -59,22 +59,18 @@ class OperationDTO:
         return extract_timestamp_from_uuid(self.id)
 
     def merge(self, new: OperationDTO) -> OperationDTO:
-        sql_query: SQLQueryDTO | None
+        self.run.merge(new.run)
         if self.sql_query and new.sql_query:
-            sql_query = self.sql_query.merge(new.sql_query)
+            self.sql_query.merge(new.sql_query)
         else:
-            sql_query = new.sql_query or self.sql_query
+            self.sql_query = new.sql_query or self.sql_query
 
-        return OperationDTO(
-            id=self.id,
-            run=self.run.merge(new.run),
-            name=new.name or self.name,
-            type=new.type,
-            group=new.group or self.group,
-            description=new.description or self.description,
-            status=max(new.status, self.status),
-            sql_query=sql_query,
-            position=new.position or self.position,
-            started_at=new.started_at or self.started_at,
-            ended_at=new.ended_at or self.ended_at,
-        )
+        self.name = new.name or self.name
+        self.type = new.type or self.type
+        self.group = new.group or self.group
+        self.description = new.description or self.description
+        self.status = max(new.status, self.status)
+        self.position = new.position or self.position
+        self.started_at = new.started_at or self.started_at
+        self.ended_at = new.ended_at or self.ended_at
+        return self

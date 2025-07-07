@@ -39,8 +39,8 @@ class DatasetColumnRelationRepository(Repository[DatasetColumnRelation]):
         return set(fingerprints) - set(existing.scalars().all())
 
     async def _create_dataset_column_relations_bulk(self, items: list[ColumnLineageDTO]):
-        # we don't have to return anything, so there is no need to use o_conflict_update.
-        # also rows are immutable, so there is no need to acquire any lock
+        # we don't have to return anything, so there is no need to use on_conflict_update.
+        # also rows have stable id and immutable, so there is no need to acquire any lock
         insert_statement = insert(DatasetColumnRelation).on_conflict_do_nothing(
             index_elements=[
                 DatasetColumnRelation.fingerprint,

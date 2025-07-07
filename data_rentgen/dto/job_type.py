@@ -16,11 +16,6 @@ class JobTypeDTO:
         return (self.type,)
 
     def merge(self, new: JobTypeDTO) -> JobTypeDTO:
-        if new.id is None and self.type == new.type:
-            # job types aren't changed that much, reuse them if possible
-            return self
-
-        return JobTypeDTO(
-            type=new.type,
-            id=new.id or self.id,
-        )
+        self.type = new.type
+        self.id = new.id or self.id
+        return self

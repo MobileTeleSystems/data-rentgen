@@ -71,7 +71,6 @@ class BatchExtractor:
             for symlink_dto in symlink_dtos:
                 self.result.add_dataset_symlink(symlink_dto)
 
-        for dataset in event.inputs + event.outputs:
-            column_lineage = extractor.extract_column_lineage(operation, dataset, event)
+            column_lineage = extractor.extract_column_lineage(operation, output_dataset, event)
             for item in column_lineage:
                 self.result.add_column_lineage(item)

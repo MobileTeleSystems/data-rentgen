@@ -16,7 +16,5 @@ class UserDTO:
         return (self.name,)
 
     def merge(self, new: UserDTO) -> UserDTO:
-        return UserDTO(
-            name=self.name,
-            id=new.id or self.id,
-        )
+        self.id = new.id or self.id
+        return self

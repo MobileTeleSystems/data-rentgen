@@ -23,10 +23,5 @@ class SQLQueryDTO:
         return generate_static_uuid(self.query)
 
     def merge(self, new: SQLQueryDTO) -> SQLQueryDTO:
-        if new.id is None:
-            return self
-
-        return SQLQueryDTO(
-            query=self.query,
-            id=new.id or self.id,
-        )
+        self.id = new.id or self.id
+        return self
