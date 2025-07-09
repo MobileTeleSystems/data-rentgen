@@ -364,6 +364,180 @@ async def cyclic_lineage(
 
 
 @pytest_asyncio.fixture()
+async def direct_self_reference_lineage(
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
+    user: User,
+):
+    # Example then table can be its own source:
+    # J1 -> R1 -> O1, D1 -> O1 -> D1  # reading duplicates and removing them
+
+    created_at = datetime.now(tz=UTC)
+
+    lineage = LineageResult()
+    async with async_session_maker() as async_session:
+        dataset_location = await create_location(async_session)
+        dataset = await create_dataset(async_session, location_id=dataset_location.id)
+        lineage.datasets.append(dataset)
+
+        schema = await create_schema(async_session)
+
+        job_location = await create_location(async_session)
+        job_type = await create_job_type(async_session)
+        job = await create_job(async_session, location_id=job_location.id, job_type_id=job_type.id)
+        lineage.jobs.append(job)
+
+        run = await create_run(
+            async_session,
+            run_kwargs={
+                "job_id": job.id,
+                "started_by_user_id": user.id,
+                "created_at": created_at + timedelta(seconds=5),
+            },
+        )
+        lineage.runs.append(run)
+
+        operation = await create_operation(
+            async_session,
+            operation_kwargs={
+                "run_id": run.id,
+                "created_at": run.created_at + timedelta(seconds=1),
+            },
+        )
+        lineage.operations.append(operation)
+
+        input = await create_input(
+            async_session,
+            input_kwargs={
+                "created_at": operation.created_at,
+                "operation_id": operation.id,
+                "run_id": run.id,
+                "job_id": job.id,
+                "dataset_id": dataset.id,
+                "schema_id": schema.id,
+            },
+        )
+        lineage.inputs.append(input)
+
+        output = await create_output(
+            async_session,
+            output_kwargs={
+                "created_at": operation.created_at,
+                "operation_id": operation.id,
+                "run_id": run.id,
+                "job_id": job.id,
+                "dataset_id": dataset.id,
+                "type": OutputType.OVERWRITE,
+                "schema_id": schema.id,
+            },
+        )
+        lineage.outputs.append(output)
+
+    yield lineage
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)
+
+
+@pytest_asyncio.fixture()
+async def indirect_self_reference_lineage(
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
+    user: User,
+):
+    # Example then table can be its own source:
+    # J1 -> R1 -> O1, D1 -> O1        # SELECT max(id) FROM table1
+    # J1 -> R1 -> O2, D2 -> O2 -> D1  # INSERT INTO table1
+
+    num_datasets = 2
+    created_at = datetime.now(tz=UTC)
+
+    lineage = LineageResult()
+    async with async_session_maker() as async_session:
+        dataset_locations = [await create_location(async_session) for _ in range(num_datasets)]
+        datasets = [await create_dataset(async_session, location_id=location.id) for location in dataset_locations]
+        lineage.datasets.extend(datasets)
+
+        schema = await create_schema(async_session)
+
+        job_location = await create_location(async_session)
+        job_type = await create_job_type(async_session)
+        job = await create_job(async_session, location_id=job_location.id, job_type_id=job_type.id)
+        lineage.jobs.append(job)
+
+        run = await create_run(
+            async_session,
+            run_kwargs={
+                "job_id": job.id,
+                "started_by_user_id": user.id,
+                "created_at": created_at + timedelta(seconds=10),
+            },
+        )
+        lineage.runs.append(run)
+
+        operation1 = await create_operation(
+            async_session,
+            operation_kwargs={
+                "run_id": run.id,
+                "created_at": run.created_at + timedelta(seconds=1),
+            },
+        )
+        lineage.operations.append(operation1)
+
+        input1 = await create_input(
+            async_session,
+            input_kwargs={
+                "created_at": operation1.created_at,
+                "operation_id": operation1.id,
+                "run_id": run.id,
+                "job_id": job.id,
+                "dataset_id": datasets[0].id,
+                "schema_id": schema.id,
+            },
+        )
+        lineage.inputs.append(input1)
+
+        operation2 = await create_operation(
+            async_session,
+            operation_kwargs={
+                "run_id": run.id,
+                "created_at": run.created_at + timedelta(seconds=2),
+            },
+        )
+        lineage.operations.append(operation2)
+
+        input2 = await create_input(
+            async_session,
+            input_kwargs={
+                "created_at": operation2.created_at,
+                "operation_id": operation2.id,
+                "run_id": run.id,
+                "job_id": job.id,
+                "dataset_id": datasets[1].id,
+                "schema_id": schema.id,
+            },
+        )
+        lineage.inputs.append(input2)
+
+        output2 = await create_output(
+            async_session,
+            output_kwargs={
+                "created_at": operation2.created_at,
+                "operation_id": operation2.id,
+                "run_id": run.id,
+                "job_id": job.id,
+                "dataset_id": datasets[0].id,
+                "type": OutputType.APPEND,
+                "schema_id": schema.id,
+            },
+        )
+        lineage.outputs.append(output2)
+
+    yield lineage
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)
+
+
+@pytest_asyncio.fixture()
 async def duplicated_lineage(
     async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     user: User,
