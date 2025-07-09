@@ -1666,6 +1666,131 @@ async def test_get_dataset_lineage_with_granularity_dataset_without_output_schem
     }
 
 
+async def test_get_dataset_lineage_with_granularity_dataset_ignore_direct_self_references(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    direct_self_reference_lineage: LineageResult,
+    mocked_user: MockedUser,
+):
+    # For this lineage:
+    # J1 -> R1 -> O1, D1 -> O1 -> D1  # reading duplicates and removing them
+    lineage = direct_self_reference_lineage
+
+    # We start at D1
+    [dataset] = await enrich_datasets(lineage.datasets[:1], async_session)
+
+    since = min(run.created_at for run in lineage.runs)
+
+    response = await test_client.get(
+        "v1/datasets/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "start_node_id": dataset.id,
+            "granularity": "DATASET",
+        },
+    )
+
+    # And return no lineage, only dataset itself
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": {
+            "parents": [],
+            "symlinks": [],
+            "inputs": [],
+            "outputs": [],
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
+        },
+        "nodes": {
+            "datasets": {
+                str(dataset.id): {
+                    "id": str(dataset.id),
+                    "name": dataset.name,
+                    "location": location_to_json(dataset.location),
+                    "schema": None,
+                },
+            },
+            "jobs": {},
+            "runs": {},
+            "operations": {},
+        },
+    }
+
+
+async def test_get_dataset_lineage_with_granularity_dataset_ignore_indirect_self_references(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    indirect_self_reference_lineage: LineageResult,
+    mocked_user: MockedUser,
+):
+    # For this lineage:
+    # J1 -> R1 -> O1, D1 -> O1        # SELECT max(id) FROM table1
+    # J1 -> R1 -> O2, D2 -> O2 -> D1  # INSERT INTO table1
+    lineage = indirect_self_reference_lineage
+
+    datasets = await enrich_datasets(lineage.datasets, async_session)
+    dataset1, dataset2 = datasets
+
+    inputs_by_dataset_id = {input_.dataset_id: input_ for input_ in lineage.inputs}
+    outputs_by_dataset_id = {output.dataset_id: output for output in lineage.outputs}
+
+    # We start at D1
+    dataset = dataset1
+    since = min(run.created_at for run in lineage.runs)
+
+    response = await test_client.get(
+        "v1/datasets/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "start_node_id": dataset.id,
+            "granularity": "DATASET",
+        },
+    )
+
+    # Return only D2 -> D1
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "relations": {
+            "parents": [],
+            "symlinks": [],
+            "inputs": [
+                {
+                    "from": {"kind": "DATASET", "id": str(dataset2.id)},
+                    "to": {"kind": "DATASET", "id": str(dataset1.id)},
+                    "num_bytes": None,
+                    "num_rows": None,
+                    "num_files": None,
+                    "last_interaction_at": format_datetime(outputs_by_dataset_id[dataset1.id].created_at),
+                },
+            ],
+            "outputs": [],
+            "direct_column_lineage": [],
+            "indirect_column_lineage": [],
+        },
+        "nodes": {
+            "datasets": {
+                str(dataset1.id): {
+                    "id": str(dataset1.id),
+                    "name": dataset1.name,
+                    "location": location_to_json(dataset1.location),
+                    "schema": schema_to_json(outputs_by_dataset_id[dataset1.id].schema, "EXACT_MATCH"),
+                },
+                str(dataset2.id): {
+                    "id": str(dataset2.id),
+                    "name": dataset2.name,
+                    "location": location_to_json(dataset2.location),
+                    "schema": schema_to_json(inputs_by_dataset_id[dataset2.id].schema, "EXACT_MATCH"),
+                },
+            },
+            "jobs": {},
+            "runs": {},
+            "operations": {},
+        },
+    }
+
+
 async def test_get_dataset_lineage_for_long_running_operations_with_granularity_run(
     test_client: AsyncClient,
     async_session: AsyncSession,

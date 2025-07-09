@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Literal
 
-from sqlalchemy import any_, func, select
+from sqlalchemy import and_, any_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Input, Output, Schema
@@ -67,7 +67,18 @@ class IODatasetRelationRepository:
                 window(func.last_value(Input.schema_id), order_by).label("newest_input_schema_id"),
             )
             .distinct(*unique_ids)
-            .join(Input, Output.run_id == Input.run_id)
+            .join(
+                Input,
+                and_(
+                    Output.run_id == Input.run_id,
+                    # if same run executed 1 queries:
+                    # * SELECT max(...) FROM table1
+                    # * INSERT INTO table1
+                    # Avoid returning table1 -> table1 relations. Including ones resolved via symlink.
+                    # TODO: cover case with self-reference via symlink
+                    Output.dataset_id != Input.dataset_id,
+                ),
+            )
             .where(*where)
         )
 
