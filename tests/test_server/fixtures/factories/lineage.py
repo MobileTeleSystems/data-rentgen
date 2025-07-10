@@ -364,7 +364,7 @@ async def cyclic_lineage(
 
 
 @pytest_asyncio.fixture()
-async def direct_self_reference_lineage(
+async def self_referencing_lineage(
     async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     user: User,
 ):
@@ -439,13 +439,13 @@ async def direct_self_reference_lineage(
 
 
 @pytest_asyncio.fixture()
-async def indirect_self_reference_lineage(
+async def lineage_with_non_connected_operations(
     async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
     user: User,
 ):
-    # Example then table can be its own source:
+    # Run interacted with 2 datasets, but in different operations:
     # J1 -> R1 -> O1, D1 -> O1        # SELECT max(id) FROM table1
-    # J1 -> R1 -> O2, D2 -> O2 -> D1  # INSERT INTO table1
+    # J1 -> R1 -> O2,       O2 -> D2  # INSERT INTO table1 VALUES
 
     num_datasets = 2
     created_at = datetime.now(tz=UTC)
@@ -504,19 +504,6 @@ async def indirect_self_reference_lineage(
         )
         lineage.operations.append(operation2)
 
-        input2 = await create_input(
-            async_session,
-            input_kwargs={
-                "created_at": operation2.created_at,
-                "operation_id": operation2.id,
-                "run_id": run.id,
-                "job_id": job.id,
-                "dataset_id": datasets[1].id,
-                "schema_id": schema.id,
-            },
-        )
-        lineage.inputs.append(input2)
-
         output2 = await create_output(
             async_session,
             output_kwargs={
@@ -524,7 +511,7 @@ async def indirect_self_reference_lineage(
                 "operation_id": operation2.id,
                 "run_id": run.id,
                 "job_id": job.id,
-                "dataset_id": datasets[0].id,
+                "dataset_id": datasets[1].id,
                 "type": OutputType.APPEND,
                 "schema_id": schema.id,
             },
