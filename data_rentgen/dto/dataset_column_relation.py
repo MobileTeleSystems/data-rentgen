@@ -28,7 +28,7 @@ class DatasetColumnRelationTypeDTO(IntFlag):
     CONDITIONAL = 2048
 
 
-@dataclass
+@dataclass(slots=True)
 class DatasetColumnRelationDTO:
     type: DatasetColumnRelationTypeDTO
     source_column: str

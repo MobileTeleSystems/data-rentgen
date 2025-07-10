@@ -9,7 +9,7 @@ from typing import Generic, TypeVar
 T = TypeVar("T")
 
 
-@dataclass
+@dataclass(slots=True)
 class PaginationDTO(Generic[T]):
     items: list[T]
     page: int

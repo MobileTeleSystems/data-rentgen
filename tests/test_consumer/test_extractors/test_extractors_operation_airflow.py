@@ -41,7 +41,7 @@ from data_rentgen.dto import (
 
 def test_extractors_extract_operation_airflow():
     now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
-    run_id = UUID("1efc1e7f-4015-6970-b4f9-12e828cb9b91")
+    run_id = UUID("01908223-0782-79b8-9495-b1c38aaee839")
     operation = OpenLineageRunEvent(
         eventType=OpenLineageRunEventType.COMPLETE,
         eventTime=now,
@@ -117,7 +117,7 @@ def test_extractors_extract_operation_airflow():
 
 def test_extractors_extract_operation_airflow_task_group():
     now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
-    run_id = UUID("1efc1e7f-4015-6970-b4f9-12e828cb9b91")
+    run_id = UUID("01908223-0782-79b8-9495-b1c38aaee839")
     operation = OpenLineageRunEvent(
         eventType=OpenLineageRunEventType.COMPLETE,
         eventTime=now,
@@ -194,7 +194,7 @@ def test_extractors_extract_operation_airflow_task_group():
 
 def test_extractors_extract_operation_airflow_map_index():
     now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
-    run_id = UUID("1efc1e7f-4015-6970-b4f9-12e828cb9b91")
+    run_id = UUID("01908223-0782-79b8-9495-b1c38aaee839")
     operation = OpenLineageRunEvent(
         eventType=OpenLineageRunEventType.COMPLETE,
         eventTime=now,
