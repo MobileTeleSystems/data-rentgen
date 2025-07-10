@@ -178,8 +178,9 @@ class RunRepository(Repository[Run]):
     ) -> Run:
         # for parent_run most of fields are None, so we can avoid UPDATE statements if row is unchanged
         optional_fields = {
-            # in some cases start event may be send from "unknown" job,
-            # but sequential RUNNING and STOPPED events are send with proper job name. Rebound run to latest job.
+            # Workaround for https://github.com/OpenLineage/OpenLineage/issues/3846.
+            # In some cases, Spark STARTED event may be send from "unknown" job,
+            # but sequential RUNNING and STOPPED events are send with proper job name. Bound run to proper job.
             "job_id": new.job.id or existing.job_id,
             # Merge new information with existing one
             "status": max(RunStatus(new.status), existing.status),
@@ -238,6 +239,7 @@ class RunRepository(Repository[Run]):
         statement = statement.on_conflict_do_update(
             index_elements=[Run.created_at, Run.id],
             set_={
+                "job_id": statement.excluded.job_id,
                 "status": func.greatest(statement.excluded.status, Run.status),
                 "parent_run_id": func.coalesce(statement.excluded.parent_run_id, Run.parent_run_id),
                 "started_at": func.coalesce(statement.excluded.started_at, Run.started_at),

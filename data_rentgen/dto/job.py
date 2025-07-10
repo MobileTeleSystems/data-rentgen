@@ -24,6 +24,10 @@ class JobDTO:
         self.id = new.id or self.id
         self.location.merge(new.location)
 
+        if self.name == "unknown" and new.name != "unknown":
+            # Workaround for https://github.com/OpenLineage/OpenLineage/issues/3846
+            self.name = new.name
+
         if new.type and self.type:
             self.type.merge(new.type)
         else:

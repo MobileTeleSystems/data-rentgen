@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-from typing import TypeVar
+from typing import Callable, TypeVar
 
 from data_rentgen.dto import (
     ColumnLineageDTO,
@@ -239,44 +239,50 @@ class BatchExtractionResult:
         lineage.target_dataset = self.get_dataset(lineage.target_dataset.unique_key)
         return lineage
 
+    @staticmethod
+    def _resolve(getter: Callable[[tuple], T], items: dict[tuple, T]) -> list[T]:
+        resolved = list(map(getter, items))
+        unique = {item.unique_key: item for item in resolved}
+        return [unique[key] for key in sorted(unique.keys())]
+
     def locations(self) -> list[LocationDTO]:
-        return list(map(self.get_location, sorted(self._locations)))
+        return self._resolve(self.get_location, self._locations)
 
     def datasets(self) -> list[DatasetDTO]:
-        return list(map(self.get_dataset, sorted(self._datasets)))
+        return self._resolve(self.get_dataset, self._datasets)
 
     def dataset_symlinks(self) -> list[DatasetSymlinkDTO]:
-        return list(map(self.get_dataset_symlink, sorted(self._dataset_symlinks)))
+        return self._resolve(self.get_dataset_symlink, self._dataset_symlinks)
 
     def job_types(self) -> list[JobTypeDTO]:
-        return list(map(self.get_job_type, sorted(self._job_types)))
+        return self._resolve(self.get_job_type, self._job_types)
 
     def jobs(self) -> list[JobDTO]:
-        return list(map(self.get_job, sorted(self._jobs)))
+        return self._resolve(self.get_job, self._jobs)
 
     def runs(self) -> list[RunDTO]:
-        return list(map(self.get_run, sorted(self._runs)))
+        return self._resolve(self.get_run, self._runs)
 
     def operations(self) -> list[OperationDTO]:
-        return list(map(self.get_operation, sorted(self._operations)))
+        return self._resolve(self.get_operation, self._operations)
 
     def inputs(self) -> list[InputDTO]:
-        return list(map(self.get_input, sorted(self._inputs)))
+        return self._resolve(self.get_input, self._inputs)
 
     def outputs(self) -> list[OutputDTO]:
-        return list(map(self.get_output, sorted(self._outputs)))
+        return self._resolve(self.get_output, self._outputs)
 
     def column_lineage(self) -> list[ColumnLineageDTO]:
-        return list(map(self.get_column_lineage, sorted(self._column_lineage)))
+        return self._resolve(self.get_column_lineage, self._column_lineage)
 
     def schemas(self) -> list[SchemaDTO]:
-        return list(map(self.get_schema, sorted(self._schemas)))
+        return self._resolve(self.get_schema, self._schemas)
 
     def sql_queries(self) -> list[SQLQueryDTO]:
-        return list(map(self.get_sql_query, sorted(self._sql_queries)))
+        return self._resolve(self.get_sql_query, self._sql_queries)
 
     def users(self) -> list[UserDTO]:
-        return list(map(self.get_user, sorted(self._users)))
+        return self._resolve(self.get_user, self._users)
 
     def merge(self, other: BatchExtractionResult) -> BatchExtractionResult:  # noqa: C901, PLR0912
         for location in other.locations():

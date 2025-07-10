@@ -37,7 +37,10 @@ class SparkExtractor(GenericExtractor):
 
     def extract_run(self, event: OpenLineageRunEvent) -> RunDTO:
         run = super().extract_run(event)
+        self._enrich_run_identifiers(run, event)
+        return run
 
+    def _enrich_run_identifiers(self, run: RunDTO, event: OpenLineageRunEvent):
         app = event.run.facets.spark_applicationDetails
         if not app:
             return run
@@ -57,6 +60,8 @@ class SparkExtractor(GenericExtractor):
         # For Spark, SQL_JOB --parent-> SPARK_APPLICATION = operation -> run,
         # and parent is always here.
         run = self.extract_parent_run(event.run.facets.parent)  # type: ignore[arg-type]
+        # Workaround for https://github.com/OpenLineage/OpenLineage/issues/3846
+        self._enrich_run_identifiers(run, event)
         operation = super()._extract_operation(event, run)
 
         # in some cases, operation name may contain raw SELECT query with newlines. use spaces instead.
