@@ -70,11 +70,8 @@ class IODatasetRelationRepository:
             .join(
                 Input,
                 and_(
-                    Output.run_id == Input.run_id,
-                    # if same run executed 1 queries:
-                    # * SELECT max(...) FROM table1
-                    # * INSERT INTO table1
-                    # Avoid returning table1 -> table1 relations. Including ones resolved via symlink.
+                    Output.operation_id == Input.operation_id,
+                    # Avoid returning table1 -> table1 relations.
                     # TODO: cover case with self-reference via symlink
                     Output.dataset_id != Input.dataset_id,
                 ),
