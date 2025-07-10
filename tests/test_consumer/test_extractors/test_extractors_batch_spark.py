@@ -92,6 +92,45 @@ def test_extractors_extract_batch_spark_without_lineage(
     assert not extracted.outputs()
 
 
+def test_extractors_extract_batch_spark_openlineage_emitted_unknown_name(
+    spark_app_run_event_start_with_unknown_name: OpenLineageRunEvent,
+    spark_app_run_event_stop: OpenLineageRunEvent,
+    spark_operation_run_event_start: OpenLineageRunEvent,
+    spark_operation_run_event_running: OpenLineageRunEvent,
+    spark_operation_run_event_stop: OpenLineageRunEvent,
+    extracted_spark_location: LocationDTO,
+    extracted_spark_app_job: JobDTO,
+    extracted_user: UserDTO,
+    extracted_spark_app_run: RunDTO,
+    extracted_spark_operation: OperationDTO,
+):
+    events = [
+        spark_app_run_event_start_with_unknown_name,
+        spark_operation_run_event_start,
+        spark_operation_run_event_running,
+        spark_operation_run_event_stop,
+        spark_app_run_event_stop,
+    ]
+
+    extracted = BatchExtractor().add_events(events)
+
+    # the result is the same as above
+    assert extracted.locations() == [
+        extracted_spark_location,
+    ]
+
+    assert extracted.jobs() == [extracted_spark_app_job]
+    assert extracted.users() == [extracted_user]
+    assert extracted.runs() == [extracted_spark_app_run]
+    assert extracted.operations() == [extracted_spark_operation]
+
+    assert not extracted.datasets()
+    assert not extracted.dataset_symlinks()
+    assert not extracted.schemas()
+    assert not extracted.inputs()
+    assert not extracted.outputs()
+
+
 @pytest.mark.parametrize(
     "input_transformation",
     [

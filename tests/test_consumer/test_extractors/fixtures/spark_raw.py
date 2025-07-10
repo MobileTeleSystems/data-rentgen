@@ -192,6 +192,28 @@ def spark_app_run_event_start() -> OpenLineageRunEvent:
 
 
 @pytest.fixture
+def spark_app_run_event_start_with_unknown_name() -> OpenLineageRunEvent:
+    event_time = datetime(2024, 7, 5, 9, 4, 48, 794900, tzinfo=timezone.utc)
+    run_id = UUID("01908224-8410-79a2-8de6-a769ad6944c9")
+    return OpenLineageRunEvent(
+        eventType=OpenLineageRunEventType.START,
+        eventTime=event_time,
+        job=OpenLineageJob(
+            namespace="local://some.host.com",
+            name="unknown",
+            facets=OpenLineageJobFacets(
+                jobType=OpenLineageJobTypeJobFacet(
+                    processingType=OpenLineageJobProcessingType.NONE,
+                    integration="SPARK",
+                    jobType="APPLICATION",
+                ),
+            ),
+        ),
+        run=OpenLineageRun(runId=run_id),
+    )
+
+
+@pytest.fixture
 def spark_app_run_event_stop() -> OpenLineageRunEvent:
     event_time = datetime(2024, 7, 5, 9, 7, 15, 646000, tzinfo=timezone.utc)
     run_id = UUID("01908224-8410-79a2-8de6-a769ad6944c9")
@@ -244,6 +266,15 @@ def spark_operation_run_event_start() -> OpenLineageRunEvent:
                         runId=run_id,
                     ),
                 ),
+                spark_applicationDetails=OpenLineageSparkApplicationDetailsRunFacet(
+                    master="local[*]",
+                    appName="spark_session",
+                    applicationId="local-1719136537510",
+                    deployMode=OpenLineageSparkDeployMode.CLIENT,
+                    driverHost="127.0.0.1",
+                    userName="myuser",
+                    uiWebUrl="http://127.0.0.1:4040",
+                ),
             ),
         ),
     )
@@ -279,6 +310,15 @@ def spark_operation_run_event_running() -> OpenLineageRunEvent:
                     run=OpenLineageParentRun(
                         runId=run_id,
                     ),
+                ),
+                spark_applicationDetails=OpenLineageSparkApplicationDetailsRunFacet(
+                    master="local[*]",
+                    appName="spark_session",
+                    applicationId="local-1719136537510",
+                    deployMode=OpenLineageSparkDeployMode.CLIENT,
+                    driverHost="127.0.0.1",
+                    userName="myuser",
+                    uiWebUrl="http://127.0.0.1:4040",
                 ),
             ),
         ),
