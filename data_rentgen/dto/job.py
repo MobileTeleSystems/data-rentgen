@@ -9,7 +9,7 @@ from data_rentgen.dto.job_type import JobTypeDTO
 from data_rentgen.dto.location import LocationDTO
 
 
-@dataclass
+@dataclass(slots=True)
 class JobDTO:
     name: str
     location: LocationDTO

@@ -3,24 +3,23 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from functools import cached_property
 from uuid import UUID
 
 from data_rentgen.utils.uuid import generate_static_uuid
 
 
-@dataclass
+@dataclass(slots=True)
 class SQLQueryDTO:
     query: str
+    fingerprint: UUID = field(init=False)
     id: int | None = field(default=None, compare=False)
+
+    def __post_init__(self):
+        self.fingerprint = generate_static_uuid(self.query)
 
     @property
     def unique_key(self) -> tuple:
         return (self.fingerprint,)
-
-    @cached_property
-    def fingerprint(self) -> UUID:
-        return generate_static_uuid(self.query)
 
     def merge(self, new: SQLQueryDTO) -> SQLQueryDTO:
         self.id = new.id or self.id

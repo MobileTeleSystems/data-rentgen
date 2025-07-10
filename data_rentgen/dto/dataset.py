@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from data_rentgen.dto.location import LocationDTO
 
 
-@dataclass
+@dataclass(slots=True)
 class DatasetDTO:
     location: LocationDTO
     name: str

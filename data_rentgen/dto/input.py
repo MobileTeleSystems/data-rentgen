@@ -13,7 +13,7 @@ from data_rentgen.dto.schema import SchemaDTO
 from data_rentgen.utils.uuid import generate_incremental_uuid
 
 
-@dataclass
+@dataclass(slots=True)
 class InputDTO:
     created_at: datetime
     operation: OperationDTO

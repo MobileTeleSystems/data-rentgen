@@ -516,7 +516,7 @@ def test_extractors_extract_run_airflow_task_log_url_2_x():
 )
 def test_extractors_extract_run_airflow_dag_owner(owner: str, extracted_user: UserDTO | None):
     now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
-    run_id = UUID("1efc1e4c-04e5-6cc0-b991-358ae6c316c8")
+    run_id = UUID("01908223-0782-79b8-9495-b1c38aaee839")
     run = OpenLineageRunEvent(
         eventType=OpenLineageRunEventType.COMPLETE,
         eventTime=now,
@@ -588,7 +588,7 @@ def test_extractors_extract_run_airflow_dag_owner(owner: str, extracted_user: Us
 )
 def test_extractors_extract_run_airflow_task_owner(owner: str, extracted_user: UserDTO | None):
     now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
-    run_id = UUID("1efc1e7f-4015-6970-b4f9-12e828cb9b91")
+    run_id = UUID("01908223-0782-79b8-9495-b1c38aaee839")
     run = OpenLineageRunEvent(
         eventType=OpenLineageRunEventType.COMPLETE,
         eventTime=now,
@@ -653,7 +653,7 @@ def test_extractors_extract_run_airflow_task_owner(owner: str, extracted_user: U
 
 def test_extractors_extract_run_airflow_3_x_task_map_index():
     now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
-    run_id = UUID("1efc1e7f-4015-6970-b4f9-12e828cb9b91")
+    run_id = UUID("01908223-0782-79b8-9495-b1c38aaee839")
     run = OpenLineageRunEvent(
         eventType=OpenLineageRunEventType.COMPLETE,
         eventTime=now,
@@ -724,7 +724,7 @@ def test_extractors_extract_run_airflow_3_x_task_map_index():
 
 def test_extractors_extract_run_airflow_2_x_task_map_index():
     now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
-    run_id = UUID("1efc1e7f-4015-6970-b4f9-12e828cb9b91")
+    run_id = UUID("01908223-0782-79b8-9495-b1c38aaee839")
     run = OpenLineageRunEvent(
         eventType=OpenLineageRunEventType.COMPLETE,
         eventTime=now,

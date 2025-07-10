@@ -27,7 +27,7 @@ class OutputTypeDTO(IntFlag):
     TRUNCATE = 64
 
 
-@dataclass
+@dataclass(slots=True)
 class OutputDTO:
     created_at: datetime
     operation: OperationDTO

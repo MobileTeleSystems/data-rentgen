@@ -3,10 +3,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, IntEnum
-from functools import cached_property
 from uuid import UUID
 
 from data_rentgen.dto.job import JobDTO
@@ -30,9 +29,10 @@ class RunStartReasonDTO(str, Enum):
         return str(self.value)
 
 
-@dataclass
+@dataclass(slots=True)
 class RunDTO:
     id: UUID
+    created_at: datetime = field(init=False)
     job: JobDTO
     parent_run: RunDTO | None = None
     status: RunStatusDTO = RunStatusDTO.UNKNOWN
@@ -45,13 +45,12 @@ class RunDTO:
     running_log_url: str | None = None
     persistent_log_url: str | None = None
 
+    def __post_init__(self):
+        self.created_at = extract_timestamp_from_uuid(self.id)
+
     @property
     def unique_key(self) -> tuple:
         return (self.id,)
-
-    @cached_property
-    def created_at(self) -> datetime:
-        return extract_timestamp_from_uuid(self.id)
 
     def merge(self, new: RunDTO) -> RunDTO:
         self.job.merge(new.job)

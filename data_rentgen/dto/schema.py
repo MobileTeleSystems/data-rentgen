@@ -5,24 +5,23 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
-from functools import cached_property
 from uuid import UUID
 
 from data_rentgen.utils.uuid import generate_static_uuid
 
 
-@dataclass
+@dataclass(slots=True)
 class SchemaDTO:
     fields: list[dict]
+    digest: UUID = field(init=False)
     id: int | None = field(default=None, compare=False)
+
+    def __post_init__(self):
+        self.digest = generate_static_uuid(json.dumps(self.fields, sort_keys=True))
 
     @property
     def unique_key(self) -> tuple:
         return (self.digest,)
-
-    @cached_property
-    def digest(self) -> UUID:
-        return generate_static_uuid(json.dumps(self.fields, sort_keys=True))
 
     def merge(self, new: SchemaDTO) -> SchemaDTO:
         self.id = new.id or self.id

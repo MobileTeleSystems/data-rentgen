@@ -6,7 +6,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 
-@dataclass
+@dataclass(slots=True)
 class JobTypeDTO:
     type: str
     id: int | None = field(default=None, compare=False)

@@ -17,7 +17,7 @@ class DatasetSymlinkTypeDTO(str, Enum):
         return self.value
 
 
-@dataclass
+@dataclass(slots=True)
 class DatasetSymlinkDTO:
     from_dataset: DatasetDTO
     to_dataset: DatasetDTO

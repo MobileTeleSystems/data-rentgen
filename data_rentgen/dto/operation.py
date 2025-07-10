@@ -3,10 +3,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, IntEnum
-from functools import cached_property
 from uuid import UUID
 
 from data_rentgen.dto.run import RunDTO
@@ -36,9 +35,10 @@ class OperationStatusDTO(IntEnum):
     KILLED = 3
 
 
-@dataclass
+@dataclass(slots=True)
 class OperationDTO:
     id: UUID
+    created_at: datetime = field(init=False)
     run: RunDTO
     name: str | None = None
     type: OperationTypeDTO | None = None
@@ -50,13 +50,12 @@ class OperationDTO:
     started_at: datetime | None = None
     ended_at: datetime | None = None
 
+    def __post_init__(self):
+        self.created_at = extract_timestamp_from_uuid(self.id)
+
     @property
     def unique_key(self) -> tuple:
         return (self.id,)
-
-    @cached_property
-    def created_at(self) -> datetime:
-        return extract_timestamp_from_uuid(self.id)
 
     def merge(self, new: OperationDTO) -> OperationDTO:
         self.run.merge(new.run)
