@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 import pytest
 from uuid6 import UUID
 
-from data_rentgen.consumer.extractors.generic import GenericExtractor
+from data_rentgen.consumer.extractors.impl import UnknownExtractor
 from data_rentgen.consumer.openlineage.job import OpenLineageJob
 from data_rentgen.consumer.openlineage.job_facets import (
     OpenLineageJobFacets,
@@ -17,12 +17,20 @@ from data_rentgen.consumer.openlineage.run_event import (
     OpenLineageRunEvent,
     OpenLineageRunEventType,
 )
+from data_rentgen.consumer.openlineage.run_facets import DataRentgenRunInfoFacet, OpenLineageRunFacets
+from data_rentgen.consumer.openlineage.run_facets.parent_run import (
+    OpenLineageParentJob,
+    OpenLineageParentRun,
+    OpenLineageParentRunFacet,
+)
 from data_rentgen.dto import (
     JobDTO,
     JobTypeDTO,
     LocationDTO,
     RunDTO,
+    RunStartReasonDTO,
     RunStatusDTO,
+    UserDTO,
 )
 
 
@@ -52,7 +60,7 @@ def test_extractors_extract_run_unknown(
     extracted_job_type: JobTypeDTO | None,
 ):
     now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
-    run_id = UUID("01908223-0e9b-7c52-9856-6cecfc842610")
+    run_id = UUID("01908225-1fd7-746b-910C-70d24f2898b1")
     run = OpenLineageRunEvent(
         eventType=OpenLineageRunEventType.COMPLETE,
         eventTime=now,
@@ -66,7 +74,7 @@ def test_extractors_extract_run_unknown(
         run=OpenLineageRun(runId=run_id),
     )
 
-    assert GenericExtractor().extract_run(run) == RunDTO(
+    assert UnknownExtractor().extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(
             name="myjob",
@@ -102,7 +110,7 @@ def test_extractors_extract_run_with_status(
     expected_status: RunStatusDTO,
 ):
     now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
-    run_id = UUID("01908223-0e9b-7c52-9856-6cecfc842610")
+    run_id = UUID("01908225-1fd7-746b-910C-70d24f2898b1")
     run = OpenLineageRunEvent(
         eventType=event_type,
         eventTime=now,
@@ -111,7 +119,7 @@ def test_extractors_extract_run_with_status(
     )
 
     ended_at = now if expected_status != RunStatusDTO.UNKNOWN else None
-    assert GenericExtractor().extract_run(run) == RunDTO(
+    assert UnknownExtractor().extract_run(run) == RunDTO(
         id=run_id,
         job=JobDTO(
             name="myjob",
@@ -130,4 +138,121 @@ def test_extractors_extract_run_with_status(
         attempt=None,
         persistent_log_url=None,
         running_log_url=None,
+    )
+
+
+def test_extractors_extract_run_unknown_with_parent():
+    now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
+    run_id = UUID("01908225-1fd7-746b-910C-70d24f2898b1")
+    parent_run_id = UUID("01908224-8410-79a2-8de6-a769ad6944c9")
+    run = OpenLineageRunEvent(
+        eventType=OpenLineageRunEventType.COMPLETE,
+        eventTime=now,
+        job=OpenLineageJob(
+            namespace="something",
+            name="myjob",
+            facets=OpenLineageJobFacets(
+                jobType=OpenLineageJobTypeJobFacet(
+                    processingType=OpenLineageJobProcessingType.NONE,
+                    integration="UNKNOWN_SOMETHING",
+                ),
+            ),
+        ),
+        run=OpenLineageRun(
+            runId=run_id,
+            facets=OpenLineageRunFacets(
+                parent=OpenLineageParentRunFacet(
+                    job=OpenLineageParentJob(
+                        namespace="anything",
+                        name="parentjob",
+                    ),
+                    run=OpenLineageParentRun(
+                        runId=parent_run_id,
+                    ),
+                ),
+            ),
+        ),
+    )
+
+    assert UnknownExtractor().extract_run(run) == RunDTO(
+        id=run_id,
+        job=JobDTO(
+            name="myjob",
+            type=JobTypeDTO(type="UNKNOWN_SOMETHING"),
+            location=LocationDTO(
+                type="unknown",
+                name="something",
+                addresses={"unknown://something"},
+            ),
+        ),
+        parent_run=RunDTO(
+            id=parent_run_id,
+            job=JobDTO(
+                name="parentjob",
+                type=None,
+                location=LocationDTO(
+                    type="unknown",
+                    name="anything",
+                    addresses={"unknown://anything"},
+                ),
+            ),
+            status=RunStatusDTO.UNKNOWN,
+        ),
+        status=RunStatusDTO.SUCCEEDED,
+        started_at=None,
+        ended_at=now,
+    )
+
+
+def test_extractors_extract_run_unknown_with_custom_run_info():
+    now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
+    run_id = UUID("01908225-1fd7-746b-910C-70d24f2898b1")
+    run = OpenLineageRunEvent(
+        eventType=OpenLineageRunEventType.COMPLETE,
+        eventTime=now,
+        job=OpenLineageJob(
+            namespace="something",
+            name="myjob",
+            facets=OpenLineageJobFacets(
+                jobType=OpenLineageJobTypeJobFacet(
+                    processingType=OpenLineageJobProcessingType.NONE,
+                    integration="UNKNOWN_SOMETHING",
+                ),
+            ),
+        ),
+        run=OpenLineageRun(
+            runId=run_id,
+            facets=OpenLineageRunFacets(
+                dataRentgen_run=DataRentgenRunInfoFacet(
+                    external_id="external_id",
+                    attempt="attempt",
+                    running_log_url="running_log_url",
+                    persistent_log_url="persistent_log_url",
+                    start_reason="AUTOMATIC",
+                    started_by_user="someuser",
+                ),
+            ),
+        ),
+    )
+
+    assert UnknownExtractor().extract_run(run) == RunDTO(
+        id=run_id,
+        job=JobDTO(
+            name="myjob",
+            type=JobTypeDTO(type="UNKNOWN_SOMETHING"),
+            location=LocationDTO(
+                type="unknown",
+                name="something",
+                addresses={"unknown://something"},
+            ),
+        ),
+        status=RunStatusDTO.SUCCEEDED,
+        started_at=None,
+        start_reason=RunStartReasonDTO.AUTOMATIC,
+        ended_at=now,
+        external_id="external_id",
+        attempt="attempt",
+        persistent_log_url="persistent_log_url",
+        running_log_url="running_log_url",
+        user=UserDTO(name="someuser"),
     )
