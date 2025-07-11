@@ -13,6 +13,8 @@ from data_rentgen.consumer.openlineage.run_facets.airflow import (
     OpenLineageAirflowTaskRunFacet,
 )
 from data_rentgen.consumer.openlineage.run_facets.base import OpenLineageRunFacet
+from data_rentgen.consumer.openlineage.run_facets.data_rentgen_operation import DataRentgenOperationInfoFacet
+from data_rentgen.consumer.openlineage.run_facets.data_rentgen_run import DataRentgenRunInfoFacet
 from data_rentgen.consumer.openlineage.run_facets.dbt_run import OpenLineageDbtRunRunFacet
 from data_rentgen.consumer.openlineage.run_facets.flink_job import (
     OpenLineageFlinkJobDetailsRunFacet,
@@ -36,6 +38,8 @@ from data_rentgen.consumer.openlineage.run_facets.spark_job import (
 )
 
 __all__ = [
+    "DataRentgenOperationInfoFacet",
+    "DataRentgenRunInfoFacet",
     "OpenLineageAirflowDagInfo",
     "OpenLineageAirflowDagRunFacet",
     "OpenLineageAirflowDagRunInfo",
@@ -65,6 +69,8 @@ class OpenLineageRunFacets(OpenLineageBase):
 
     parent: OpenLineageParentRunFacet | None = None
     processing_engine: OpenLineageProcessingEngineRunFacet | None = None
+    dataRentgen_run: DataRentgenRunInfoFacet | None = None
+    dataRentgen_operation: DataRentgenOperationInfoFacet | None = None
     spark_applicationDetails: OpenLineageSparkApplicationDetailsRunFacet | None = None
     spark_jobDetails: OpenLineageSparkJobDetailsRunFacet | None = None
     airflow: OpenLineageAirflowTaskRunFacet | None = None
