@@ -81,15 +81,15 @@ files = [
 
 [[package]]
 name = "alembic"
-version = "1.16.2"
+version = "1.16.4"
 description = "A database migration tool for SQLAlchemy."
 optional = true
 python-versions = ">=3.9"
 groups = ["main"]
 markers = "extra == \"consumer\" or extra == \"server\""
 files = [
-    {file = "alembic-1.16.2-py3-none-any.whl", hash = "sha256:5f42e9bd0afdbd1d5e3ad856c01754530367debdebf21ed6894e34af52b3bb03"},
-    {file = "alembic-1.16.2.tar.gz", hash = "sha256:e53c38ff88dadb92eb22f8b150708367db731d58ad7e9d417c9168ab516cbed8"},
+    {file = "alembic-1.16.4-py3-none-any.whl", hash = "sha256:b05e51e8e82efc1abd14ba2af6392897e145930c3e0a2faf2b0da2f7f7fd660d"},
+    {file = "alembic-1.16.4.tar.gz", hash = "sha256:efab6ada0dd0fae2c92060800e0bf5c1dc26af15a10e02fb4babff164b4725e2"},
 ]
 
 [package.dependencies]
@@ -957,20 +957,20 @@ pydantic = ">=1.7.4,<1.8 || >1.8,<1.8.1 || >1.8.1,<3.0.0"
 
 [[package]]
 name = "fastapi"
-version = "0.116.0"
+version = "0.116.1"
 description = "FastAPI framework, high performance, easy to learn, fast to code, ready for production"
 optional = true
 python-versions = ">=3.8"
 groups = ["main"]
 markers = "extra == \"server\""
 files = [
-    {file = "fastapi-0.116.0-py3-none-any.whl", hash = "sha256:fdcc9ed272eaef038952923bef2b735c02372402d1203ee1210af4eea7a78d2b"},
-    {file = "fastapi-0.116.0.tar.gz", hash = "sha256:80dc0794627af0390353a6d1171618276616310d37d24faba6648398e57d687a"},
+    {file = "fastapi-0.116.1-py3-none-any.whl", hash = "sha256:c46ac7c312df840f0c9e220f7964bada936781bc4e2e6eb71f1c4d7553786565"},
+    {file = "fastapi-0.116.1.tar.gz", hash = "sha256:ed52cbf946abfd70c5a0dccb24673f0670deeb517a88b3544d03c2a6bf283143"},
 ]
 
 [package.dependencies]
 pydantic = ">=1.7.4,<1.8 || >1.8,<1.8.1 || >1.8.1,<2.0.0 || >2.0.0,<2.0.1 || >2.0.1,<2.1.0 || >2.1.0,<3.0.0"
-starlette = ">=0.40.0,<0.47.0"
+starlette = ">=0.40.0,<0.48.0"
 typing-extensions = ">=4.8.0"
 
 [package.extras]
@@ -980,15 +980,15 @@ standard-no-fastapi-cloud-cli = ["email-validator (>=2.0.0)", "fastapi-cli[stand
 
 [[package]]
 name = "faststream"
-version = "0.5.44"
+version = "0.5.47"
 description = "FastStream: the simplest way to work with a messaging queues"
 optional = true
 python-versions = ">=3.8"
 groups = ["main"]
 markers = "extra == \"consumer\""
 files = [
-    {file = "faststream-0.5.44-py3-none-any.whl", hash = "sha256:103267a5551799bcce5c9e20f24f8a440cdce4d2c83fb7ba762167a070fe5cab"},
-    {file = "faststream-0.5.44.tar.gz", hash = "sha256:066fa17823e78c88f4ae6f84080b9b32a097a8354d7e85c67fe7b17e36508ad3"},
+    {file = "faststream-0.5.47-py3-none-any.whl", hash = "sha256:a2665423ae944b89f3c22533a31e384ed806c9f2135732a1ebe42049379553f3"},
+    {file = "faststream-0.5.47.tar.gz", hash = "sha256:21e630ce8baa4d4507433ace11004d737ee2f02f41e60f2ff2e55280060d966c"},
 ]
 
 [package.dependencies]
@@ -1002,18 +1002,18 @@ watchfiles = {version = ">=0.15.0,<1.2.0", optional = true, markers = "extra == 
 [package.extras]
 cli = ["typer (>=0.9,!=0.12,<=0.16.0)", "watchfiles (>=0.15.0,<1.2.0)"]
 confluent = ["confluent-kafka (>=2,!=2.8.1,<3) ; python_version < \"3.13\"", "confluent-kafka (>=2.6,!=2.8.1,<3) ; python_version >= \"3.13\""]
-dev = ["aio-pika (>=9,<10)", "aiokafka (>=0.9,<0.13)", "bandit (==1.7.10) ; python_version < \"3.9\"", "bandit (==1.8.5) ; python_version >= \"3.9\"", "cairosvg", "codespell (==2.4.1)", "confluent-kafka (>=2,!=2.8.1,<3) ; python_version < \"3.13\"", "confluent-kafka (>=2.6,!=2.8.1,<3) ; python_version >= \"3.13\"", "confluent-kafka-stubs ; python_version >= \"3.11\"", "coverage[toml] (==7.6.1) ; python_version < \"3.9\"", "coverage[toml] (==7.9.1) ; python_version >= \"3.9\"", "detect-secrets (==1.5.0)", "dirty-equals (==0.9.0)", "email-validator (==2.2.0)", "fastapi (==0.115.14)", "httpx (==0.28.1)", "mdx-include (==1.4.2)", "mike (==2.1.3)", "mkdocs-git-revision-date-localized-plugin (==1.4.7)", "mkdocs-glightbox (==0.4.0)", "mkdocs-literate-nav (==0.6.2)", "mkdocs-macros-plugin (==1.3.7)", "mkdocs-material (==9.6.14)", "mkdocs-minify-plugin (==0.8.0)", "mkdocs-static-i18n (==1.3.0)", "mkdocstrings[python] (==0.26.1) ; python_version < \"3.9\"", "mkdocstrings[python] (==0.29.1) ; python_version >= \"3.9\"", "mypy (==1.16.1)", "nats-py (>=2.7.0,<=3.0.0)", "opentelemetry-sdk (>=1.24.0,<2.0.0)", "pillow", "pre-commit (==3.5.0) ; python_version < \"3.9\"", "pre-commit (==4.2.0) ; python_version >= \"3.9\"", "prometheus-client (>=0.20.0,<0.30.0)", "psutil (==7.0.0)", "pydantic-settings (>=2.0.0,<3.0.0)", "pytest (==8.3.5) ; python_version < \"3.9\"", "pytest (==8.4.1) ; python_version >= \"3.9\"", "pytest-asyncio (==0.24.0) ; python_version < \"3.9\"", "pytest-asyncio (==1.0.0) ; python_version >= \"3.9\"", "pyyaml (==6.0.2)", "redis (>=5.0.0,<7.0.0)", "requests", "ruff (==0.12.1)", "semgrep (==1.127.1) ; python_version >= \"3.9\"", "semgrep (==1.99.0) ; python_version < \"3.9\"", "typer (>=0.9,!=0.12,<=0.16.0)", "types-aiofiles", "types-deprecated", "types-docutils", "types-pygments", "types-pyyaml", "types-redis", "types-setuptools", "types-ujson", "typing-extensions (>=4.8.0,<4.12.1) ; python_version < \"3.9\"", "uvicorn (==0.33.0) ; python_version < \"3.9\"", "uvicorn (>=0.34.3) ; python_version >= \"3.9\"", "watchfiles (>=0.15.0,<1.2.0)"]
-devdocs = ["cairosvg", "mdx-include (==1.4.2)", "mike (==2.1.3)", "mkdocs-git-revision-date-localized-plugin (==1.4.7)", "mkdocs-glightbox (==0.4.0)", "mkdocs-literate-nav (==0.6.2)", "mkdocs-macros-plugin (==1.3.7)", "mkdocs-material (==9.6.14)", "mkdocs-minify-plugin (==0.8.0)", "mkdocs-static-i18n (==1.3.0)", "mkdocstrings[python] (==0.26.1) ; python_version < \"3.9\"", "mkdocstrings[python] (==0.29.1) ; python_version >= \"3.9\"", "pillow", "requests"]
+dev = ["aio-pika (>=9,<10)", "aiokafka (>=0.9,<0.13)", "bandit (==1.7.10) ; python_version < \"3.9\"", "bandit (==1.8.6) ; python_version >= \"3.9\"", "cairosvg", "codespell (==2.4.1)", "confluent-kafka (>=2,!=2.8.1,<3) ; python_version < \"3.13\"", "confluent-kafka (>=2.6,!=2.8.1,<3) ; python_version >= \"3.13\"", "confluent-kafka-stubs ; python_version >= \"3.11\"", "coverage[toml] (==7.6.1) ; python_version < \"3.9\"", "coverage[toml] (==7.9.2) ; python_version >= \"3.9\"", "detect-secrets (==1.5.0)", "dirty-equals (==0.9.0)", "email-validator (==2.2.0)", "fastapi (==0.115.14)", "httpx (==0.28.1)", "mdx-include (==1.4.2)", "mike (==2.1.3)", "mkdocs-git-revision-date-localized-plugin (==1.4.7)", "mkdocs-glightbox (==0.4.0)", "mkdocs-literate-nav (==0.6.2)", "mkdocs-macros-plugin (==1.3.7)", "mkdocs-material (==9.6.15)", "mkdocs-minify-plugin (==0.8.0)", "mkdocs-static-i18n (==1.3.0)", "mkdocstrings[python] (==0.26.1) ; python_version < \"3.9\"", "mkdocstrings[python] (==0.29.1) ; python_version >= \"3.9\"", "mypy (==1.16.1)", "nats-py (>=2.7.0,<=3.0.0)", "opentelemetry-sdk (>=1.24.0,<2.0.0)", "pillow", "pre-commit (==3.5.0) ; python_version < \"3.9\"", "pre-commit (==4.2.0) ; python_version >= \"3.9\"", "prometheus-client (>=0.20.0,<0.30.0)", "psutil (==7.0.0)", "pydantic-settings (>=2.0.0,<3.0.0)", "pytest (==8.3.5) ; python_version < \"3.9\"", "pytest (==8.4.1) ; python_version >= \"3.9\"", "pytest-asyncio (==0.24.0) ; python_version < \"3.9\"", "pytest-asyncio (==1.0.0) ; python_version >= \"3.9\"", "pyyaml (==6.0.2)", "redis (>=5.0.0,<7.0.0)", "requests", "ruff (==0.12.2)", "semgrep (==1.128.0) ; python_version >= \"3.9\"", "semgrep (==1.99.0) ; python_version < \"3.9\"", "typer (>=0.9,!=0.12,<=0.16.0)", "types-aiofiles", "types-deprecated", "types-docutils", "types-pygments", "types-pyyaml", "types-redis", "types-setuptools", "types-ujson", "typing-extensions (>=4.8.0,<4.12.1) ; python_version < \"3.9\"", "uvicorn (==0.33.0) ; python_version < \"3.9\"", "uvicorn (>=0.34.3) ; python_version >= \"3.9\"", "watchfiles (>=0.15.0,<1.2.0)"]
+devdocs = ["cairosvg", "mdx-include (==1.4.2)", "mike (==2.1.3)", "mkdocs-git-revision-date-localized-plugin (==1.4.7)", "mkdocs-glightbox (==0.4.0)", "mkdocs-literate-nav (==0.6.2)", "mkdocs-macros-plugin (==1.3.7)", "mkdocs-material (==9.6.15)", "mkdocs-minify-plugin (==0.8.0)", "mkdocs-static-i18n (==1.3.0)", "mkdocstrings[python] (==0.26.1) ; python_version < \"3.9\"", "mkdocstrings[python] (==0.29.1) ; python_version >= \"3.9\"", "pillow", "requests"]
 kafka = ["aiokafka (>=0.9,<0.13)"]
-lint = ["aio-pika (>=9,<10)", "aiokafka (>=0.9,<0.13)", "bandit (==1.7.10) ; python_version < \"3.9\"", "bandit (==1.8.5) ; python_version >= \"3.9\"", "codespell (==2.4.1)", "confluent-kafka (>=2,!=2.8.1,<3) ; python_version < \"3.13\"", "confluent-kafka (>=2.6,!=2.8.1,<3) ; python_version >= \"3.13\"", "confluent-kafka-stubs ; python_version >= \"3.11\"", "mypy (==1.16.1)", "nats-py (>=2.7.0,<=3.0.0)", "opentelemetry-sdk (>=1.24.0,<2.0.0)", "prometheus-client (>=0.20.0,<0.30.0)", "redis (>=5.0.0,<7.0.0)", "ruff (==0.12.1)", "semgrep (==1.127.1) ; python_version >= \"3.9\"", "semgrep (==1.99.0) ; python_version < \"3.9\"", "typer (>=0.9,!=0.12,<=0.16.0)", "types-aiofiles", "types-deprecated", "types-docutils", "types-pygments", "types-pyyaml", "types-redis", "types-setuptools", "types-ujson", "watchfiles (>=0.15.0,<1.2.0)"]
+lint = ["aio-pika (>=9,<10)", "aiokafka (>=0.9,<0.13)", "bandit (==1.7.10) ; python_version < \"3.9\"", "bandit (==1.8.6) ; python_version >= \"3.9\"", "codespell (==2.4.1)", "confluent-kafka (>=2,!=2.8.1,<3) ; python_version < \"3.13\"", "confluent-kafka (>=2.6,!=2.8.1,<3) ; python_version >= \"3.13\"", "confluent-kafka-stubs ; python_version >= \"3.11\"", "mypy (==1.16.1)", "nats-py (>=2.7.0,<=3.0.0)", "opentelemetry-sdk (>=1.24.0,<2.0.0)", "prometheus-client (>=0.20.0,<0.30.0)", "redis (>=5.0.0,<7.0.0)", "ruff (==0.12.2)", "semgrep (==1.128.0) ; python_version >= \"3.9\"", "semgrep (==1.99.0) ; python_version < \"3.9\"", "typer (>=0.9,!=0.12,<=0.16.0)", "types-aiofiles", "types-deprecated", "types-docutils", "types-pygments", "types-pyyaml", "types-redis", "types-setuptools", "types-ujson", "watchfiles (>=0.15.0,<1.2.0)"]
 nats = ["nats-py (>=2.7.0,<=3.0.0)"]
 optionals = ["aio-pika (>=9,<10)", "aiokafka (>=0.9,<0.13)", "confluent-kafka (>=2,!=2.8.1,<3) ; python_version < \"3.13\"", "confluent-kafka (>=2.6,!=2.8.1,<3) ; python_version >= \"3.13\"", "nats-py (>=2.7.0,<=3.0.0)", "opentelemetry-sdk (>=1.24.0,<2.0.0)", "prometheus-client (>=0.20.0,<0.30.0)", "redis (>=5.0.0,<7.0.0)", "typer (>=0.9,!=0.12,<=0.16.0)", "watchfiles (>=0.15.0,<1.2.0)"]
 otel = ["opentelemetry-sdk (>=1.24.0,<2.0.0)"]
 prometheus = ["prometheus-client (>=0.20.0,<0.30.0)"]
 rabbit = ["aio-pika (>=9,<10)"]
 redis = ["redis (>=5.0.0,<7.0.0)"]
-test-core = ["coverage[toml] (==7.6.1) ; python_version < \"3.9\"", "coverage[toml] (==7.9.1) ; python_version >= \"3.9\"", "dirty-equals (==0.9.0)", "pytest (==8.3.5) ; python_version < \"3.9\"", "pytest (==8.4.1) ; python_version >= \"3.9\"", "pytest-asyncio (==0.24.0) ; python_version < \"3.9\"", "pytest-asyncio (==1.0.0) ; python_version >= \"3.9\"", "typing-extensions (>=4.8.0,<4.12.1) ; python_version < \"3.9\""]
-testing = ["coverage[toml] (==7.6.1) ; python_version < \"3.9\"", "coverage[toml] (==7.9.1) ; python_version >= \"3.9\"", "dirty-equals (==0.9.0)", "email-validator (==2.2.0)", "fastapi (==0.115.14)", "httpx (==0.28.1)", "psutil (==7.0.0)", "pydantic-settings (>=2.0.0,<3.0.0)", "pytest (==8.3.5) ; python_version < \"3.9\"", "pytest (==8.4.1) ; python_version >= \"3.9\"", "pytest-asyncio (==0.24.0) ; python_version < \"3.9\"", "pytest-asyncio (==1.0.0) ; python_version >= \"3.9\"", "pyyaml (==6.0.2)", "typing-extensions (>=4.8.0,<4.12.1) ; python_version < \"3.9\"", "uvicorn (==0.33.0) ; python_version < \"3.9\"", "uvicorn (>=0.34.3) ; python_version >= \"3.9\""]
+test-core = ["coverage[toml] (==7.6.1) ; python_version < \"3.9\"", "coverage[toml] (==7.9.2) ; python_version >= \"3.9\"", "dirty-equals (==0.9.0)", "pytest (==8.3.5) ; python_version < \"3.9\"", "pytest (==8.4.1) ; python_version >= \"3.9\"", "pytest-asyncio (==0.24.0) ; python_version < \"3.9\"", "pytest-asyncio (==1.0.0) ; python_version >= \"3.9\"", "typing-extensions (>=4.8.0,<4.12.1) ; python_version < \"3.9\""]
+testing = ["coverage[toml] (==7.6.1) ; python_version < \"3.9\"", "coverage[toml] (==7.9.2) ; python_version >= \"3.9\"", "dirty-equals (==0.9.0)", "email-validator (==2.2.0)", "fastapi (==0.115.14)", "httpx (==0.28.1)", "psutil (==7.0.0)", "pydantic-settings (>=2.0.0,<3.0.0)", "pytest (==8.3.5) ; python_version < \"3.9\"", "pytest (==8.4.1) ; python_version >= \"3.9\"", "pytest-asyncio (==0.24.0) ; python_version < \"3.9\"", "pytest-asyncio (==1.0.0) ; python_version >= \"3.9\"", "pyyaml (==6.0.2)", "typing-extensions (>=4.8.0,<4.12.1) ; python_version < \"3.9\"", "uvicorn (==0.33.0) ; python_version < \"3.9\"", "uvicorn (>=0.34.3) ; python_version >= \"3.9\""]
 types = ["aio-pika (>=9,<10)", "aiokafka (>=0.9,<0.13)", "confluent-kafka (>=2,!=2.8.1,<3) ; python_version < \"3.13\"", "confluent-kafka (>=2.6,!=2.8.1,<3) ; python_version >= \"3.13\"", "confluent-kafka-stubs ; python_version >= \"3.11\"", "mypy (==1.16.1)", "nats-py (>=2.7.0,<=3.0.0)", "opentelemetry-sdk (>=1.24.0,<2.0.0)", "prometheus-client (>=0.20.0,<0.30.0)", "redis (>=5.0.0,<7.0.0)", "typer (>=0.9,!=0.12,<=0.16.0)", "types-aiofiles", "types-deprecated", "types-docutils", "types-pygments", "types-pyyaml", "types-redis", "types-setuptools", "types-ujson", "watchfiles (>=0.15.0,<1.2.0)"]
 
 [[package]]
@@ -2846,19 +2846,20 @@ url = ["furl (>=0.4.1)"]
 
 [[package]]
 name = "starlette"
-version = "0.46.2"
+version = "0.47.1"
 description = "The little ASGI library that shines."
 optional = true
 python-versions = ">=3.9"
 groups = ["main"]
 markers = "extra == \"server\""
 files = [
-    {file = "starlette-0.46.2-py3-none-any.whl", hash = "sha256:595633ce89f8ffa71a015caed34a5b2dc1c0cdb3f0f1fbd1e69339cf2abeec35"},
-    {file = "starlette-0.46.2.tar.gz", hash = "sha256:7f7361f34eed179294600af672f565727419830b54b7b084efe44bb82d2fccd5"},
+    {file = "starlette-0.47.1-py3-none-any.whl", hash = "sha256:5e11c9f5c7c3f24959edbf2dffdc01bba860228acf657129467d8a7468591527"},
+    {file = "starlette-0.47.1.tar.gz", hash = "sha256:aef012dd2b6be325ffa16698f9dc533614fb1cebd593a906b90dc1025529a79b"},
 ]
 
 [package.dependencies]
 anyio = ">=3.6.2,<5"
+typing-extensions = {version = ">=4.10.0", markers = "python_version < \"3.13\""}
 
 [package.extras]
 full = ["httpx (>=0.27.0,<0.29.0)", "itsdangerous", "jinja2", "python-multipart (>=0.0.18)", "pyyaml"]
@@ -2979,14 +2980,14 @@ cryptography = "*"
 
 [[package]]
 name = "types-python-dateutil"
-version = "2.9.0.20250516"
+version = "2.9.0.20250708"
 description = "Typing stubs for python-dateutil"
 optional = false
 python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "types_python_dateutil-2.9.0.20250516-py3-none-any.whl", hash = "sha256:2b2b3f57f9c6a61fba26a9c0ffb9ea5681c9b83e69cd897c6b5f668d9c0cab93"},
-    {file = "types_python_dateutil-2.9.0.20250516.tar.gz", hash = "sha256:13e80d6c9c47df23ad773d54b2826bd52dbbb41be87c3f339381c1700ad21ee5"},
+    {file = "types_python_dateutil-2.9.0.20250708-py3-none-any.whl", hash = "sha256:4d6d0cc1cc4d24a2dc3816024e502564094497b713f7befda4d5bc7a8e3fd21f"},
+    {file = "types_python_dateutil-2.9.0.20250708.tar.gz", hash = "sha256:ccdbd75dab2d6c9696c350579f34cffe2c281e4c5f27a585b2a2438dd1d5c8ab"},
 ]
 
 [[package]]
@@ -3319,4 +3320,4 @@ server = ["alembic", "asgi-correlation-id", "coloredlogs", "fastapi", "greenlet"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "abb224a5e872ff2cb6d61582e8db60ce03debb08ade915f73d233cdecb04d3d6"
+content-hash = "c48b667fefed064ae1ff3965f05fc1686b7fe24d44cbc8e1eef06d1f41b1cfa2"

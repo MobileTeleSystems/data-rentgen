@@ -56,7 +56,7 @@ coloredlogs = {version = "^15.0.1", optional = true}
 uuid6 = {version = "^2025.0.0", optional = true}
 python-dateutil = {version = "^2.9.0.post0", optional = true}
 fastapi = {version = ">=0.115.14,<0.117.0", optional = true}
-starlette = {version = "^0.46.2", optional = true}
+starlette = {version = ">=0.46.2,<0.48.0", optional = true}
 starlette-exporter = {version = "^0.23.0", optional = true}
 uvicorn = {version = "^0.35.0", optional = true}
 asyncpg = {version = "^0.30.0", optional = true}
