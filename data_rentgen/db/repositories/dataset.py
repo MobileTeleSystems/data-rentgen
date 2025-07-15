@@ -17,7 +17,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import selectinload
 
-from data_rentgen.db.models import Address, Dataset, Location
+from data_rentgen.db.models import Address, Dataset, Location, TagValue
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.search import make_tsquery, ts_match, ts_rank
 from data_rentgen.dto import DatasetDTO, PaginationDTO
@@ -83,7 +83,10 @@ class DatasetRepository(Repository[Dataset]):
             query = select(Dataset).where(*where)
             order_by = [Dataset.name]
 
-        options = [selectinload(Dataset.location).selectinload(Location.addresses)]
+        options = [
+            selectinload(Dataset.location).selectinload(Location.addresses),
+            selectinload(Dataset.tags).selectinload(TagValue.tag),
+        ]
         return await self._paginate_by_query(
             query=query,
             order_by=order_by,
@@ -99,6 +102,7 @@ class DatasetRepository(Repository[Dataset]):
             select(Dataset)
             .where(Dataset.id == any_(list(dataset_ids)))  # type: ignore[arg-type]
             .options(selectinload(Dataset.location).selectinload(Location.addresses))
+            .options(selectinload(Dataset.tags).selectinload(TagValue.tag))
         )
         result = await self._session.scalars(query)
         return list(result.all())

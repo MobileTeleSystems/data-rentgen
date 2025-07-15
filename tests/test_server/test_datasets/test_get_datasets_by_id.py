@@ -110,3 +110,39 @@ async def test_get_datasets_by_multiple_ids(
             for dataset in sorted(selected_datasets, key=lambda x: x.name)
         ],
     }
+
+
+async def test_get_datasets_by_one_id_with_tags(
+    test_client: AsyncClient,
+    dataset_with_tags: Dataset,
+    async_session: AsyncSession,
+    mocked_user: MockedUser,
+):
+    datasets = await enrich_datasets([dataset_with_tags], async_session)
+    dataset = datasets[0]
+
+    response = await test_client.get(
+        "v1/datasets",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={"dataset_id": dataset.id},
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "page": 1,
+            "page_size": 20,
+            "total_count": 1,
+            "pages_count": 1,
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "previous_page": None,
+        },
+        "items": [
+            {
+                "id": str(dataset.id),
+                "data": dataset_to_json(dataset),
+            },
+        ],
+    }

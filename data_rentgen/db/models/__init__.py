@@ -21,6 +21,8 @@ from data_rentgen.db.models.output import Output, OutputType
 from data_rentgen.db.models.run import Run, RunStartReason, RunStatus
 from data_rentgen.db.models.schema import Schema
 from data_rentgen.db.models.sql_query import SQLQuery
+from data_rentgen.db.models.tag import Tag
+from data_rentgen.db.models.tag_value import TagValue
 from data_rentgen.db.models.user import User
 
 __all__ = [
@@ -48,5 +50,7 @@ __all__ = [
     "RunStatus",
     "SQLQuery",
     "Schema",
+    "Tag",
+    "TagValue",
     "User",
 ]

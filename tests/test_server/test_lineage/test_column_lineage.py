@@ -1342,6 +1342,7 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_column_lineage(
                     "name": dataset.name,
                     "location": location_to_json(dataset.location),
                     "schema": schema_to_json(lineage.outputs[0].schema, "EXACT_MATCH"),
+                    "tags": [],
                 }
                 for dataset in datasets
             },
@@ -1482,6 +1483,7 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_column_lineage_f
                     "name": dataset.name,
                     "location": location_to_json(dataset.location),
                     "schema": schema_to_json(lineage.outputs[0].schema, "EXACT_MATCH"),
+                    "tags": [],
                 }
                 for dataset in datasets
             },

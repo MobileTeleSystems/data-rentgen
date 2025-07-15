@@ -6,15 +6,30 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from data_rentgen.db.models.dataset import Dataset
+from data_rentgen.db.models.location import Location
 from data_rentgen.dto.pagination import PaginationDTO
 from data_rentgen.services.uow import UnitOfWork
 
 
 @dataclass
+class TagData:
+    name: str
+    value: str
+
+
+@dataclass
+class DatasetData:
+    id: int
+    name: str
+    location: Location
+    tags: list[TagData]
+    schema = None
+
+
+@dataclass
 class DatasetServiceResult:
     id: int
-    data: Dataset
+    data: DatasetData
 
 
 class DatasetServicePaginatedResult(PaginationDTO[DatasetServiceResult]):
@@ -43,5 +58,16 @@ class DatasetService:
             page=pagination.page,
             page_size=pagination.page_size,
             total_count=pagination.total_count,
-            items=[DatasetServiceResult(id=dataset.id, data=dataset) for dataset in pagination.items],
+            items=[
+                DatasetServiceResult(
+                    id=dataset.id,
+                    data=DatasetData(
+                        id=dataset.id,
+                        name=dataset.name,
+                        location=dataset.location,
+                        tags=[TagData(name=tag.tag.name, value=tag.value) for tag in dataset.tags],
+                    ),
+                )
+                for dataset in pagination.items
+            ],
         )

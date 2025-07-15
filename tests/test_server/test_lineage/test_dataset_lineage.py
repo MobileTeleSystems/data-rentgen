@@ -320,6 +320,7 @@ async def test_get_dataset_lineage_with_granularity_dataset(
                     "name": dataset.name,
                     "location": location_to_json(dataset.location),
                     "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
+                    "tags": [],
                 }
                 for dataset in datasets
             },
@@ -396,6 +397,7 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_direction(
                     "name": dataset.name,
                     "location": location_to_json(dataset.location),
                     "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
+                    "tags": [],
                 }
                 for dataset in datasets
             },
@@ -464,6 +466,7 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_depth(
                     "name": dataset.name,
                     "location": location_to_json(dataset.location),
                     "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
+                    "tags": [],
                 }
                 for dataset in datasets
             },
@@ -536,6 +539,7 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_symlinks(
                     "name": dataset.name,
                     "location": location_to_json(dataset.location),
                     "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
+                    "tags": [],
                 }
                 for dataset in datasets
             },
@@ -606,6 +610,7 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_until(
                     "name": dataset.name,
                     "location": location_to_json(dataset.location),
                     "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
+                    "tags": [],
                 }
                 for dataset in datasets
             },
@@ -1455,6 +1460,7 @@ async def test_get_dataset_lineage_unmergeable_schema_and_output_type(
                     "name": dataset.name,
                     "location": location_to_json(dataset.location),
                     "schema": schema_to_json(response_schema, "LATEST_KNOWN"),
+                    "tags": [],
                 },
             },
             "jobs": jobs_to_json(jobs),
@@ -1645,18 +1651,21 @@ async def test_get_dataset_lineage_with_granularity_dataset_without_output_schem
                     "name": lineage_dataset.name,
                     "location": location_to_json(lineage_dataset.location),
                     "schema": schema_to_json(response_schema, "EXACT_MATCH"),
+                    "tags": [],
                 },
                 str(datasets[0].id): {
                     "id": str(datasets[0].id),
                     "name": datasets[0].name,
                     "location": location_to_json(datasets[0].location),
                     "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
+                    "tags": [],
                 },
                 str(datasets[2].id): {
                     "id": str(datasets[2].id),
                     "name": datasets[2].name,
                     "location": location_to_json(datasets[2].location),
                     "schema": schema_to_json(lineage.inputs[0].schema, "EXACT_MATCH"),
+                    "tags": [],
                 },
             },
             "jobs": {},
@@ -1709,6 +1718,7 @@ async def test_get_dataset_lineage_with_granularity_dataset_ignore_self_referenc
                     "name": dataset.name,
                     "location": location_to_json(dataset.location),
                     "schema": None,
+                    "tags": [],
                 },
             },
             "jobs": {},
@@ -1762,6 +1772,7 @@ async def test_get_dataset_lineage_with_granularity_dataset_ignore_not_connected
                     "name": dataset.name,
                     "location": location_to_json(dataset.location),
                     "schema": None,
+                    "tags": [],
                 },
             },
             "jobs": {},

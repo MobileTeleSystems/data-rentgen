@@ -5,10 +5,11 @@ from typing import TYPE_CHECKING, Callable
 
 import pytest_asyncio
 
-from data_rentgen.db.models import Dataset
+from data_rentgen.db.models import Dataset, TagValue
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
 from tests.test_server.fixtures.factories.base import random_string
 from tests.test_server.fixtures.factories.location import create_location
+from tests.test_server.fixtures.factories.tag import create_tag, create_tag_value
 from tests.test_server.utils.delete import clean_db
 
 if TYPE_CHECKING:
@@ -34,6 +35,7 @@ async def create_dataset(
     async_session: AsyncSession,
     location_id: int,
     dataset_kwargs: dict | None = None,
+    tags: list[TagValue] | None = None,
 ) -> Dataset:
     if dataset_kwargs:
         dataset_kwargs.update({"location_id": location_id})
@@ -41,6 +43,8 @@ async def create_dataset(
         dataset_kwargs = {"location_id": location_id}
     dataset = dataset_factory(**dataset_kwargs)
     del dataset.id
+    if tags:
+        dataset.tags.extend(tags)
     async_session.add(dataset)
     await async_session.commit()
     await async_session.refresh(dataset)
@@ -62,6 +66,16 @@ async def make_symlink(
     await async_session.commit()
     await async_session.refresh(symlink)
     return symlink
+
+
+async def add_tags(
+    async_session: AsyncSession,
+    tags: list[TagValue],
+    dataset: Dataset,
+):
+    dataset.tags.extend(tags)
+    await async_session.commit()
+    await async_session.refresh(dataset)
 
 
 @pytest_asyncio.fixture(params=[{}])
@@ -259,6 +273,27 @@ async def datasets_search(
     )
 
     yield datasets_by_name, datasets_by_location, datasets_by_address
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)
+
+
+@pytest_asyncio.fixture(params=[{}])
+async def dataset_with_tags(
+    request: pytest.FixtureRequest,
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
+) -> AsyncGenerator[Dataset, None]:
+    params = request.param
+
+    async with async_session_maker() as async_session:
+        location = await create_location(async_session)
+        tag = await create_tag(async_session)
+        tag_value = await create_tag_value(async_session, tag_id=tag.id)
+        item = await create_dataset(async_session, location_id=location.id, dataset_kwargs=params, tags=[tag_value])
+
+        async_session.expunge_all()
+
+    yield item
 
     async with async_session_maker() as async_session:
         await clean_db(async_session)

@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import select
 
-from data_rentgen.db.models import Dataset, Job, Location, Run
+from data_rentgen.db.models import Dataset, Job, Location, Run, TagValue
 
 
 async def enrich_runs(runs: list[Run], async_session: AsyncSession) -> list[Run]:
@@ -20,6 +20,7 @@ async def enrich_datasets(datasets: list[Dataset], async_session: AsyncSession) 
         select(Dataset)
         .where(Dataset.id.in_(dataset_ids))
         .options(selectinload(Dataset.location).selectinload(Location.addresses))
+        .options(selectinload(Dataset.tags).selectinload(TagValue.tag))
     )
     result = await async_session.scalars(query)
     datasets_by_id = {dataset.id: dataset for dataset in result.all()}
