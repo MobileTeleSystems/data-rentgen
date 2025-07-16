@@ -20,6 +20,7 @@ if TYPE_CHECKING:
         Operation,
         Run,
         Schema,
+        TagValue,
         User,
     )
     from data_rentgen.db.repositories.input import InputRow
@@ -170,6 +171,10 @@ def _get_dataset_schema(dataset: Dataset, outputs: list[OutputRow | Output], inp
     return schema_to_json(schema, "EXACT_MATCH")
 
 
+def tags_to_json(tags: list[TagValue]):
+    return [{"name": tag.tag.name, "value": tag.value} for tag in tags]
+
+
 def dataset_to_json(
     dataset: Dataset,
     outputs: list[OutputRow | Output] | None = None,
@@ -183,6 +188,7 @@ def dataset_to_json(
         "name": dataset.name,
         "location": location_to_json(dataset.location),
         "schema": schema,
+        "tags": tags_to_json(dataset.tags) if dataset.tags else [],
     }
 
 

@@ -3,12 +3,13 @@
 
 from __future__ import annotations
 
-from sqlalchemy import BigInteger, Computed, ForeignKey, Index, String, UniqueConstraint
+from sqlalchemy import BigInteger, Column, Computed, ForeignKey, Index, String, Table, UniqueConstraint
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from data_rentgen.db.models.base import Base
 from data_rentgen.db.models.location import Location
+from data_rentgen.db.models.tag_value import TagValue
 
 
 class Dataset(Base):
@@ -40,6 +41,8 @@ class Dataset(Base):
         doc="Dataset name, e.g. table name or filesystem path",
     )
 
+    tags: Mapped[set[TagValue]] = relationship(secondary=lambda: dataset_tags_table)
+
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,
         Computed(
@@ -59,3 +62,11 @@ class Dataset(Base):
         deferred=True,
         doc="Full-text search vector",
     )
+
+
+dataset_tags_table: Table = Table(
+    "dataset_tags",
+    Base.metadata,
+    Column("dataset_id", ForeignKey("dataset.id"), primary_key=True),
+    Column("tag_value_id", ForeignKey("tag_value.id"), primary_key=True),
+)

@@ -9,6 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from data_rentgen.server.schemas.v1.location import LocationResponseV1
 from data_rentgen.server.schemas.v1.pagination import PaginateQueryV1
+from data_rentgen.server.schemas.v1.tags import TagsResponseV1
 
 
 class DatasetSchemaFieldV1(BaseModel):
@@ -34,6 +35,7 @@ class DatasetResponseV1(BaseModel):
     id: str = Field(description="Dataset id", coerce_numbers_to_str=True)
     location: LocationResponseV1 = Field(description="Corresponding Location")
     name: str = Field(description="Dataset name")
+    tags: list[TagsResponseV1] = Field(default_factory=list, description="Dataset tags")
     schema: DatasetSchemaV1 | None = Field(  # type: ignore[assignment]
         description="Schema",
         default=None,

@@ -11,6 +11,8 @@ from data_rentgen.db.models import (
     Operation,
     Output,
     Run,
+    Tag,
+    TagValue,
 )
 
 
@@ -18,6 +20,8 @@ async def clean_db(async_session: AsyncSession) -> None:
     await async_session.execute(delete(Location))
     await async_session.execute(delete(Address))
     await async_session.execute(delete(DatasetSymlink))
+    await async_session.execute(delete(TagValue))
+    await async_session.execute(delete(Tag))
     await async_session.execute(delete(Dataset))
     await async_session.execute(delete(Job))
     await async_session.execute(delete(Run))
