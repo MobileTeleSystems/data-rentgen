@@ -168,6 +168,9 @@ def _get_dataset_schema(dataset: Dataset, outputs: list[OutputRow | Output], inp
         None,
     )
 
+    if not schema:
+        return None
+
     return schema_to_json(schema, "EXACT_MATCH")
 
 

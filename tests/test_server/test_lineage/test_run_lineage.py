@@ -842,7 +842,15 @@ async def test_get_run_lineage_with_symlink_without_input_output(
     dataset_ids = {input.dataset_id for input in inputs} | {output.dataset_id for output in outputs}
     assert dataset_ids
 
-    datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids]
+    dataset_symlinks = [
+        dataset_symlink
+        for dataset_symlink in lineage.dataset_symlinks
+        if dataset_symlink.from_dataset_id in dataset_ids or dataset_symlink.to_dataset_id in dataset_ids
+    ]
+    dataset_ids_from_symlink = {dataset_symlink.from_dataset_id for dataset_symlink in dataset_symlinks}
+    dataset_ids_to_symlink = {dataset_symlink.to_dataset_id for dataset_symlink in dataset_symlinks}
+    dataset_ids_include_symlinks = dataset_ids | dataset_ids_from_symlink | dataset_ids_to_symlink
+    datasets = [dataset for dataset in lineage.datasets if dataset.id in dataset_ids_include_symlinks]
     assert datasets
 
     [job] = await enrich_jobs([job], async_session)
@@ -862,7 +870,7 @@ async def test_get_run_lineage_with_symlink_without_input_output(
     assert response.json() == {
         "relations": {
             "parents": run_parents_to_json([run]),
-            "symlinks": [],  # symlinks without inputs/outputs are excluded
+            "symlinks": symlinks_to_json(dataset_symlinks),
             "inputs": [
                 *inputs_to_json(merge_io_by_jobs(inputs), granularity="JOB"),
                 *inputs_to_json(merge_io_by_runs(inputs), granularity="RUN"),
