@@ -1,7 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-import dataclasses
 import logging
 from collections import defaultdict
 from collections.abc import Collection
@@ -234,18 +233,15 @@ class LineageService:
                 for dataset_symlink in dataset_symlinks
             }
 
-        if level == 0:
-            if include_column_lineage:
-                result.column_lineage.update(
-                    await self._get_column_lineage(
-                        current_result=result,
-                        since=since,
-                        until=until,
-                        granularity="JOB",
-                    ),
-                )
-
-            result = self._drop_unused_datasets(result)
+        if level == 0 and include_column_lineage:
+            result.column_lineage.update(
+                await self._get_column_lineage(
+                    current_result=result,
+                    since=since,
+                    until=until,
+                    granularity="JOB",
+                ),
+            )
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
@@ -437,13 +433,10 @@ class LineageService:
                 for dataset_symlink in dataset_symlinks
             }
 
-        if level == 0:
-            if include_column_lineage:
-                result.column_lineage.update(
-                    await self._get_column_lineage(current_result=result, since=since, until=until, granularity="RUN"),
-                )
-
-            result = self._drop_unused_datasets(result)
+        if level == 0 and include_column_lineage:
+            result.column_lineage.update(
+                await self._get_column_lineage(current_result=result, since=since, until=until, granularity="RUN"),
+            )
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
@@ -461,7 +454,7 @@ class LineageService:
             )
         return result
 
-    async def get_lineage_by_operations(  # noqa: C901, PLR0912, PLR0915
+    async def get_lineage_by_operations(  # noqa: C901, PLR0912
         self,
         start_node_ids: Collection[UUID],
         direction: LineageDirectionV1,
@@ -599,18 +592,15 @@ class LineageService:
                 for dataset_symlink in dataset_symlinks
             }
 
-        if level == 0:
-            if include_column_lineage:
-                result.column_lineage.update(
-                    await self._get_column_lineage(
-                        current_result=result,
-                        since=since,
-                        until=until,
-                        granularity="OPERATION",
-                    ),
-                )
-
-            result = self._drop_unused_datasets(result)
+        if level == 0 and include_column_lineage:
+            result.column_lineage.update(
+                await self._get_column_lineage(
+                    current_result=result,
+                    since=since,
+                    until=until,
+                    granularity="OPERATION",
+                ),
+            )
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
@@ -628,7 +618,7 @@ class LineageService:
             )
         return result
 
-    async def get_lineage_by_datasets(  # noqa: C901
+    async def get_lineage_by_datasets(
         self,
         start_node_ids: Collection[int],
         direction: LineageDirectionV1,
@@ -721,18 +711,15 @@ class LineageService:
                 msg = f"Unknown granularity: {granularity}"
                 raise ValueError(msg)
 
-        if level == 0:
-            if include_column_lineage:
-                result.column_lineage.update(
-                    await self._get_column_lineage(
-                        current_result=result,
-                        since=since,
-                        until=until,
-                        granularity=granularity,
-                    ),
-                )
-
-            result = self._drop_unused_datasets(result, keep_dataset_ids=start_node_ids)
+        if level == 0 and include_column_lineage:
+            result.column_lineage.update(
+                await self._get_column_lineage(
+                    current_result=result,
+                    since=since,
+                    until=until,
+                    granularity=granularity,
+                ),
+            )
 
         if logger.isEnabledFor(logging.INFO):
             logger.info(
@@ -1307,34 +1294,3 @@ class LineageService:
             )
 
         return result
-
-    def _drop_unused_datasets(
-        self,
-        current_result: LineageServiceResult,
-        keep_dataset_ids: Collection[int] | None = None,
-    ) -> LineageServiceResult:
-        dataset_ids_with_inputs = {input_.dataset_id for input_ in current_result.inputs.values()}
-        dataset_ids_with_outputs = {output.dataset_id for output in current_result.outputs.values()}
-        dataset_ids_with_io_relations = {
-            relation.in_dataset_id for relation in current_result.io_dataset_relations.values()
-        } | {relation.out_dataset_id for relation in current_result.io_dataset_relations.values()}
-
-        keep_ids = (
-            set(keep_dataset_ids or [])
-            | dataset_ids_with_inputs
-            | dataset_ids_with_outputs
-            | dataset_ids_with_io_relations
-        )
-
-        final_datasets = {key: dataset for key, dataset in current_result.datasets.items() if dataset.id in keep_ids}
-        final_symlinks = {
-            key: symlink
-            for key, symlink in current_result.dataset_symlinks.items()
-            if symlink.from_dataset_id in keep_ids and symlink.to_dataset_id in keep_ids
-        }
-
-        return dataclasses.replace(
-            current_result,
-            datasets=final_datasets,
-            dataset_symlinks=final_symlinks,
-        )
