@@ -64,7 +64,7 @@ repos:
       - id: add-trailing-comma
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.3
+    rev: v0.12.4
     hooks:
       - id: ruff
         args: [--fix]
@@ -90,7 +90,7 @@ repos:
           - tomli
 
   - repo: https://github.com/sbrunner/hooks
-    rev: 1.4.1
+    rev: 1.5.0
     hooks:
       - id: poetry-check
         additional_dependencies:
