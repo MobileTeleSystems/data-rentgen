@@ -22,6 +22,8 @@ updates:
     ignore:
       # https://github.com/sphinx-contrib/sphinxcontrib-towncrier/issues/92
       - dependency-name: towncrier
+      - dependency-name: pytest-asyncio
+        update-types: [version-update:semver-major]
     # https://til.simonwillison.net/github/dependabot-python-setup
     groups:
       python-packages:
