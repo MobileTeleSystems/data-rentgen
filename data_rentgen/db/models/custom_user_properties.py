@@ -2,8 +2,10 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+from datetime import datetime
+
 from sqlalchemy import BigInteger, ForeignKey, text
-from sqlalchemy.dialects.postgresql import JSONB, TSTZRANGE, ExcludeConstraint
+from sqlalchemy.dialects.postgresql import JSONB, TSTZRANGE, ExcludeConstraint, Range
 from sqlalchemy.orm import Mapped, mapped_column
 
 from data_rentgen.db.models.base import Base
@@ -25,7 +27,6 @@ class CustomUserProperties(Base):
     user_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("user.id", ondelete="CASCADE"),
-        index=True,
         nullable=False,
         doc="Id of corresponding user",
     )
@@ -33,7 +34,6 @@ class CustomUserProperties(Base):
     property_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("custom_properties.id", ondelete="CASCADE"),
-        index=True,
         nullable=False,
         doc="Id of user's custom property",
     )
@@ -41,10 +41,12 @@ class CustomUserProperties(Base):
     value: Mapped[JSONB] = mapped_column(
         JSONB,
         nullable=False,
+        doc="Value of user's custom property",
     )
 
-    during: Mapped[TSTZRANGE] = mapped_column(
+    during: Mapped[Range[datetime]] = mapped_column(
         TSTZRANGE,
         server_default=text("tstzrange(now(), NULL, '[)')"),
         nullable=False,
+        doc="Duration when value of user's custom property is valid",
     )

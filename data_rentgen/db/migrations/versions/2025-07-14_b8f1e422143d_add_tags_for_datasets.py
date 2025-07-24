@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-"""add_tags_for_datasets
+"""Add tags for datasets
 
 Revision ID: b8f1e422143d
 Revises: def0be789a48

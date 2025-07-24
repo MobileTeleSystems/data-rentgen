@@ -90,9 +90,9 @@ def downgrade() -> None:
     op.execute(
         sa.text(
             """
-        UPDATE job
-        SET type = (SELECT job_type.type FROM job_type WHERE job_type.id = job.type);
-        """,
+            UPDATE job
+            SET type = (SELECT job_type.type FROM job_type WHERE job_type.id = job.type);
+            """,
         ),
     )
     op.create_index("ix__job__type", "job", ["type"], unique=False)
