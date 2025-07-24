@@ -156,6 +156,17 @@ Database structure
         fingerprint: uuid(v5)
     }
 
+    entity personal_token {
+        * id: uuid(v7)
+        ----
+        * user_id: bigint
+        * name: varchar(64)
+        scopes: jsonb
+        since: date
+        until: date
+        revoked_at: timestamptz
+    }
+
     address ||--o{ location
 
     dataset ||--o{ location
@@ -189,5 +200,7 @@ Database structure
     column_lineage "source_dataset_id" ||--o{ dataset
     column_lineage "target_dataset_id" ||--o{ dataset
     column_lineage "fingerprint" ||--o{ dataset_column_relation
+
+    personal_token ||--o{ user
 
     @enduml

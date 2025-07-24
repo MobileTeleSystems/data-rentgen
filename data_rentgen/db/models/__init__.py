@@ -18,6 +18,7 @@ from data_rentgen.db.models.job_type import JobType
 from data_rentgen.db.models.location import Location
 from data_rentgen.db.models.operation import Operation, OperationStatus, OperationType
 from data_rentgen.db.models.output import Output, OutputType
+from data_rentgen.db.models.personal_token import PersonalToken
 from data_rentgen.db.models.run import Run, RunStartReason, RunStatus
 from data_rentgen.db.models.schema import Schema
 from data_rentgen.db.models.sql_query import SQLQuery
@@ -45,6 +46,7 @@ __all__ = [
     "OperationType",
     "Output",
     "OutputType",
+    "PersonalToken",
     "Run",
     "RunStartReason",
     "RunStatus",

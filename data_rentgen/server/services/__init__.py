@@ -6,6 +6,7 @@ from data_rentgen.server.services.job import JobService
 from data_rentgen.server.services.lineage import LineageService
 from data_rentgen.server.services.location import LocationService
 from data_rentgen.server.services.operation import OperationService
+from data_rentgen.server.services.personal_token import PersonalTokenService
 from data_rentgen.server.services.run import RunService
 
 __all__ = [
@@ -14,6 +15,7 @@ __all__ = [
     "LineageService",
     "LocationService",
     "OperationService",
+    "PersonalTokenService",
     "RunService",
     "get_user",
 ]

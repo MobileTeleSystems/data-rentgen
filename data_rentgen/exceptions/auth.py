@@ -47,4 +47,25 @@ class LogoutError(ApplicationError):
 
 
 class ActionNotAllowedError(ApplicationError):
-    pass
+    """Action is not allowed for current user.
+
+    Examples
+    --------
+
+    >>> from data_rentgen.exceptions import ActionNotAllowedError
+    >>> raise ActionNotAllowedError("User 'test' cannot perform some action")
+    Traceback (most recent call last):
+    data_rentgen.exceptions.auth.ActionNotAllowedError: User 'test' cannot perform some action
+    """
+
+    def __init__(self, details: str) -> None:
+        self._message = "Action not allowed"
+        self._details = details
+
+    @property
+    def message(self) -> str:
+        return self._message
+
+    @property
+    def details(self) -> Any:
+        return self._details

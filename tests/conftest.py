@@ -32,6 +32,7 @@ pytest_plugins = [
     "tests.test_server.fixtures.factories.job",
     "tests.test_server.fixtures.factories.lineage",
     "tests.test_server.fixtures.factories.location",
+    "tests.test_server.fixtures.factories.personal_token",
     "tests.test_server.fixtures.factories.operation",
     "tests.test_server.fixtures.factories.run",
     "tests.test_server.fixtures.factories.user",

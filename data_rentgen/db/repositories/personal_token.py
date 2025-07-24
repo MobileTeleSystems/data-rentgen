@@ -1,0 +1,86 @@
+# SPDX-FileCopyrightText: 2024-2025 MTS PJSC
+# SPDX-License-Identifier: Apache-2.0
+
+from collections.abc import Collection
+from datetime import UTC, date, datetime
+from uuid import UUID
+
+from sqlalchemy import any_, select
+from sqlalchemy.exc import IntegrityError
+
+from data_rentgen.db.models import PersonalToken
+from data_rentgen.db.repositories.base import Repository
+from data_rentgen.dto.pagination import PaginationDTO
+from data_rentgen.exceptions.entity import EntityAlreadyExistsError, EntityNotFoundError
+
+
+class PersonalTokenRepository(Repository[PersonalToken]):
+    async def paginate(
+        self,
+        page: int,
+        page_size: int,
+        user_id: int,
+        personal_token_ids: Collection[UUID],
+    ) -> PaginationDTO[PersonalToken]:
+        where = [
+            PersonalToken.user_id == user_id,
+            PersonalToken.revoked_at.is_(None),
+        ]
+
+        if personal_token_ids:
+            where.append(PersonalToken.id == any_(list(personal_token_ids)))  # type: ignore[arg-type]
+
+        query = select(PersonalToken).distinct(PersonalToken.name).where(*where)
+
+        return await self._paginate_by_query(
+            query=query,
+            order_by=[PersonalToken.name, PersonalToken.since.desc()],
+            page=page,
+            page_size=page_size,
+        )
+
+    async def get_by_id(
+        self,
+        user_id: int,
+        token_id: UUID,
+    ) -> PersonalToken | None:
+        query = select(PersonalToken).where(
+            PersonalToken.user_id == user_id,
+            PersonalToken.id == token_id,
+            PersonalToken.revoked_at.is_(None),
+        )
+        return await self._session.scalar(query)
+
+    async def create(
+        self,
+        token_id: UUID,
+        user_id: int,
+        name: str,
+        scopes: list[str],
+        since: date,
+        until: date,
+    ) -> PersonalToken:
+        result = PersonalToken(
+            id=token_id,
+            user_id=user_id,
+            name=name,
+            scopes=scopes,
+            since=since,
+            until=until,
+        )
+        self._session.add(result)
+        try:
+            await self._session.flush([result])
+        except IntegrityError as e:
+            constraint = e.__cause__.__cause__.constraint_name  # type: ignore[union-attr]
+            if constraint == "uq__personal_token__user_id_since_until_name":
+                raise EntityAlreadyExistsError("PersonalToken", "name", name) from e  # noqa: EM101
+            if constraint == "fk__personal_token__user_id__user":
+                raise EntityNotFoundError("User", "id", user_id) from e  # noqa: EM101
+            raise
+        return result
+
+    async def revoke(self, user_token: PersonalToken) -> PersonalToken:
+        user_token.revoked_at = datetime.now(tz=UTC)
+        await self._session.flush([user_token])
+        return user_token

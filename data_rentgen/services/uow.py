@@ -19,6 +19,7 @@ from data_rentgen.db.repositories.job_type import JobTypeRepository
 from data_rentgen.db.repositories.location import LocationRepository
 from data_rentgen.db.repositories.operation import OperationRepository
 from data_rentgen.db.repositories.output import OutputRepository
+from data_rentgen.db.repositories.personal_token import PersonalTokenRepository
 from data_rentgen.db.repositories.run import RunRepository
 from data_rentgen.db.repositories.schema import SchemaRepository
 from data_rentgen.db.repositories.sql_query import SQLQueryRepository
@@ -47,6 +48,7 @@ class UnitOfWork:
         self.column_lineage = ColumnLineageRepository(session)
         self.io_dataset_relation = IODatasetRelationRepository(session)
         self.user = UserRepository(session)
+        self.personal_token = PersonalTokenRepository(session)
 
     async def __aenter__(self):
         return self
