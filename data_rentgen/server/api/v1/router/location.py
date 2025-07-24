@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends
 
 from data_rentgen.db.models import User
 from data_rentgen.server.errors import get_error_responses
-from data_rentgen.server.errors.schemas import InvalidRequestSchema, NotFoundSchema
+from data_rentgen.server.errors.schemas import InvalidRequestSchema, NotAuthorizedRedirectSchema, NotAuthorizedSchema
+from data_rentgen.server.errors.schemas.not_found import NotFoundSchema
 from data_rentgen.server.schemas.v1 import (
     LocationDetailedResponseV1,
     LocationPaginateQueryV1,
@@ -18,11 +19,14 @@ from data_rentgen.server.services import LocationService, get_user
 router = APIRouter(
     prefix="/locations",
     tags=["Locations"],
-    responses=get_error_responses(include={InvalidRequestSchema}),
 )
 
 
-@router.get("", summary="Paginated list of Locations")
+@router.get(
+    "",
+    summary="Paginated list of Locations",
+    responses=get_error_responses(include={NotAuthorizedSchema, NotAuthorizedRedirectSchema, InvalidRequestSchema}),
+)
 async def paginate_locations(
     query_args: Annotated[LocationPaginateQueryV1, Depends()],
     location_service: Annotated[LocationService, Depends()],
@@ -40,7 +44,10 @@ async def paginate_locations(
 
 @router.patch(
     "/{location_id}",
-    responses=get_error_responses(include={InvalidRequestSchema, NotFoundSchema}),
+    summary="Update location external_id",
+    responses=get_error_responses(
+        include={NotFoundSchema, NotAuthorizedSchema, NotAuthorizedRedirectSchema, InvalidRequestSchema},
+    ),
 )
 async def update_location(
     location_id: int,

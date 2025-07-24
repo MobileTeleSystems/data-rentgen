@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query
 
 from data_rentgen.db.models import User
 from data_rentgen.server.errors import get_error_responses
-from data_rentgen.server.errors.schemas import InvalidRequestSchema
+from data_rentgen.server.errors.schemas import InvalidRequestSchema, NotAuthorizedRedirectSchema, NotAuthorizedSchema
 from data_rentgen.server.schemas.v1 import (
     LineageResponseV1,
     PageResponseV1,
@@ -17,7 +17,11 @@ from data_rentgen.server.schemas.v1 import (
 from data_rentgen.server.services import LineageService, RunService, get_user
 from data_rentgen.server.utils.lineage_response import build_lineage_response
 
-router = APIRouter(prefix="/runs", tags=["Runs"], responses=get_error_responses(include={InvalidRequestSchema}))
+router = APIRouter(
+    prefix="/runs",
+    tags=["Runs"],
+    responses=get_error_responses(include={NotAuthorizedSchema, NotAuthorizedRedirectSchema, InvalidRequestSchema}),
+)
 
 
 @router.get("", summary="Paginated list of Runs")

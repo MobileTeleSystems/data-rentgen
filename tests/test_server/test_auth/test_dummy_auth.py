@@ -24,7 +24,7 @@ async def test_dummy_auth_invalid_token(
     assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
     assert response.json() == {
         "error": {"code": "unauthorized", "details": None, "message": "Invalid token"},
-    }, response.json()
+    }
 
 
 async def test_dummy_auth_expired_token(
@@ -46,7 +46,7 @@ async def test_dummy_auth_expired_token(
     assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
     assert response.json() == {
         "error": {"code": "unauthorized", "details": None, "message": "Invalid token"},
-    }, response.json()
+    }
 
 
 async def test_dummy_auth_unexisting_user(
@@ -72,7 +72,7 @@ async def test_dummy_auth_unexisting_user(
             "details": {"entity_type": "User", "field": "user_id", "value": user.id + 666},
             "message": f"User with user_id={user.id + 666} not found",
         },
-    }, response.json()
+    }
 
 
 async def test_dummy_auth_logout_not_implemented(
@@ -98,7 +98,7 @@ async def test_dummy_auth_logout_not_implemented(
             "details": None,
             "message": "Logout method is not implemented for DummyAuthProvider.",
         },
-    }, response.json()
+    }
 
 
 async def test_dummy_auth_generate_valid_token(

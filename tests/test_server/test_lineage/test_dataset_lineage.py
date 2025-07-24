@@ -38,7 +38,7 @@ async def test_get_dataset_lineage_unauthorized(
     assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
     assert response.json() == {
         "error": {"code": "unauthorized", "details": None, "message": "Missing auth credentials"},
-    }, response.json()
+    }
 
 
 async def test_get_dataset_lineage_no_relations(
