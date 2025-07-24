@@ -5,6 +5,7 @@ from tests.test_server.fixtures.factories.job import job_factory
 from tests.test_server.fixtures.factories.location import location_factory
 from tests.test_server.fixtures.factories.operation import operation_factory
 from tests.test_server.fixtures.factories.output import output_factory
+from tests.test_server.fixtures.factories.personal_token import personal_token_factory
 from tests.test_server.fixtures.factories.run import run_factory
 from tests.test_server.fixtures.factories.user import user_factory
 
@@ -16,6 +17,7 @@ __all__ = [
     "location_factory",
     "operation_factory",
     "output_factory",
+    "personal_token_factory",
     "run_factory",
     "user_factory",
 ]

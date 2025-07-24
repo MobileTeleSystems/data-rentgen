@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 from pydantic import BaseModel, ConfigDict, Field, ImportString
 
+from data_rentgen.server.settings.auth.personal_token import PersonalTokenSettings
+
 
 class AuthSettings(BaseModel):
     """Authorization-related settings.
@@ -23,6 +25,12 @@ class AuthSettings(BaseModel):
         default="data_rentgen.server.providers.auth.dummy_provider.DummyAuthProvider",
         description="Full name of auth provider class",
         validate_default=True,
+    )
+    # switching between auth provider class doesn't change how Personal Tokens are treated,
+    # so these are in separate settings
+    personal_tokens: PersonalTokenSettings = Field(
+        default_factory=PersonalTokenSettings,
+        description="Settings for generating Personal Access Tokens",
     )
 
     model_config = ConfigDict(extra="allow")

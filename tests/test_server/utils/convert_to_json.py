@@ -18,6 +18,7 @@ if TYPE_CHECKING:
         Job,
         Location,
         Operation,
+        PersonalToken,
         Run,
         Schema,
         TagValue,
@@ -266,3 +267,13 @@ def operation_to_json(operation: Operation):
 
 def operations_to_json(operations: list[Operation]):
     return {str(operation.id): operation_to_json(operation) for operation in operations}
+
+
+def personal_token_to_json(user_token: PersonalToken):
+    return {
+        "id": str(user_token.id),
+        "name": user_token.name,
+        "scopes": user_token.scopes,
+        "since": user_token.since.isoformat(),  # type: ignore[union-attr]
+        "until": user_token.until.isoformat(),  # type: ignore[union-attr]
+    }

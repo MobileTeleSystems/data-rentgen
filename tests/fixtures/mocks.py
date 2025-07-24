@@ -23,8 +23,8 @@ async def mocked_user(
     access_token_factory: Callable[[int], str],
 ) -> MockedUser:
     access_token = access_token_factory(user.id)
-    yield MockedUser(
-        user=user.name,
+    return MockedUser(
+        user=user,
         access_token=access_token,
     )
 

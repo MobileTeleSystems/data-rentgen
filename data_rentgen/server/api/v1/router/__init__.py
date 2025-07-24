@@ -7,6 +7,7 @@ from data_rentgen.server.api.v1.router.dataset import router as dataset_router
 from data_rentgen.server.api.v1.router.job import router as job_router
 from data_rentgen.server.api.v1.router.location import router as location_router
 from data_rentgen.server.api.v1.router.operation import router as operation_router
+from data_rentgen.server.api.v1.router.personal_token import router as personal_token_router
 from data_rentgen.server.api.v1.router.run import router as run_router
 from data_rentgen.server.api.v1.router.user import router as user_router
 
@@ -18,3 +19,4 @@ router.include_router(location_router)
 router.include_router(operation_router)
 router.include_router(run_router)
 router.include_router(user_router)
+router.include_router(personal_token_router)
