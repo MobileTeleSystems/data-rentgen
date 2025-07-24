@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import BigInteger, Computed, ForeignKey, Index, String, UniqueConstraint, select
+from sqlalchemy import BigInteger, Column, Computed, ForeignKey, Index, String, UniqueConstraint, select
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
@@ -45,6 +45,10 @@ class Job(Base):
         doc="Job type",
     )
 
+    type = column_property(
+        select(JobType.type).where(Column("type_id") == JobType.id).scalar_subquery(),
+    )
+
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,
         Computed(
@@ -64,6 +68,3 @@ class Job(Base):
         deferred=True,
         doc="Full-text search vector",
     )
-
-
-Job.type = column_property(select(JobType.type).where(Job.type_id == JobType.id).scalar_subquery())

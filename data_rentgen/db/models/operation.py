@@ -8,7 +8,7 @@ from enum import Enum, IntEnum
 from uuid import UUID
 
 from sqlalchemy import UUID as SQL_UUID
-from sqlalchemy import BigInteger, DateTime, Integer, PrimaryKeyConstraint, SmallInteger, String, select
+from sqlalchemy import BigInteger, Column, DateTime, Integer, PrimaryKeyConstraint, SmallInteger, String, select
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
 
@@ -116,11 +116,8 @@ class Operation(Base):
         doc="Sql query of operation",
     )
 
-    sql_query: Mapped[SQLQuery | None] = relationship(
-        SQLQuery,
-        primaryjoin="Operation.sql_query_id == SQLQuery.id",
-        lazy="noload",
-        foreign_keys=[sql_query_id],
+    sql_query = column_property(
+        select(SQLQuery.query).where(Column("sql_query_id") == SQLQuery.id).scalar_subquery(),
     )
 
     started_at: Mapped[datetime | None] = mapped_column(
@@ -133,8 +130,3 @@ class Operation(Base):
         nullable=True,
         doc="End time of the operation",
     )
-
-
-Operation.sql_query = column_property(
-    select(SQLQuery.query).where(Operation.sql_query_id == SQLQuery.id).scalar_subquery(),
-)
