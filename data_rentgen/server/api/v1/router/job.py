@@ -6,7 +6,8 @@ from fastapi import APIRouter, Depends, Query
 
 from data_rentgen.db.models import User
 from data_rentgen.server.errors import get_error_responses
-from data_rentgen.server.errors.schemas import InvalidRequestSchema
+from data_rentgen.server.errors.schemas.invalid_request import InvalidRequestSchema
+from data_rentgen.server.errors.schemas.not_authorized import NotAuthorizedRedirectSchema, NotAuthorizedSchema
 from data_rentgen.server.schemas.v1 import (
     JobDetailedResponseV1,
     JobLineageQueryV1,
@@ -17,7 +18,11 @@ from data_rentgen.server.schemas.v1 import (
 from data_rentgen.server.services import JobService, LineageService, get_user
 from data_rentgen.server.utils.lineage_response import build_lineage_response
 
-router = APIRouter(prefix="/jobs", tags=["Jobs"], responses=get_error_responses(include={InvalidRequestSchema}))
+router = APIRouter(
+    prefix="/jobs",
+    tags=["Jobs"],
+    responses=get_error_responses(include={NotAuthorizedSchema, NotAuthorizedRedirectSchema, InvalidRequestSchema}),
+)
 
 
 @router.get("", summary="Paginated list of Jobs")
