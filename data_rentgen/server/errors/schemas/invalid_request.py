@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import http
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
-from typing_extensions import Literal
 
 from data_rentgen.server.errors.base import BaseErrorSchema
 from data_rentgen.server.errors.registration import register_error_response

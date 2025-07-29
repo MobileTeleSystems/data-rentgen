@@ -6,25 +6,6 @@ import pytest
 from uuid6 import UUID
 
 from data_rentgen.consumer.extractors.impl import SparkExtractor
-from data_rentgen.consumer.openlineage.job import OpenLineageJob
-from data_rentgen.consumer.openlineage.job_facets import (
-    OpenLineageJobFacets,
-    OpenLineageJobProcessingType,
-    OpenLineageJobTypeJobFacet,
-    OpenLineageSqlJobFacet,
-)
-from data_rentgen.consumer.openlineage.run import OpenLineageRun
-from data_rentgen.consumer.openlineage.run_event import (
-    OpenLineageRunEvent,
-    OpenLineageRunEventType,
-)
-from data_rentgen.consumer.openlineage.run_facets import (
-    OpenLineageParentJob,
-    OpenLineageParentRun,
-    OpenLineageParentRunFacet,
-    OpenLineageRunFacets,
-    OpenLineageSparkJobDetailsRunFacet,
-)
 from data_rentgen.dto import (
     JobDTO,
     LocationDTO,
@@ -33,6 +14,25 @@ from data_rentgen.dto import (
     OperationTypeDTO,
     RunDTO,
     SQLQueryDTO,
+)
+from data_rentgen.openlineage.job import OpenLineageJob
+from data_rentgen.openlineage.job_facets import (
+    OpenLineageJobFacets,
+    OpenLineageJobProcessingType,
+    OpenLineageJobTypeJobFacet,
+    OpenLineageSqlJobFacet,
+)
+from data_rentgen.openlineage.run import OpenLineageRun
+from data_rentgen.openlineage.run_event import (
+    OpenLineageRunEvent,
+    OpenLineageRunEventType,
+)
+from data_rentgen.openlineage.run_facets import (
+    OpenLineageParentJob,
+    OpenLineageParentRun,
+    OpenLineageParentRunFacet,
+    OpenLineageRunFacets,
+    OpenLineageSparkJobDetailsRunFacet,
 )
 
 

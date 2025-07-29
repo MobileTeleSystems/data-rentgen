@@ -12,7 +12,7 @@ from data_rentgen.consumer.extractors.impl import (
     SparkExtractor,
     UnknownExtractor,
 )
-from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
+from data_rentgen.openlineage.run_event import OpenLineageRunEvent
 
 
 class BatchExtractor:

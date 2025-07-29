@@ -6,12 +6,13 @@ from unittest.mock import Mock
 import pytest
 
 from data_rentgen.consumer.extractors.generic import GenericExtractor
-from data_rentgen.consumer.openlineage.dataset import (
+from data_rentgen.dto import DatasetDTO, InputDTO, LocationDTO, OperationDTO, OutputDTO, OutputTypeDTO, SchemaDTO
+from data_rentgen.openlineage.dataset import (
     OpenLineageDataset,
     OpenLineageInputDataset,
     OpenLineageOutputDataset,
 )
-from data_rentgen.consumer.openlineage.dataset_facets import (
+from data_rentgen.openlineage.dataset_facets import (
     OpenLineageDatasetFacets,
     OpenLineageDatasetLifecycleStateChange,
     OpenLineageInputDatasetFacets,
@@ -22,8 +23,7 @@ from data_rentgen.consumer.openlineage.dataset_facets import (
     OpenLineageSchemaDatasetFacet,
     OpenLineageSchemaField,
 )
-from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
-from data_rentgen.dto import DatasetDTO, InputDTO, LocationDTO, OperationDTO, OutputDTO, OutputTypeDTO, SchemaDTO
+from data_rentgen.openlineage.run_event import OpenLineageRunEvent
 
 
 @pytest.mark.parametrize("dataset_type", [OpenLineageInputDataset, OpenLineageOutputDataset])

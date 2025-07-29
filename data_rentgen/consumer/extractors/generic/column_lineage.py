@@ -5,17 +5,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from datetime import datetime
 
-from data_rentgen.consumer.openlineage.dataset import (
-    OpenLineageDataset,
-    OpenLineageOutputDataset,
-)
-from data_rentgen.consumer.openlineage.dataset_facets import (
-    OpenLineageColumnLineageDatasetFacetField,
-    OpenLineageColumnLineageDatasetFacetFieldRef,
-    OpenLineageColumnLineageDatasetFacetFieldTransformation,
-    OpenLineageSymlinkIdentifier,
-)
-from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
 from data_rentgen.dto import (
     ColumnLineageDTO,
     DatasetColumnRelationDTO,
@@ -23,6 +12,17 @@ from data_rentgen.dto import (
     DatasetDTO,
     OperationDTO,
 )
+from data_rentgen.openlineage.dataset import (
+    OpenLineageDataset,
+    OpenLineageOutputDataset,
+)
+from data_rentgen.openlineage.dataset_facets import (
+    OpenLineageColumnLineageDatasetFacetField,
+    OpenLineageColumnLineageDatasetFacetFieldRef,
+    OpenLineageColumnLineageDatasetFacetFieldTransformation,
+    OpenLineageSymlinkIdentifier,
+)
+from data_rentgen.openlineage.run_event import OpenLineageRunEvent
 
 TRANSFORMATION_TYPE_DIRECT = "DIRECT"
 TRANSFORMATION_TYPE_INDIRECT = "INDIRECT"

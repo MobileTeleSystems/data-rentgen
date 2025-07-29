@@ -5,17 +5,17 @@ from uuid6 import UUID
 
 from data_rentgen.consumer.extractors import BatchExtractor
 from data_rentgen.consumer.extractors.generic import GenericExtractor
-from data_rentgen.consumer.openlineage.dataset_facets import (
-    OpenLineageColumnLineageDatasetFacet,
-    OpenLineageColumnLineageDatasetFacetField,
-    OpenLineageColumnLineageDatasetFacetFieldRef,
-    OpenLineageColumnLineageDatasetFacetFieldTransformation,
-)
 from data_rentgen.dto import (
     ColumnLineageDTO,
     DatasetColumnRelationDTO,
     DatasetColumnRelationTypeDTO,
     DatasetDTO,
+)
+from data_rentgen.openlineage.dataset_facets import (
+    OpenLineageColumnLineageDatasetFacet,
+    OpenLineageColumnLineageDatasetFacetField,
+    OpenLineageColumnLineageDatasetFacetFieldRef,
+    OpenLineageColumnLineageDatasetFacetFieldTransformation,
 )
 from data_rentgen.utils.uuid import extract_timestamp_from_uuid
 from tests.test_consumer.test_extractors.fixtures.column_lineage_raw import (

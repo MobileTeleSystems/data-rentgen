@@ -7,12 +7,12 @@ from urllib.parse import quote
 from packaging.version import Version
 
 from data_rentgen.consumer.extractors.generic import GenericExtractor
-from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
-from data_rentgen.consumer.openlineage.run_facets import (
+from data_rentgen.dto import OperationDTO, RunDTO, RunStartReasonDTO, UserDTO
+from data_rentgen.openlineage.run_event import OpenLineageRunEvent
+from data_rentgen.openlineage.run_facets import (
     OpenLineageAirflowDagRunType,
     OpenLineageAirflowTaskRunFacet,
 )
-from data_rentgen.dto import OperationDTO, RunDTO, RunStartReasonDTO, UserDTO
 
 
 class AirflowTaskExtractor(GenericExtractor):

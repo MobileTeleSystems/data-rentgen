@@ -1,19 +1,19 @@
 from data_rentgen.consumer.extractors.generic import GenericExtractor
 from data_rentgen.consumer.extractors.impl import DbtExtractor, FlinkExtractor, SparkExtractor
-from data_rentgen.consumer.openlineage.dataset import (
-    OpenLineageDataset,
-)
-from data_rentgen.consumer.openlineage.dataset_facets import (
-    OpenLineageDatasetFacets,
-    OpenLineageSymlinkIdentifier,
-    OpenLineageSymlinksDatasetFacet,
-    OpenLineageSymlinkType,
-)
 from data_rentgen.dto import (
     DatasetDTO,
     DatasetSymlinkDTO,
     DatasetSymlinkTypeDTO,
     LocationDTO,
+)
+from data_rentgen.openlineage.dataset import (
+    OpenLineageDataset,
+)
+from data_rentgen.openlineage.dataset_facets import (
+    OpenLineageDatasetFacets,
+    OpenLineageSymlinkIdentifier,
+    OpenLineageSymlinksDatasetFacet,
+    OpenLineageSymlinkType,
 )
 
 

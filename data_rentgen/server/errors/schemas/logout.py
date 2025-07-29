@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import http
-from typing import Any
-
-from typing_extensions import Literal
+from typing import Any, Literal
 
 from data_rentgen.exceptions.auth import LogoutError
 from data_rentgen.server.errors.base import BaseErrorSchema

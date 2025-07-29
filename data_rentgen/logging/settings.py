@@ -3,10 +3,10 @@
 
 import textwrap
 from pathlib import Path
+from typing import Literal
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from typing_extensions import Literal
 
 
 class LoggingSettings(BaseSettings):
@@ -73,7 +73,7 @@ class LoggingSettings(BaseSettings):
         ),
     )
 
-    custom_config_path: Path | None = Field(  # noqa: FA102
+    custom_config_path: Path | None = Field(
         default=None,
         description=textwrap.dedent(
             """

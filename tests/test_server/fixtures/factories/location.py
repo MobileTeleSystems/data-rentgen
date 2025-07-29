@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from random import choice, randint
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import pytest_asyncio
 
@@ -11,7 +11,7 @@ from tests.test_server.fixtures.factories.base import random_string
 from tests.test_server.utils.delete import clean_db
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator
+    from collections.abc import AsyncGenerator, Callable
     from contextlib import AbstractAsyncContextManager
 
     import pytest
@@ -136,7 +136,7 @@ async def locations_search(
         async_session.expunge_all()
 
     location_by_name = {location.name: location for location in locations}
-    location_by_address = dict(zip(address_urls, locations))
+    location_by_address = dict(zip(address_urls, locations, strict=False))
 
     yield location_by_name, location_by_address
 

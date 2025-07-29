@@ -1,19 +1,19 @@
 import pytest
 
-from data_rentgen.consumer.openlineage.dataset import OpenLineageInputDataset, OpenLineageOutputDataset
-from data_rentgen.consumer.openlineage.dataset_facets import OpenLineageDatasetFacets, OpenLineageOutputDatasetFacets
-from data_rentgen.consumer.openlineage.dataset_facets.lifecycle_change import (
+from data_rentgen.openlineage.dataset import OpenLineageInputDataset, OpenLineageOutputDataset
+from data_rentgen.openlineage.dataset_facets import OpenLineageDatasetFacets, OpenLineageOutputDatasetFacets
+from data_rentgen.openlineage.dataset_facets.lifecycle_change import (
     OpenLineageDatasetLifecycleStateChange,
     OpenLineageLifecycleStateChangeDatasetFacet,
 )
-from data_rentgen.consumer.openlineage.dataset_facets.output_statistics import (
+from data_rentgen.openlineage.dataset_facets.output_statistics import (
     OpenLineageOutputStatisticsOutputDatasetFacet,
 )
-from data_rentgen.consumer.openlineage.dataset_facets.schema import (
+from data_rentgen.openlineage.dataset_facets.schema import (
     OpenLineageSchemaDatasetFacet,
     OpenLineageSchemaField,
 )
-from data_rentgen.consumer.openlineage.dataset_facets.symlinks import (
+from data_rentgen.openlineage.dataset_facets.symlinks import (
     OpenLineageSymlinkIdentifier,
     OpenLineageSymlinksDatasetFacet,
     OpenLineageSymlinkType,
