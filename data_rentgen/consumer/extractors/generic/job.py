@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from urllib.parse import urlparse
 
-from data_rentgen.consumer.openlineage.job import OpenLineageJob
-from data_rentgen.consumer.openlineage.run_facets import (
-    OpenLineageParentJob,
-)
 from data_rentgen.dto import (
     JobDTO,
     JobTypeDTO,
     LocationDTO,
+)
+from data_rentgen.openlineage.job import OpenLineageJob
+from data_rentgen.openlineage.run_facets import (
+    OpenLineageParentJob,
 )
 
 

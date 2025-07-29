@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from random import randint
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import pytest_asyncio
 from sqlalchemy import delete
@@ -10,7 +10,7 @@ from data_rentgen.db.models import User
 from tests.test_server.fixtures.factories.base import random_string
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator
+    from collections.abc import AsyncGenerator, Callable
     from contextlib import AbstractAsyncContextManager
 
     import pytest

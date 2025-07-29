@@ -1,9 +1,6 @@
 import pytest
 
 from data_rentgen.consumer.extractors import BatchExtractor
-from data_rentgen.consumer.openlineage.run_event import (
-    OpenLineageRunEvent,
-)
 from data_rentgen.dto import (
     DatasetDTO,
     InputDTO,
@@ -14,6 +11,9 @@ from data_rentgen.dto import (
     RunDTO,
     SchemaDTO,
     SQLQueryDTO,
+)
+from data_rentgen.openlineage.run_event import (
+    OpenLineageRunEvent,
 )
 
 

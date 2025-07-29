@@ -488,7 +488,7 @@ async def test_get_dataset_lineage_with_granularity_dataset_and_symlinks(
     # If start dataset is ds2 and depth = 2 we should have this lineage: d1->ds2 d2->ds3 d3 -> ds4
     datasets, symlink_datasets = lineage.datasets[:3], lineage.datasets[5:]
     lineage_dataset = symlink_datasets[0]
-    dataset_pairs_ids = [(from_.id, to.id) for (from_, to) in zip(datasets, symlink_datasets)]
+    dataset_pairs_ids = [(from_.id, to.id) for (from_, to) in zip(datasets, symlink_datasets, strict=False)]
 
     dataset_symlinks = lineage.dataset_symlinks
     inputs_by_dataset_id = {input_.dataset_id: input_ for input_ in lineage.inputs}

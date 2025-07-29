@@ -4,19 +4,19 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from data_rentgen.consumer.openlineage.job import OpenLineageJob
-from data_rentgen.consumer.openlineage.run_event import (
-    OpenLineageRunEvent,
-    OpenLineageRunEventType,
-)
-from data_rentgen.consumer.openlineage.run_facets import (
-    OpenLineageParentJob,
-    OpenLineageParentRunFacet,
-)
 from data_rentgen.dto import (
     JobDTO,
     RunDTO,
     RunStatusDTO,
+)
+from data_rentgen.openlineage.job import OpenLineageJob
+from data_rentgen.openlineage.run_event import (
+    OpenLineageRunEvent,
+    OpenLineageRunEventType,
+)
+from data_rentgen.openlineage.run_facets import (
+    OpenLineageParentJob,
+    OpenLineageParentRunFacet,
 )
 
 

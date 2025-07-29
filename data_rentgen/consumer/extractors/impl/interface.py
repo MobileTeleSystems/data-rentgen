@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from data_rentgen.consumer.openlineage.dataset import (
+from data_rentgen.dto import ColumnLineageDTO, DatasetSymlinkDTO, InputDTO, OperationDTO, OutputDTO, RunDTO
+from data_rentgen.openlineage.dataset import (
     OpenLineageInputDataset,
     OpenLineageOutputDataset,
 )
-from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
-from data_rentgen.dto import ColumnLineageDTO, DatasetSymlinkDTO, InputDTO, OperationDTO, OutputDTO, RunDTO
+from data_rentgen.openlineage.run_event import OpenLineageRunEvent
 
 
 class ExtractorInterface(Protocol):

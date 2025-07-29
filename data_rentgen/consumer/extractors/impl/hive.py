@@ -5,12 +5,6 @@ from __future__ import annotations
 from typing import cast
 
 from data_rentgen.consumer.extractors.generic import GenericExtractor
-from data_rentgen.consumer.openlineage.dataset import OpenLineageOutputDataset
-from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
-from data_rentgen.consumer.openlineage.run_facets import (
-    OpenLineageHiveQueryInfoRunFacet,
-    OpenLineageHiveSessionInfoRunFacet,
-)
 from data_rentgen.dto import (
     JobDTO,
     JobTypeDTO,
@@ -19,6 +13,12 @@ from data_rentgen.dto import (
     RunDTO,
     RunStatusDTO,
     UserDTO,
+)
+from data_rentgen.openlineage.dataset import OpenLineageOutputDataset
+from data_rentgen.openlineage.run_event import OpenLineageRunEvent
+from data_rentgen.openlineage.run_facets import (
+    OpenLineageHiveQueryInfoRunFacet,
+    OpenLineageHiveSessionInfoRunFacet,
 )
 from data_rentgen.utils.uuid import generate_incremental_uuid
 

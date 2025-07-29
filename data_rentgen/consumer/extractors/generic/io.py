@@ -5,15 +5,6 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 
-from data_rentgen.consumer.openlineage.dataset import (
-    OpenLineageDataset,
-    OpenLineageInputDataset,
-    OpenLineageOutputDataset,
-)
-from data_rentgen.consumer.openlineage.dataset_facets import (
-    OpenLineageSchemaField,
-)
-from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
 from data_rentgen.dto import (
     DatasetDTO,
     DatasetSymlinkDTO,
@@ -24,6 +15,15 @@ from data_rentgen.dto import (
     OutputTypeDTO,
     SchemaDTO,
 )
+from data_rentgen.openlineage.dataset import (
+    OpenLineageDataset,
+    OpenLineageInputDataset,
+    OpenLineageOutputDataset,
+)
+from data_rentgen.openlineage.dataset_facets import (
+    OpenLineageSchemaField,
+)
+from data_rentgen.openlineage.run_event import OpenLineageRunEvent
 
 METASTORE = DatasetSymlinkTypeDTO.METASTORE
 WAREHOUSE = DatasetSymlinkTypeDTO.WAREHOUSE

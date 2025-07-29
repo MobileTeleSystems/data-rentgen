@@ -1,7 +1,6 @@
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
 from contextlib import AbstractAsyncContextManager
 from datetime import UTC, datetime, timedelta
-from typing import Callable
 
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -712,7 +711,7 @@ async def branchy_lineage(
                     "schema_id": schema.id,
                 },
             )
-            for i, (operation, run, job) in enumerate(zip(operations, runs, jobs))
+            for i, (operation, run, job) in enumerate(zip(operations, runs, jobs, strict=False))
         ] + [
             await create_input(
                 async_session,
@@ -725,7 +724,7 @@ async def branchy_lineage(
                     "schema_id": schema.id,
                 },
             )
-            for i, (operation, run, job) in enumerate(zip(operations, runs, jobs))
+            for i, (operation, run, job) in enumerate(zip(operations, runs, jobs, strict=False))
         ]
         lineage.inputs.extend(inputs)
 
@@ -742,7 +741,7 @@ async def branchy_lineage(
                     "schema_id": schema.id,
                 },
             )
-            for i, (operation, run, job) in enumerate(zip(operations, runs, jobs))
+            for i, (operation, run, job) in enumerate(zip(operations, runs, jobs, strict=False))
         ] + [
             await create_output(
                 async_session,
@@ -756,7 +755,7 @@ async def branchy_lineage(
                     "schema_id": schema.id,
                 },
             )
-            for i, (operation, run, job) in enumerate(zip(operations, runs, jobs))
+            for i, (operation, run, job) in enumerate(zip(operations, runs, jobs, strict=False))
         ]
         lineage.outputs.extend(outputs)
 
@@ -799,7 +798,7 @@ async def lineage_with_symlinks(
         lineage.datasets.extend(symlink_datasets)
 
         # Make symlinks
-        for dataset, symlink_dataset in zip(datasets, symlink_datasets):
+        for dataset, symlink_dataset in zip(datasets, symlink_datasets, strict=False):
             metastore = [await make_symlink(async_session, dataset, symlink_dataset, DatasetSymlinkType.METASTORE)]
             lineage.dataset_symlinks.extend(metastore)
 
@@ -897,7 +896,7 @@ async def lineage_with_symlinks_dataset_granularity(
         lineage.datasets.extend(symlink_datasets)
 
         # Make symlinks
-        for dataset, symlink_dataset in zip(datasets, symlink_datasets):
+        for dataset, symlink_dataset in zip(datasets, symlink_datasets, strict=False):
             metastore = [await make_symlink(async_session, dataset, symlink_dataset, DatasetSymlinkType.METASTORE)]
             lineage.dataset_symlinks.extend(metastore)
 
@@ -1179,7 +1178,11 @@ async def lineage_with_different_dataset_interactions(
                     "schema_id": schema.id,
                 },
             )
-            for operation, type_ in zip(operations, [OutputType.OVERWRITE, OutputType.TRUNCATE, OutputType.DROP])
+            for operation, type_ in zip(
+                operations,
+                [OutputType.OVERWRITE, OutputType.TRUNCATE, OutputType.DROP],
+                strict=False,
+            )
         ]
         lineage.outputs.extend(outputs)
 

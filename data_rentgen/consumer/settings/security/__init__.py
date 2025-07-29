@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from typing import Annotated, Union
+from typing import Annotated
 
 from pydantic import Discriminator
 
@@ -10,13 +10,11 @@ from data_rentgen.consumer.settings.security.plain import KafkaSecurityPlaintext
 from data_rentgen.consumer.settings.security.scram import KafkaSecurityScram256Settings, KafkaSecurityScram512Settings
 
 KafkaSecuritySettings = Annotated[
-    Union[
-        KafkaSecurityAnonymousSettings,
-        KafkaSecurityScram256Settings,
-        KafkaSecurityScram512Settings,
-        KafkaSecurityPlaintextSettings,
-        KafkaSecurityGSSAPISettings,
-    ],
+    KafkaSecurityAnonymousSettings
+    | KafkaSecurityScram256Settings
+    | KafkaSecurityScram512Settings
+    | KafkaSecurityPlaintextSettings
+    | KafkaSecurityGSSAPISettings,
     Discriminator("type"),
 ]
 

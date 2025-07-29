@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 from random import choice, randint
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import pytest_asyncio
 
@@ -13,7 +13,7 @@ from tests.test_server.fixtures.factories.sql_query import create_sql_query
 from tests.test_server.utils.delete import clean_db
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator
+    from collections.abc import AsyncGenerator, Callable
     from contextlib import AbstractAsyncContextManager
 
     import pytest

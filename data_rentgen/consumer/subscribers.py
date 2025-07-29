@@ -15,8 +15,8 @@ from pydantic import TypeAdapter
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.consumer.extractors import BatchExtractionResult, BatchExtractor
-from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
 from data_rentgen.dependencies import Stub
+from data_rentgen.openlineage.run_event import OpenLineageRunEvent
 from data_rentgen.services.uow import UnitOfWork
 
 __all__ = [

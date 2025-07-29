@@ -3,11 +3,11 @@ from datetime import datetime, timezone
 import pytest
 from uuid6 import UUID
 
-from data_rentgen.consumer.openlineage.dataset import (
+from data_rentgen.openlineage.dataset import (
     OpenLineageInputDataset,
     OpenLineageOutputDataset,
 )
-from data_rentgen.consumer.openlineage.dataset_facets import (
+from data_rentgen.openlineage.dataset_facets import (
     OpenLineageColumnLineageDatasetFacet,
     OpenLineageColumnLineageDatasetFacetField,
     OpenLineageColumnLineageDatasetFacetFieldRef,
@@ -18,19 +18,19 @@ from data_rentgen.consumer.openlineage.dataset_facets import (
     OpenLineageSchemaDatasetFacet,
     OpenLineageSchemaField,
 )
-from data_rentgen.consumer.openlineage.job import OpenLineageJob
-from data_rentgen.consumer.openlineage.job_facets import (
+from data_rentgen.openlineage.job import OpenLineageJob
+from data_rentgen.openlineage.job_facets import (
     OpenLineageJobFacets,
     OpenLineageJobProcessingType,
     OpenLineageJobTypeJobFacet,
     OpenLineageSqlJobFacet,
 )
-from data_rentgen.consumer.openlineage.run import OpenLineageRun
-from data_rentgen.consumer.openlineage.run_event import (
+from data_rentgen.openlineage.run import OpenLineageRun
+from data_rentgen.openlineage.run_event import (
     OpenLineageRunEvent,
     OpenLineageRunEventType,
 )
-from data_rentgen.consumer.openlineage.run_facets import (
+from data_rentgen.openlineage.run_facets import (
     OpenLineageDbtRunRunFacet,
     OpenLineageParentJob,
     OpenLineageParentRun,

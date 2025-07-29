@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from random import choice, randint
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import pytest_asyncio
 from sqlalchemy import select
@@ -10,7 +10,7 @@ from data_rentgen.db.models import JobType
 from tests.test_server.utils.delete import clean_db
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator
+    from collections.abc import AsyncGenerator, Callable
     from contextlib import AbstractAsyncContextManager
 
     import pytest

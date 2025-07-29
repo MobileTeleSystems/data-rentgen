@@ -6,23 +6,6 @@ import pytest
 from uuid6 import UUID
 
 from data_rentgen.consumer.extractors.impl import UnknownExtractor
-from data_rentgen.consumer.openlineage.job import OpenLineageJob
-from data_rentgen.consumer.openlineage.job_facets import (
-    OpenLineageJobFacets,
-    OpenLineageJobProcessingType,
-    OpenLineageJobTypeJobFacet,
-)
-from data_rentgen.consumer.openlineage.run import OpenLineageRun
-from data_rentgen.consumer.openlineage.run_event import (
-    OpenLineageRunEvent,
-    OpenLineageRunEventType,
-)
-from data_rentgen.consumer.openlineage.run_facets import DataRentgenRunInfoFacet, OpenLineageRunFacets
-from data_rentgen.consumer.openlineage.run_facets.parent_run import (
-    OpenLineageParentJob,
-    OpenLineageParentRun,
-    OpenLineageParentRunFacet,
-)
 from data_rentgen.dto import (
     JobDTO,
     JobTypeDTO,
@@ -31,6 +14,23 @@ from data_rentgen.dto import (
     RunStartReasonDTO,
     RunStatusDTO,
     UserDTO,
+)
+from data_rentgen.openlineage.job import OpenLineageJob
+from data_rentgen.openlineage.job_facets import (
+    OpenLineageJobFacets,
+    OpenLineageJobProcessingType,
+    OpenLineageJobTypeJobFacet,
+)
+from data_rentgen.openlineage.run import OpenLineageRun
+from data_rentgen.openlineage.run_event import (
+    OpenLineageRunEvent,
+    OpenLineageRunEventType,
+)
+from data_rentgen.openlineage.run_facets import DataRentgenRunInfoFacet, OpenLineageRunFacets
+from data_rentgen.openlineage.run_facets.parent_run import (
+    OpenLineageParentJob,
+    OpenLineageParentRun,
+    OpenLineageParentRunFacet,
 )
 
 

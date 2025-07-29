@@ -6,28 +6,28 @@ from packaging.version import Version
 from uuid6 import UUID
 
 from data_rentgen.consumer.extractors.impl import FlinkExtractor
-from data_rentgen.consumer.openlineage.job import OpenLineageJob
-from data_rentgen.consumer.openlineage.job_facets import (
-    OpenLineageJobFacets,
-    OpenLineageJobProcessingType,
-    OpenLineageJobTypeJobFacet,
-)
-from data_rentgen.consumer.openlineage.run import OpenLineageRun
-from data_rentgen.consumer.openlineage.run_event import (
-    OpenLineageRunEvent,
-    OpenLineageRunEventType,
-)
-from data_rentgen.consumer.openlineage.run_facets import (
-    OpenLineageFlinkJobDetailsRunFacet,
-    OpenLineageProcessingEngineRunFacet,
-    OpenLineageRunFacets,
-)
 from data_rentgen.dto import (
     JobDTO,
     JobTypeDTO,
     LocationDTO,
     RunDTO,
     RunStatusDTO,
+)
+from data_rentgen.openlineage.job import OpenLineageJob
+from data_rentgen.openlineage.job_facets import (
+    OpenLineageJobFacets,
+    OpenLineageJobProcessingType,
+    OpenLineageJobTypeJobFacet,
+)
+from data_rentgen.openlineage.run import OpenLineageRun
+from data_rentgen.openlineage.run_event import (
+    OpenLineageRunEvent,
+    OpenLineageRunEventType,
+)
+from data_rentgen.openlineage.run_facets import (
+    OpenLineageFlinkJobDetailsRunFacet,
+    OpenLineageProcessingEngineRunFacet,
+    OpenLineageRunFacets,
 )
 
 

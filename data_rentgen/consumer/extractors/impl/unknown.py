@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from data_rentgen.consumer.extractors.generic import GenericExtractor
-from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
 from data_rentgen.dto import OperationDTO, RunDTO
 from data_rentgen.dto.run import RunStartReasonDTO
 from data_rentgen.dto.user import UserDTO
+from data_rentgen.openlineage.run_event import OpenLineageRunEvent
 
 
 class UnknownExtractor(GenericExtractor):

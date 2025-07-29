@@ -205,6 +205,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
+target-version = "py310"
 line-length = 120
 extend-exclude = ["docs/", "Makefile"]
 
@@ -214,7 +215,7 @@ select = ["ALL"]
 ignore = ["ARG", "ANN", "D", "COM812", "TD", "FIX002", "RUF005"]
 
 [tool.ruff.lint.per-file-ignores]
-"data_rentgen/server/services/*" = ["PLR0913", "FA102"]
+"data_rentgen/server/services/*" = ["PLR0913"]
 "data_rentgen/server/schemas/*" = ["TC"]
 "data_rentgen/server/middlewares/*" = ["TC"]
 "data_rentgen/dto/*" = ["TC"]
@@ -223,11 +224,11 @@ ignore = ["ARG", "ANN", "D", "COM812", "TD", "FIX002", "RUF005"]
 "data_rentgen/db/utils/*" = ["INP001"]
 "data_rentgen/db/utils/uuid.py" = ["A005"]
 "data_rentgen/db/scripts/*" = ["TC"]
-"data_rentgen/db/repositories/*" = ["TC", "FA102", "PLR0913"]
-"data_rentgen/db/models/*" = ["TC", "FA102"]
+"data_rentgen/db/repositories/*" = ["TC", "PLR0913"]
+"data_rentgen/db/models/*" = ["TC"]
 "data_rentgen/db/migrations/*" = ["INP001", "E501", "S608"]
-"data_rentgen/consumer/*" = ["TC", "B008", "FA102"]
-"data_rentgen/consumer/openlineage/*" = ["N815"]
+"data_rentgen/consumer/*" = ["TC", "B008"]
+"data_rentgen/openlineage/*" = ["N815"]
 "data_rentgen/utils/uuid.py" = ["A005"]
 "data_rentgen/logging/*" = ["A005"]
 

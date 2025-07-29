@@ -1,11 +1,11 @@
 from data_rentgen.consumer.extractors.generic import GenericExtractor
-from data_rentgen.consumer.openlineage.job import OpenLineageJob
-from data_rentgen.consumer.openlineage.job_facets import (
+from data_rentgen.dto import JobDTO, JobTypeDTO, LocationDTO
+from data_rentgen.openlineage.job import OpenLineageJob
+from data_rentgen.openlineage.job_facets import (
     OpenLineageJobFacets,
     OpenLineageJobProcessingType,
     OpenLineageJobTypeJobFacet,
 )
-from data_rentgen.dto import JobDTO, JobTypeDTO, LocationDTO
 
 
 def test_extractors_extract_job_spark_yarn():

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from random import randint
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import pytest_asyncio
 
@@ -13,7 +13,7 @@ from tests.test_server.fixtures.factories.tag import create_tag, create_tag_valu
 from tests.test_server.utils.delete import clean_db
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator
+    from collections.abc import AsyncGenerator, Callable
     from contextlib import AbstractAsyncContextManager
 
     import pytest
@@ -133,7 +133,7 @@ async def datasets_with_symlinks(
             datasets.append(await create_dataset(async_session, location_id=location.id, dataset_kwargs=params))
 
         dataset_symlinks = []
-        for dataset1, dataset2 in zip(datasets, datasets[1:] + datasets[:1]):
+        for dataset1, dataset2 in zip(datasets, datasets[1:] + datasets[:1], strict=False):
             # Connect datasets like this
             # Dataset0 - METASTORE - Dataset1
             # Dataset1 - WAREHOUSE - Dataset0
@@ -257,9 +257,11 @@ async def datasets_search(
         async_session.expunge_all()
 
     datasets_by_name = {dataset.name: dataset for dataset in datasets_with_name}
-    datasets_by_location = dict(zip([location.name for location in locations_with_name], datasets_with_location_name))
+    datasets_by_location = dict(
+        zip([location.name for location in locations_with_name], datasets_with_location_name, strict=False),
+    )
     datasets_by_address = dict(
-        zip(addresses_url, [dataset for dataset in datasets_with_address_urls for _ in range(2)]),
+        zip(addresses_url, [dataset for dataset in datasets_with_address_urls for _ in range(2)], strict=False),
     )
 
     yield datasets_by_name, datasets_by_location, datasets_by_address

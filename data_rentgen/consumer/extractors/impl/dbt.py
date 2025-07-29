@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 from data_rentgen.consumer.extractors.generic import GenericExtractor
-from data_rentgen.consumer.openlineage.dataset import OpenLineageDataset
-from data_rentgen.consumer.openlineage.dataset_facets import (
+from data_rentgen.dto import DatasetDTO, OperationDTO, RunDTO
+from data_rentgen.openlineage.dataset import OpenLineageDataset
+from data_rentgen.openlineage.dataset_facets import (
     OpenLineageColumnLineageDatasetFacetFieldRef,
     OpenLineageSymlinkIdentifier,
 )
-from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
-from data_rentgen.dto import DatasetDTO, OperationDTO, RunDTO
+from data_rentgen.openlineage.run_event import OpenLineageRunEvent
 
 
 class DbtExtractor(GenericExtractor):

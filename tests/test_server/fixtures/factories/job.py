@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from random import randint
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import pytest_asyncio
 
@@ -12,7 +12,7 @@ from tests.test_server.fixtures.factories.location import create_location
 from tests.test_server.utils.delete import clean_db
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator
+    from collections.abc import AsyncGenerator, Callable
     from contextlib import AbstractAsyncContextManager
 
     import pytest
@@ -203,8 +203,10 @@ async def jobs_search(
         async_session.expunge_all()
 
     jobs_by_name = {job.name: job for job in jobs_with_names}
-    jobs_by_location = dict(zip([location.name for location in locations_with_names], jobs_with_location_names))
-    jobs_by_address = dict(zip(addresses_url, [job for job in jobs_with_address_urls for _ in range(2)]))
+    jobs_by_location = dict(
+        zip([location.name for location in locations_with_names], jobs_with_location_names, strict=False),
+    )
+    jobs_by_address = dict(zip(addresses_url, [job for job in jobs_with_address_urls for _ in range(2)], strict=False))
 
     yield jobs_by_name, jobs_by_location, jobs_by_address
 

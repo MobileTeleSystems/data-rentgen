@@ -6,14 +6,14 @@ import logging
 import re
 
 from data_rentgen.consumer.extractors.generic import GenericExtractor
-from data_rentgen.consumer.openlineage.dataset import OpenLineageDataset
-from data_rentgen.consumer.openlineage.dataset_facets import (
+from data_rentgen.dto import DatasetDTO, DatasetSymlinkDTO, OperationDTO, RunDTO, UserDTO
+from data_rentgen.openlineage.dataset import OpenLineageDataset
+from data_rentgen.openlineage.dataset_facets import (
     OpenLineageColumnLineageDatasetFacetFieldRef,
     OpenLineageSymlinkIdentifier,
     OpenLineageSymlinkType,
 )
-from data_rentgen.consumer.openlineage.run_event import OpenLineageRunEvent
-from data_rentgen.dto import DatasetDTO, DatasetSymlinkDTO, OperationDTO, RunDTO, UserDTO
+from data_rentgen.openlineage.run_event import OpenLineageRunEvent
 
 PARTITION_PATH_PATTERN: re.Pattern = re.compile("^(.*?)/[^/=]+=")
 

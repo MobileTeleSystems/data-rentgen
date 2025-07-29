@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
 from random import choice, randint
-from typing import TYPE_CHECKING, Callable
+from typing import TYPE_CHECKING
 
 import pytest_asyncio
 
@@ -15,7 +15,7 @@ from tests.test_server.fixtures.factories.location import create_location
 from tests.test_server.utils.delete import clean_db
 
 if TYPE_CHECKING:
-    from collections.abc import AsyncGenerator
+    from collections.abc import AsyncGenerator, Callable
     from contextlib import AbstractAsyncContextManager
 
     import pytest
@@ -222,7 +222,7 @@ async def runs_search(
                     **kwargs,
                 },
             )
-            for i, (job, kwargs) in enumerate(zip([job for job in jobs for _ in range(2)], runs_kwargs))
+            for i, (job, kwargs) in enumerate(zip([job for job in jobs for _ in range(2)], runs_kwargs, strict=False))
         ]
 
         async_session.expunge_all()

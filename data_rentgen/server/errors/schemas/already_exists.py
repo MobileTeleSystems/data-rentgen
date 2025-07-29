@@ -1,10 +1,9 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 import http
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel
-from typing_extensions import Literal
 
 from data_rentgen.exceptions.entity import EntityAlreadyExistsError
 from data_rentgen.server.errors.base import BaseErrorSchema

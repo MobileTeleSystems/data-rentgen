@@ -4,19 +4,19 @@ from __future__ import annotations
 
 from urllib.parse import urlparse
 
-from data_rentgen.consumer.openlineage.dataset import (
-    OpenLineageDataset,
-)
-from data_rentgen.consumer.openlineage.dataset_facets import (
-    OpenLineageColumnLineageDatasetFacetFieldRef,
-    OpenLineageSymlinkIdentifier,
-    OpenLineageSymlinkType,
-)
 from data_rentgen.dto import (
     DatasetDTO,
     DatasetSymlinkDTO,
     DatasetSymlinkTypeDTO,
     LocationDTO,
+)
+from data_rentgen.openlineage.dataset import (
+    OpenLineageDataset,
+)
+from data_rentgen.openlineage.dataset_facets import (
+    OpenLineageColumnLineageDatasetFacetFieldRef,
+    OpenLineageSymlinkIdentifier,
+    OpenLineageSymlinkType,
 )
 
 METASTORE = DatasetSymlinkTypeDTO.METASTORE
