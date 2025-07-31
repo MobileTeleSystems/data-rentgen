@@ -8,6 +8,7 @@ from uuid import UUID
 
 from fastapi import Query
 from pydantic import (
+    UUID7,
     BaseModel,
     ConfigDict,
     Field,
@@ -19,7 +20,6 @@ from pydantic import (
 
 from data_rentgen.server.schemas.v1.pagination import PaginateQueryV1
 from data_rentgen.server.schemas.v1.user import UserResponseV1
-from data_rentgen.utils import UUIDv6Plus
 
 
 class RunStatusV1(IntEnum):
@@ -129,7 +129,7 @@ class RunsQueryV1(PaginateQueryV1):
             examples=["2008-09-15T15:53:00+05:00"],
         ),
     )
-    run_id: list[UUIDv6Plus] = Field(
+    run_id: list[UUID7] = Field(
         Query(
             default_factory=list,
             description="Run ids, for exact match",
@@ -142,7 +142,7 @@ class RunsQueryV1(PaginateQueryV1):
         ),
     )
 
-    parent_run_id: UUIDv6Plus | None = Field(
+    parent_run_id: UUID7 | None = Field(
         Query(
             default=None,
             description="Parent run id, can be used only with 'since' and 'until'",

@@ -174,14 +174,63 @@ async def test_get_lineage_start_node_id_uuid_type_validation(
             "code": "invalid_request",
             "details": [
                 {
-                    "code": "value_error",
+                    "code": "uuid_parsing",
                     "context": {},
                     "input": "1",
                     "location": [
                         "query",
                         "start_node_id",
                     ],
-                    "message": "Value error, badly formed hexadecimal UUID string",
+                    "message": (
+                        "Input should be a valid UUID, invalid length: expected length 32 for simple format, found 1"
+                    ),
+                },
+            ],
+            "message": "Invalid request",
+        },
+    }
+
+
+@pytest.mark.parametrize(
+    ["entity_kind", "start_node_id"],
+    [
+        ("operations", "9f3569b7-b6e1-48df-893a-3e49482ba9e7"),
+        ("runs", "9f3569b7-b6e1-48df-893a-3e49482ba9e7"),
+    ],
+    ids=["operations", "runs"],
+)
+async def test_get_lineage_start_node_id_uuid_version_validation(
+    entity_kind: str,
+    start_node_id: int,
+    test_client: AsyncClient,
+    mocked_user: MockedUser,
+):
+    since = datetime.now(tz=timezone.utc)
+    response = await test_client.get(
+        f"v1/{entity_kind}/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "start_node_id": start_node_id,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY, response.json()
+    assert response.json() == {
+        "error": {
+            "code": "invalid_request",
+            "details": [
+                {
+                    "code": "uuid_version",
+                    "context": {
+                        "expected_version": 7,
+                    },
+                    "input": start_node_id,
+                    "location": [
+                        "query",
+                        "start_node_id",
+                    ],
+                    "message": "UUID version 7 expected",
                 },
             ],
             "message": "Invalid request",

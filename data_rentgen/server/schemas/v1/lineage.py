@@ -7,13 +7,12 @@ from enum import Enum, IntEnum, IntFlag
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_serializer, field_validator
+from pydantic import UUID7, BaseModel, ConfigDict, Field, ValidationInfo, field_serializer, field_validator
 
 from data_rentgen.server.schemas.v1.dataset import DatasetResponseV1
 from data_rentgen.server.schemas.v1.job import JobResponseV1
 from data_rentgen.server.schemas.v1.operation import OperationResponseV1
 from data_rentgen.server.schemas.v1.run import RunResponseV1
-from data_rentgen.utils import UUIDv6Plus
 
 
 class LineageEntityKindV1(str, Enum):
@@ -99,11 +98,11 @@ class JobLineageQueryV1(BaseLineageQueryV1):
 
 
 class OperationLineageQueryV1(BaseLineageQueryV1):
-    start_node_id: UUIDv6Plus = Field(description="Operation id", examples=["00000000-0000-0000-0000-000000000000"])
+    start_node_id: UUID7 = Field(description="Operation id", examples=["00000000-0000-0000-0000-000000000000"])
 
 
 class RunLineageQueryV1(BaseLineageQueryV1):
-    start_node_id: UUIDv6Plus = Field(description="Run id", examples=["00000000-0000-0000-0000-000000000000"])
+    start_node_id: UUID7 = Field(description="Run id", examples=["00000000-0000-0000-0000-000000000000"])
     granularity: Literal["OPERATION", "RUN"] = Field(
         default="RUN",
         description="Granularity of the run lineage",
