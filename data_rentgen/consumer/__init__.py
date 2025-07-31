@@ -36,6 +36,8 @@ def broker_factory(settings: ConsumerApplicationSettings) -> KafkaBroker:
         client_id=f"data-rentgen-{data_rentgen.__version__}",
         logger=logger,
         **settings.kafka.security.extra_broker_kwargs(),
+        **settings.kafka.model_dump(exclude={"bootstrap_servers", "security", "compression"}),
+        **settings.producer.model_dump(exclude={"malformed_topic"}),
     )
 
     # register subscribers using settings
@@ -63,8 +65,8 @@ def application_factory(settings: ConsumerApplicationSettings) -> AsgiFastStream
     @asynccontextmanager
     async def security_lifespan(context: ContextRepo):
         try:
+            await settings.kafka.security.initialize()
             async with anyio.create_task_group() as tg:
-                await settings.kafka.security.initialize()
                 tg.start_soon(settings.kafka.security.refresh)
 
                 yield
