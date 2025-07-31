@@ -36,4 +36,8 @@ pytest_plugins = [
     "tests.test_server.fixtures.factories.operation",
     "tests.test_server.fixtures.factories.run",
     "tests.test_server.fixtures.factories.user",
+    "tests.test_http2kafka.fixtures.http2kafka_app_settings",
+    "tests.test_http2kafka.fixtures.http2kafka_app",
+    "tests.test_http2kafka.fixtures.http2kafka_client",
+    "tests.test_http2kafka.fixtures.http2kafka_broker",
 ]

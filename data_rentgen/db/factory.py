@@ -24,7 +24,7 @@ def session_generator(settings: DatabaseSettings):
     a_session = create_session_factory(settings)
 
     async def wrapper() -> AsyncGenerator[AsyncSession, None]:
-        async with a_session.begin() as session:
+        async with a_session() as session:
             yield session
 
     return wrapper

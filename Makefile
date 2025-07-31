@@ -116,6 +116,9 @@ dev-server: db-start ##@Application Run development server (without docker)
 dev-consumer: db-start broker-start ##@Application Run development broker (without docker)
 	${PYTHON} -m data_rentgen.consumer --host 0.0.0.0 --port 8001 $(ARGS)
 
+dev-http2kafka: broker-start ##@Application Run development http2kafka (without docker)
+	${PYTHON} -m data_rentgen.http2kafka --host 0.0.0.0 --port 8002 $(ARGS)
+
 prod-build: ##@Application Build docker image
 	docker build --progress=plain --network=host -t mtsrus/data-rentgen:develop -f ./docker/Dockerfile $(ARGS) .
 
@@ -142,4 +145,5 @@ docs-cleanup: ##@Docs Cleanup docs
 docs-fresh: docs-cleanup docs-build ##@Docs Cleanup & build docs
 
 docs-openapi: ##@Docs Generate OpenAPI schema
-	${PYTHON} -m data_rentgen.server.scripts.export_openapi_schema docs/_static/openapi.json
+	${PYTHON} -m data_rentgen.server.scripts.export_openapi_schema docs/_static/openapi_server.json
+	${PYTHON} -m data_rentgen.http2kafka.scripts.export_openapi_schema docs/_static/openapi_http2kafka.json

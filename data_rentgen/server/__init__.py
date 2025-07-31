@@ -20,8 +20,8 @@ if TYPE_CHECKING:
 
 def application_factory(settings: ServerApplicationSettings) -> FastAPI:
     application = FastAPI(
-        title="Data.Rentgen",
-        description="Data.Rentgen is a nextgen DataLineage service",
+        title="Data.Rentgen Server",
+        description="Provides REST API for fetching lineage data",
         version=data_rentgen.__version__,
         debug=settings.server.debug,
         # will be set up by middlewares

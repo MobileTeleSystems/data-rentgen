@@ -24,6 +24,15 @@ class OpenLineageParentRun(OpenLineageBase):
     runId: UUID7
 
 
+class OpenLineageParentRoot(OpenLineageBase):
+    """Root run started the chain of runs, e.g. Airflow DAG -> Airflow Task -> Spark application -> Spark command.
+    See [ParentRunFacet](https://github.com/OpenLineage/OpenLineage/blob/main/spec/facets/ParentRunFacet.json).
+    """
+
+    job: OpenLineageParentJob
+    run: OpenLineageParentRun
+
+
 class OpenLineageParentRunFacet(OpenLineageRunFacet):
     """Run facet describing parent run.
     See [ParentRunFacet](https://github.com/OpenLineage/OpenLineage/blob/main/spec/facets/ParentRunFacet.json).
@@ -31,3 +40,4 @@ class OpenLineageParentRunFacet(OpenLineageRunFacet):
 
     job: OpenLineageParentJob
     run: OpenLineageParentRun
+    root: OpenLineageParentRoot | None = None

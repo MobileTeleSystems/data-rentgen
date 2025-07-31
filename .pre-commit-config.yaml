@@ -39,10 +39,10 @@ repos:
       - id: chmod
         args: ['644']
         exclude_types: [shell]
-        exclude: ^(.*__main__\.py|data_rentgen/server/scripts/export_openapi_schema\.py|data_rentgen/db/scripts/create_partitions\.py|data_rentgen/db/scripts/refresh_analytic_views\.py|data_rentgen/db/scripts/cleanup_partitions\.py)$
+        exclude: ^(.*__main__\.py|data_rentgen/server/scripts/.*\.py|data_rentgen/db/scripts/.*\.py|data_rentgen/http2kafka/scripts/.*\.py)$
       - id: chmod
         args: ['755']
-        files: ^(.*__main__\.py|data_rentgen/server/scripts/export_openapi_schema\.py|data_rentgen/db/scripts/create_partitions\.py|data_rentgen/db/scripts/refresh_analytic_views\.py|data_rentgen/db/scripts/cleanup_partitions\.py)$
+        files: ^(.*__main__\.py|data_rentgen/server/scripts/.*\.py|data_rentgen/db/scripts/.*\.py|data_rentgen/http2kafka/scripts/.*\.py)$
       - id: insert-license
         files: .*\.py$
         exclude: ^(data_rentgen/dependencies/stub.py|docs/.*\.py|tests/.*\.py)$

@@ -7,7 +7,7 @@ from http import HTTPStatus
 from typing import Annotated
 from uuid import UUID  # noqa: TC003
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from pydantic import ValidationError
 from pydantic_core import InitErrorDetails
 
@@ -112,7 +112,9 @@ async def revoke_personal_token(
     current_user: Annotated[User, Depends(get_user())],
     user_token_service: Annotated[PersonalTokenService, Depends()],
 ):
-    await user_token_service.revoke(current_user, token_id)
+    async with user_token_service:
+        await user_token_service.revoke(current_user, token_id)
+    return Response(status_code=HTTPStatus.NO_CONTENT)
 
 
 def validate_until(input_until: date | None, actual_until: date) -> None:

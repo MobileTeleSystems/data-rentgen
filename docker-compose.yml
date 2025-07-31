@@ -112,17 +112,20 @@ services:
       timeout: 5s
       retries: 5
     profiles:
-      - consumer
       - broker
+      - consumer
+      - http2kafka
       - all
 
   consumer:
     image: mtsrus/data-rentgen:${VERSION:-latest}
-    command: python -m data_rentgen.consumer --host 0.0.0.0 --port 8000
+    command: python -m data_rentgen.consumer --host 0.0.0.0 --port 8001
     restart: unless-stopped
     env_file: .env.docker
+    ports:
+      - 8001:8001
     healthcheck:
-      test: [CMD-SHELL, curl -f http://localhost:8000/internal/healthcheck/liveness]
+      test: [CMD-SHELL, curl -f http://localhost:8001/internal/healthcheck/liveness]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -147,6 +150,26 @@ services:
         condition: service_healthy
     profiles:
       - frontend
+      - all
+
+  http2kafka:
+    image: mtsrus/data-rentgen:${VERSION:-latest}
+    command: python -m data_rentgen.http2kafka --host 0.0.0.0 --port 8002
+    restart: unless-stopped
+    env_file: .env.docker
+    ports:
+      - 8002:8002
+    healthcheck:
+      test: [CMD-SHELL, curl -f http://localhost:8002/monitoring/ping]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    depends_on:
+      broker:
+        condition: service_healthy
+    profiles:
+      - http2kafka
       - all
 
 volumes:
