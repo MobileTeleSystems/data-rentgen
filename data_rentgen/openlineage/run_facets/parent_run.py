@@ -1,9 +1,10 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+from pydantic import UUID7
+
 from data_rentgen.openlineage.base import OpenLineageBase
 from data_rentgen.openlineage.run_facets.base import OpenLineageRunFacet
-from data_rentgen.utils import UUIDv6Plus
 
 
 class OpenLineageParentJob(OpenLineageBase):
@@ -20,7 +21,7 @@ class OpenLineageParentRun(OpenLineageBase):
     See [ParentRunFacet](https://github.com/OpenLineage/OpenLineage/blob/main/spec/facets/ParentRunFacet.json).
     """
 
-    runId: UUIDv6Plus
+    runId: UUID7
 
 
 class OpenLineageParentRunFacet(OpenLineageRunFacet):

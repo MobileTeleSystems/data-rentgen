@@ -6,15 +6,13 @@ import secrets
 import time
 from datetime import datetime, timezone
 from hashlib import sha1
-from typing import Annotated, Any
+from typing import Any
 from uuid import NAMESPACE_URL, uuid5
 from uuid import UUID as BaseUUID  # noqa: N811
 
-from pydantic import PlainValidator
 from uuid6 import UUID as NewUUID  # noqa: N811
 
 __all__ = [
-    "UUIDv6Plus",
     "extract_timestamp_from_uuid",
     "generate_incremental_uuid",
     "generate_new_uuid",
@@ -108,11 +106,3 @@ def uuid_version_validator(run_id: Any) -> NewUUID:
             raise ValueError(err_msg)
         return run_id
     return run_id
-
-
-# Teach Pydantic how to parse and represent UUID v7
-# Right now use uuid from uuid lib cause: https://github.com/tiangolo/fastapi/issues/10259
-UUIDv6Plus = Annotated[
-    BaseUUID,
-    PlainValidator(uuid_version_validator),
-]
