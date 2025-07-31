@@ -3,9 +3,26 @@
 Message Broker
 ==============
 
-Message broker is component used by OpenLineage to store data, and then read by :ref:`message-consumer` in batches.
+Message broker is component used by OpenLineage to store all received events. Then these avents are handled by :ref:`message-consumer`, in batches.
 
 Currently, Data.Rentgen supports only `Apache Kafka <https://kafka.apache.org/>`_ as message broker.
+
+Why Kafka?
+----------
+
+Other popular OpenLineage server implementations use HTTP protocol for receiving events. In out experience, Kafka is much superior for this case:
+
+* Kafka is designed to be scalable. If performance level is not enough, just add another broker to the cluster. For HTTP servers it's not that simple,
+  as this requires load balancing on reverse proxy side or DNS side.
+* Kafka is designed to receive A LOT of events per second, like millions, and store them on disk as fast as possible. So no events are lost
+  even if :ref:`message-consumer` is overloaded - events are already on disk, and will be handled later.
+* ETL scripts are mostly run on schedule The usual pattern is almost zero events during the day, but huge spikes at every whole hour
+  (e.g. at 00:00, 01:00, 03:00, 12:00). Kafka is used as an intermediate buffer which smooths these spikes.
+* Events stored in Kafka can be read in batches, even if OpenLineage integration initially send them one-by-one.
+  Batching gives x10 more performance than handling individual events.
+* HTTP/HTTPS protocol have higher latency than Kafka TCP protocol. Some OpenLineage integrations are sensitive to latency - for example,
+  `Flink job listener documentation <https://nightlies.apache.org/flink/flink-docs-master/api/java/org/apache/flink/core/execution/JobListener.html>`_
+  explicitly says: *If you block the thread the invoker of environment execute methods is possibly blocked*. The less time required for sending response, the better.
 
 Requirements
 ------------
@@ -34,7 +51,7 @@ With Docker
   .. dropdown:: ``docker-compose.yml``
 
     .. literalinclude:: ../../../docker-compose.yml
-        :emphasize-lines: 101-117,154
+        :emphasize-lines: 101-117,177
 
   .. dropdown:: ``.env.docker``
 

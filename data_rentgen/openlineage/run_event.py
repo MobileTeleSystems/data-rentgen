@@ -42,4 +42,3 @@ class OpenLineageRunEvent(OpenLineageBase):
     run: OpenLineageRun
     inputs: list[OpenLineageInputDataset] = Field(default_factory=list)
     outputs: list[OpenLineageOutputDataset] = Field(default_factory=list)
-    # ignore producer and schemaURL

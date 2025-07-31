@@ -160,4 +160,4 @@ cython_debug/
 
 .DS_Store
 .python-version
-openapi.json
+openapi*.json

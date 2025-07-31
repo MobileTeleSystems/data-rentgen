@@ -30,7 +30,7 @@ from data_rentgen.db.models import (
     SQLQuery,
 )
 
-RESOURCES_PATH = Path(__file__).parent.parent.joinpath("resources").resolve()
+RESOURCES_PATH = Path(__file__).parent.parent.parent.joinpath("resources").resolve()
 
 pytestmark = [pytest.mark.consumer, pytest.mark.asyncio]
 

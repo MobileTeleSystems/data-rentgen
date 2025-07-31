@@ -97,14 +97,3 @@ Server can add ``X-Application-Version`` header to responses, which allows to de
 This is done by ``application_version`` middleware, which is enabled by default and can configured as described below:
 
 .. autopydantic_model:: data_rentgen.server.settings.application_version.ApplicationVersionSettings
-
-
-Use ``X-Application-Version`` header on client
-----------------------------------------------
-
-If client got ``X-Application-Version`` header from REST API, it is compared with client version.
-
-If versions do not match, a warning is shown:
-
->>> client.ping()
-UserWarning: Data.Rentgen client version '0.0.9' does not match backend version '1.0.0'. Please upgrade.

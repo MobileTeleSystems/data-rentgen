@@ -3,7 +3,7 @@
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
 from fastapi.security import OAuth2PasswordRequestForm
 
 from data_rentgen.db.models.user import User
@@ -72,6 +72,7 @@ async def auth_callback(
     )
     request.session["access_token"] = code_grant["access_token"]
     request.session["refresh_token"] = code_grant["refresh_token"]
+    return Response(status_code=HTTPStatus.NO_CONTENT)
 
 
 @router.get(
@@ -95,3 +96,4 @@ async def logout(
     refresh_token = request.session.get("refresh_token", None)
     request.session.clear()
     await auth_provider.logout(user=current_user, refresh_token=refresh_token)
+    return Response(status_code=HTTPStatus.NO_CONTENT)

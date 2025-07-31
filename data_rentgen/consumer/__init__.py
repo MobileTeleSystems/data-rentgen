@@ -37,7 +37,7 @@ def broker_factory(settings: ConsumerApplicationSettings) -> KafkaBroker:
         logger=logger,
         **settings.kafka.security.extra_broker_kwargs(),
         **settings.kafka.model_dump(exclude={"bootstrap_servers", "security", "compression"}),
-        **settings.producer.model_dump(exclude={"malformed_topic"}),
+        **settings.producer.model_dump(exclude={"main_topic", "malformed_topic"}),
     )
 
     # register subscribers using settings

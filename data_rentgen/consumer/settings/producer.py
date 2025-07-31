@@ -17,8 +17,14 @@ class ProducerSettings(BaseModel):
 
     .. code-block:: bash
 
+        DATA_RENTGEN__PRODUCER__MAIN_TOPIC="input.runs"
         DATA_RENTGEN__PRODUCER__MALFOMED_TOPIC="input.runs__malformed"
     """
+
+    main_topic: str = Field(
+        default="input.runs",
+        description="Topic to publish messages to.",
+    )
 
     malformed_topic: str = Field(
         default="input.runs__malformed",

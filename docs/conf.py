@@ -34,7 +34,7 @@ author = "DataOps.ETL"
 # The short X.Y version.
 
 # this value is updated automatically by `poetry version ...` and poetry-bumpversion plugin
-ver = Version.parse("0.3.2")
+ver = Version.parse("0.4.0")
 version = ver.base_version
 # The full version, including alpha/beta/rc tags.
 release = ver.public
@@ -57,17 +57,6 @@ extensions = [
     "sphinx_favicon",
     "sphinx_last_updated_by_git",
     "sphinxarg.ext",
-]
-
-swagger = [
-    {
-        "name": "Data.Rentgen REST API",
-        "page": "openapi",
-        "id": "data-rentgen-api",
-        "options": {
-            "url": "_static/openapi.json",
-        },
-    },
 ]
 
 numpydoc_show_class_members = True

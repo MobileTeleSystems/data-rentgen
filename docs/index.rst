@@ -36,6 +36,7 @@
     reference/consumer/index
     reference/server/index
     reference/frontend/index
+    reference/http2kafka/index
 
 .. toctree::
     :maxdepth: 2

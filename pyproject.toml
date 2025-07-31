@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "data-rentgen"
-version = "0.3.2"
+version = "0.4.0"
 license = "Apache-2.0"
 description = "Data.Rentgen REST API + Kafka consumer"
 authors = ["DataOps.ETL <onetools@mts.ru>"]
@@ -109,6 +109,21 @@ consumer = [
   "uuid6",
   "python-dateutil",
   "packaging",
+]
+http2kafka = [
+  "fastapi",
+  "starlette",
+  "uvicorn",
+  "starlette-exporter",
+  "asgi-correlation-id",
+  "pydantic-settings",
+  "pyyaml",
+  "python-json-logger",
+  "coloredlogs",
+  "uuid6",
+  "packaging",
+  "faststream",
+  "cramjam",
 ]
 postgres = [
   "asyncpg",

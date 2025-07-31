@@ -16,11 +16,11 @@ class ConsumerApplicationSettings(BaseSettings):
 
     Application can be configured in 2 ways:
 
-    * By explicitly passing ``settings`` object as an argument to :obj:`application_factory <data_rentgen.consumer.main.application_factory>`
+    * By explicitly passing ``settings`` object as an argument to :obj:`application_factory <data_rentgen.consumer.application_factory>`
     * By setting up environment variables matching a specific key.
 
-        All environment variable names are written in uppercase and should be prefixed with ``DATA_RENTGEN__``.
-        Nested items are delimited with ``__``.
+      All environment variable names are written in uppercase and should be prefixed with ``DATA_RENTGEN__``.
+      Nested items are delimited with ``__``.
 
     More details can be found in `Pydantic documentation <https://docs.pydantic.dev/latest/concepts/pydantic_settings/>`_.
 
