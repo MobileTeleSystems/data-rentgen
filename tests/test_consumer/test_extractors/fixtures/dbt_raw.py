@@ -12,7 +12,6 @@ from data_rentgen.openlineage.dataset_facets import (
     OpenLineageColumnLineageDatasetFacetField,
     OpenLineageColumnLineageDatasetFacetFieldRef,
     OpenLineageDatasetFacets,
-    OpenLineageDatasourceDatasetFacet,
     OpenLineageOutputDatasetFacets,
     OpenLineageOutputStatisticsOutputDatasetFacet,
     OpenLineageSchemaDatasetFacet,
@@ -75,10 +74,6 @@ def dbt_outputs() -> list[OpenLineageOutputDataset]:
             namespace="spark://localhost:10000",
             name="demo_schema.target_table",
             facets=OpenLineageDatasetFacets(
-                dataSource=OpenLineageDatasourceDatasetFacet(
-                    name="spark://localhost:10000",
-                    uri="spark://localhost:10000",
-                ),
                 columnLineage=OpenLineageColumnLineageDatasetFacet(
                     fields={
                         "complex_id": OpenLineageColumnLineageDatasetFacetField(

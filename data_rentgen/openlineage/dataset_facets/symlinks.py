@@ -5,6 +5,8 @@ from __future__ import annotations
 
 from enum import Enum
 
+from pydantic import Field
+
 from data_rentgen.openlineage.base import OpenLineageBase
 from data_rentgen.openlineage.dataset_facets.base import (
     OpenLineageDatasetFacet,
@@ -25,9 +27,9 @@ class OpenLineageSymlinkIdentifier(OpenLineageBase):
     See [SymlinksDatasetFacet](https://github.com/OpenLineage/OpenLineage/blob/main/spec/facets/SymlinksDatasetFacet.json).
     """
 
-    namespace: str
-    name: str
-    type: OpenLineageSymlinkType
+    namespace: str = Field(examples=["hdfs://rnd-dwh"], json_schema_extra={"format": "uri"})
+    name: str = Field(examples=["/app/warehouse/hive/managed/someschema.db/sometable"])
+    type: OpenLineageSymlinkType = Field(examples=["LOCATION"])
 
 
 class OpenLineageSymlinksDatasetFacet(OpenLineageDatasetFacet):

@@ -3,6 +3,8 @@
 
 from enum import Enum
 
+from pydantic import Field
+
 from data_rentgen.openlineage.job_facets.base import OpenLineageJobFacet
 
 
@@ -22,5 +24,5 @@ class OpenLineageJobTypeJobFacet(OpenLineageJobFacet):
     """
 
     processingType: OpenLineageJobProcessingType
-    integration: str
-    jobType: str | None = None
+    integration: str = Field(examples=["SPARK"])
+    jobType: str | None = Field(default=None, examples=["APPLICATION"])

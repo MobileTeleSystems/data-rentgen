@@ -12,8 +12,11 @@ from data_rentgen.openlineage.dataset_facets.base import (
 class OpenLineageColumnLineageDatasetFacetFieldTransformation(OpenLineageBase):
     """Dataset facet describing field transformation."""
 
-    type: str
-    subtype: str | None = None
+    type: str = Field(examples=["DIRECT", "INDIRECT"])
+    subtype: str | None = Field(
+        default=None,
+        examples=["TRANSFORMATION", "AGGREGATION", "JOIN", "FILTER", "WINDOW", "SORT"],
+    )
     description: str | None = None
     masking: bool = False
 
@@ -21,9 +24,9 @@ class OpenLineageColumnLineageDatasetFacetFieldTransformation(OpenLineageBase):
 class OpenLineageColumnLineageDatasetFacetFieldRef(OpenLineageBase):
     """Dataset facet describing field reference for column lineage facet."""
 
-    namespace: str
-    name: str
-    field: str
+    namespace: str = Field(examples=["hive://rnd-dwh"], json_schema_extra={"format": "uri"})
+    name: str = Field(examples=["otherdb.othertable"])
+    field: str = Field(examples=["col1", "col2"])
     transformations: list[OpenLineageColumnLineageDatasetFacetFieldTransformation] = Field(default_factory=list)
 
 
@@ -31,8 +34,8 @@ class OpenLineageColumnLineageDatasetFacetField(OpenLineageBase):
     """Dataset facet describing column lineage for specific field."""
 
     inputFields: list[OpenLineageColumnLineageDatasetFacetFieldRef] = Field(default_factory=list)
-    transformationDescription: str | None = None
-    transformationType: str | None = None
+    transformationDescription: str | None = Field(default=None, deprecated=True)
+    transformationType: str | None = Field(default=None, deprecated=True)
 
 
 class OpenLineageColumnLineageDatasetFacet(OpenLineageDatasetFacet):

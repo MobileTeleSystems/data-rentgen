@@ -3,6 +3,8 @@
 
 from enum import Enum
 
+from pydantic import Field
+
 from data_rentgen.openlineage.run_facets.base import OpenLineageRunFacet
 
 
@@ -21,12 +23,18 @@ class OpenLineageSparkApplicationDetailsRunFacet(OpenLineageRunFacet):
     See [SparkApplicationDetailsFacet](https://github.com/OpenLineage/OpenLineage/blob/main/integration/spark/shared/src/main/java/io/openlineage/spark/agent/facets/SparkApplicationDetailsFacet.java).
     """
 
-    master: str
-    appName: str
-    applicationId: str
+    master: str = Field(examples=["yarn"])
+    appName: str = Field(examples=["spark_session"])
+    applicationId: str = Field(examples=["application_1234_1234"])
     deployMode: OpenLineageSparkDeployMode
-    driverHost: str
-    userName: str
-    uiWebUrl: str | None = None
-    proxyUrl: str | None = None
-    historyUrl: str | None = None
+    driverHost: str = Field(examples=["192.168.1.15"])
+    userName: str = Field(examples=["user"])
+    uiWebUrl: str | None = Field(default=None, examples=["http://192.168.1.15:4040"])
+    proxyUrl: str | None = Field(
+        default=None,
+        examples=["http://mycluster-nn1.domain.com:8080/proxy/application_1234_1234"],
+    )
+    historyUrl: str | None = Field(
+        default=None,
+        examples=["http://mycluster-nn1.domain.com:18081/history/application_1234_1234"],
+    )

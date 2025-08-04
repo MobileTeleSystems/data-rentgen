@@ -1,6 +1,8 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+from pydantic import Field
+
 from data_rentgen.openlineage.run_facets.base import OpenLineageRunFacet
 
 
@@ -12,7 +14,7 @@ class DataRentgenOperationInfoFacet(OpenLineageRunFacet):
     or DataRentgen Run + Operation if DataRentgenRunInfoFacet is also present.
     """
 
-    name: str | None = None
-    description: str | None = None
-    group: str | None = None
-    position: int | None = None
+    name: str | None = Field(default=None, examples=["execute_save_into_data_source_command"])
+    description: str | None = Field(default=None, examples=["Clickhouse -> Clickhouse"])
+    group: str | None = Field(default=None, examples=["my_group"])
+    position: int | None = Field(default=None, examples=[1])

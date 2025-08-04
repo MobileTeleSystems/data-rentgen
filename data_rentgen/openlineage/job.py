@@ -12,6 +12,6 @@ class OpenLineageJob(OpenLineageBase):
     See [Job](https://github.com/OpenLineage/OpenLineage/blob/main/spec/OpenLineage.json).
     """
 
-    namespace: str
-    name: str
+    namespace: str = Field(examples=["yarn://rnd-dwh"], json_schema_extra={"format": "uri"})
+    name: str = Field(examples=["my_spark_session"])
     facets: OpenLineageJobFacets = Field(default_factory=OpenLineageJobFacets)
