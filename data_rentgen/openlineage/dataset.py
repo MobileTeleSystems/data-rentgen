@@ -16,8 +16,11 @@ class OpenLineageDataset(OpenLineageBase):
     See [Dataset](https://github.com/OpenLineage/OpenLineage/blob/main/spec/OpenLineage.json).
     """
 
-    namespace: str = Field(json_schema_extra={"format": "uri"})
-    name: str
+    namespace: str = Field(
+        examples=["postgresql://myhost:5432", "oracle://myhost:1521", "hive://rnd-dwh"],
+        json_schema_extra={"format": "uri"},
+    )
+    name: str = Field(examples=["somedb.someschema.sometable"])
     facets: OpenLineageDatasetFacets = Field(default_factory=OpenLineageDatasetFacets)
 
 

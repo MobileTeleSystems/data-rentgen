@@ -13,6 +13,6 @@ class OpenLineageInputStatisticsInputDatasetFacet(OpenLineageInputDatasetFacet):
     See [InputStatisticsInputDatasetFacet](https://github.com/OpenLineage/OpenLineage/blob/main/spec/facets/InputStatisticsInputDatasetFacet.json).
     """
 
-    rows: int | None = Field(default=None, alias="rowCount")
-    bytes: int | None = Field(default=None, alias="size")
-    files: int | None = Field(default=None, alias="fileCount")
+    rows: int | None = Field(default=None, alias="rowCount", examples=[1_000_000])
+    bytes: int | None = Field(default=None, alias="size", examples=[2**30])
+    files: int | None = Field(default=None, alias="fileCount", examples=[0])

@@ -4,7 +4,7 @@
 from typing import Annotated
 
 from packaging.version import Version as RawVersion
-from pydantic import PlainSerializer, PlainValidator, WithJsonSchema
+from pydantic import Field, PlainSerializer, PlainValidator, WithJsonSchema
 from typing_extensions import Doc
 
 from data_rentgen.openlineage.run_facets.base import OpenLineageRunFacet
@@ -31,6 +31,6 @@ class OpenLineageProcessingEngineRunFacet(OpenLineageRunFacet):
     See [ProcessingEngineRunFacet](https://github.com/OpenLineage/OpenLineage/blob/main/spec/facets/ProcessingEngineRunFacet.json).
     """
 
-    name: str
-    version: Version
-    openlineageAdapterVersion: Version
+    name: str = Field(examples=["Spark", "Flink", "Hive"])
+    version: Version = Field(examples=["3.5.6"])
+    openlineageAdapterVersion: Version = Field(examples=["1.36.0"])

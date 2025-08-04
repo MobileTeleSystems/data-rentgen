@@ -3,6 +3,8 @@
 
 from enum import Enum
 
+from pydantic import Field
+
 from data_rentgen.openlineage.base import OpenLineageBase
 from data_rentgen.openlineage.dataset_facets.base import (
     OpenLineageDatasetFacet,
@@ -30,8 +32,8 @@ class OpenLineageDatasetPreviousIdentifier(OpenLineageBase):
     See [LifecycleStateChangeDatasetFacet](https://github.com/OpenLineage/OpenLineage/blob/main/spec/facets/LifecycleStateChangeDatasetFacet.json).
     """
 
-    namespace: str
-    name: str
+    namespace: str = Field(examples=["hive://rnd-dwh"], json_schema_extra={"format": "uri"})
+    name: str = Field(examples=["somedb.new_table"])
 
 
 class OpenLineageLifecycleStateChangeDatasetFacet(OpenLineageDatasetFacet):
@@ -39,5 +41,5 @@ class OpenLineageLifecycleStateChangeDatasetFacet(OpenLineageDatasetFacet):
     See [LifecycleStateChangeDatasetFacet](https://github.com/OpenLineage/OpenLineage/blob/main/spec/facets/LifecycleStateChangeDatasetFacet.json).
     """
 
-    lifecycleStateChange: OpenLineageDatasetLifecycleStateChange
+    lifecycleStateChange: OpenLineageDatasetLifecycleStateChange = Field(examples=["RENAME"])
     previousIdentifier: OpenLineageDatasetPreviousIdentifier | None = None

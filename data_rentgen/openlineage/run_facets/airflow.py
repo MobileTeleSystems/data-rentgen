@@ -4,6 +4,8 @@
 from datetime import datetime
 from enum import Enum
 
+from pydantic import Field
+
 from data_rentgen.openlineage.base import OpenLineageBase
 from data_rentgen.openlineage.run_facets.base import OpenLineageRunFacet
 
@@ -13,8 +15,8 @@ class OpenLineageAirflowDagInfo(OpenLineageBase):
     See [Dag](https://github.com/apache/airflow/blob/providers-openlineage/2.2.0/providers/openlineage/src/airflow/providers/openlineage/facets/AirflowRunFacet.json).
     """
 
-    dag_id: str
-    owner: str | None = None
+    dag_id: str = Field(examples=["my_dag"])
+    owner: str | None = Field(default=None, examples=["user:myuser"])
 
 
 class OpenLineageAirflowDagRunType(Enum):
@@ -33,7 +35,7 @@ class OpenLineageAirflowDagRunInfo(OpenLineageBase):
     See [DagRun](https://github.com/apache/airflow/blob/providers-openlineage/2.2.0/providers/openlineage/src/airflow/providers/openlineage/facets/AirflowRunFacet.json).
     """
 
-    run_id: str
+    run_id: str = Field(examples=["my_dag_run_id"])
     run_type: OpenLineageAirflowDagRunType
     data_interval_start: datetime
     data_interval_end: datetime
@@ -44,7 +46,7 @@ class OpenLineageAirflowTaskGroupInfo(OpenLineageBase):
     See [task_group](https://github.com/apache/airflow/blob/providers-openlineage/2.2.0/providers/openlineage/src/airflow/providers/openlineage/facets/AirflowRunFacet.json).
     """
 
-    group_id: str
+    group_id: str = Field(examples=["my_task_group"])
 
 
 class OpenLineageAirflowTaskInfo(OpenLineageBase):
@@ -52,8 +54,8 @@ class OpenLineageAirflowTaskInfo(OpenLineageBase):
     See [Task](https://github.com/apache/airflow/blob/providers-openlineage/2.2.0/providers/openlineage/src/airflow/providers/openlineage/facets/AirflowRunFacet.json).
     """
 
-    task_id: str
-    operator_class: str | None = None
+    task_id: str = Field(examples=["my_task"])
+    operator_class: str | None = Field(default=None, examples=["MyOperator"])
     task_group: OpenLineageAirflowTaskGroupInfo | None = None
 
 
@@ -62,9 +64,14 @@ class OpenLineageAirflowTaskInstanceInfo(OpenLineageBase):
     See [TaskInstance](https://github.com/apache/airflow/blob/providers-openlineage/2.2.0/providers/openlineage/src/airflow/providers/openlineage/facets/AirflowRunFacet.json).
     """
 
-    try_number: int
+    try_number: int = Field(examples=[1])
     map_index: int | None = None
-    log_url: str | None = None
+    log_url: str | None = Field(
+        default=None,
+        examples=[
+            "http://myairflow.domain.com:8080/log?dag_id=my_dag&task_id=my_task&execution_date=2022-01-01&map_index=0&try_number=1",
+        ],
+    )
 
 
 class OpenLineageAirflowDagRunFacet(OpenLineageRunFacet):
