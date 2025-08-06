@@ -42,7 +42,10 @@ class ServerApplicationSettings(BaseSettings):
         default_factory=AuthSettings,
         description="Auth settings",
     )
-    database: DatabaseSettings = Field(description=":ref:`Database settings <configuration-database>`")
+    database: DatabaseSettings = Field(
+        default_factory=DatabaseSettings,  # type: ignore[arg-type]
+        description=":ref:`Database settings <configuration-database>`",
+    )
     logging: LoggingSettings = Field(
         default_factory=LoggingSettings,
         description=":ref:`Logging settings <configuration-server-logging>`",

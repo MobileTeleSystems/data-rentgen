@@ -22,7 +22,7 @@ from data_rentgen.server.providers.auth import (
     KeycloakAuthProvider,
 )
 from data_rentgen.server.schemas.v1.auth import AuthTokenSchema
-from data_rentgen.server.services import get_user
+from data_rentgen.server.services import PersonalTokenPolicy, get_user
 
 router = APIRouter(
     prefix="/auth",
@@ -35,8 +35,10 @@ router = APIRouter(
     summary="Get auth token",
     responses=get_error_responses(
         include={
-            InvalidRequestSchema,
+            NotAuthorizedSchema,
             NotAuthorizedRedirectSchema,
+            InvalidRequestSchema,
+            NotImplementedErrorSchema,
         },
     ),
 )
@@ -56,6 +58,7 @@ async def token(
     summary="Handle redirect callback from OAuth2 provider",
     responses=get_error_responses(
         include={
+            NotAuthorizedSchema,
             InvalidRequestSchema,
             NotImplementedErrorSchema,
         },
@@ -90,7 +93,7 @@ async def auth_callback(
 )
 async def logout(
     request: Request,
-    current_user: Annotated[User, Depends(get_user())],
+    current_user: Annotated[User, Depends(get_user(personal_token_policy=PersonalTokenPolicy.DENY))],
     auth_provider: Annotated[KeycloakAuthProvider, Depends(Stub(AuthProvider))],
 ):
     refresh_token = request.session.get("refresh_token", None)

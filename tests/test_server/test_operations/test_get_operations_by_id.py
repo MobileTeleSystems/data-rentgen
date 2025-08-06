@@ -258,3 +258,17 @@ async def test_get_operations_by_one_id_with_sql_query(
             },
         ],
     }
+
+
+async def test_get_operations_via_personal_token_is_allowed(
+    test_client: AsyncClient,
+    new_operation: Operation,
+    mocked_user: MockedUser,
+):
+    response = await test_client.get(
+        "v1/operations",
+        headers={"Authorization": f"Bearer {mocked_user.personal_token}"},
+        params={"operation_id": str(new_operation.id)},
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()

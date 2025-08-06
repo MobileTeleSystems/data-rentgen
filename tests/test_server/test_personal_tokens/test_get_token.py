@@ -107,19 +107,3 @@ async def test_get_personal_token_not_found(
             },
             "items": [],
         }
-
-
-async def test_get_personal_token_unauthorized(
-    test_client: AsyncClient,
-):
-    token = personal_token_factory()
-
-    response = await test_client.get(
-        "v1/personal-tokens",
-        params={"personal_token_id": str(token.id)},
-    )
-
-    assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
-    assert response.json() == {
-        "error": {"code": "unauthorized", "details": None, "message": "Missing auth credentials"},
-    }

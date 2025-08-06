@@ -58,12 +58,20 @@ class PersonalTokenSettings(BaseModel):
         description="Maximum duration of Personal Token in days",
     )
 
+    cache_ttl_seconds: int = Field(
+        default=300,
+        description="Maximum duration of Personal Token cache in seconds",
+    )
+
+    cache_size: int = Field(
+        default=500,
+        description="Maximum number of Personal Tokens in cache",
+    )
+
     @field_validator("secret_key", mode="after")
     @classmethod
     def _check_secret_key(cls, value: SecretStr | None, info: ValidationInfo) -> SecretStr | None:
-        if not info.data.get("enabled"):
-            return None
-        if not value:
+        if info.data.get("enabled") and not value:
             error_message = "Personal Access Tokens are enabled, but 'secret_key' is not set"
             raise ValueError(error_message)
         return value

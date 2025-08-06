@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from datetime import UTC, date, datetime, timedelta
 from http import HTTPStatus
 
@@ -8,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models.personal_token import PersonalToken
 from data_rentgen.server.settings import ServerApplicationSettings as Settings
+from data_rentgen.utils.uuid import extract_timestamp_from_uuid
 from tests.fixtures.mocks import MockedUser
 from tests.test_server.fixtures.factories.personal_token import create_personal_token
 from tests.test_server.utils.convert_to_json import personal_token_to_json
@@ -23,6 +25,7 @@ async def test_create_personal_token(
     test_client: AsyncClient,
     async_session: AsyncSession,
     mocked_user: MockedUser,
+    personal_token_jwt_decoder: Callable[[str], dict],
 ):
     today = datetime.now(tz=UTC).date()
     until = today + timedelta(days=366)
@@ -35,11 +38,10 @@ async def test_create_personal_token(
 
     assert response.status_code == HTTPStatus.OK, response.json()
 
-    query = select(PersonalToken).where(PersonalToken.user_id == mocked_user.user.id)
+    query = select(PersonalToken).where(PersonalToken.user_id == mocked_user.user.id, PersonalToken.name == "test")
     personal_token = await async_session.scalar(query)
 
     assert personal_token is not None
-    assert personal_token.name == "test"
     assert personal_token.user_id == mocked_user.user.id
     assert personal_token.since == today
     assert personal_token.until == until
@@ -51,13 +53,25 @@ async def test_create_personal_token(
     assert response_data["data"] == personal_token_to_json(personal_token)
 
     jwt = response_data["content"]
-    assert jwt == "TODO"
+    assert jwt
+    assert personal_token_jwt_decoder(jwt) == {
+        "jti": str(personal_token.id),
+        "iss": "data-rentgen",
+        "token_name": "test",
+        "sub_id": mocked_user.user.id,
+        "preferred_username": mocked_user.user.name,
+        "scope": "all:read all:write",
+        "iat": int(extract_timestamp_from_uuid(personal_token.id).timestamp()),
+        "nbf": day_beginning(personal_token.since).timestamp(),
+        "exp": day_beginning(personal_token.until + timedelta(days=1)).timestamp(),
+    }
 
 
 async def test_create_personal_token_with_until(
     test_client: AsyncClient,
     async_session: AsyncSession,
     mocked_user: MockedUser,
+    personal_token_jwt_decoder: Callable[[str], dict],
 ):
     today = datetime.now(tz=UTC).date()
     until = today + timedelta(days=1)
@@ -70,11 +84,10 @@ async def test_create_personal_token_with_until(
 
     assert response.status_code == HTTPStatus.OK, response.json()
 
-    query = select(PersonalToken).where(PersonalToken.user_id == mocked_user.user.id)
+    query = select(PersonalToken).where(PersonalToken.user_id == mocked_user.user.id, PersonalToken.name == "test")
     personal_token = await async_session.scalar(query)
 
     assert personal_token is not None
-    assert personal_token.name == "test"
     assert personal_token.user_id == mocked_user.user.id
     assert personal_token.since == today
     assert personal_token.until == until
@@ -86,7 +99,18 @@ async def test_create_personal_token_with_until(
     assert response_data["data"] == personal_token_to_json(personal_token)
 
     jwt = response_data["content"]
-    assert jwt == "TODO"
+    assert jwt
+    assert personal_token_jwt_decoder(jwt) == {
+        "jti": str(personal_token.id),
+        "iss": "data-rentgen",
+        "token_name": "test",
+        "sub_id": mocked_user.user.id,
+        "preferred_username": mocked_user.user.name,
+        "scope": "all:read all:write",
+        "iat": int(extract_timestamp_from_uuid(personal_token.id).timestamp()),
+        "nbf": day_beginning(personal_token.since).timestamp(),
+        "exp": day_beginning(personal_token.until + timedelta(days=1)).timestamp(),
+    }
 
 
 async def test_create_personal_token_with_until_more_than_max_value(
@@ -186,7 +210,11 @@ async def test_create_personal_token_unauthorized(
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
     assert response.json() == {
-        "error": {"code": "unauthorized", "details": None, "message": "Missing auth credentials"},
+        "error": {
+            "code": "unauthorized",
+            "message": "Missing Authorization header",
+            "details": None,
+        },
     }
 
 
@@ -197,7 +225,7 @@ async def test_create_personal_token_unauthorized(
     ],
     indirect=True,
 )
-async def test_create_personal_token_not_allowed(
+async def test_create_personal_token_disabled(
     test_client: AsyncClient,
     mocked_user: MockedUser,
     server_app_settings: Settings,
@@ -213,6 +241,26 @@ async def test_create_personal_token_not_allowed(
         "error": {
             "code": "forbidden",
             "message": "Action not allowed",
-            "details": "Personal tokens are disabled",
+            "details": "Authentication using PersonalTokens is disabled",
+        },
+    }
+
+
+async def test_create_personal_token_via_personal_token_not_allowed(
+    test_client: AsyncClient,
+    mocked_user: MockedUser,
+):
+    response = await test_client.post(
+        "v1/personal-tokens",
+        headers={"Authorization": f"Bearer {mocked_user.personal_token}"},
+        json={"name": "test"},
+    )
+
+    assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
+    assert response.json() == {
+        "error": {
+            "code": "unauthorized",
+            "message": "Invalid token",
+            "details": "PersonalToken was passed but access token was expected",
         },
     }

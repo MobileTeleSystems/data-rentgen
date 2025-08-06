@@ -1,7 +1,8 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from pydantic import BaseModel, ConfigDict, Field, ImportString
+from pydantic import BaseModel, ConfigDict, Field, ImportString, field_validator
 
+from data_rentgen.server.providers.auth.base_provider import AuthProvider
 from data_rentgen.server.settings.auth.personal_token import PersonalTokenSettings
 
 
@@ -34,3 +35,11 @@ class AuthSettings(BaseModel):
     )
 
     model_config = ConfigDict(extra="allow")
+
+    @field_validator("provider", mode="after")
+    @classmethod
+    def _validate_provider(cls, value: type) -> type[AuthProvider]:
+        if not issubclass(value, AuthProvider):
+            msg = f"Class {value.__qualname__} is not a subclass of {AuthProvider}"
+            raise TypeError(msg)
+        return value

@@ -12,6 +12,7 @@ from data_rentgen.logging.setup_logging import setup_logging
 from data_rentgen.server.api.handlers import apply_exception_handlers
 from data_rentgen.server.api.router import api_router
 from data_rentgen.server.middlewares import apply_middlewares
+from data_rentgen.server.providers.auth.personal_token_provider import PersonalTokenAuthProvider
 from data_rentgen.server.settings import ServerApplicationSettings
 
 if TYPE_CHECKING:
@@ -36,11 +37,16 @@ def application_factory(settings: ServerApplicationSettings) -> FastAPI:
     apply_exception_handlers(application)
     auth_class: type[AuthProvider] = settings.auth.provider  # type: ignore[assignment]
     auth_class.setup(application)
+
+    PersonalTokenAuthProvider.setup(application)
     apply_middlewares(application, settings.server)
+
+    async def get_settings():
+        return settings
 
     application.dependency_overrides.update(
         {
-            ServerApplicationSettings: lambda: settings,
+            ServerApplicationSettings: get_settings,
             AsyncSession: session_generator(settings.database),  # type: ignore[dict-item]
         },
     )

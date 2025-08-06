@@ -6,7 +6,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from data_rentgen.consumer.settings.kafka import KafkaSettings
 from data_rentgen.consumer.settings.producer import ProducerSettings
+from data_rentgen.db.settings import DatabaseSettings
 from data_rentgen.logging.settings import LoggingSettings
+from data_rentgen.server.settings.auth import AuthSettings
 from data_rentgen.server.settings.server import ServerSettings
 
 
@@ -41,6 +43,14 @@ class Http2KafkaApplicationSettings(BaseSettings):
         DATA_RENTGEN__PRODUCER__MAIN_TOPIC="input.runs"
     """  # noqa: E501
 
+    auth: AuthSettings = Field(
+        default_factory=AuthSettings,
+        description=":ref:`Authentication settings <configuration-server-authentication>`",
+    )
+    database: DatabaseSettings = Field(
+        default_factory=DatabaseSettings,  # type: ignore[arg-type]
+        description=":ref:`Database settings <configuration-database>`",
+    )
     logging: LoggingSettings = Field(
         default_factory=LoggingSettings,
         description=":ref:`Logging settings <configuration-server-logging>`",

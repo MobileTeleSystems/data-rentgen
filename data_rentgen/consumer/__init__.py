@@ -74,7 +74,7 @@ def application_factory(settings: ConsumerApplicationSettings) -> AsgiFastStream
                 await settings.kafka.security.destroy()
                 tg.cancel_scope.cancel()
         except ExceptionGroup as e:
-            for exception in e.exceptions:
+            for exception in e.exceptions:  # type: ignore[attr-defined]
                 raise exception from None
 
     return FastStream(

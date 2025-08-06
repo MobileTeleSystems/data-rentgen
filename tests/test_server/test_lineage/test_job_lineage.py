@@ -31,8 +31,29 @@ async def test_get_job_lineage_unauthorized(
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
     assert response.json() == {
-        "error": {"code": "unauthorized", "details": None, "message": "Missing auth credentials"},
+        "error": {
+            "code": "unauthorized",
+            "message": "Missing Authorization header",
+            "details": None,
+        },
     }
+
+
+async def test_get_job_lineage_via_personal_token_is_allowed(
+    test_client: AsyncClient,
+    job: Job,
+    mocked_user: MockedUser,
+):
+    response = await test_client.get(
+        "v1/jobs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.personal_token}"},
+        params={
+            "since": datetime.now(tz=timezone.utc).isoformat(),
+            "start_node_id": job.id,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
 
 
 async def test_get_job_lineage_no_runs(

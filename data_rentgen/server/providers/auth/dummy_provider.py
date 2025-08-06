@@ -10,7 +10,6 @@ from fastapi import Depends, FastAPI, Request
 from data_rentgen.db.models import User
 from data_rentgen.dependencies import Stub
 from data_rentgen.dto import UserDTO
-from data_rentgen.exceptions import EntityNotFoundError
 from data_rentgen.exceptions.auth import AuthorizationError
 from data_rentgen.server.providers.auth.base_provider import AuthProvider
 from data_rentgen.server.settings.auth.dummy import DummyAuthProviderSettings
@@ -21,6 +20,8 @@ logger = logging.getLogger(__name__)
 
 
 class DummyAuthProvider(AuthProvider):
+    """Auth provider which accepts any user and password."""
+
     def __init__(
         self,
         settings: Annotated[DummyAuthProviderSettings, Depends(Stub(DummyAuthProviderSettings))],
@@ -35,20 +36,58 @@ class DummyAuthProvider(AuthProvider):
             app.state.settings.auth.model_dump(exclude={"provider"}),
         )
         logger.info("Using %s provider with settings:\n%s", cls.__name__, pformat(settings))
+
+        async def get_settings():
+            return settings
+
         app.dependency_overrides[AuthProvider] = cls
-        app.dependency_overrides[DummyAuthProviderSettings] = lambda: settings
+        app.dependency_overrides[DummyAuthProviderSettings] = get_settings
         return app
+
+    def generate_jwt(
+        self,
+        user: User,
+    ) -> tuple[str, float]:
+        now = time()
+        expires_at = time() + self._settings.access_token.expire_seconds
+        claims = {
+            "sub_id": user.id,
+            "preferred_username": user.name,
+            "iat": now,
+            "nbf": now,
+            "exp": expires_at,
+        }
+        jwt = sign_jwt(
+            payload=claims,
+            secret_key=self._settings.access_token.secret_key.get_secret_value(),
+            security_algorithm=self._settings.access_token.security_algorithm,
+        )
+        return f"access_token_{jwt}", expires_at
+
+    def extract_token(
+        self,
+        jwt_string: str,
+    ) -> User:
+        claims = decode_jwt(
+            token=jwt_string.replace("access_token_", ""),
+            secret_key=self._settings.access_token.secret_key.get_secret_value(),
+            security_algorithm=self._settings.access_token.security_algorithm,
+        )
+        try:
+            return User(id=int(claims["sub_id"]), name=claims["preferred_username"])
+        except (KeyError, TypeError, ValueError) as e:
+            msg = "Invalid token"
+            raise AuthorizationError(msg) from e
 
     async def get_current_user(self, access_token: str | None, request: Request) -> User:
         if not access_token:
-            msg = "Missing auth credentials"
+            msg = "Missing Authorization header"
             raise AuthorizationError(msg)
-
-        user_id = self._get_user_id_from_token(access_token)
-        user = await self._uow.user.read_by_id(user_id)
-        if user is None:
-            raise EntityNotFoundError("User", "user_id", user_id)  # type: ignore[call-arg]  # noqa: EM101
-        return user
+        if not access_token.startswith("access_token_"):
+            details = "PersonalToken was passed but access token was expected"
+            msg = "Invalid token"
+            raise AuthorizationError(msg, details)
+        return self.extract_token(access_token)
 
     async def get_token_password_grant(
         self,
@@ -65,7 +104,7 @@ class DummyAuthProvider(AuthProvider):
 
         logger.debug("User with id %r found", user.id)
         logger.debug("Generate access token for user id %r", user.id)
-        access_token, expires_at = self._generate_access_token(user_id=user.id)
+        access_token, expires_at = self.generate_jwt(user)
         return {
             "access_token": access_token,
             "token_type": "bearer",
@@ -76,34 +115,9 @@ class DummyAuthProvider(AuthProvider):
         self,
         code: str,
     ) -> dict[str, Any]:
-        msg = "Authorization code grant is not supported by DummyAuthProvider."
+        msg = "Authorization code grant is not supported by DummyAuthProvider"
         raise NotImplementedError(msg)
 
     async def logout(self, user: User, refresh_token: str | None) -> None:
-        msg = "Logout method is not implemented for DummyAuthProvider."
+        msg = "Logout method is not implemented for DummyAuthProvider"
         raise NotImplementedError(msg)
-
-    def _generate_access_token(self, user_id: int) -> tuple[str, float]:
-        expires_at = time() + self._settings.access_token.expire_seconds
-        payload = {
-            "user_id": user_id,
-            "exp": expires_at,
-        }
-        access_token = sign_jwt(
-            payload,
-            self._settings.access_token.secret_key.get_secret_value(),
-            self._settings.access_token.security_algorithm,
-        )
-        return access_token, expires_at
-
-    def _get_user_id_from_token(self, token: str) -> int:
-        try:
-            payload = decode_jwt(
-                token,
-                self._settings.access_token.secret_key.get_secret_value(),
-                self._settings.access_token.security_algorithm,
-            )
-            return int(payload["user_id"])
-        except (KeyError, TypeError, ValueError) as e:
-            msg = "Invalid token"
-            raise AuthorizationError(msg) from e

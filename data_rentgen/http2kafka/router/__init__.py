@@ -8,19 +8,22 @@ from asgi_correlation_id import correlation_id
 from fastapi import APIRouter, Body, Depends, Request, Response
 from faststream.kafka.publisher.asyncapi import AsyncAPIDefaultPublisher
 
+from data_rentgen.db.models.user import User
 from data_rentgen.dependencies.stub import Stub
 from data_rentgen.http2kafka.router.gzip_route import SupportsGzipRoute
 from data_rentgen.openlineage.run_event import OpenLineageRunEvent
 from data_rentgen.openlineage.run_facets import OpenLineageParentRunFacet
 from data_rentgen.server.errors import get_error_responses
 from data_rentgen.server.errors.schemas import InvalidRequestSchema
+from data_rentgen.server.errors.schemas.not_authorized import NotAuthorizedSchema
+from data_rentgen.server.services.get_user import PersonalTokenPolicy, get_user
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter(
     prefix="/v1/openlineage",
     tags=["OpenLineage"],
-    responses=get_error_responses(include={InvalidRequestSchema}),
+    responses=get_error_responses(include={InvalidRequestSchema, NotAuthorizedSchema}),
     route_class=SupportsGzipRoute,
 )
 
@@ -35,6 +38,7 @@ async def send_events_to_kafka(
     event: Annotated[OpenLineageRunEvent, Body()],
     request: Request,
     kafka_publisher: Annotated[AsyncAPIDefaultPublisher, Depends(Stub(AsyncAPIDefaultPublisher))],
+    current_user: Annotated[User, Depends(get_user(personal_token_policy=PersonalTokenPolicy.REQUIRE))],
 ):
     body_json_bytes = await request.body()
     logger.debug("Got 1 message (%dKiB)", len(body_json_bytes) / 1024)
@@ -45,6 +49,7 @@ async def send_events_to_kafka(
         correlation_id=correlation_id.get(),
         headers={
             "content-type": "application/json",
+            "reported-by-user-name": current_user.name,
         },
         # add event to message accumulator. messages are send in a background task.
         # do not wait until the message is actually send

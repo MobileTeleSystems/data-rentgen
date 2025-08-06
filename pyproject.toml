@@ -70,7 +70,8 @@ python-multipart = {version = "^0.0.20", optional = true}
 python-keycloak = {version = "^5.6.0", optional = true}
 pyjwt = {version = "^2.10.1 ", optional = true}
 gssapi = {version = "^1.9.0", optional = true}
-faker = {version = "37.4.2", optional = true}
+faker = {version = "^37.4.2", optional = true}
+cachetools = {version="^6.1.0", optional = true}
 
 [tool.poetry.extras]
 server = [
@@ -94,6 +95,7 @@ server = [
   "itsdangerous",
   "python-multipart",
   "python-keycloak",
+  "cachetools",
 ]
 consumer = [
   "faststream",
@@ -124,6 +126,7 @@ http2kafka = [
   "packaging",
   "faststream",
   "cramjam",
+  "cachetools",
 ]
 postgres = [
   "asyncpg",
@@ -148,6 +151,7 @@ psycopg2-binary = "^2.9.10"
 gevent = "^25.5.1"
 deepdiff = "^8.5.0"
 respx = "^0.22.0"
+dirty_equals = "^0.9.0"
 
 [tool.poetry.group.dev.dependencies]
 pre-commit = "^4.2.0"
@@ -156,6 +160,7 @@ sqlalchemy = {extras = ["mypy"], version = "^2.0.41"}
 types-pyyaml = "^6.0.12"
 types-python-dateutil = "^2.9.0"
 types-jwcrypto = "^1.5.0"
+types-cachetools = "^6.1.0"
 
 [tool.poetry.group.docs.dependencies]
 autodoc-pydantic = "^2.2.0"
@@ -184,8 +189,9 @@ replace = 'ver = Version.parse("{new_version}")'
 [tool.pytest.ini_options]
 markers = [
     "server: tests for server (require running database)",
-    "consumer: tests for consumer (require running database)",
-    "db: tests for db",
+    "consumer: tests for consumer (require running database and kafka)",
+    "http2kafka: tests for consumer (require running database and kafka)",
+    "db: tests for db structure and migrations",
     "lineage: tests for lineage endpoints (require running database)"
 ]
 

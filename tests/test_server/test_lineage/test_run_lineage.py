@@ -33,8 +33,29 @@ async def test_get_run_lineage_unauthorized(
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
     assert response.json() == {
-        "error": {"code": "unauthorized", "details": None, "message": "Missing auth credentials"},
+        "error": {
+            "code": "unauthorized",
+            "message": "Missing Authorization header",
+            "details": None,
+        },
     }
+
+
+async def test_get_run_lineage_via_personal_token_is_allowed(
+    test_client: AsyncClient,
+    run: Run,
+    mocked_user: MockedUser,
+):
+    response = await test_client.get(
+        "v1/runs/lineage",
+        headers={"Authorization": f"Bearer {mocked_user.personal_token}"},
+        params={
+            "since": run.created_at.isoformat(),
+            "start_node_id": str(run.id),
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
 
 
 async def test_get_run_lineage_no_operations(
