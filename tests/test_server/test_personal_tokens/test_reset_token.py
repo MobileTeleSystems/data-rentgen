@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from datetime import UTC, date, datetime, timedelta
 from http import HTTPStatus
 
@@ -8,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models.personal_token import PersonalToken
 from data_rentgen.server.settings import ServerApplicationSettings as Settings
+from data_rentgen.utils.uuid import extract_timestamp_from_uuid
 from tests.fixtures.mocks import MockedUser
 from tests.test_server.fixtures.factories.personal_token import (
     create_personal_token,
@@ -40,6 +42,7 @@ async def test_reset_personal_token(
     mocked_user: MockedUser,
     since_delta: timedelta,
     until_delta: timedelta,
+    personal_token_jwt_decoder: Callable[[str], dict],
 ):
     today = datetime.now(tz=UTC).date()
 
@@ -68,7 +71,7 @@ async def test_reset_personal_token(
 
     query = (
         select(PersonalToken)
-        .where(PersonalToken.user_id == mocked_user.user.id)
+        .where(PersonalToken.user_id == mocked_user.user.id, PersonalToken.name == "test")
         .order_by(PersonalToken.revoked_at.nulls_first(), PersonalToken.id)
     )
     personal_token_scalars = await async_session.scalars(query)
@@ -97,13 +100,25 @@ async def test_reset_personal_token(
 
     # only new token is returned
     jwt = response_data["content"]
-    assert jwt == "TODO"
+    assert jwt
+    assert personal_token_jwt_decoder(jwt) == {
+        "jti": str(new_token.id),
+        "iss": "data-rentgen",
+        "token_name": "test",
+        "sub_id": mocked_user.user.id,
+        "preferred_username": mocked_user.user.name,
+        "scope": "all:read all:write",
+        "iat": int(extract_timestamp_from_uuid(new_token.id).timestamp()),
+        "nbf": day_beginning(new_token.since).timestamp(),
+        "exp": day_beginning(new_token.until + timedelta(days=1)).timestamp(),
+    }
 
 
 async def test_reset_personal_token_with_until(
     test_client: AsyncClient,
     async_session: AsyncSession,
     mocked_user: MockedUser,
+    personal_token_jwt_decoder: Callable[[str], dict],
 ):
     today = datetime.now(tz=UTC).date()
 
@@ -132,7 +147,7 @@ async def test_reset_personal_token_with_until(
 
     query = (
         select(PersonalToken)
-        .where(PersonalToken.user_id == mocked_user.user.id)
+        .where(PersonalToken.user_id == mocked_user.user.id, PersonalToken.name == "test")
         .order_by(PersonalToken.revoked_at.nulls_first(), PersonalToken.id)
     )
     personal_token_scalars = await async_session.scalars(query)
@@ -161,7 +176,18 @@ async def test_reset_personal_token_with_until(
 
     # only new token is returned
     jwt = response_data["content"]
-    assert jwt == "TODO"
+    assert jwt
+    assert personal_token_jwt_decoder(jwt) == {
+        "jti": str(new_token.id),
+        "iss": "data-rentgen",
+        "token_name": "test",
+        "sub_id": mocked_user.user.id,
+        "preferred_username": mocked_user.user.name,
+        "scope": "all:read all:write",
+        "iat": int(extract_timestamp_from_uuid(new_token.id).timestamp()),
+        "nbf": day_beginning(new_token.since).timestamp(),
+        "exp": day_beginning(new_token.until + timedelta(days=1)).timestamp(),
+    }
 
 
 async def test_reset_personal_token_with_until_more_than_max_value(
@@ -336,7 +362,11 @@ async def test_reset_personal_token_unauthorized(
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
     assert response.json() == {
-        "error": {"code": "unauthorized", "details": None, "message": "Missing auth credentials"},
+        "error": {
+            "code": "unauthorized",
+            "message": "Missing Authorization header",
+            "details": None,
+        },
     }
 
 
@@ -347,7 +377,7 @@ async def test_reset_personal_token_unauthorized(
     ],
     indirect=True,
 )
-async def test_reset_personal_token_not_allowed(
+async def test_reset_personal_token_disabled(
     test_client: AsyncClient,
     async_session: AsyncSession,
     mocked_user: MockedUser,
@@ -366,6 +396,27 @@ async def test_reset_personal_token_not_allowed(
         "error": {
             "code": "forbidden",
             "message": "Action not allowed",
-            "details": "Personal tokens are disabled",
+            "details": "Authentication using PersonalTokens is disabled",
+        },
+    }
+
+
+async def test_reset_personal_token_via_personal_token_not_allowed(
+    test_client: AsyncClient,
+    mocked_user: MockedUser,
+    personal_token: PersonalToken,
+):
+    response = await test_client.patch(
+        f"v1/personal-tokens/{personal_token.id}",
+        headers={"Authorization": f"Bearer {mocked_user.personal_token}"},
+        json={},
+    )
+
+    assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
+    assert response.json() == {
+        "error": {
+            "code": "unauthorized",
+            "message": "Invalid token",
+            "details": "PersonalToken was passed but access token was expected",
         },
     }

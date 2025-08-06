@@ -13,6 +13,7 @@ from pydantic_core import InitErrorDetails
 
 from data_rentgen.db.models import User  # noqa: TC001
 from data_rentgen.server.errors import get_error_responses
+from data_rentgen.server.providers.auth.personal_token_provider import PersonalTokenAuthProvider  # noqa: TC001
 from data_rentgen.server.schemas.v1 import (
     PageResponseV1,
     PersonalTokenCreatedDetailedResponseV1,
@@ -23,7 +24,7 @@ from data_rentgen.server.schemas.v1 import (
     PersonalTokenResponseV1,
     PersonalTokenScopeV1,
 )
-from data_rentgen.server.services import PersonalTokenService, get_user
+from data_rentgen.server.services import PersonalTokenPolicy, PersonalTokenService, get_user
 
 router = APIRouter(
     prefix="/personal-tokens",
@@ -50,8 +51,9 @@ async def get_personal_tokens(
 @router.post("")
 async def create_personal_token(
     token_params: PersonalTokenCreateRequestV1,
-    current_user: Annotated[User, Depends(get_user())],
+    current_user: Annotated[User, Depends(get_user(personal_token_policy=PersonalTokenPolicy.DENY))],
     user_token_service: Annotated[PersonalTokenService, Depends()],
+    personal_token_auth_provider: Annotated[PersonalTokenAuthProvider, Depends()],
 ) -> PersonalTokenCreatedDetailedResponseV1:
     async with user_token_service:
         token = await user_token_service.create(
@@ -72,7 +74,7 @@ async def create_personal_token(
             since=token.since,
             until=token.until,
         ),
-        content="TODO",
+        content=personal_token_auth_provider.generate_jwt(user=current_user, token=token),
     )
 
 
@@ -80,8 +82,9 @@ async def create_personal_token(
 async def reset_personal_token(
     token_id: UUID,
     new_token_params: PersonalTokenResetRequestV1,
-    current_user: Annotated[User, Depends(get_user())],
+    current_user: Annotated[User, Depends(get_user(personal_token_policy=PersonalTokenPolicy.DENY))],
     user_token_service: Annotated[PersonalTokenService, Depends()],
+    personal_token_auth_provider: Annotated[PersonalTokenAuthProvider, Depends()],
 ) -> PersonalTokenCreatedDetailedResponseV1:
     async with user_token_service:
         old_token = await user_token_service.revoke(current_user, token_id)
@@ -102,14 +105,14 @@ async def reset_personal_token(
             since=new_token.since,
             until=new_token.until,
         ),
-        content="TODO",
+        content=personal_token_auth_provider.generate_jwt(user=current_user, token=new_token),
     )
 
 
 @router.delete("/{token_id}", status_code=HTTPStatus.NO_CONTENT)
 async def revoke_personal_token(
     token_id: UUID,
-    current_user: Annotated[User, Depends(get_user())],
+    current_user: Annotated[User, Depends(get_user(personal_token_policy=PersonalTokenPolicy.DENY))],
     user_token_service: Annotated[PersonalTokenService, Depends()],
 ):
     async with user_token_service:

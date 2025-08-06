@@ -53,5 +53,21 @@ async def test_get_jobs_unauthorized(
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
     assert response.json() == {
-        "error": {"code": "unauthorized", "details": None, "message": "Missing auth credentials"},
+        "error": {
+            "code": "unauthorized",
+            "message": "Missing Authorization header",
+            "details": None,
+        },
     }
+
+
+async def test_get_jobs_via_personal_token_is_allowed(
+    test_client: AsyncClient,
+    mocked_user: MockedUser,
+):
+    response = await test_client.get(
+        "v1/jobs",
+        headers={"Authorization": f"Bearer {mocked_user.personal_token}"},
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()

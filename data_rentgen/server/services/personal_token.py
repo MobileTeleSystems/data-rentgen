@@ -11,7 +11,7 @@ from data_rentgen.db.models import PersonalToken, User
 from data_rentgen.dependencies.stub import Stub
 from data_rentgen.dto.pagination import PaginationDTO
 from data_rentgen.exceptions import ActionNotAllowedError, EntityNotFoundError
-from data_rentgen.server.settings import ServerApplicationSettings
+from data_rentgen.server.settings.auth.personal_token import PersonalTokenSettings
 from data_rentgen.services.uow import UnitOfWork
 from data_rentgen.utils.uuid import generate_new_uuid
 
@@ -30,10 +30,10 @@ class PersonalTokenService:
     def __init__(
         self,
         uow: Annotated[UnitOfWork, Depends()],
-        settings: Annotated[ServerApplicationSettings, Depends(Stub(ServerApplicationSettings))],
+        settings: Annotated[PersonalTokenSettings, Depends(Stub(PersonalTokenSettings))],
     ):
         self._uow = uow
-        self._token_settings = settings.auth.personal_tokens
+        self._settings = settings
 
     async def __aenter__(self):
         await self._uow.__aenter__()
@@ -80,12 +80,12 @@ class PersonalTokenService:
         scopes: list[str],
         until: date | None,
     ) -> PersonalToken:
-        if not self._token_settings.enabled:
-            error_msg = "Personal tokens are disabled"
+        if not self._settings.enabled:
+            error_msg = "Authentication using PersonalTokens is disabled"
             raise ActionNotAllowedError(error_msg)
 
         today = datetime.now(tz=UTC).date()
-        max_until = today + timedelta(days=self._token_settings.max_duration_days)
+        max_until = today + timedelta(days=self._settings.max_duration_days)
         until = min(max_until, until or max_until)
 
         return await self._uow.personal_token.create(

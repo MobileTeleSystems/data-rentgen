@@ -20,11 +20,18 @@ _responses_by_exception: dict[type[Exception], APIErrorResponse] = {}
 _responses_by_status_code: dict[int, APIErrorResponse] = {}
 
 
-def register_error_response(exception: type[Exception], status: http.HTTPStatus):
+def register_error_response(
+    exception: type[Exception],
+    status: http.HTTPStatus,
+):
     """Register mapping between exception, status code and JSON body schema."""
 
     def wrapper(cls):
-        response = APIErrorResponse(status.value, status.phrase, cls)
+        response = APIErrorResponse(
+            status=status.value,
+            description=status.phrase,
+            schema=cls,
+        )
         _responses_by_exception[exception] = response
         _responses_by_status_code[status.value] = response
         return cls

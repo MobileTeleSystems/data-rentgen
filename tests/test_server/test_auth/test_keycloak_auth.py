@@ -1,4 +1,5 @@
 import logging
+from http import HTTPStatus
 
 import pytest
 from httpx import AsyncClient
@@ -38,7 +39,7 @@ async def test_keycloak_get_current_user_unauthorized(
         f"{settings.client_id}&response_type=code&redirect_uri={settings.redirect_uri}"
         f"&scope={settings.scope}&state=&nonce="
     )
-    assert response.status_code == 401, response.json()
+    assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
     assert response.json() == {
         "error": {
             "code": "auth_redirect",
@@ -60,7 +61,7 @@ async def test_keycloak_get_current_user_unauthorized(
     indirect=True,
 )
 @pytest.mark.flaky  # sometimes cookie signature may be regenerated
-async def test_keycloak_get_current_user_authorized(
+async def test_keycloak_auth(
     test_client: AsyncClient,
     user: User,
     server_app_settings: Settings,
@@ -94,7 +95,7 @@ async def test_keycloak_get_current_user_authorized(
     ],
     indirect=True,
 )
-async def test_keycloak_get_current_user_refresh_access_token(
+async def test_keycloak_auth_refresh_access_token(
     caplog,
     user: User,
     test_client: AsyncClient,
@@ -116,7 +117,7 @@ async def test_keycloak_get_current_user_refresh_access_token(
         )
 
     assert response.cookies.get("session") != session_cookie, caplog.text  # cookie is updated
-    assert response.status_code == 200, response.json()
+    assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {"name": user.name}
 
 
@@ -133,7 +134,6 @@ async def test_keycloak_get_current_user_refresh_access_token(
 )
 async def test_keycloak_auth_callback(
     caplog,
-    user: User,
     test_client: AsyncClient,
     server_app_settings: Settings,
     mock_keycloak_well_known,
@@ -147,7 +147,7 @@ async def test_keycloak_auth_callback(
         )
 
     assert response.cookies.get("session"), caplog.text  # cookie is set
-    assert response.status_code == 204, response.json()
+    assert response.status_code == HTTPStatus.NO_CONTENT, response.json()
 
 
 @pytest.mark.parametrize(
@@ -180,18 +180,22 @@ async def test_keycloak_auth_logout(
         "/v1/auth/logout",
         headers=headers,
     )
-    assert response.status_code == 204, response.json()
+    assert response.status_code == HTTPStatus.NO_CONTENT, response.json()
     assert response.cookies.get("session") is None
 
-    dataset_response = await test_client.get(
-        "v1/datasets",
+    next_response = await test_client.get("v1/users/me")
+    # redirect unauthorized user to Keycloak
+    redirect_url = (
+        f"{settings.server_url}/realms/{settings.realm_name}/protocol/openid-connect/auth?client_id="
+        f"{settings.client_id}&response_type=code&redirect_uri={settings.redirect_uri}"
+        f"&scope={settings.scope}&state=&nonce="
     )
-    assert dataset_response.status_code == 401, response.json()
-    assert dataset_response.json() == {
+    assert next_response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
+    assert next_response.json() == {
         "error": {
             "code": "auth_redirect",
             "message": "Please authorize using provided URL",
-            "details": f"{settings.server_url}/realms/{settings.realm_name}/protocol/openid-connect/auth?client_id={settings.client_id}&response_type=code&redirect_uri={settings.redirect_uri}&scope=email&state=&nonce=",
+            "details": redirect_url,
         },
     }
 
@@ -225,8 +229,12 @@ async def test_keycloak_auth_logout_bad_request(
         "/v1/auth/logout",
         headers=headers,
     )
-    assert response.status_code == 400, response.json()
+    assert response.status_code == HTTPStatus.BAD_REQUEST, response.json()
     assert response.json() == {
-        "error": {"code": "logout_error", "message": "Logout error", "details": f"Can't logout user: {user.name}"},
+        "error": {
+            "code": "logout_error",
+            "message": "Logout error",
+            "details": f"Can't logout user: {user.name}",
+        },
     }
     assert response.cookies.get("session") is None

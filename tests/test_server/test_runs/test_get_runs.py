@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from http import HTTPStatus
 
 import pytest
@@ -208,5 +208,24 @@ async def test_get_runs_unauthorized(
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
     assert response.json() == {
-        "error": {"code": "unauthorized", "details": None, "message": "Missing auth credentials"},
+        "error": {
+            "code": "unauthorized",
+            "message": "Missing Authorization header",
+            "details": None,
+        },
     }
+
+
+async def test_get_runs_via_personal_token_is_allowed(
+    test_client: AsyncClient,
+    mocked_user: MockedUser,
+):
+    response = await test_client.get(
+        "v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.personal_token}"},
+        params={
+            "since": datetime.now(tz=UTC).isoformat(),
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()

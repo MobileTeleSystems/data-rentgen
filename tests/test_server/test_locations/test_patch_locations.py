@@ -152,5 +152,9 @@ async def test_patch_location_without_auth(
 
     assert response.status_code == HTTPStatus.UNAUTHORIZED, response.json()
     assert response.json() == {
-        "error": {"code": "unauthorized", "details": None, "message": "Missing auth credentials"},
+        "error": {
+            "code": "unauthorized",
+            "message": "Missing Authorization header",
+            "details": None,
+        },
     }

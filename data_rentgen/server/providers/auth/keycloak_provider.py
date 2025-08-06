@@ -20,6 +20,8 @@ logger = logging.getLogger(__name__)
 
 
 class KeycloakAuthProvider(AuthProvider):
+    """Auth provider which uses Keycloak OpenID Connect."""
+
     def __init__(
         self,
         settings: Annotated[KeycloakAuthProviderSettings, Depends(Stub(KeycloakAuthProviderSettings))],
@@ -41,8 +43,12 @@ class KeycloakAuthProvider(AuthProvider):
             app.state.settings.auth.model_dump(exclude={"provider"}),
         )
         logger.info("Using %s provider with settings:\n%s", cls.__name__, settings)
+
+        async def get_settings():
+            return settings
+
         app.dependency_overrides[AuthProvider] = cls
-        app.dependency_overrides[KeycloakAuthProviderSettings] = lambda: settings
+        app.dependency_overrides[KeycloakAuthProviderSettings] = get_settings
         return app
 
     async def get_token_password_grant(
@@ -50,7 +56,7 @@ class KeycloakAuthProvider(AuthProvider):
         login: str,
         password: str,
     ) -> dict[str, Any]:
-        msg = "Password grant is not supported by KeycloakAuthProvider."
+        msg = "Password grant is not supported by KeycloakAuthProvider"
         raise NotImplementedError(msg)
 
     async def get_token_authorization_code_grant(
@@ -73,8 +79,10 @@ class KeycloakAuthProvider(AuthProvider):
         access_token: str | None,
         request: Request,
     ) -> User:
+        # we ignore explicit token passed via Authorization header
+        access_token = request.session.get("access_token")
         if not access_token:
-            logger.debug("No access token found in session.")
+            logger.debug("No access token found in session")
             await self.redirect_to_auth()
 
         # if user is disabled or blocked in Keycloak after the token is issued, he will
@@ -96,7 +104,7 @@ class KeycloakAuthProvider(AuthProvider):
         # https://github.com/keycloak/keycloak/blob/3ca3a4ad349b4d457f6829eaf2ae05f1e01408be/core/src/main/java/org/keycloak/representations/IDToken.java
         login = token_info.get("preferred_username")  # type: ignore[union-attr]
         if not login:
-            msg = "Invalid token payload"
+            msg = "Invalid token"
             raise AuthorizationError(msg)
         return await self._uow.user.get_or_create(UserDTO(name=login))  # type: ignore[arg-type]
 
