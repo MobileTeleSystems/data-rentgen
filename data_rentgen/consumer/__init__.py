@@ -84,7 +84,7 @@ def application_factory(settings: ConsumerApplicationSettings) -> AsgiFastStream
         description="Data.Rentgen is a nextgen DataLineage service",
         version=data_rentgen.__version__,
         logger=logger,
-    ).as_asgi(asgi_routes=[("/internal/healthcheck/liveness", liveness)])
+    ).as_asgi(asgi_routes=[("/monitoring/ping", liveness)])
 
 
 def get_application():
