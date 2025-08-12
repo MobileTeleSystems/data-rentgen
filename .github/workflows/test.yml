@@ -136,9 +136,7 @@ jobs:
 
       - name: Combine Coverage Data
         run: |
-          ls -lsah coverage-data
-          ls -lsah coverage-data/*
-          coverage combine coverage-data/*
+          coverage combine coverage-data
           coverage xml -o combined_coverage.xml
 
       - name: Check Coverage
