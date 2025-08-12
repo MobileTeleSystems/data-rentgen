@@ -25,7 +25,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -115,7 +115,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v5
@@ -129,7 +129,7 @@ jobs:
         run: pip install -I coverage
 
       - name: Download all raw coverage data
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           path: coverage-data/
           pattern: raw-coverage-*
