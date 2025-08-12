@@ -13,8 +13,6 @@ repos:
       - id: end-of-file-fixer
         types: [python]
       - id: fix-byte-order-marker
-      - id: fix-encoding-pragma
-        args: [--remove]
       - id: mixed-line-ending
         args: [--fix=lf]
         types: [python]
