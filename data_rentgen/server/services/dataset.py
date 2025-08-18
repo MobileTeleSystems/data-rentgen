@@ -13,7 +13,9 @@ from data_rentgen.services.uow import UnitOfWork
 
 @dataclass
 class TagData:
+    id: int
     name: str
+    value_id: int
     value: str
 
 
@@ -22,7 +24,6 @@ class DatasetData:
     id: int
     name: str
     location: Location
-    tags: list[TagData]
     schema = None
 
 
@@ -30,6 +31,7 @@ class DatasetData:
 class DatasetServiceResult:
     id: int
     data: DatasetData
+    tags: list[TagData]
 
 
 class DatasetServicePaginatedResult(PaginationDTO[DatasetServiceResult]):
@@ -45,12 +47,14 @@ class DatasetService:
         page: int,
         page_size: int,
         dataset_ids: Collection[int],
+        tag_value_ids: Collection[int],
         search_query: str | None,
     ) -> DatasetServicePaginatedResult:
         pagination = await self._uow.dataset.paginate(
             page=page,
             page_size=page_size,
             dataset_ids=dataset_ids,
+            tag_value_ids=tag_value_ids,
             search_query=search_query,
         )
 
@@ -65,8 +69,16 @@ class DatasetService:
                         id=dataset.id,
                         name=dataset.name,
                         location=dataset.location,
-                        tags=[TagData(name=tag.tag.name, value=tag.value) for tag in dataset.tags],
                     ),
+                    tags=[
+                        TagData(
+                            id=tv.tag.id,
+                            name=tv.tag.name,
+                            value_id=tv.id,
+                            value=tv.value,
+                        )
+                        for tv in sorted(dataset.tags, key=lambda tv: (tv.tag.name, tv.value))
+                    ],
                 )
                 for dataset in pagination.items
             ],

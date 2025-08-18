@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from data_rentgen.server.schemas.v1.location import LocationResponseV1
 from data_rentgen.server.schemas.v1.pagination import PaginateQueryV1
-from data_rentgen.server.schemas.v1.tags import TagsResponseV1
+from data_rentgen.server.schemas.v1.tag import TagResponseV1
 
 
 class DatasetSchemaFieldV1(BaseModel):
@@ -35,7 +35,6 @@ class DatasetResponseV1(BaseModel):
     id: str = Field(description="Dataset id", coerce_numbers_to_str=True)
     location: LocationResponseV1 = Field(description="Corresponding Location")
     name: str = Field(description="Dataset name")
-    tags: list[TagsResponseV1] = Field(default_factory=list, description="Dataset tags")
     schema: DatasetSchemaV1 | None = Field(  # type: ignore[assignment]
         description="Schema",
         default=None,
@@ -49,6 +48,7 @@ class DatasetResponseV1(BaseModel):
 class DatasetDetailedResponseV1(BaseModel):
     id: str = Field(description="Dataset id", coerce_numbers_to_str=True)
     data: DatasetResponseV1 = Field(description="Dataset data")
+    tags: list[TagResponseV1] = Field(default_factory=list, description="Dataset tags")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -57,6 +57,7 @@ class DatasetPaginateQueryV1(PaginateQueryV1):
     """Query params for Dataset paginate request."""
 
     dataset_id: list[int] = Field(Query(default_factory=list), description="Dataset id")
+    tag_value_id: list[int] = Field(Query(default_factory=list), description="Tag value id")
     search_query: str | None = Field(
         Query(
             default=None,

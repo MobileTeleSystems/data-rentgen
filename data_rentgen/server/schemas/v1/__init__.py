@@ -69,7 +69,7 @@ from data_rentgen.server.schemas.v1.run import (
     RunsQueryV1,
     RunStatisticsReponseV1,
 )
-from data_rentgen.server.schemas.v1.tags import TagsResponseV1
+from data_rentgen.server.schemas.v1.tag import TagDetailedResponseV1, TagResponseV1
 from data_rentgen.server.schemas.v1.user import UserResponseV1
 
 __all__ = [
@@ -125,7 +125,8 @@ __all__ = [
     "RunResponseV1",
     "RunStatisticsReponseV1",
     "RunsQueryV1",
-    "TagsResponseV1",
+    "TagDetailedResponseV1",
+    "TagResponseV1",
     "UpdateLocationRequestV1",
     "UserResponseV1",
 ]

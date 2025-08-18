@@ -6,7 +6,7 @@ from data_rentgen.db.models.base import Base
 from data_rentgen.db.models.column_lineage import ColumnLineage
 from data_rentgen.db.models.custom_properties import CustomProperties
 from data_rentgen.db.models.custom_user_properties import CustomUserProperties
-from data_rentgen.db.models.dataset import Dataset
+from data_rentgen.db.models.dataset import Dataset, dataset_tags_table
 from data_rentgen.db.models.dataset_column_relation import (
     DatasetColumnRelation,
     DatasetColumnRelationType,
@@ -55,4 +55,5 @@ __all__ = [
     "Tag",
     "TagValue",
     "User",
+    "dataset_tags_table",
 ]

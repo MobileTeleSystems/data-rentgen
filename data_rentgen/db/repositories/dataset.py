@@ -11,6 +11,7 @@ from sqlalchemy import (
     any_,
     asc,
     desc,
+    distinct,
     func,
     select,
     union,
@@ -42,11 +43,24 @@ class DatasetRepository(Repository[Dataset]):
         page: int,
         page_size: int,
         dataset_ids: Collection[int],
+        tag_value_ids: Collection[int],
         search_query: str | None,
     ) -> PaginationDTO[Dataset]:
         where = []
         if dataset_ids:
             where.append(Dataset.id == any_(list(dataset_ids)))  # type: ignore[arg-type]
+
+        if tag_value_ids:
+            tv_ids = list(tag_value_ids)
+            dataset_ids_subq = (
+                select(Dataset.id)
+                .join(Dataset.tags)
+                .where(TagValue.id.in_(tv_ids))
+                .group_by(Dataset.id)
+                # If multiple tag values are passed, dataset should have both of them (AND, not OR)
+                .having(func.count(distinct(TagValue.id)) == len(tv_ids))
+            )
+            where.append(Dataset.id.in_(dataset_ids_subq))
 
         query: Select | CompoundSelect
         order_by: list[ColumnElement | SQLColumnExpression]

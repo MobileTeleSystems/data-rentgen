@@ -51,6 +51,28 @@ async def create_dataset(
     return dataset
 
 
+async def create_dataset_with_tags(
+    async_session: AsyncSession,
+    dataset_kwargs: dict | None = None,
+    tags_count: int = 3,
+    tag_values_count: int = 2,
+) -> Dataset:
+    location = await create_location(async_session)
+
+    tag_values = set()
+    for _ in range(tags_count):
+        tag = await create_tag(async_session)
+        values = [await create_tag_value(async_session, tag_id=tag.id) for _ in range(tag_values_count)]
+        tag_values.update(values)
+
+    return await create_dataset(
+        async_session,
+        location_id=location.id,
+        dataset_kwargs=dataset_kwargs,
+        tags=tag_values,
+    )
+
+
 async def make_symlink(
     async_session: AsyncSession,
     from_dataset: Dataset,
@@ -275,17 +297,31 @@ async def dataset_with_tags(
     request: pytest.FixtureRequest,
     async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[Dataset, None]:
-    params = request.param
-
     async with async_session_maker() as async_session:
-        location = await create_location(async_session)
-        tag = await create_tag(async_session)
-        tag_value = await create_tag_value(async_session, tag_id=tag.id)
-        item = await create_dataset(async_session, location_id=location.id, dataset_kwargs=params, tags={tag_value})
-
+        dataset = await create_dataset_with_tags(
+            async_session,
+            dataset_kwargs=request.param,
+        )
         async_session.expunge_all()
 
-    yield item
+    yield dataset
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)
+
+
+@pytest_asyncio.fixture(params=[(3, {})])
+async def datasets_with_tags(
+    request: pytest.FixtureRequest,
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
+) -> AsyncGenerator[list[Dataset], None]:
+    size, params = request.param
+
+    async with async_session_maker() as async_session:
+        datasets = [await create_dataset_with_tags(async_session, dataset_kwargs=params) for _ in range(size)]
+        async_session.expunge_all()
+
+    yield datasets
 
     async with async_session_maker() as async_session:
         await clean_db(async_session)
