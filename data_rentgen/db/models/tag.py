@@ -19,7 +19,7 @@ class Tag(Base):
     __table_args__ = (Index("ix__tag__search_vector", "search_vector", postgresql_using="gin"),)
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    name: Mapped[str] = mapped_column(String(32), nullable=False)
+    name: Mapped[str] = mapped_column(String(32), nullable=False, unique=True)
     tag_values: Mapped[list[TagValue]] = relationship(
         "TagValue",
         lazy="noload",

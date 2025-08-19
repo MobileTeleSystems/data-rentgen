@@ -2,21 +2,16 @@
 # SPDX-License-Identifier: Apache-2.0
 from collections.abc import Collection
 from dataclasses import dataclass
+from itertools import groupby
 from typing import Annotated
 
 from fastapi import Depends
 
 from data_rentgen.db.models.location import Location
 from data_rentgen.dto.pagination import PaginationDTO
+from data_rentgen.server.services.tag import TagServiceResult as TagData
+from data_rentgen.server.services.tag import TagValueData
 from data_rentgen.services.uow import UnitOfWork
-
-
-@dataclass
-class TagData:
-    id: int
-    name: str
-    value_id: int
-    value: str
 
 
 @dataclass
@@ -72,12 +67,16 @@ class DatasetService:
                     ),
                     tags=[
                         TagData(
-                            id=tv.tag.id,
-                            name=tv.tag.name,
-                            value_id=tv.id,
-                            value=tv.value,
+                            id=tag.id,
+                            name=tag.name,
+                            values=[
+                                TagValueData(id=tv.id, value=tv.value) for tv in sorted(group, key=lambda tv: tv.value)
+                            ],
                         )
-                        for tv in sorted(dataset.tags, key=lambda tv: (tv.tag.name, tv.value))
+                        for tag, group in groupby(
+                            sorted(dataset.tags, key=lambda tv: tv.tag.name),
+                            key=lambda tv: tv.tag,
+                        )
                     ],
                 )
                 for dataset in pagination.items

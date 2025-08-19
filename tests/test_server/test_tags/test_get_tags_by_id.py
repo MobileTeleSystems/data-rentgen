@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Tag
 from tests.fixtures.mocks import MockedUser
-from tests.test_server.utils.convert_to_json import tag_values_to_json
+from tests.test_server.utils.convert_to_json import tags_to_json
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
@@ -63,13 +63,7 @@ async def test_get_tags_by_one_id(
             "next_page": None,
             "previous_page": None,
         },
-        "items": [
-            {
-                "id": tag.id,
-                "name": tag.name,
-                "values": tag_values_to_json(tag.tag_values) if tag.tag_values else [],
-            },
-        ],
+        "items": tags_to_json([tag]),
     }
 
 
@@ -98,12 +92,5 @@ async def test_get_tags_by_multiple_ids(
             "next_page": None,
             "previous_page": None,
         },
-        "items": [
-            {
-                "id": tag.id,
-                "name": tag.name,
-                "values": tag_values_to_json(tag.tag_values) if tag.tag_values else [],
-            }
-            for tag in sorted(selected_tags, key=lambda x: x.name)
-        ],
+        "items": tags_to_json(selected_tags),
     }

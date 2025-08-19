@@ -325,3 +325,20 @@ async def datasets_with_tags(
 
     async with async_session_maker() as async_session:
         await clean_db(async_session)
+
+
+@pytest_asyncio.fixture
+def make_dataset(async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]]):
+    async def _create(tag_values: list[TagValue] | None = None, dataset_kwargs: dict | None = None) -> Dataset:
+        async with async_session_maker() as async_session:
+            location = await create_location(async_session)
+            dataset = await create_dataset(
+                async_session,
+                location_id=location.id,
+                dataset_kwargs=dataset_kwargs,
+                tags=set(tag_values or []),
+            )
+            async_session.expunge_all()
+            return dataset
+
+    return _create

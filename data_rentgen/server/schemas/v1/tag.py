@@ -6,15 +6,6 @@ from pydantic import BaseModel, ConfigDict, Field
 from data_rentgen.server.schemas.v1.pagination import PaginateQueryV1
 
 
-class TagResponseV1(BaseModel):
-    id: int = Field(description="Tag id")
-    name: str = Field(description="Tag name")
-    value_id: int = Field(description="Tag value id")
-    value: str = Field(description="Tag value")
-
-    model_config = ConfigDict(from_attributes=True)
-
-
 class TagValueResponseV1(BaseModel):
     id: int = Field(description="Tag value id")
     value: str = Field(description="Tag value")

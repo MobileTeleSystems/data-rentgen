@@ -20,6 +20,7 @@ depends_on = None
 
 
 def upgrade() -> None:
+    op.create_unique_constraint(op.f("uq__tag__name"), "tag", ["name"])
     op.add_column(
         "tag",
         sa.Column(
@@ -59,3 +60,4 @@ def downgrade() -> None:
     op.drop_column("tag_value", "search_vector")
     op.drop_index("ix__tag__search_vector", table_name="tag", postgresql_using="gin")
     op.drop_column("tag", "search_vector")
+    op.drop_constraint(op.f("uq__tag__name"), "tag", type_="unique")
