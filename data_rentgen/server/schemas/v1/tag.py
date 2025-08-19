@@ -20,11 +20,14 @@ class TagResponseV1(BaseModel):
 
     model_config = ConfigDict(from_attributes=True)
 
+
 class TagDetailedResponseV1(BaseModel):
     id: int = Field(description="Tag id")
     data: TagResponseV1 = Field(description="Tag data")
 
     model_config = ConfigDict(from_attributes=True)
+
+
 class TagPaginateQueryV1(PaginateQueryV1):
     """Query params for Tag paginate request."""
 
