@@ -54,7 +54,7 @@ class DatasetRepository(Repository[Dataset]):
             tv_ids = list(tag_value_ids)
             dataset_ids_subq = (
                 select(Dataset.id)
-                .join(Dataset.tags)
+                .join(Dataset.tag_values)
                 .where(TagValue.id.in_(tv_ids))
                 .group_by(Dataset.id)
                 # If multiple tag values are passed, dataset should have both of them (AND, not OR)
@@ -99,7 +99,7 @@ class DatasetRepository(Repository[Dataset]):
 
         options = [
             selectinload(Dataset.location).selectinload(Location.addresses),
-            selectinload(Dataset.tags).selectinload(TagValue.tag),
+            selectinload(Dataset.tag_values).selectinload(TagValue.tag),
         ]
         return await self._paginate_by_query(
             query=query,
@@ -116,7 +116,7 @@ class DatasetRepository(Repository[Dataset]):
             select(Dataset)
             .where(Dataset.id == any_(list(dataset_ids)))  # type: ignore[arg-type]
             .options(selectinload(Dataset.location).selectinload(Location.addresses))
-            .options(selectinload(Dataset.tags).selectinload(TagValue.tag))
+            .options(selectinload(Dataset.tag_values).selectinload(TagValue.tag))
         )
         result = await self._session.scalars(query)
         return list(result.all())

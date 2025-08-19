@@ -47,8 +47,7 @@ async def test_get_datasets_by_one_id(
     async_session: AsyncSession,
     mocked_user: MockedUser,
 ):
-    datasets = await enrich_datasets([dataset], async_session)
-    dataset = datasets[0]
+    [dataset] = await enrich_datasets([dataset], async_session)
 
     response = await test_client.get(
         "v1/datasets",
@@ -72,7 +71,7 @@ async def test_get_datasets_by_one_id(
             {
                 "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
-                "tags": tag_values_to_json(dataset.tags) if dataset.tags else [],
+                "tags": tag_values_to_json(dataset.tag_values) if dataset.tag_values else [],
             },
         ],
     }
@@ -109,7 +108,7 @@ async def test_get_datasets_by_multiple_ids(
             {
                 "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
-                "tags": tag_values_to_json(dataset.tags) if dataset.tags else [],
+                "tags": tag_values_to_json(dataset.tag_values) if dataset.tag_values else [],
             }
             for dataset in sorted(selected_datasets, key=lambda x: x.name)
         ],
@@ -122,8 +121,7 @@ async def test_get_datasets_by_one_id_with_tags(
     async_session: AsyncSession,
     mocked_user: MockedUser,
 ):
-    datasets = await enrich_datasets([dataset_with_tags], async_session)
-    dataset = datasets[0]
+    [dataset] = await enrich_datasets([dataset_with_tags], async_session)
 
     response = await test_client.get(
         "v1/datasets",
@@ -147,7 +145,7 @@ async def test_get_datasets_by_one_id_with_tags(
             {
                 "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
-                "tags": tag_values_to_json(dataset.tags) if dataset.tags else [],
+                "tags": tag_values_to_json(dataset.tag_values) if dataset.tag_values else [],
             },
         ],
     }
@@ -160,9 +158,8 @@ async def test_get_datasets_by_tag_value_id(
     async_session: AsyncSession,
     mocked_user: MockedUser,
 ):
-    datasets_with_tags = await enrich_datasets([dataset_with_tags], async_session)
-    dataset = datasets_with_tags[0]
-    tag_value_id = next(iter(dataset.tags)).id
+    [dataset] = await enrich_datasets([dataset_with_tags], async_session)
+    tag_value_id = next(iter(dataset.tag_values)).id
 
     response = await test_client.get(
         "v1/datasets",
@@ -186,7 +183,7 @@ async def test_get_datasets_by_tag_value_id(
             {
                 "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
-                "tags": tag_values_to_json(dataset.tags) if dataset.tags else [],
+                "tags": tag_values_to_json(dataset.tag_values) if dataset.tag_values else [],
             },
         ],
     }
@@ -228,7 +225,7 @@ async def test_get_datasets_by_multiple_tag_value_ids(
             {
                 "id": str(wanted_dataset.id),
                 "data": dataset_to_json(wanted_dataset),
-                "tags": tag_values_to_json(wanted_dataset.tags),
+                "tags": tag_values_to_json(wanted_dataset.tag_values),
             },
         ],
     }
