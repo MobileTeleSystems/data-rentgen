@@ -13,10 +13,12 @@ from data_rentgen.db.models import (
     Run,
     Tag,
     TagValue,
+    dataset_tags_table,
 )
 
 
 async def clean_db(async_session: AsyncSession) -> None:
+    await async_session.execute(delete(dataset_tags_table))
     await async_session.execute(delete(Location))
     await async_session.execute(delete(Address))
     await async_session.execute(delete(DatasetSymlink))

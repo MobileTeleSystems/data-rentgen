@@ -27,7 +27,6 @@ from data_rentgen.server.schemas.v1 import (
     OperationResponseV1,
     OutputTypeV1,
     RunResponseV1,
-    TagsResponseV1,
 )
 from data_rentgen.server.schemas.v1.lineage import (
     LineageRelationsResponseV1,
@@ -267,7 +266,6 @@ def _get_datasets(
             location=LocationResponseV1.model_validate(dataset.location),
             name=dataset.name,
             schema=schema,
-            tags=[TagsResponseV1(name=tag.tag.name, value=tag.value) for tag in dataset.tags],
         )
     return datasets
 
@@ -330,6 +328,5 @@ def _get_datasets_with_dataset_granularity(
             location=LocationResponseV1.model_validate(dataset.location),
             name=dataset.name,
             schema=schema,
-            tags=[TagsResponseV1(name=tag.tag.name, value=tag.value) for tag in dataset.tags],
         )
     return datasets

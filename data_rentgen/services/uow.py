@@ -23,6 +23,7 @@ from data_rentgen.db.repositories.personal_token import PersonalTokenRepository
 from data_rentgen.db.repositories.run import RunRepository
 from data_rentgen.db.repositories.schema import SchemaRepository
 from data_rentgen.db.repositories.sql_query import SQLQueryRepository
+from data_rentgen.db.repositories.tag import TagRepository
 from data_rentgen.db.repositories.user import UserRepository
 from data_rentgen.dependencies import Stub
 
@@ -49,6 +50,7 @@ class UnitOfWork:
         self.io_dataset_relation = IODatasetRelationRepository(session)
         self.user = UserRepository(session)
         self.personal_token = PersonalTokenRepository(session)
+        self.tag = TagRepository(session)
 
     async def __aenter__(self):
         return self

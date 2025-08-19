@@ -1,0 +1,27 @@
+- Added a new endpoint to retrieve tag names and their values: ``GET /v1/tags``
+- Added search for tags: ``GET /v1/tags?search_query=optional``. The search can be performed either by tag name or by tag value
+- Implemented filter ``GET /v1/tags?tag_id=123&tag_id=234`` to return only specific tags
+
+Response format:
+
+.. code-block:: json
+
+    [
+      {
+        "id": 1,
+        "name": "env",
+        "values": [
+          {
+            "id": 1,
+            "value": "dev"
+          },
+          {
+            "id": 2,
+            "value": "prod"
+          }
+        ]
+      }
+    ]
+
+- Updated ``GET /v1/datasets`` to include ``tags: [...]`` in the root of ``DatasetDetailedResponse``, returning tag and tag_value identifiers
+- Added filter ``GET /v1/datasets?tag_value_id=1234&tag_value_id=2345``. When multiple ``tag_value_id`` are provided, applied an ``AND`` condition

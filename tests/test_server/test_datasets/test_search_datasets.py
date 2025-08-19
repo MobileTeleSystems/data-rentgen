@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Dataset
 from tests.fixtures.mocks import MockedUser
-from tests.test_server.utils.convert_to_json import dataset_to_json
+from tests.test_server.utils.convert_to_json import dataset_to_json, tag_values_to_json
 from tests.test_server.utils.enrich import enrich_datasets
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -45,6 +45,7 @@ async def test_search_datasets_by_address_url(
             {
                 "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
+                "tags": tag_values_to_json(dataset.tags) if dataset.tags else [],
             }
             for dataset in datasets
         ],
@@ -94,6 +95,7 @@ async def test_search_datasets_by_location_name(
             {
                 "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
+                "tags": tag_values_to_json(dataset.tags) if dataset.tags else [],
             }
             for dataset in datasets
         ],
@@ -132,6 +134,7 @@ async def test_search_datasets_by_dataset_name(
             {
                 "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
+                "tags": tag_values_to_json(dataset.tags) if dataset.tags else [],
             }
             for dataset in datasets
         ],
@@ -177,6 +180,7 @@ async def test_search_datasets_by_location_name_and_address_url(
             {
                 "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
+                "tags": tag_values_to_json(dataset.tags) if dataset.tags else [],
             }
             for dataset in datasets
         ],

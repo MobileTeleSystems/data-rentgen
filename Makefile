@@ -66,7 +66,7 @@ db-cleanup-partitions: ##@DB Clean partitions
 db-cleanup-partitions-ci: ##@DB Clean partitions in CI
 	${PYTHON} -m data_rentgen.db.scripts.cleanup_partitions $(ARGS)
 db-views: ##@DB Create views
-	${POETRY} run coveratge run python -m data_rentgen.db.scripts.refresh_analytic_views $(ARGS)
+	${POETRY} run coverage run python -m data_rentgen.db.scripts.refresh_analytic_views $(ARGS)
 
 db-seed: ##@DB Seed database with random data
 	${PYTHON} -m data_rentgen.db.scripts.seed $(ARGS)

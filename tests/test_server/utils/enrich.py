@@ -3,6 +3,7 @@ from sqlalchemy.orm import selectinload
 from sqlalchemy.sql import select
 
 from data_rentgen.db.models import Dataset, Job, Location, Run, TagValue
+from data_rentgen.db.models.tag import Tag
 
 
 async def enrich_runs(runs: list[Run], async_session: AsyncSession) -> list[Run]:
@@ -44,3 +45,12 @@ async def enrich_locations(locations: list[Location], async_session: AsyncSessio
     locations_by_id = {location.id: location for location in result.all()}
     # preserve original order
     return [locations_by_id[location_id] for location_id in location_ids]
+
+
+async def enrich_tags(tags: list[Tag], async_session: AsyncSession) -> list[Tag]:
+    tag_ids = [tag.id for tag in tags]
+    query = select(Tag).where(Tag.id.in_(tag_ids)).options(selectinload(Tag.tag_values))
+    result = await async_session.scalars(query)
+    tags_by_id = {tag.id: tag for tag in result.all()}
+    # preserve original order
+    return [tags_by_id[tag_id] for tag_id in tag_ids]

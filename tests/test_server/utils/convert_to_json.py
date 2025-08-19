@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from itertools import groupby
 from typing import TYPE_CHECKING, Literal
 
 from data_rentgen.db.models import (
@@ -21,6 +22,7 @@ if TYPE_CHECKING:
         PersonalToken,
         Run,
         Schema,
+        Tag,
         TagValue,
         User,
     )
@@ -175,8 +177,21 @@ def _get_dataset_schema(dataset: Dataset, outputs: list[OutputRow | Output], inp
     return schema_to_json(schema, "EXACT_MATCH")
 
 
-def tags_to_json(tags: list[TagValue]):
-    return [{"name": tag.tag.name, "value": tag.value} for tag in tags]
+def tag_to_json(tag: Tag, values: list[TagValue] | None = None) -> dict:
+    values = values or tag.tag_values
+    return {
+        "id": tag.id,
+        "name": tag.name,
+        "values": [{"id": tv.id, "value": tv.value} for tv in sorted(values, key=lambda tv: tv.value)],
+    }
+
+
+def tag_values_to_json(tag_values: set[TagValue]) -> list[dict]:
+    sorted_tag_values = sorted(tag_values, key=lambda tv: tv.tag.name)
+    tags = []
+    for tag, group in groupby(sorted_tag_values, key=lambda tv: tv.tag):
+        tags.append(tag_to_json(tag, values=list(group)))
+    return tags
 
 
 def dataset_to_json(
@@ -192,7 +207,6 @@ def dataset_to_json(
         "name": dataset.name,
         "location": location_to_json(dataset.location),
         "schema": schema,
-        "tags": tags_to_json(dataset.tags) if dataset.tags else [],
     }
 
 
