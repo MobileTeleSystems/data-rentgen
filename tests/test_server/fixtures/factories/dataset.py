@@ -35,7 +35,7 @@ async def create_dataset(
     async_session: AsyncSession,
     location_id: int,
     dataset_kwargs: dict | None = None,
-    tags: set[TagValue] | None = None,
+    tag_values: set[TagValue] | None = None,
 ) -> Dataset:
     if dataset_kwargs:
         dataset_kwargs.update({"location_id": location_id})
@@ -43,8 +43,8 @@ async def create_dataset(
         dataset_kwargs = {"location_id": location_id}
     dataset = dataset_factory(**dataset_kwargs)
     del dataset.id
-    if tags:
-        dataset.tags |= tags
+    if tag_values:
+        dataset.tag_values |= tag_values
     async_session.add(dataset)
     await async_session.commit()
     await async_session.refresh(dataset)
@@ -69,7 +69,7 @@ async def create_dataset_with_tags(
         async_session,
         location_id=location.id,
         dataset_kwargs=dataset_kwargs,
-        tags=tag_values,
+        tag_values=tag_values,
     )
 
 
@@ -336,7 +336,7 @@ def make_dataset(async_session_maker: Callable[[], AbstractAsyncContextManager[A
                 async_session,
                 location_id=location.id,
                 dataset_kwargs=dataset_kwargs,
-                tags=set(tag_values or []),
+                tag_values=set(tag_values or []),
             )
             async_session.expunge_all()
             return dataset

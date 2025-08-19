@@ -40,7 +40,7 @@ async def test_get_datasets_no_filters(
             {
                 "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
-                "tags": tag_values_to_json(dataset.tags) if dataset.tags else [],
+                "tags": tag_values_to_json(dataset.tag_values) if dataset.tag_values else [],
             }
             for dataset in sorted(datasets, key=lambda x: x.name)
         ],

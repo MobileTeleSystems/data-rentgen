@@ -41,7 +41,7 @@ class Dataset(Base):
         doc="Dataset name, e.g. table name or filesystem path",
     )
 
-    tags: Mapped[set[TagValue]] = relationship(secondary=lambda: dataset_tags_table)
+    tag_values: Mapped[set[TagValue]] = relationship(secondary=lambda: dataset_tags_table)
 
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,

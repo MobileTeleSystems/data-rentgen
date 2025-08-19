@@ -21,7 +21,7 @@ async def enrich_datasets(datasets: list[Dataset], async_session: AsyncSession) 
         select(Dataset)
         .where(Dataset.id.in_(dataset_ids))
         .options(selectinload(Dataset.location).selectinload(Location.addresses))
-        .options(selectinload(Dataset.tags).selectinload(TagValue.tag))
+        .options(selectinload(Dataset.tag_values).selectinload(TagValue.tag))
     )
     result = await async_session.scalars(query)
     datasets_by_id = {dataset.id: dataset for dataset in result.all()}

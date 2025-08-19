@@ -73,7 +73,7 @@ class DatasetService:
                             ],
                         )
                         for tag, group in groupby(
-                            sorted(dataset.tags, key=lambda tv: tv.tag.name),
+                            sorted(dataset.tag_values, key=lambda tv: tv.tag.name),
                             key=lambda tv: tv.tag,
                         )
                     ],

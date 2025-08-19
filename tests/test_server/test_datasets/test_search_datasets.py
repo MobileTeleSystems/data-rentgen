@@ -45,7 +45,7 @@ async def test_search_datasets_by_address_url(
             {
                 "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
-                "tags": tag_values_to_json(dataset.tags) if dataset.tags else [],
+                "tags": tag_values_to_json(dataset.tag_values) if dataset.tag_values else [],
             }
             for dataset in datasets
         ],
@@ -95,7 +95,7 @@ async def test_search_datasets_by_location_name(
             {
                 "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
-                "tags": tag_values_to_json(dataset.tags) if dataset.tags else [],
+                "tags": tag_values_to_json(dataset.tag_values) if dataset.tag_values else [],
             }
             for dataset in datasets
         ],
@@ -134,7 +134,7 @@ async def test_search_datasets_by_dataset_name(
             {
                 "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
-                "tags": tag_values_to_json(dataset.tags) if dataset.tags else [],
+                "tags": tag_values_to_json(dataset.tag_values) if dataset.tag_values else [],
             }
             for dataset in datasets
         ],
@@ -180,7 +180,7 @@ async def test_search_datasets_by_location_name_and_address_url(
             {
                 "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
-                "tags": tag_values_to_json(dataset.tags) if dataset.tags else [],
+                "tags": tag_values_to_json(dataset.tag_values) if dataset.tag_values else [],
             }
             for dataset in datasets
         ],
