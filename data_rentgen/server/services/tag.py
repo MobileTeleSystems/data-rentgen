@@ -17,10 +17,16 @@ class TagValueData:
 
 
 @dataclass
-class TagServiceResult:
+class TagData:
     id: int
     name: str
     values: list[TagValueData]
+
+
+@dataclass
+class TagServiceResult:
+    id: int
+    data: TagData
 
 
 class TagServicePaginatedResult(PaginationDTO[TagServiceResult]):
@@ -52,8 +58,11 @@ class TagService:
             items=[
                 TagServiceResult(
                     id=tag.id,
-                    name=tag.name,
-                    values=[TagValueData(id=tv.id, value=tv.value) for tv in tag.tag_values],
+                    data=TagData(
+                        id=tag.id,
+                        name=tag.name,
+                        values=[TagValueData(id=tv.id, value=tv.value) for tv in tag.tag_values],
+                    ),
                 )
                 for tag in pagination.items
             ],

@@ -9,8 +9,7 @@ from fastapi import Depends
 
 from data_rentgen.db.models.location import Location
 from data_rentgen.dto.pagination import PaginationDTO
-from data_rentgen.server.services.tag import TagServiceResult as TagData
-from data_rentgen.server.services.tag import TagValueData
+from data_rentgen.server.services.tag import TagData, TagValueData
 from data_rentgen.services.uow import UnitOfWork
 
 

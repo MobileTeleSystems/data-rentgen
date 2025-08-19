@@ -177,40 +177,20 @@ def _get_dataset_schema(dataset: Dataset, outputs: list[OutputRow | Output], inp
     return schema_to_json(schema, "EXACT_MATCH")
 
 
-def tags_to_json(tags: list[Tag]) -> list[dict]:
-    return [
-        {
-            "id": tag.id,
-            "name": tag.name,
-            "values": [
-                {
-                    "id": tv.id,
-                    "value": tv.value,
-                }
-                for tv in sorted(tag.tag_values, key=lambda tv: tv.value)
-            ],
-        }
-        for tag in sorted(tags, key=lambda tag: tag.name)
-    ]
+def tag_to_json(tag: Tag, values: list[TagValue] | None = None) -> dict:
+    values = values or tag.tag_values
+    return {
+        "id": tag.id,
+        "name": tag.name,
+        "values": [{"id": tv.id, "value": tv.value} for tv in sorted(values, key=lambda tv: tv.value)],
+    }
 
 
 def tag_values_to_json(tag_values: set[TagValue]) -> list[dict]:
-    sorted_tags = sorted(tag_values, key=lambda tv: tv.tag.name)
+    sorted_tag_values = sorted(tag_values, key=lambda tv: tv.tag.name)
     tags = []
-    for tag, group in groupby(sorted_tags, key=lambda tv: tv.tag):
-        tags.append(
-            {
-                "id": tag.id,
-                "name": tag.name,
-                "values": [
-                    {
-                        "id": tv.id,
-                        "value": tv.value,
-                    }
-                    for tv in sorted(group, key=lambda tv: tv.value)
-                ],
-            },
-        )
+    for tag, group in groupby(sorted_tag_values, key=lambda tv: tv.tag):
+        tags.append(tag_to_json(tag, values=list(group)))
     return tags
 
 
