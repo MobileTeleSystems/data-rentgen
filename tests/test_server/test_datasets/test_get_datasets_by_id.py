@@ -202,7 +202,7 @@ async def test_get_datasets_by_multiple_tag_value_ids(
 ):
     tv1, tv2, tv3 = tag_values
     wanted_dataset = await make_dataset(tag_values=tag_values)
-    wanted_dataset = (await enrich_datasets([wanted_dataset], async_session))[0]
+    [wanted_dataset] = await enrich_datasets([wanted_dataset], async_session)
     await make_dataset(tag_values=[tv1])
     await make_dataset()
 
