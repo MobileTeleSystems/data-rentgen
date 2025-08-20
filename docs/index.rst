@@ -12,6 +12,7 @@
 
     install
     entities/index
+    personal_tokens/index
 
 .. toctree::
     :maxdepth: 2
