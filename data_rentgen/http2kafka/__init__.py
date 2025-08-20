@@ -17,8 +17,11 @@ from data_rentgen.http2kafka.router import router as openlineage_router
 from data_rentgen.http2kafka.settings import Http2KafkaApplicationSettings
 from data_rentgen.logging.setup_logging import setup_logging
 from data_rentgen.server.api.handlers import apply_exception_handlers
+from data_rentgen.server.api.monitoring import router as monitoring_router
 from data_rentgen.server.middlewares import apply_middlewares
-from data_rentgen.server.providers.auth.personal_token_provider import PersonalTokenAuthProvider
+from data_rentgen.server.providers.auth.personal_token_provider import (
+    PersonalTokenAuthProvider,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -68,6 +71,7 @@ def application_factory(settings: Http2KafkaApplicationSettings) -> FastAPI:
     )
 
     application.state.settings = settings
+    application.include_router(monitoring_router)
     application.include_router(openlineage_router)
 
     PersonalTokenAuthProvider.setup(application)
