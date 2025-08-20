@@ -156,6 +156,26 @@ Database structure
         fingerprint: uuid(v5)
     }
 
+    entity tag {
+        * id: bigint
+        ----
+        * name: varchar(64)
+    }
+
+    entity tag_value {
+        * id: bigint
+        ----
+        * tag_id: bigint
+        * value: varchar(256)
+    }
+
+    entity dataset_tag {
+        * id: bigint
+        ----
+        * dataset_id: bigint
+        * tag_value_id: bigint
+    }
+
     entity personal_token {
         * id: uuid(v7)
         ----
@@ -200,6 +220,9 @@ Database structure
     column_lineage "source_dataset_id" ||--o{ dataset
     column_lineage "target_dataset_id" ||--o{ dataset
     column_lineage "fingerprint" ||--o{ dataset_column_relation
+
+    tag_value ||--o{ tag
+    dataset_tag ||--o{ tag_value
 
     personal_token ||--o{ user
 

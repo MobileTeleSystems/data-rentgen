@@ -112,6 +112,7 @@ That's why the information about datasets is very limited:
 - ``location: Location`` - Location where data is actually stored in, like RDMBS instance or cluster.
 - ``name: str`` - qualified name of Dataset, like ``mydb.myschema.mytable`` or ``/app/warehouse/hive/managed/myschema.df/mytable``
 - ``schema: Schema | None`` - schema of dataset.
+- ``tags: list[Tag]`` - tags of dataset.
 
 .. image:: dataset_list.png
 
@@ -144,6 +145,18 @@ It contains following fields:
   - ``LATEST_KNOWN`` - if there are multiple interactions with this dataset, but with different schemas. In this case a schema of the most recent interaction is returned.
 
 .. image:: dataset_schema.png
+
+Dataset tags
+^^^^^^^^^^^^
+
+Dataset can have multiple tags which are arbitrary ``key: value`` pairs.
+
+- ``id: int`` - tag identifier
+- ``name: str`` - tag name, usually in format ``source.name``, e.g. ``airflow.tag``,  ``company.team``
+- ``values: list[TagValue]`` - tag values bound to dataset:
+
+  - ``id: int`` - tag value identifier
+  -  ``value: str`` - tag value, e.g. ``production``, ``Some team``
 
 Job
 ~~~
