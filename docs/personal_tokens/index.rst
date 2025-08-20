@@ -152,7 +152,7 @@ With ``requests``
     response = session.get(
         url="http://localhost:8000/v1/datasets",
         headers={
-        "Authorization": f"Bearer {personal_token}",
+            "Authorization": f"Bearer {personal_token}",
         },
     )
     response.raise_for_status()
