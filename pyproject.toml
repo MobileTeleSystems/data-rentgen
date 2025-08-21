@@ -177,6 +177,7 @@ sphinx-last-updated-by-git = "^0.3.8"
 # uncomment after https://github.com/zqmillet/sphinx-plantuml/pull/4
 # sphinx-plantuml = "^1.0.0"
 sphinx-argparse = "^0.5.2"
+sphinx-tabs = "^3.4.7"
 
 [tool.poetry_bumpversion.file."data_rentgen/__init__.py"]
 search = '_raw_version = "{current_version}"'

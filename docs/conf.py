@@ -57,6 +57,7 @@ extensions = [
     "sphinx_favicon",
     "sphinx_last_updated_by_git",
     "sphinxarg.ext",
+    "sphinx_tabs.tabs",
 ]
 
 numpydoc_show_class_members = True
