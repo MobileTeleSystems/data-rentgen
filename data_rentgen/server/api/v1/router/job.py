@@ -27,7 +27,7 @@ router = APIRouter(
 
 @router.get("", summary="Paginated list of Jobs")
 async def paginate_jobs(
-    query_args: Annotated[JobPaginateQueryV1, Depends()],
+    query_args: Annotated[JobPaginateQueryV1, Query()],
     job_service: Annotated[JobService, Depends()],
     current_user: Annotated[User, Depends(get_user())],
 ) -> PageResponseV1[JobDetailedResponseV1]:

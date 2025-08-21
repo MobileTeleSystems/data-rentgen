@@ -44,11 +44,15 @@ class DatasetRepository(Repository[Dataset]):
         page_size: int,
         dataset_ids: Collection[int],
         tag_value_ids: Collection[int],
+        location_id: int | None,
         search_query: str | None,
     ) -> PaginationDTO[Dataset]:
         where = []
         if dataset_ids:
             where.append(Dataset.id == any_(list(dataset_ids)))  # type: ignore[arg-type]
+
+        if location_id:
+            where.append(Dataset.location_id == location_id)
 
         if tag_value_ids:
             tv_ids = list(tag_value_ids)

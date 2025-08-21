@@ -229,3 +229,42 @@ async def test_get_datasets_by_multiple_tag_value_ids(
             },
         ],
     }
+
+
+@pytest.mark.asyncio
+async def test_get_datasets_by_location_id(
+    test_client: AsyncClient,
+    datasets: list[Dataset],
+    async_session: AsyncSession,
+    mocked_user: MockedUser,
+):
+    # Each dataset at this ficture has it's own location
+    dataset = datasets[0]
+    [dataset] = await enrich_datasets([dataset], async_session)
+
+    response = await test_client.get(
+        "v1/datasets",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={"location_id": dataset.location.id},
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "page": 1,
+            "page_size": 20,
+            "total_count": 1,
+            "pages_count": 1,
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "previous_page": None,
+        },
+        "items": [
+            {
+                "id": str(dataset.id),
+                "data": dataset_to_json(dataset),
+                "tags": tag_values_to_json(dataset.tag_values) if dataset.tag_values else [],
+            },
+        ],
+    }

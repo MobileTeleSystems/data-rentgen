@@ -6,7 +6,6 @@ from datetime import datetime
 from enum import IntEnum
 from uuid import UUID
 
-from fastapi import Query
 from pydantic import (
     UUID7,
     BaseModel,
@@ -116,46 +115,34 @@ class RunsQueryV1(PaginateQueryV1):
     """Query params for Runs paginate request."""
 
     since: datetime | None = Field(
-        Query(
-            default=None,
-            description="Minimum value of Run 'created_at' field, in ISO 8601 format",
-            examples=["2008-09-15T15:53:00+05:00"],
-        ),
+        default=None,
+        description="Minimum value of Run 'created_at' field, in ISO 8601 format",
+        examples=["2008-09-15T15:53:00+05:00"],
     )
     until: datetime | None = Field(
-        Query(
-            default=None,
-            description="Maximum value of Run 'created_at' field, in ISO 8601 format",
-            examples=["2008-09-15T15:53:00+05:00"],
-        ),
+        default=None,
+        description="Maximum value of Run 'created_at' field, in ISO 8601 format",
+        examples=["2008-09-15T15:53:00+05:00"],
     )
     run_id: list[UUID7] = Field(
-        Query(
-            default_factory=list,
-            description="Run ids, for exact match",
-        ),
+        default_factory=list,
+        description="Run ids, for exact match",
     )
     job_id: int | None = Field(
-        Query(
-            default=None,
-            description="Job id, can be used only with 'since'",
-        ),
+        default=None,
+        description="Job id, can be used only with 'since'",
     )
 
     parent_run_id: UUID7 | None = Field(
-        Query(
-            default=None,
-            description="Parent run id, can be used only with 'since' and 'until'",
-            examples=["01913217-b761-7b1a-bb52-489da9c8b9c8"],
-        ),
+        default=None,
+        description="Parent run id, can be used only with 'since' and 'until'",
+        examples=["01913217-b761-7b1a-bb52-489da9c8b9c8"],
     )
 
     search_query: str | None = Field(
-        Query(
-            default=None,
-            min_length=3,
-            description="Search query",
-        ),
+        default=None,
+        min_length=3,
+        description="Search query",
     )
 
     model_config = ConfigDict(extra="forbid")

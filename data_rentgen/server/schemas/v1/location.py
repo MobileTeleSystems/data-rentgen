@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
-from fastapi import Query
 from pydantic import BaseModel, ConfigDict, Field
 
 from data_rentgen.server.schemas.v1.address import AddressResponseV1
@@ -55,14 +54,12 @@ class LocationDetailedResponseV1(BaseModel):
 class LocationPaginateQueryV1(PaginateQueryV1):
     """Query params for Location paginate request."""
 
-    location_id: list[int] = Field(Query(default_factory=list), description="Location id")
-    location_type: str | None = Field(Query(default=None), description="Location type")
+    location_id: list[int] = Field(default_factory=list, description="Location id")
+    location_type: str | None = Field(default=None, description="Location type")
     search_query: str | None = Field(
-        Query(
-            default=None,
-            min_length=3,
-            description="Search query",
-        ),
+        default=None,
+        min_length=3,
+        description="Search query",
     )
 
     model_config = ConfigDict(extra="forbid")

@@ -6,7 +6,6 @@ from datetime import datetime
 from enum import IntEnum
 from uuid import UUID
 
-from fastapi import Query
 from pydantic import (
     UUID7,
     BaseModel,
@@ -102,30 +101,22 @@ class OperationQueryV1(PaginateQueryV1):
     """Query params for Operations paginate request."""
 
     since: datetime | None = Field(
-        Query(
-            default=None,
-            description="Minimum value of Operation 'created_at' field, in ISO 8601 format",
-            examples=["2008-09-15T15:53:00+05:00"],
-        ),
+        default=None,
+        description="Minimum value of Operation 'created_at' field, in ISO 8601 format",
+        examples=["2008-09-15T15:53:00+05:00"],
     )
     until: datetime | None = Field(
-        Query(
-            default=None,
-            description="Maximum value of Operation 'created_at' field, in ISO 8601 format",
-            examples=["2008-09-15T15:53:00+05:00"],
-        ),
+        default=None,
+        description="Maximum value of Operation 'created_at' field, in ISO 8601 format",
+        examples=["2008-09-15T15:53:00+05:00"],
     )
     operation_id: list[UUID7] = Field(
-        Query(
-            default_factory=list,
-            description="Operation ids, for exact match",
-        ),
+        default_factory=list,
+        description="Operation ids, for exact match",
     )
     run_id: UUID7 | None = Field(
-        Query(
-            default=None,
-            description="Run id, can be used only with 'since'",
-        ),
+        default=None,
+        description="Run id, can be used only with 'since'",
     )
 
     model_config = ConfigDict(extra="forbid")

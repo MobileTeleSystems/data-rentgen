@@ -29,7 +29,7 @@ router = APIRouter(
 
 @router.get("", summary="Paginated list of Datasets")
 async def paginate_datasets(
-    query_args: Annotated[DatasetPaginateQueryV1, Depends()],
+    query_args: Annotated[DatasetPaginateQueryV1, Query()],
     dataset_service: Annotated[DatasetService, Depends()],
     current_user: Annotated[User, Depends(get_user())],
 ) -> PageResponseV1[DatasetDetailedResponseV1]:
@@ -38,6 +38,7 @@ async def paginate_datasets(
         page_size=query_args.page_size,
         dataset_ids=query_args.dataset_id,
         tag_value_ids=query_args.tag_value_id,
+        location_id=query_args.location_id,
         search_query=query_args.search_query,
     )
     return PageResponseV1[DatasetDetailedResponseV1].from_pagination(pagination)

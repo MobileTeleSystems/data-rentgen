@@ -33,19 +33,15 @@ async def test_get_runs_by_job_id_missing_since(
             "message": "Invalid request",
             "details": [
                 {
-                    "location": [],
+                    "location": ["query"],
                     "code": "value_error",
                     "message": "Value error, 'job_id' can be passed only with 'since'",
                     "context": {},
                     "input": {
                         "page": 1,
                         "page_size": 20,
-                        "job_id": new_run.job_id,
-                        "since": None,
-                        "until": None,
-                        "parent_run_id": None,
+                        "job_id": str(new_run.job_id),
                         "run_id": [],
-                        "search_query": None,
                     },
                 },
             ],
