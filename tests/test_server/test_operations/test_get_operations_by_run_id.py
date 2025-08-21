@@ -31,7 +31,7 @@ async def test_get_operations_missing_since(
             "message": "Invalid request",
             "details": [
                 {
-                    "location": [],
+                    "location": ["query"],
                     "code": "value_error",
                     "message": "Value error, 'run_id' can be passed only with 'since'",
                     "context": {},
@@ -39,8 +39,6 @@ async def test_get_operations_missing_since(
                         "page": 1,
                         "page_size": 20,
                         "run_id": str(new_operation.run_id),
-                        "since": None,
-                        "until": None,
                         "operation_id": [],
                     },
                 },

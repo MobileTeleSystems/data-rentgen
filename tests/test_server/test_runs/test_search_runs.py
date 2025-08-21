@@ -32,17 +32,13 @@ async def test_search_runs_missing_since(
             "message": "Invalid request",
             "details": [
                 {
-                    "location": [],
+                    "location": ["query"],
                     "code": "value_error",
                     "message": "Value error, 'search_query' can be passed only with 'since'",
                     "context": {},
                     "input": {
                         "page": 1,
                         "page_size": 20,
-                        "job_id": None,
-                        "since": None,
-                        "until": None,
-                        "parent_run_id": None,
                         "run_id": [],
                         "search_query": new_run.external_id,
                     },

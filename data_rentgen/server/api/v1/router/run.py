@@ -26,7 +26,7 @@ router = APIRouter(
 
 @router.get("", summary="Paginated list of Runs")
 async def runs(
-    query_args: Annotated[RunsQueryV1, Depends()],
+    query_args: Annotated[RunsQueryV1, Query()],
     run_service: Annotated[RunService, Depends()],
     current_user: Annotated[User, Depends(get_user())],
 ) -> PageResponseV1[RunDetailedResponseV1]:

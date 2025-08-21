@@ -27,7 +27,7 @@ router = APIRouter(
 
 @router.get("", summary="Paginated list of Operations")
 async def operations(
-    query_args: Annotated[OperationQueryV1, Depends()],
+    query_args: Annotated[OperationQueryV1, Query()],
     unit_of_work: Annotated[UnitOfWork, Depends()],
     operation_service: Annotated[OperationService, Depends()],
     current_user: Annotated[User, Depends(get_user())],

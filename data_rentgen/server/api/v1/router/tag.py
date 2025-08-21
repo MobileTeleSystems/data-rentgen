@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from data_rentgen.db.models.user import User
 from data_rentgen.server.errors import get_error_responses
@@ -24,7 +24,7 @@ router = APIRouter(
 
 @router.get("", summary="Paginated list of Tags")
 async def paginate_tags(
-    query_args: Annotated[TagPaginateQueryV1, Depends()],
+    query_args: Annotated[TagPaginateQueryV1, Query()],
     tag_service: Annotated[TagService, Depends()],
     current_user: Annotated[User, Depends(get_user())],
 ) -> PageResponseV1[TagDetailedResponseV1]:

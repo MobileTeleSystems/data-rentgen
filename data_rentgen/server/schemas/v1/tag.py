@@ -1,6 +1,5 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from fastapi import Query
 from pydantic import BaseModel, ConfigDict, Field
 
 from data_rentgen.server.schemas.v1.pagination import PaginateQueryV1
@@ -31,13 +30,11 @@ class TagDetailedResponseV1(BaseModel):
 class TagPaginateQueryV1(PaginateQueryV1):
     """Query params for Tag paginate request."""
 
-    tag_id: list[int] = Field(Query(default_factory=list), description="Tag id")
+    tag_id: list[int] = Field(default_factory=list, description="Tag id")
     search_query: str | None = Field(
-        Query(
-            default=None,
-            min_length=3,
-            description="Search query",
-        ),
+        default=None,
+        min_length=3,
+        description="Search query",
     )
 
     model_config = ConfigDict(extra="forbid")

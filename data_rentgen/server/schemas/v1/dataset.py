@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Literal
 
-from fastapi import Query
 from pydantic import BaseModel, ConfigDict, Field
 
 from data_rentgen.server.schemas.v1.location import LocationResponseV1
@@ -56,14 +55,13 @@ class DatasetDetailedResponseV1(BaseModel):
 class DatasetPaginateQueryV1(PaginateQueryV1):
     """Query params for Dataset paginate request."""
 
-    dataset_id: list[int] = Field(Query(default_factory=list), description="Dataset id")
-    tag_value_id: list[int] = Field(Query(default_factory=list), description="Tag value id")
+    dataset_id: list[int] = Field(default_factory=list, description="Dataset id")
+    tag_value_id: list[int] = Field(default_factory=list, description="Tag value id")
+    location_id: int | None = Field(default=None, description="Location id to filter dataset")
     search_query: str | None = Field(
-        Query(
-            default=None,
-            min_length=3,
-            description="Search query",
-        ),
+        default=None,
+        min_length=3,
+        description="Search query",
     )
 
     model_config = ConfigDict(extra="forbid")

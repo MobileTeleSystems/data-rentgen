@@ -31,19 +31,14 @@ async def test_get_runs_missing_fields(
             "message": "Invalid request",
             "details": [
                 {
-                    "location": [],
+                    "location": ["query"],
                     "code": "value_error",
                     "message": "Value error, input should contain either 'since', 'run_id', 'job_id', 'parent_run_id' or 'search_query' field",
                     "context": {},
                     "input": {
                         "page": 1,
                         "page_size": 20,
-                        "since": None,
-                        "until": None,
                         "run_id": [],
-                        "parent_run_id": None,
-                        "job_id": None,
-                        "search_query": None,
                     },
                 },
             ],
@@ -74,11 +69,11 @@ async def test_get_runs_by_run_id_until_less_than_since(
             "message": "Invalid request",
             "details": [
                 {
-                    "location": ["until"],
+                    "location": ["query", "until"],
                     "code": "value_error",
                     "message": "Value error, 'since' should be less than 'until'",
                     "context": {},
-                    "input": until.strftime("%Y-%m-%dT%H:%M:%S.%fZ"),
+                    "input": until.isoformat(),
                 },
             ],
         },

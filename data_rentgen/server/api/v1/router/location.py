@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from typing import Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 
 from data_rentgen.db.models import User
 from data_rentgen.server.errors import get_error_responses
@@ -28,7 +28,7 @@ router = APIRouter(
     responses=get_error_responses(include={NotAuthorizedSchema, NotAuthorizedRedirectSchema, InvalidRequestSchema}),
 )
 async def paginate_locations(
-    query_args: Annotated[LocationPaginateQueryV1, Depends()],
+    query_args: Annotated[LocationPaginateQueryV1, Query()],
     location_service: Annotated[LocationService, Depends()],
     current_user: Annotated[User, Depends(get_user())],
 ) -> PageResponseV1[LocationDetailedResponseV1]:
