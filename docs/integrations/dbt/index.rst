@@ -9,7 +9,9 @@ Requirements
 ------------
 
 * `dbt <https://www.getdbt.com/>`_ 1.3 or higher
-* OpenLineage 1.19.0 or higher, recommended 1.34.0+
+* OpenLineage 1.19.0 or higher, recommended 1.37.0+
+* Running :ref:`message-broker`
+* (Optional) :ref:`http2kafka`
 
 Entity mapping
 --------------
@@ -21,28 +23,52 @@ Entity mapping
 Install
 -------
 
-.. code:: console
+.. tabs::
 
-    $ pip install "openlineage-dbt>=1.34.0" "openlineage-python[kafka]>=1.34.0" zstd
+  .. code-tab:: console KafkaTransport
+
+    $ pip install "openlineage-dbt>=1.37.0" "openlineage-python[kafka]>=1.37.0" zstd
+
+  .. code-tab:: console HttpTransport (requires HTTP2Kafka)
+
+    $ pip install "openlineage-dbt>=1.37.0"
 
 Setup
 -----
 
-* Create ``openlineage.yml`` file with content below`:
+* Create ``openlineage.yml`` file with content like:
 
-  .. code:: yaml
+  .. tabs::
 
-    transport:
-        type: kafka
-        topic: input.runs
-        config:
-            bootstrap.servers: localhost:9093
-            security.protocol: SASL_PLAINTEXT
-            sasl.mechanism: SCRAM-SHA-256
-            sasl.username: data_rentgen
-            sasl.password: changeme
-            compression.type: zstd
-            acks: all
+    .. code-tab:: yaml KafkaTransport
+
+      transport:
+          type: kafka
+          topic: input.runs
+          config:
+              # should be accessible from host
+              bootstrap.servers: localhost:9093
+              security.protocol: SASL_PLAINTEXT
+              sasl.mechanism: SCRAM-SHA-256
+              # Kafka auth credentials
+              sasl.username: data_rentgen
+              sasl.password: changeme
+              compression.type: zstd
+              acks: all
+
+    .. code-tab:: yaml HttpTransport (requires HTTP2Kafka)
+
+      transport:
+          # "type: http" for OpenLineage below 1.35.0
+          type: async_http
+          # http2kafka URL, should be accessible from host
+          url: http://localhost:8002
+          endpoint: /v1/openlineage
+          compression: gzip
+          auth:
+              type: api_key
+              # create a PersonalToken, and pass it here
+              apiKey: personal_token_AAAAAAAAAAAA.BBBBBBBBBBBBBBBBBBBBBBB.CCCCCCCCCCCCCCCCCCCCC
 
 * Set environment variables:
 
