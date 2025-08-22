@@ -1,6 +1,4 @@
-(overview-setup-flink2)=
-
-# Apache Flink 2.x integration
+# Apache Flink 2.x integration { #overview-setup-flink2 }
 
 Using [OpenLineage integration with Apache Flink 2.x](https://openlineage.io/docs/integrations/flink/flink2).
 
@@ -31,8 +29,7 @@ Using [OpenLineage integration with Apache Flink 2.x](https://openlineage.io/doc
 
 - Configure Flink `JobManager` to load these dependencies using its own ClassLoader:
 
-  ```{code-block} yaml
-  :caption: config.yaml
+  ```yaml title="config.yaml"
 
   classloader.parent-first-patterns.additional: ["io.openlineage.", "org.apache.kafka.","com.github.luben."]
   ```
@@ -50,8 +47,7 @@ Using [OpenLineage integration with Apache Flink 2.x](https://openlineage.io/doc
 
 - Add `OpenLineageJobStatusChangedListenerFactory` to Flink `config.yaml`:
 
-  ```{code-block} yaml
-  :caption: config.yaml
+  ```yaml title="config.yaml"
 
   classloader.parent-first-patterns.additional: ["io.openlineage.", "org.apache.kafka.","com.github.luben."]
   execution.job-status-changed-listeners: io.openlineage.flink.listener.OpenLineageJobStatusChangedListenerFactory  # capture job event
@@ -62,8 +58,7 @@ Using [OpenLineage integration with Apache Flink 2.x](https://openlineage.io/doc
 
 - Create `openlineage.yml` file with content like:
 
-  ```{code-block} yaml
-  :caption: openlineage.yml
+  ```yaml title="openlineage.yml"
 
   # Send RUNNING event every 1 hour.
   # Using default interval (1 minute) just floods Kafka with useless RUNNING events.
@@ -94,8 +89,7 @@ Using [OpenLineage integration with Apache Flink 2.x](https://openlineage.io/doc
 
 At the end, this should look like this (see [Official documentation](https://nightlies.apache.org/flink/flink-docs-release-2.0/docs/deployment/resource-providers/standalone/docker/)):
 
-```{code-block} yaml
-:caption: docker-compose.yml
+```yaml title="docker-compose.yml"
 
 services:
     jobmanager:
@@ -132,30 +126,24 @@ Browse frontend pages [Jobs](http://localhost:3000/jobs) to see what information
 
 ### Job list page
 
-```{image} ../flink1/job_list.png
-```
+![job list](../flink1/job_list.png)
 
 ### Job details page
 
-```{image} ../flink1/job_details.png
-```
+![job details](../flink1/job_details.png)
 
 ### Run details page
 
-```{image} ../flink1/run_details.png
-```
+![run details](../flink1/run_details.png)
 
 ### Dataset level lineage
 
-```{image} ../flink1/dataset_lineage.png
-```
+![dataset lineage](../flink1/dataset_lineage.png)
 
 ### Job level lineage
 
-```{image} ../flink1/job_lineage.png
-```
+![job lineage](../flink1/job_lineage.png)
 
 ### Run level lineage
 
-```{image} ../flink1/run_lineage.png
-```
+![run lineage](../flink1/run_lineage.png)

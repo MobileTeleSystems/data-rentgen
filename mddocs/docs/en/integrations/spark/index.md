@@ -1,6 +1,4 @@
-(overview-setup-spark)=
-
-# Apache Spark integration
+# Apache Spark integration { #overview-setup-spark }
 
 Using [OpenLineage integration with Apache Spark](https://openlineage.io/docs/integrations/spark/).
 
@@ -151,43 +149,34 @@ to see what information was extracted by OpenLineage & DataRentgen.
 
 ### Job list page
 
-```{image} ./job_list.png
-```
+![job_list](job_list.png)
 
 ### Job details page
 
-```{image} ./job_details.png
-```
+![job_details](job_details.png)
 
 ### Run details page
 
-```{image} ./run_details.png
-```
+![run_details](run_details.png)
 
 ### Operation details page
 
-```{image} ./operation_details.png
-```
+![operation_details](operation_details.png)
 
 ### Dataset level lineage
 
-```{image} ./dataset_lineage.png
-```
+![dataset_lineage](dataset_lineage.png)
 
-```{image} ./dataset_column_lineage.png
-```
+![dataset_column_lineage](dataset_column_lineage.png)
 
 ### Job level lineage
 
-```{image} ./job_lineage.png
-```
+![job_lineage](job_lineage.png)
 
 ### Run level lineage
 
-```{image} ./run_lineage.png
-```
+![run_lineage](run_lineage.png)
 
 ### Operation level lineage
 
-```{image} ./operation_lineage.png
-```
+![operation_lineage](operation_lineage.png)

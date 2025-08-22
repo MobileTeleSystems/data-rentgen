@@ -1,6 +1,4 @@
-(overview-setup-flink1)=
-
-# Apache Flink 1.x integration
+# Apache Flink 1.x integration { #overview-setup-flink1 }
 
 Using [OpenLineage integration with Apache Flink 1.x](https://openlineage.io/docs/integrations/flink/flink1).
 
@@ -22,8 +20,7 @@ Using [OpenLineage integration with Apache Flink 1.x](https://openlineage.io/doc
 
 - Add dependencies [openlineage-flink](https://mvnrepository.com/artifact/io.openlineage/openlineage-flink) and [kafka-clients](https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients) to your Flink job:
 
-  ```{code-block} groovy
-  :caption: build.gradle
+  ```groovy title="build.gradle"
 
   implementation "io.openlineage:openlineage-flink:1.34.0"
   implementation "org.apache.kafka:kafka-clients:3.9.0"
@@ -31,8 +28,7 @@ Using [OpenLineage integration with Apache Flink 1.x](https://openlineage.io/doc
 
 - Register `OpenLineageFlinkJobListener` in the code of your Flink job:
 
-  ```{code-block} java
-  :caption: MyFlinkJob.java
+  ```java title="MyFlinkJob.java"
 
   import io.openlineage.flink.OpenLineageFlinkJobListener;
 
@@ -48,16 +44,14 @@ Using [OpenLineage integration with Apache Flink 1.x](https://openlineage.io/doc
 
 - Modify Flink `config.yaml` to include:
 
-  ```{code-block} yaml
-  :caption: config.yaml
+  ```yaml title="config.yaml"
 
   execution.attached: true  # capture job stop events
   ```
 
 - Create `openlineage.yml` file with content like:
 
-  ```{code-block} yaml
-  :caption: openlineage.yml
+  ```yaml title="openlineage.yml"
 
   job:
       namespace: http://some.host.name:18081  # set namespace to match Flink address
@@ -92,8 +86,7 @@ Using [OpenLineage integration with Apache Flink 1.x](https://openlineage.io/doc
 
 At the end, this should look like this (see [Official documentation](https://nightlies.apache.org/flink/flink-docs-release-1.20/docs/deployment/resource-providers/standalone/docker/)):
 
-```{code-block} yaml
-:caption: docker-compose.yml
+```yaml title="docker-compose.yml"
 
 services:
     jobmanager:
@@ -129,30 +122,24 @@ Browse frontend pages [Jobs](http://localhost:3000/jobs) to see what information
 
 ### Job list page
 
-```{image} ./job_list.png
-```
+![job list](job_list.png)
 
 ### Job details page
 
-```{image} ./job_details.png
-```
+![job details](job_details.png)
 
 ### Run details page
 
-```{image} ./run_details.png
-```
+![run details](run_details.png)
 
 ### Dataset level lineage
 
-```{image} ./dataset_lineage.png
-```
+![dataset lineage](dataset_lineage.png)
 
 ### Job level lineage
 
-```{image} ./job_lineage.png
-```
+![job lineage](job_lineage.png)
 
 ### Run level lineage
 
-```{image} ./run_lineage.png
-```
+![run lineage](run_lineage.png)

@@ -1,6 +1,4 @@
-(overview-setup-dbt)=
-
-# dbt integration
+# dbt integration { #overview-setup-dbt }
 
 Using [OpenLineage integration with dbt](https://openlineage.io/docs/integrations/dbt).
 
@@ -19,6 +17,7 @@ Using [OpenLineage integration with dbt](https://openlineage.io/docs/integration
 
 ```console
 $ pip install "openlineage-dbt>=1.34.0" "openlineage-python[kafka]>=1.34.0" zstd
+...
 ```
 
 ## Setup
@@ -52,14 +51,18 @@ Replace `dbt` CLI commands:
 
 ```shell
 $ dbt run myproject
+...
 $ dbt test myproject
+...
 ```
 
 with `dbt-ol` CLI:
 
 ```shell
 $ dbt-ol run myproject
+...
 $ dbt-ol test myproject
+...
 ```
 
 Lineage will be send to Data.Rentgen automatically by OpenLineage integration.
@@ -70,35 +73,28 @@ Browse frontend page [Jobs](http://localhost:3000/jobs) to see what information 
 
 ### Job list page
 
-```{image} ./job_list.png
-```
+![job list](job_list.png)
 
 ### Job details page
 
-```{image} ./job_details.png
-```
+![job details](job_details.png)
 
 ### Job-level lineage
 
-```{image} ./job_lineage.png
-```
+![job lineage](job_lineage.png)
 
 ### Run details
 
-```{image} ./run_details.png
-```
+![run details](run_details.png)
 
 ### Run lineage
 
-```{image} ./run_lineage.png
-```
+![run lineage](run_lineage.png)
 
 ### Operation details
 
-```{image} ./operation_details.png
-```
+![operation details](operation_details.png)
 
 ### Operation lineage
 
-```{image} ./operation_lineage.png
-```
+![operation lineage](operation_lineage.png)

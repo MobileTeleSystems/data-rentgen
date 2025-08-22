@@ -1,6 +1,4 @@
-(overview-setup-hive)=
-
-# Apache Hive integration
+# Apache Hive integration { #overview-setup-hive }
 
 Using [OpenLineage integration with Apache Hive](https://openlineage.io/docs/integrations/hive/).
 
@@ -131,13 +129,13 @@ Change `hive-site.xml` configuration file:
 Connect to you HiveServer2 instance JDBC interface, e.g. using `beeline` or DBeaver.
 After query was executed, integration will send lineage events to DataRentgen.
 
-:::{note}
-By default, Job is created with name `{username}@{clientIp}`. You can override this name by executing this statement:
+!!! note
 
-```sql
-SET hive.openlineage.job.name=my_session_name;
-```
-:::
+    By default, Job is created with name `{username}@{clientIp}`. You can override this name by executing this statement:
+
+    ```sql
+    SET hive.openlineage.job.name=my_session_name;
+    ```
 
 ## See results
 
@@ -145,40 +143,32 @@ Browse frontend pages [Jobs](http://localhost:3000/jobs) to see what information
 
 ### Job list page
 
-```{image} ./job_list.png
-```
+![job list](job_list.png)
 
 ### Job details page
 
-```{image} ./job_details.png
-```
+![job details](job_details.png)
 
 ### Run details page
 
-```{image} ./run_details.png
-```
+![run details](run_details.png)
 
 ### Operation details page
 
-```{image} ./operation_details.png
-```
+![operation details](operation_details.png)
 
 ### Dataset level lineage
 
-```{image} ./dataset_lineage.png
-```
+![dataset lineage](dataset_lineage.png)
 
 ### Job level lineage
 
-```{image} ./job_lineage.png
-```
+![job lineage](job_lineage.png)
 
 ### Run level lineage
 
-```{image} ./run_lineage.png
-```
+![run lineage](run_lineage.png)
 
 ### Operation level lineage
 
-```{image} ./operation_lineage.png
-```
+![operation lineage](operation_lineage.png)

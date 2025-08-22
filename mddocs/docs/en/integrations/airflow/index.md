@@ -1,6 +1,4 @@
-(overview-setup-airflow)=
-
-# Apache Airflow integration
+# Apache Airflow integration { #overview-setup-airflow }
 
 Using [OpenLineage integration with Apache Airflow](https://openlineage.io/docs/integrations/airflow/).
 
@@ -23,12 +21,14 @@ Using [OpenLineage integration with Apache Airflow](https://openlineage.io/docs/
 
   ```console
   $ pip install "apache-airflow-providers-openlineage>=2.3.0" "openlineage-python[kafka]>=1.34.0" zstd
+  ...
   ```
 
 - For Airflow 2.1.x-2.6.x, use [OpenLineage integration for Airflow](https://openlineage.io/docs/integrations/airflow/) 1.19.0 or higher
 
   ```console
   $ pip install "openlineage-airflow>=1.34.0" "openlineage-python[kafka]>=1.34.0" zstd
+  ...
   ```
 
 ## Setup
@@ -105,15 +105,12 @@ Browse frontend page [Jobs](http://localhost:3000/jobs) to see what information 
 
 ### Job list page
 
-```{image} ./job_list.png
-```
+![job list](job_list.png)
 
 ### DAG run details page
 
-```{image} ./dag_run_details.png
-```
+![dag run details](dag_run_details.png)
 
 ### Task run details page
 
-```{image} ./task_run_details.png
-```
+![task run details](task_run_details.png)
