@@ -1,9 +1,6 @@
-(entities)=
+# Entities { #entities }
 
-# Entities
-
-```{eval-rst}
-.. plantuml::
+```plantuml
 
     @startuml
         title Entities diagram
@@ -41,6 +38,52 @@
     @enduml
 ```
 
+```mermaid
+---
+title: Entities diagram
+---
+
+flowchart LR
+   subgraph locations1 [locations 1]
+       addresses1@{shape: docs, label: "addresses"}
+    end
+   subgraph locations2 [locations 2]
+       addresses2@{shape: docs, label: "addresses"}
+    end
+   subgraph locations3 [locations 3]
+       addresses3@{shape: docs, label: "addresses"}
+    end
+   dataset1[(dataset 1)]
+   dataset2[(dataset 2)]
+   operations@{shape: procs}
+   runs@{shape: procs, fill: yellow}
+   
+   style runs fill:lightyellow
+   job
+   style job fill:lightblue
+   user@{shape: stadium}
+   style user fill:lightblue
+
+   dataset1 -- SYMLINK ---> dataset2
+   dataset2 -- SYMLINK --> dataset1
+ 
+   dataset2 -- located in --> locations2
+
+   dataset1 -. INPUT .-> operations
+   operations -. OUTPUT .-> dataset1
+   dataset1 -- located in --> locations1
+
+   operations -- PARENT --> runs
+   
+   runs -- PARENT ----> job
+   runs -- started by ----> user
+   
+   job -- located in ---> locations3
+
+   runs -- PARENT --> runs
+
+```
+
 ## Nodes
 
 Nodes are independent entities which describe information about some real entity, like table, ETL job, ETL job run and so on.
@@ -74,8 +117,7 @@ It contains following fields:
 
   - `url: str` - alternative address, in URL form.
 
-```{image} location_list.png
-```
+![location list](location_list.png)
 
 #### Location addresses
 
@@ -115,8 +157,7 @@ That's why the information about datasets is very limited:
 - `name: str` - qualified name of Dataset, like `mydb.myschema.mytable` or `/app/warehouse/hive/managed/myschema.df/mytable`
 - `schema: Schema | None` - schema of dataset.
 
-```{image} dataset_list.png
-```
+![dataset list](dataset_list.png)
 
 #### Dataset schema
 
@@ -146,8 +187,7 @@ It contains following fields:
   - `EXACT_MATCH` - returned if all interactions with this dataset used only one schema.
   - `LATEST_KNOWN` - if there are multiple interactions with this dataset, but with different schemas. In this case a schema of the most recent interaction is returned.
 
-```{image} dataset_schema.png
-```
+![dataset schema](dataset_schema.png)
 
 ### Job
 
@@ -180,8 +220,7 @@ It contains following fields:
   - `DBT_JOB`
   - `UNKNOWN`
 
-```{image} job_list.png
-```
+![job list](job_list.png)
 
 ### User
 
@@ -241,17 +280,13 @@ It contains following fields:
 
 - `persistent_log_url: str | None` - external URL there specific Run logs could be found (e.g. Spark History server, Airflow Web UI).
 
-```{image} run_list.png
-```
+![run list](run_list.png)
 
-```{image} ../integrations/spark/run_details.png
-```
+![run details](../integrations/spark/run_details.png)
 
-```{image} ../integrations/airflow/dag_run_details.png
-```
+![dag run details](../integrations/airflow/dag_run_details.png)
 
-```{image} ../integrations/airflow/task_run_details.png
-```
+![task run details](../integrations/airflow/task_run_details.png)
 
 ### Operation
 
@@ -287,8 +322,7 @@ It contains following fields:
 
 - `sql_query: str | None` - SQL query executed by this operation, if any.
 
-```{image} ../integrations/dbt/operation_details.png
-```
+![../integrations/dbt/operation_details.png](../integrations/dbt/operation_details.png)
 
 ## Relations
 
@@ -309,13 +343,12 @@ It contains following fields:
   - `METASTORE` - from HDFS location to Hive table in metastore.
   - `WAREHOUSE` - from Hive table to HDFS/S3 location.
 
-:::{note}
-Currently, OpenLineage sends only symlinks `HDFS location → Hive table` which [do not exist in the real world](https://github.com/OpenLineage/OpenLineage/issues/2718#issuecomment-2134746258).
-Message consumer automatically adds a reverse symlink `Hive table → HDFS location` to simplify building lineage graph, but this is temporary solution.
-:::
+!!! note
 
-```{image} dataset_symlinks.png
-```
+  Currently, OpenLineage sends only symlinks `HDFS location → Hive table` which [do not exist in the real world](https://github.com/OpenLineage/OpenLineage/issues/2718#issuecomment-2134746258).
+  Message consumer automatically adds a reverse symlink `Hive table → HDFS location` to simplify building lineage graph, but this is temporary solution.
+
+![dataset_symlinks.png](dataset_symlinks.png)
 
 ### Parent Relation
 
@@ -331,8 +364,7 @@ It contains following fields:
 - `from: Job | Run` - parent entity.
 - `to: Run | Operation` - child entity.
 
-```{image} parent.png
-```
+![parent.png](parent.png)
 
 ### Input relation
 
@@ -348,8 +380,7 @@ It contains following fields:
 - `num_bytes: int | None` - number of bytes read from dataset. For `granularity=JOB|RUN` it is a sum of all read bytes from this dataset. For `granularity=DATASET` always `None`.
 - `num_files: int | None` - number of files read from dataset. For `granularity=JOB|RUN` it is a sum of all read files from this dataset. For `granularity=DATASET` always `None`.
 
-```{image} input.png
-```
+![input.png](input.png)
 
 ### Output relation
 
@@ -381,8 +412,7 @@ It contains following fields:
 
 - `num_files: int | None` - number of files written from dataset. For `granularity=JOB|RUN` it is a sum of all written files to this dataset.
 
-```{image} output.png
-```
+![output.png](output.png)
 
 ### Direct Column Lineage relation
 
@@ -405,8 +435,7 @@ Relation Dataset columns → Dataset columns, describing how each target dataset
     - `AGGREGATION_MASKING` - some masking aggregation function is applied to column value, e.g. `SELECT count(DISTINCT source_column) AS target_column`
     - `UNKNOWN` - some unknown transformation type.
 
-```{image} direct_column_lineage.png
-```
+![direct column lineage](direct_column_lineage.png)
 
 ### Indirect Column Lineage relation
 
@@ -430,5 +459,4 @@ Relation Dataset columns → Dataset, describing how the entire target dataset i
     - `CONDITIONAL` - column is used in `CASE` or `IF` clause, e.g. `SELECT CASE source_column THEN 1 WHEN 'abc' ELSE 'cde' END AS target_column`
     - `UNKNOWN` - some unknown transformation type.
 
-```{image} indirect_column_lineage.png
-```
+![indirect column lineage](indirect_column_lineage.png)
