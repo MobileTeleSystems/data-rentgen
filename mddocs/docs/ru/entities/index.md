@@ -321,7 +321,7 @@ flowchart LR
 
 - `sql_query: str | None` - SQL-запрос, выполненный этой операцией, если таковой имеется.
 
-![../integrations/dbt/operation_details.png](../integrations/dbt/operation_details.png)
+![детали операций](../integrations/dbt/operation_details.png)
 
 ## Отношения (Relations)
 
@@ -363,7 +363,7 @@ flowchart LR
 - `from: Job | Run` - родительская сущность.
 - `to: Run | Operation` - дочерняя сущность.
 
-![parent](parent.png)
+![связь с родителем](parent.png)
 
 ### Input relation
 
@@ -379,7 +379,7 @@ flowchart LR
 - `num_bytes: int | None` - количество байт, прочитанных из набора данных. Для `granularity=JOB|RUN` это сумма всех прочитанных байт из этого набора данных. Для `granularity=DATASET` всегда `None`.
 - `num_files: int | None` - количество файлов, прочитанных из набора данных. Для `granularity=JOB|RUN` это сумма всех прочитанных файлов из этого набора данных. Для `granularity=DATASET` всегда `None`.
 
-![input](input.png)
+![input relation](input.png)
 
 ### Output relation (Отношение вывода)
 
@@ -411,7 +411,7 @@ flowchart LR
 
 - `num_files: int | None` - количество файлов, записанных из набора данных. Для `granularity=JOB|RUN` это сумма всех записанных файлов в этот набор данных.
 
-![output](output.png)
+![отношение вывода](output.png)
 
 ### Direct Column Lineage relation (Прямая связь колонок)
 

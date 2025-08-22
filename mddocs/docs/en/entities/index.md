@@ -322,7 +322,7 @@ It contains following fields:
 
 - `sql_query: str | None` - SQL query executed by this operation, if any.
 
-![../integrations/dbt/operation_details.png](../integrations/dbt/operation_details.png)
+![operation details](../integrations/dbt/operation_details.png)
 
 ## Relations
 
