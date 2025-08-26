@@ -1,23 +1,23 @@
-# Apache Spark integration { #overview-setup-spark }
+# Интеграция с Apache Spark { #overview-setup-spark }
 
-Using [OpenLineage integration with Apache Spark](https://openlineage.io/docs/integrations/spark/).
+Использует [интеграцию OpenLineage с Apache Spark](https://openlineage.io/docs/integrations/spark/).
 
-## Requirements
+## Требования
 
-- [Apache Spark](https://spark.apache.org/) 3.x or higher
-- OpenLineage 1.23.0 or higher, recommended 1.34.0+
+- [Apache Spark](https://spark.apache.org/) 3.x или выше
+- OpenLineage 1.23.0 или выше, рекомендуется 1.34.0+
 
-## Entity mapping
+## Соответствие сущностей
 
-- Spark applicationName → Data.Rentgen Job
-- Spark applicationId → Data.Rentgen Run
-- Spark job, execution, RDD → Data.Rentgen Operation
+- Spark applicationName → Задача (Job) в Data.Rentgen
+- Spark applicationId → Запуск (Run) в Data.Rentgen
+- Spark job, execution, RDD → Операция (Operation) в Data.Rentgen
 
-## Setup
+## Настройка
 
-### Via OpenLineage config file
+### Через файл конфигурации OpenLineage
 
-- Create `openlineage.yml` file with content like:
+- Создайте файл `openlineage.yml` со следующим содержимым:
 
   ```yaml
   transport:
@@ -37,21 +37,21 @@ Using [OpenLineage integration with Apache Spark](https://openlineage.io/docs/in
           acks: all
   ```
 
-- Pass path to config file via `OPENLINEAGE_CONFIG` environment variable:
+- Передайте путь к файлу конфигурации через переменную окружения `OPENLINEAGE_CONFIG`:
 
   ```ini
   OPENLINEAGE_NAMESPACE=local://hostname.as.fqdn
   OPENLINEAGE_CONFIG=/path/to/openlineage.yml
   ```
 
-- Setup `OpenLineageSparkListener` via SparkSession config:
+- Настройте `OpenLineageSparkListener` через конфигурацию SparkSession:
 
 ```python
 from pyspark.sql import SparkSession
 
 spark = (
     SparkSession.builder
-    # install OpenLineage integration and Kafka client
+    # установка интеграции OpenLineage и клиента Kafka
     .config(
         "spark.jars.packages",
         "io.openlineage:openlineage-spark_2.12:1.34.0,org.apache.kafka:kafka-clients:3.9.0",
@@ -59,26 +59,26 @@ spark = (
     .config(
         "spark.extraListeners", "io.openlineage.spark.agent.OpenLineageSparkListener"
     )
-    # set Spark session master & applicationName
+    # установка мастера и имени приложения Spark
     .master("local")
     .appName("mysession")
-    # few other important options
+    # несколько других важных опций
     .config("spark.openlineage.jobName.appendDatasetName", "false")
     .config("spark.openlineage.columnLineage.datasetLineageEnabled", "true")
     .getOrCreate()
 )
 ```
 
-### Via `SparkSession` config
+### Через конфигурацию `SparkSession`
 
-Add OpenLineage integration package, setup `OpenLineageSparkListener` in SparkSession config:
+Добавьте пакет интеграции OpenLineage, настройте `OpenLineageSparkListener` в конфигурации SparkSession:
 
 ```python
 from pyspark.sql import SparkSession
 
 spark = (
     SparkSession.builder
-    # install OpenLineage integration and Kafka client
+    # установка интеграции OpenLineage и клиента Kafka
     .config(
         "spark.jars.packages",
         "io.openlineage:openlineage-spark_2.12:1.34.0,org.apache.kafka:kafka-clients:3.9.0",
@@ -86,15 +86,15 @@ spark = (
     .config(
         "spark.extraListeners", "io.openlineage.spark.agent.OpenLineageSparkListener"
     )
-    # set Spark session master & applicationName
+    # установка мастера и имени приложения Spark
     .master("local")
     .appName("mysession")
-    # set here location of Spark session, e.g. current host, YARN cluster or K8s cluster:
+    # укажите расположение сессии Spark, например, текущий хост, кластер YARN или K8s:
     .config("spark.openlineage.namespace", "local://hostname.as.fqdn")
     # .config("spark.openlineage.namespace", "yarn://some-cluster")
     # .config("spark.openlineage.namespace", "k8s://some-cluster")
     .config("spark.openlineage.transport.type", "kafka")
-    # set here Kafka connection address & credentials
+    # укажите адрес подключения и учетные данные Kafka
     .config("spark.openlineage.transport.topicName", "input.runs")
     .config(
         "spark.openlineage.transport.properties.bootstrap.servers", "localhost:9093"
@@ -117,66 +117,67 @@ spark = (
         "org.apache.kafka.common.serialization.StringSerializer",
     )
     .config("spark.openlineage.transport.properties.compression.type", "zstd")
-    # few other important options
+    # несколько других важных опций
     .config("spark.openlineage.jobName.appendDatasetName", "false")
     .config("spark.openlineage.columnLineage.datasetLineageEnabled", "true")
     .getOrCreate()
 )
 ```
 
-## Collect and send lineage
+## Сбор и отправка связей между данными
 
-- Use `SparkSession` as context manager, to properly catch session stop events:
+- Используйте `SparkSession` как контекстный менеджер, чтобы правильно обрабатывать события остановки сессии:
 
 ```python
 with SparkSession.builder.getOrCreate() as spark:
-    # work with spark inside this context
+    # работа с spark внутри этого контекста
 ```
 
-- Perform some data operations using Spark, like:
+- Выполните некоторые операции с данными, используя Spark, например:
 
 ```python
 df = spark.read.format("jdbc").options(...).load()
 df.write.format("csv").save("/output/path")
 ```
 
-Lineage will be send to Data.Rentgen automatically by `OpenLineageSparkListener`.
+Связи между данными будут автоматически отправлены в Data.Rentgen через `OpenLineageSparkListener`.
 
-## See results
+## Просмотр результатов
 
-Browse frontend page [Jobs](http://localhost:3000/jobs)
-to see what information was extracted by OpenLineage & DataRentgen.
+Перейдите на страницу ["Задания" (Jobs)](http://localhost:3000/jobs) в интерфейсе, чтобы увидеть информацию, извлеченную OpenLineage и DataRentgen.
 
-### Job list page
+### Страница списка заданий (Job)
 
-![job_list](job_list.png)
+![список заданий](job_list.png)
 
-### Job details page
+### Страница деталей задания (Job)
 
-![job_details](job_details.png)
+![детали задания (Job)](job_details.png)
 
-### Run details page
+### Страница деталей запуска (Run)
 
-![run_details](run_details.png)
+![детали запуска (Run)](run_details.png)
 
-### Operation details page
+### Страница деталей операции
 
-![operation_details](operation_details.png)
+![детали операции](operation_details.png)
 
-### Dataset level lineage
+### Связи на уровне набора данных (dataset)
 
-![dataset_lineage](dataset_lineage.png)
+![связи набора данных (dataset)](dataset_lineage.png)
 
-![dataset_column_lineage](dataset_column_lineage.png)
+### Связи на уровне столбцов набора данных (dataset)
 
-### Job level lineage
+![связи уровня столбцов](dataset_column_lineage.png)
 
-![job_lineage](job_lineage.png)
+### Связи на уровне задания (Job)
 
-### Run level lineage
+![связи задачи](job_lineage.png)
 
-![run_lineage](run_lineage.png)
+### Связи на уровне запуска (Run)
 
-### Operation level lineage
+![связи запуска (Run)](run_lineage.png)
 
-![operation_lineage](operation_lineage.png)
+### Связи на уровне операции
+
+![связи операции](operation_lineage.png)

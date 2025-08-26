@@ -1,65 +1,65 @@
-# Apache Hive integration { #overview-setup-hive }
+# Интеграция с Apache Hive { #overview-setup-hive }
 
-Using [OpenLineage integration with Apache Hive](https://openlineage.io/docs/integrations/hive/).
+Использует [интеграцию OpenLineage с Apache Hive](https://openlineage.io/docs/integrations/hive/).
 
-## Requirements
+## Требования
 
-- [Apache Hive](https://hive.apache.org/) 3.1.3 (4.0 is not yet supported)
-- OpenLineage 1.34.0 or higher, recommended 1.35.0+
+- [Apache Hive](https://hive.apache.org/) 3.1.3 (версия 4.0 пока не поддерживается)
+- OpenLineage 1.34.0 или выше, рекомендуется 1.35.0+
 
-## Limitations
+## Ограничения
 
-- **Hive CLI** is not supported. HiveServer2 is required.
+- **Hive CLI** не поддерживается. Требуется HiveServer2.
 
-- As for OpenLineage 1.34.0 version only these queries are parsed as containing lineage:
+- В версии OpenLineage 1.34.0 как содержащие связи между данными только следующие запросы обрабатываются:
 
   - `CREATE TABLE .. AS SELECT ...`
   - `INSERT INTO ... SELECT ...`
 
-  Other query types are ignored by OpenLineage integration, including:
+  Типы запросов которые игнорируются интеграцией OpenLineage:
 
   - `CREATE TABLE ...`, `ALTER TABLE ...`, `TRUNCATE TABLE ...`, `DROP TABLE ...`.
   - `INSERT INTO ... VALUES ...`, `UPDATE`, `DELETE`, `MERGE`.
   - `LOAD DATA`, `EXPORT`, `IMPORT`.
-  - `SELECT` data directly to JDBC client.
+  - `SELECT` с выводом данных напрямую в JDBC-клиент.
 
-- Hive sends events when user session started, but not when stopped. So all Hive sessions in Data.Rentgen are in `STARTED` status.
+- Hive отправляет события при запуске пользовательской сессии, но не при её завершении. Поэтому все сессии Hive в Data.Rentgen имеют статус `STARTED`.
 
-## Entity mapping
+## Соответствие сущностей
 
-- Hive user + user IP → Data.Rentgen Job
-- Hive session → Data.Rentgen Run
-- Hive query → Data.Rentgen Operation
+- Пользователь Hive + IP пользователя → Задание (Job) в Data.Rentgen
+- Сессия Hive → Запуск (Run) в Data.Rentgen
+- Запрос Hive → Операция (Operation) в Data.Rentgen
 
-## Installation
+## Установка
 
-Download these jars and place then in `/path/to/jars/` directory on HiveServer2 machine:
+Скачайте следующие jar-файлы и поместите их в каталог `/path/to/jars/` на машине с HiveServer2:
 
 - [openlineage-java](https://mvnrepository.com/artifact/io.openlineage/openlineage-java)
 - [openlineage-hive](https://mvnrepository.com/artifact/io.openlineage/openlineage-hive)
 - [kafka-clients](https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients)
 - [zstd-jni](https://mvnrepository.com/artifact/com.github.luben/zstd-jni)
 
-## Setup
+## Настройка
 
-Change `hive-site.xml` configuration file:
+Измените конфигурационный файл `hive-site.xml`:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <!-- Set Hive to stop complaining on unknown properties -->
+    <!-- Настройка Hive, чтобы не жаловался на неизвестные свойства -->
     <property>
         <name>hive.conf.validation</name>
         <value>false</value>
     </property>
 
-    <!-- Set path to downloaded jars -->
+    <!-- Укажите путь к скачанным jar-файлам -->
     <property>
         <name>hive.aux.jars.path</name>
         <value>/path/to/jars/</value>
     </property>
 
-    <!-- Enable OpenLineage integration based on Hive hooks -->
+    <!-- Включите интеграцию OpenLineage на основе хуков Hive -->
     <property>
         <name>hive.server2.session.hook</name>
         <value>io.openlineage.hive.hooks.HiveOpenLineageHook</value>
@@ -73,7 +73,7 @@ Change `hive-site.xml` configuration file:
         <value>io.openlineage.hive.hooks.HiveOpenLineageHook</value>
     </property>
 
-    <!-- Setup OpenLineage Kafka transport -->
+    <!-- Настройка транспорта OpenLineage через Kafka -->
     <property>
         <name>hive.openlineage.transport.type</name>
         <value>kafka</value>
@@ -84,7 +84,7 @@ Change `hive-site.xml` configuration file:
     </property>
     <property>
         <name>hive.openlineage.transport.properties.bootstrap.servers</name>
-        <!-- Address should be accessible from HiveServer2 -->
+        <!-- Адрес должен быть доступен с машины HiveServer2 -->
         <value>localhost:9093</value>
     </property>
     <property>
@@ -116,7 +116,7 @@ Change `hive-site.xml` configuration file:
         <value>all</value>
     </property>
 
-    <!-- Set default namespace for jobs -->
+    <!-- Установите пространство имен по умолчанию для задач -->
     <property>
         <name>hive.openlineage.namespace</name>
         <value>hive://my.hive.host:10000</value>
@@ -124,51 +124,50 @@ Change `hive-site.xml` configuration file:
 </configuration>
 ```
 
-## Collect and send lineage
+## Сбор и отправка связей между данными
 
-Connect to you HiveServer2 instance JDBC interface, e.g. using `beeline` or DBeaver.
-After query was executed, integration will send lineage events to DataRentgen.
+Подключитесь к интерфейсу JDBC вашего HiveServer2, например, используя `beeline` или DBeaver. После выполнения запроса интеграция отправит события связей между данными в DataRentgen.
 
 !!! note
 
-    By default, Job is created with name `{username}@{clientIp}`. You can override this name by executing this statement:
+    По умолчанию Задание (Job) создается с именем `{username}@{clientIp}`. Вы можете переопределить это имя, выполнив следующую команду:
 
     ```sql
     SET hive.openlineage.job.name=my_session_name;
     ```
 
-## See results
+## Просмотр результатов
 
-Browse frontend pages [Jobs](http://localhost:3000/jobs) to see what information was extracted by OpenLineage & DataRentgen.
+Перейдите на страницу [Задания (Jobs)](http://localhost:3000/jobs) в интерфейсе, чтобы увидеть информацию, извлеченную OpenLineage и DataRentgen.
 
-### Job list page
+### Страница списка задач
 
-![job list](job_list.png)
+![список заданий (Job)](job_list.png)
 
-### Job details page
+### Страница деталей задания (Job)
 
-![job details](job_details.png)
+![детали задания (Job)](job_details.png)
 
-### Run details page
+### Страница деталей запуска
 
-![run details](run_details.png)
+![детали запуска (Run)](run_details.png)
 
-### Operation details page
+### Страница деталей операции
 
-![operation details](operation_details.png)
+![детали операции](operation_details.png)
 
-### Dataset level lineage
+### Связи на уровне набора данных
 
-![dataset lineage](dataset_lineage.png)
+![связи набора данных (dataset)](dataset_lineage.png)
 
-### Job level lineage
+### Связи на уровне задачи
 
-![job lineage](job_lineage.png)
+![связи задания (Job)](job_lineage.png)
 
-### Run level lineage
+### Связи на уровне запуска
 
-![run lineage](run_lineage.png)
+![связи запуска (Run)](run_lineage.png)
 
-### Operation level lineage
+### Связи на уровне операции
 
-![operation lineage](operation_lineage.png)
+![связи операции](operation_lineage.png)
