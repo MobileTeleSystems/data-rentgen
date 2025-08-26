@@ -1,28 +1,28 @@
-# dbt integration { #overview-setup-dbt }
+# Интеграция с dbt { #overview-setup-dbt }
 
-Using [OpenLineage integration with dbt](https://openlineage.io/docs/integrations/dbt).
+Использование [интеграции OpenLineage с dbt](https://openlineage.io/docs/integrations/dbt).
 
-## Requirements
+## Требования
 
-- [dbt](https://www.getdbt.com/) 1.3 or higher
-- OpenLineage 1.19.0 or higher, recommended 1.34.0+
+- [dbt](https://www.getdbt.com/) 1.3 или выше
+- OpenLineage 1.19.0 или выше, рекомендуется 1.34.0+
 
-## Entity mapping
+## Отображение сущностей
 
-- dbt project → Data.Rentgen Job
-- dbt run → Data.Rentgen Run
-- dbt model, snapshot, sql, test → Data.Rentgen Operation
+- dbt проект → Data.Rentgen Job
+- dbt запуск → Data.Rentgen Run
+- dbt модель, снапшот, sql, тест → Data.Rentgen Operation
 
-## Install
+## Установка
 
 ```console
 $ pip install "openlineage-dbt>=1.34.0" "openlineage-python[kafka]>=1.34.0" zstd
 ...
 ```
 
-## Setup
+## Настройка
 
-- Create `openlineage.yml` file with content below\`:
+- Создайте файл `openlineage.yml` с содержимым ниже:
 
   ```yaml
   transport:
@@ -38,16 +38,16 @@ $ pip install "openlineage-dbt>=1.34.0" "openlineage-python[kafka]>=1.34.0" zstd
           acks: all
   ```
 
-- Set environment variables:
+- Установите переменные окружения:
 
   ```ini
   OPENLINEAGE_NAMESPACE=local://dbt.host.name
   OPENLINEAGE_CONFIG=/path/to/openlineage.yml
   ```
 
-## Collect and send lineage
+## Сбор и отправка lineage
 
-Replace `dbt` CLI commands:
+Замените команды CLI `dbt`:
 
 ```shell
 $ dbt run myproject
@@ -56,7 +56,7 @@ $ dbt test myproject
 ...
 ```
 
-with `dbt-ol` CLI:
+на CLI `dbt-ol`:
 
 ```shell
 $ dbt-ol run myproject
@@ -65,36 +65,36 @@ $ dbt-ol test myproject
 ...
 ```
 
-Lineage will be send to Data.Rentgen automatically by OpenLineage integration.
+Lineage будет автоматически отправлен в Data.Rentgen интеграцией OpenLineage.
 
-## See results
+## Просмотр результатов
 
-Browse frontend page [Jobs](http://localhost:3000/jobs) to see what information was extracted by OpenLineage & DataRentgen
+Просмотрите страницу интерфейса [Jobs](http://localhost:3000/jobs), чтобы увидеть, какая информация была извлечена OpenLineage и DataRentgen
 
-### Job list page
+### Страница списка Job
 
-![job list](job_list.png)
+![список заданий](job_list.png)
 
-### Job details page
+### Страница сведений о Job
 
-![job details](job_details.png)
+![сведения о задании](job_details.png)
 
-### Job-level lineage
+### Lineage уровня Job
 
-![job lineage](job_lineage.png)
+![lineage задания](job_lineage.png)
 
-### Run details
+### Сведения о запуске (Run)
 
-![run details](run_details.png)
+![сведения о запуске](run_details.png)
 
-### Run lineage
+### Lineage запуска (Run)
 
-![run lineage](run_lineage.png)
+![lineage запуска](run_lineage.png)
 
-### Operation details
+### Сведения об операции
 
-![operation details](operation_details.png)
+![сведения об операции](operation_details.png)
 
-### Operation lineage
+### Lineage операции
 
-![operation lineage](operation_lineage.png)
+![lineage операции](operation_lineage.png)
