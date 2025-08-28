@@ -1,11 +1,8 @@
-(database)=
-
-# Relation Database
+# Relation Database { #database }
 
 Data.Rentgen uses relational database as a storage for lineage entities and relations.
 
-Currently, Data.Rentgen supports only [PostgreSQL](https://www.postgresql.org/), as it relies on table partitioning,
-full-text search and specific aggregation functions.
+Currently, Data.Rentgen supports only [PostgreSQL](https://www.postgresql.org/), as it relies on table partitioning, full-text search and specific aggregation functions.
 
 ## Migrations
 
@@ -13,32 +10,31 @@ After a database is started, it is required to run migration script.
 If database is empty, it creates all the required tables and indexes.
 If database is not empty, it will perform database structure upgrade.
 
-Migration script is a thin wrapper around [Alembic cli](https://alembic.sqlalchemy.org/en/latest/tutorial.html#running-our-first-migration),
-options and commands are just the same.
+Migration script is a thin wrapper around [Alembic cli](https://alembic.sqlalchemy.org/en/latest/tutorial.html#running-our-first-migration), options and commands are just the same.
 
-:::{warning}
-Other containers (consumer, server) should be stopped while running migrations, to prevent interference.
-:::
+!!! warning
+
+  Other containers (consumer, server) should be stopped while running migrations, to prevent interference.
 
 ## Partitions
 
-After migrations are performed, it is required to run {ref}`create-partitions-cli` which creates partitions for some tables in the database.
+After migrations are performed, it is required to run [`create-partitions-cli`][create-partitions-cli] which creates partitions for some tables in the database.
 By default, it creates monthly partitions, for current and next month. This can be changed by overriding command args.
 
 This script should run on schedule, depending on partitions granularity.
 Scheduling can be done by adding a dedicated entry to [crontab](https://help.ubuntu.com/community/CronHowto).
 
-It's strongly recommended also to add old partitions cleanup script to cron {ref}`cleanup-partitions-cli`.
+It's strongly recommended also to add old partitions cleanup script to cron [`cleanup-partitions-cli`][cleanup-partitions-cli].
 Scheduling setup is same is for creating of partitions.
 
 ## Analytic views
 
-Along with migrations few analytics views are created. These are managed by {ref}`refresh-analytic-views-cli`,
+Along with migrations few analytics views are created. These are managed by [`refresh-analytic-views-cli`][refresh-analytic-views-cli],
 and should be executed by schedule.
 
 ## Seeding
 
-By default, database is created with no data. To seed database with some examples, use {ref}`db-seed-cli`.
+By default, database is created with no data. To seed database with some examples, use [`db-seed-cli`][db-seed-cli].
 
 ## Requirements
 
@@ -56,22 +52,24 @@ By default, database is created with no data. To seed database with some example
 
   ```console
   $ docker compose --profile analytics,cleanup,seed up -d
+  ...
   ```
 
   `docker-compose` will download PostgreSQL image, create container and volume, and then start container.
   Image entrypoint will create database if volume is empty.
 
   After that, several one-off containers will start:
-  : - `db-create-partitions` will create necessary partitions in db.
-    - `db-cleanup-partitions` will cleanup old partitions.
-    - `db-refresh-views` will refresh analytic views.
-    - `db-seed` will seed database with some examples (optional, can be omitted).
+
+- `db-create-partitions` will create necessary partitions in db.
+- `db-cleanup-partitions` will cleanup old partitions.
+- `db-refresh-views` will refresh analytic views.
+- `db-seed` will seed database with some examples (optional, can be omitted).
 
   Options can be set via `.env` file or `environment` section in `docker-compose.yml`
 
-  ```{eval-rst}
-  .. dropdown:: ``docker-compose.yml``
+=== "docker-compose.yml"
 
+  ```yaml
     .. literalinclude:: ../../../docker-compose.yml
         :emphasize-lines: 1-69,176
   ```
@@ -112,7 +110,7 @@ By default, database is created with no data. To seed database with some example
   $ pip install data-rentgen[postgres]
   ```
 
-- Configure {ref}`Database connection <configuration-database>` using environment variables, e.g. by creating `.env` file:
+- Configure [`Database connection <configuration-database>`][Database connection <configuration-database>] using environment variables, e.g. by creating `.env` file:
 
   ```{code-block} console
   :caption: /some/.env
