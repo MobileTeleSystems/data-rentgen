@@ -1,8 +1,6 @@
-(message-broker)=
+# Message Broker { #message-broker }
 
-# Message Broker
-
-Message broker is component used by OpenLineage to store all received events. Then these avents are handled by {ref}`message-consumer`, in batches.
+Message broker is component used by OpenLineage to store all received events. Then these avents are handled by [`message-consumer`][message-consumer], in batches.
 
 Currently, Data.Rentgen supports only [Apache Kafka](https://kafka.apache.org/) as message broker.
 
@@ -13,7 +11,7 @@ Other popular OpenLineage server implementations use HTTP protocol for receiving
 - Kafka is designed to be scalable. If performance level is not enough, just add another broker to the cluster. For HTTP servers it's not that simple,
   as this requires load balancing on reverse proxy side or DNS side.
 - Kafka is designed to receive A LOT of events per second, like millions, and store them on disk as fast as possible. So no events are lost
-  even if {ref}`message-consumer` is overloaded - events are already on disk, and will be handled later.
+  even if [`message-consumer`][message-consumer] is overloaded - events are already on disk, and will be handled later.
 - ETL scripts are mostly run on schedule The usual pattern is almost zero events during the day, but huge spikes at every whole hour
   (e.g. at 00:00, 01:00, 03:00, 12:00). Kafka is used as an intermediate buffer which smooths these spikes.
 - Events stored in Kafka can be read in batches, even if OpenLineage integration initially send them one-by-one.
@@ -38,6 +36,7 @@ Other popular OpenLineage server implementations use HTTP protocol for receiving
 
   ```console
   $ docker compose --profile broker up -d --wait
+  ...
   ```
 
   `docker-compose` will download Apache Kafka image, create container and volume, and then start container.
@@ -45,16 +44,16 @@ Other popular OpenLineage server implementations use HTTP protocol for receiving
   Image entrypoint will create database if volume is empty.
   Options can be set via `.env` file or `environment` section in `docker-compose.yml`
 
-  ```{eval-rst}
-  .. dropdown:: ``docker-compose.yml``
+=== "docker-compose.yml"
 
+  ```yaml
     .. literalinclude:: ../../../docker-compose.yml
         :emphasize-lines: 101-117,177
   ```
 
-  ```{eval-rst}
-  .. dropdown:: ``.env.docker``
+=== ".env.docker"
 
+  ```yaml
     .. literalinclude:: ../../../.env.docker
         :emphasize-lines: 7-20
   ```
