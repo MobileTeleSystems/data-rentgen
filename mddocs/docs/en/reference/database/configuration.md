@@ -1,7 +1,4 @@
-(configuration-database)=
+# Database settings { #configuration-database }
 
-# Database settings
-
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.db.settings.DatabaseSettings
-```
+<!-- TODO: check generation with original rst -->
+::: data_rentgen.db.settings.DatabaseSettings

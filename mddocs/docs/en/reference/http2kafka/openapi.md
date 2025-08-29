@@ -1,6 +1,4 @@
-(http2kafka-openapi)=
-
-# OpenAPI specification
+# OpenAPI specification { #http2kafka-openapi }
 
 % this page cannot be properly rendered in local environment, it should be build in CI first
 

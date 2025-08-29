@@ -1,27 +1,13 @@
-(configuration-consumer-kafka)=
+# Kafka settings { #configuration-consumer-kafka }
 
-# Kafka settings
+::: data_rentgen.consumer.settings.kafka.KafkaSettings
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.consumer.settings.kafka.KafkaSettings
-```
+::: data_rentgen.consumer.settings.security.scram.KafkaSecurityScram256Settings
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.consumer.settings.security.scram.KafkaSecurityScram256Settings
-```
+::: data_rentgen.consumer.settings.security.scram.KafkaSecurityScram512Settings
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.consumer.settings.security.scram.KafkaSecurityScram512Settings
-```
+::: data_rentgen.consumer.settings.security.plain.KafkaSecurityPlaintextSettings
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.consumer.settings.security.plain.KafkaSecurityPlaintextSettings
-```
+::: data_rentgen.consumer.settings.security.gssapi.KafkaSecurityGSSAPISettings
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.consumer.settings.security.gssapi.KafkaSecurityGSSAPISettings
-```
-
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.consumer.settings.security.anonymous.KafkaSecurityAnonymousSettings
-```
+::: data_rentgen.consumer.settings.security.anonymous.KafkaSecurityAnonymousSettings

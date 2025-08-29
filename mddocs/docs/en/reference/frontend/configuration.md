@@ -1,6 +1,4 @@
-(configuration-frontend)=
-
-# Frontend configuration
+# Frontend configuration { #configuration-frontend }
 
 ## API url
 

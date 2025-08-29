@@ -1,6 +1,4 @@
-(http2kafka)=
-
-# HTTP2Kafka proxy
+# HTTP2Kafka proxy { #http2kafka }
 
 Some of OpenLineage integrations support only HttpTransport, but not KafkaTransport, e.g. Trino.
 
@@ -11,11 +9,11 @@ so they can be handled by {ref}`message-consumer` in a proper way.
 ## OpenLineage HttpTransport or KafkaTransport?
 
 Introducing http2kafka into the chain reduces performance a bit:
-: - It parses all incoming events for validation and routing purposes. The larger the event, the slower the parsing.
-  - HTTP/HTTPS protocol is far more complex than Kafka TCP protocol, and has much higher latency in the first place.
 
-If OpenLineage integration supports both HttpTransport and KafkaTransport, and Kafka doesn't use
-complex authentication not supported by OpenLineage (e.g. OAUTHBEARER), prefer KafkaTransport.
+- It parses all incoming events for validation and routing purposes. The larger the event, the slower the parsing.
+- HTTP/HTTPS protocol is far more complex than Kafka TCP protocol, and has much higher latency in the first place.
+
+If OpenLineage integration supports both HttpTransport and KafkaTransport, and Kafka doesn't use complex authentication not supported by OpenLineage (e.g. OAUTHBEARER), prefer KafkaTransport.
 
 If this is not possible, http2kafka is the way to go.
 
@@ -31,22 +29,25 @@ If this is not possible, http2kafka is the way to go.
 
   ```console
   $ docker compose --profile http2kafka up -d --wait
+  ...
   ```
 
   `docker-compose` will download all necessary images, create containers, and then start the component.
 
   Options can be set via `.env` file or `environment` section in `docker-compose.yml`
 
-  ```{eval-rst}
-  .. dropdown:: ``docker-compose.yml``
+<!-- TODO везде, где literal include нужно сделать инклюды-->>
 
+=== "docker-compose.yml"
+
+  ```yaml
     .. literalinclude:: ../../../docker-compose.yml
         :emphasize-lines: 155-173
   ```
 
-  ```{eval-rst}
-  .. dropdown:: ``.env.docker``
+=== ".env.docker"
 
+  ```yaml
     .. literalinclude:: ../../../.env.docker
         :emphasize-lines: 29-34
   ```
@@ -63,6 +64,7 @@ If this is not possible, http2kafka is the way to go.
 
   ```console
   $ python -m venv /some/.venv
+  ...
   $ source /some/.venv/activate
   ```
 
@@ -70,25 +72,23 @@ If this is not possible, http2kafka is the way to go.
 
   ```console
   $ pip install data-rentgen[http2kafka]
+  ...
   ```
 
 - Run http2kafka process
 
   ```console
   $ python -m data_rentgen.http2kafka --host 0.0.0.0 --port 8002
+  ...
   ```
 
   This is a thin wrapper around [uvicorn](https://www.uvicorn.org/#command-line-options) cli,
   options and commands are just the same.
 
-- After server is started and ready, open <http://localhost:8002/docs>.
+- After server is started and ready, open [http://localhost:8002/docs](http://localhost:8002/docs).
 
 ## See also
 
-```{toctree}
-:maxdepth: 1
-
-configuration/index
-openapi
-alternatives
-```
+[Configuration][configuration-http2kafka]
+[OpenAPI][http2kafka-openapi]
+[Alternatives][http2kafka-alternatives]

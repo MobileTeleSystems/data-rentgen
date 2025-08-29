@@ -1,6 +1,4 @@
-(refresh-analytic-views-cli)=
-
-# CLI for refreshing analytic views
+# CLI for refreshing analytic views { #refresh-analytic-views-cli }
 
 Analytic views are:
 
@@ -25,9 +23,5 @@ We provide three types of views: `day`, `week` and `month`, based on the time pe
 By default these materialized views are empty(`WITH NO DATA`).
 In order to fill these tables with data you need to run refresh script (see below).
 
-```{eval-rst}
-.. argparse::
-   :module: data_rentgen.db.scripts.refresh_analytic_views
-   :func: get_parser
-   :prog: python -m data_rentgen.db.scripts.refresh_analytic_views
-```
+<!-- TODO: check generation with original rst -->
+::: data_rentgen.db.scripts.refresh_analytic_views

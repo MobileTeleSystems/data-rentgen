@@ -1,6 +1,4 @@
-(configuration-http2kafka-debug)=
-
-# Enabling debug
+# Enabling debug { #configuration-http2kafka-debug }
 
 ## Return debug info in REST API responses
 
@@ -34,13 +32,13 @@ File ".../site-packages/uvicorn/middleware/proxy_headers.py", line 84, in __call
     return await self.app(scope, receive, send)
 ```
 
-:::{warning}
-This is only for development environment only. Do **NOT** use on production!
-:::
+!!! warning
+
+    This is only for development environment only. Do **NOT** use on production!
 
 ## Print debug logs on backend
 
-See {ref}`configuration-server-logging`, but replace log level `INFO` with `DEBUG`.
+See [`configuration-server-logging`](configuration-server-logging), but replace log level `INFO` with `DEBUG`.
 
 ## Fill up `X-Request-ID` header on backend
 
@@ -48,20 +46,18 @@ Server can add `X-Request-ID` header to responses, which allows to match request
 
 This is done by `request_id` middleware, which is enabled by default and can configured as described below:
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.server.settings.request_id.RequestIDSettings
-```
+::: data_rentgen.server.settings.request_id.RequestIDSettings
 
 ## Print request ID to backend logs
 
 This is done by adding a specific filter to logging handler:
 
-```{eval-rst}
-.. dropdown:: ``logging.yml``
+=== "logging.yml"
 
+  ```yaml
     .. literalinclude:: ../../../../data_rentgen/logging/presets/plain.yml
         :emphasize-lines: 6-12,23-24,35
-```
+  ```
 
 Resulting logs look like:
 
@@ -95,6 +91,4 @@ Server can add `X-Application-Version` header to responses, which allows to dete
 
 This is done by `application_version` middleware, which is enabled by default and can configured as described below:
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.server.settings.application_version.ApplicationVersionSettings
-```
+::: data_rentgen.server.settings.application_version.ApplicationVersionSettings

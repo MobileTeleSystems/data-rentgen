@@ -1,6 +1,4 @@
-(configuration-http2kafka)=
-
-# HTTP2Kafka configuration
+# HTTP2Kafka configuration { #configuration-http2kafka }
 
 ```{toctree}
 :caption: Configuration

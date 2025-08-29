@@ -1,6 +1,4 @@
-(http2kafka-alternatives)=
-
-# Alternatives
+# Alternatives { #http2kafka-alternatives }
 
 HTTP → Kafka proxy is build with mandatory authentication using personal tokens. This may be a drawback for some use cases.
 
@@ -13,8 +11,7 @@ It can accept [HTTP requests](https://docs.fluentbit.io/manual/data-pipeline/inp
 
 Config example:
 
-```{code-block} yaml
-:caption: fluent-bit.yml
+```yaml title="fluent-bit.yml"
 
 pipeline:
     # receive HTTP requests on port 8002
@@ -62,8 +59,7 @@ pipeline:
         rdkafka.log.connection.close: false
 ```
 
-```{code-block} yaml
-:caption: docker-compose.yml
+```yaml title="docker-compose.yml"
 
 services:
     fluent-bit:

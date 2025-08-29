@@ -1,6 +1,4 @@
-(frontend)=
-
-# Frontend
+# Frontend { #frontend }
 
 Data.Rentgen provides a [Frontend (UI)](https://github.com/MobileTeleSystems/data-rentgen-ui) based on [ReactAdmin](https://marmelab.com/react-admin/) and [ReactFlow](https://reactflow.dev/),
 providing users the ability to navigate entities and build lineage graph.
@@ -17,22 +15,23 @@ providing users the ability to navigate entities and build lineage graph.
 
   ```console
   $ docker compose --profile frontend up -d --wait
+  ...
   ```
 
   `docker-compose` will download Data.Rentgen UI image, create containers, and then start them.
 
   Options can be set via `.env` file or `environment` section in `docker-compose.yml`
 
-  ```{eval-rst}
-  .. dropdown:: ``docker-compose.yml``
+=== "docker-compose.yml"
 
+  ```yaml
     .. literalinclude:: ../../../docker-compose.yml
         :emphasize-lines: 140-151
   ```
 
-  ```{eval-rst}
-  .. dropdown:: ``.env.docker``
+=== ".env.docker"
 
+  ```yaml
     .. literalinclude:: ../../../.env.docker
         :emphasize-lines: 36-37
   ```
@@ -41,8 +40,4 @@ providing users the ability to navigate entities and build lineage graph.
 
 ## See also
 
-```{toctree}
-:maxdepth: 1
-
-configuration
-```
+[Configuration][configuration-frontend]

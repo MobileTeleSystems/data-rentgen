@@ -1,6 +1,4 @@
-(configuration-server)=
-
-# REST API server configuration
+# REST API server configuration { #configuration-server }
 
 ```{toctree}
 :caption: Configuration

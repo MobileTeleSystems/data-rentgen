@@ -6,9 +6,7 @@ Currently, Data.Rentgen supports only [PostgreSQL](https://www.postgresql.org/),
 
 ## Migrations
 
-After a database is started, it is required to run migration script.
-If database is empty, it creates all the required tables and indexes.
-If database is not empty, it will perform database structure upgrade.
+After a database is started, it is required to run migration script. If database is empty, it creates all the required tables and indexes. If database is not empty, it will perform database structure upgrade.
 
 Migration script is a thin wrapper around [Alembic cli](https://alembic.sqlalchemy.org/en/latest/tutorial.html#running-our-first-migration), options and commands are just the same.
 
@@ -18,23 +16,22 @@ Migration script is a thin wrapper around [Alembic cli](https://alembic.sqlalche
 
 ## Partitions
 
-After migrations are performed, it is required to run [`create-partitions-cli`][create-partitions-cli] which creates partitions for some tables in the database.
+After migrations are performed, it is required to run [`create-partitions-cli`](create-partitions-cli) which creates partitions for some tables in the database.
 By default, it creates monthly partitions, for current and next month. This can be changed by overriding command args.
 
 This script should run on schedule, depending on partitions granularity.
 Scheduling can be done by adding a dedicated entry to [crontab](https://help.ubuntu.com/community/CronHowto).
 
-It's strongly recommended also to add old partitions cleanup script to cron [`cleanup-partitions-cli`][cleanup-partitions-cli].
+It's strongly recommended also to add old partitions cleanup script to cron [`cleanup-partitions-cli`](cleanup-partitions-cli).
 Scheduling setup is same is for creating of partitions.
 
 ## Analytic views
 
-Along with migrations few analytics views are created. These are managed by [`refresh-analytic-views-cli`][refresh-analytic-views-cli],
-and should be executed by schedule.
+Along with migrations few analytics views are created. These are managed by [`refresh-analytic-views-cli`](refresh-analytic-views-cli), and should be executed by schedule.
 
 ## Seeding
 
-By default, database is created with no data. To seed database with some examples, use [`db-seed-cli`][db-seed-cli].
+By default, database is created with no data. To seed database with some examples, use [`db-seed-cli`](db-seed-cli).
 
 ## Requirements
 
@@ -60,10 +57,10 @@ By default, database is created with no data. To seed database with some example
 
   After that, several one-off containers will start:
 
-- `db-create-partitions` will create necessary partitions in db.
-- `db-cleanup-partitions` will cleanup old partitions.
-- `db-refresh-views` will refresh analytic views.
-- `db-seed` will seed database with some examples (optional, can be omitted).
+  - `db-create-partitions` will create necessary partitions in db.
+  - `db-cleanup-partitions` will cleanup old partitions.
+  - `db-refresh-views` will refresh analytic views.
+  - `db-seed` will seed database with some examples (optional, can be omitted).
 
   Options can be set via `.env` file or `environment` section in `docker-compose.yml`
 
@@ -74,9 +71,9 @@ By default, database is created with no data. To seed database with some example
         :emphasize-lines: 1-69,176
   ```
 
-  ```{eval-rst}
-  .. dropdown:: ``.env.docker``
+=== ".env.docker"
 
+  ```yaml
     .. literalinclude:: ../../../.env.docker
         :emphasize-lines: 1-5,23
   ```
@@ -85,6 +82,7 @@ By default, database is created with no data. To seed database with some example
 
   ```console
   $ crontab -e
+  ...
   ```
 
   ```text
@@ -101,6 +99,7 @@ By default, database is created with no data. To seed database with some example
 
   ```console
   $ python -m venv /some/.venv
+  ...
   $ source /some/.venv/activate
   ```
 
@@ -108,54 +107,61 @@ By default, database is created with no data. To seed database with some example
 
   ```console
   $ pip install data-rentgen[postgres]
+  ...
   ```
 
-- Configure [`Database connection <configuration-database>`][Database connection <configuration-database>] using environment variables, e.g. by creating `.env` file:
+- Configure [`Database connection`](configuration-database) using environment variables, e.g. by creating `.env` file:
 
-  ```{code-block} console
-  :caption: /some/.env
+  ```console title="/some/.env"
 
   $ export DATA_RENTGEN__DATABASE__URL=postgresql+asyncpg://data_rentgen:changeme@localhost:5432/data_rentgen
+  ...
   ```
 
   And then read values from this file:
 
   ```console
   $ source /some/.env
+  ...
   ```
 
 - Run migrations:
 
   ```console
   $ python -m data_rentgen.db.migrations upgrade head
+  ...
   ```
 
-  :::{note}
+!!! note
+
   This command should be executed after each upgrade to new Data.Rentgen version.
-  :::
 
 - Create partitions:
 
   ```console
   $ python -m data_rentgen.db.scripts.create_partitions
+  ...
   ```
 
 - Create analytic views:
 
   ```console
   $ python -m data_rentgen.db.scripts.refresh_analytic_views
+  ...
   ```
 
 - Seed database with example data (optional, can be omitted):
 
   ```console
   $ python -m data_rentgen.db.scripts.seed
+  ...
   ```
 
 - Add scripts to crontab:
 
   ```console
   $ crontab -e
+  ...
   ```
 
   ```text
@@ -167,13 +173,9 @@ By default, database is created with no data. To seed database with some example
 
 ## See also
 
-```{toctree}
-:maxdepth: 1
-
-configuration
-create_partitions_cli
-cleanup_partitions_cli
-refresh_analytic_views_cli
-seed_cli
-structure
-```
+[Configuration][configuration]
+[Create partitions cli][create-partitions-cli]
+[Cleanup partitions cli][cleanup-partitions-cli]
+[Refresh analytic views cli][refresh-analytic-views-cli]
+[Seed cli][seed-cli]
+[Structure][structure]

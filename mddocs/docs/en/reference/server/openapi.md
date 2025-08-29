@@ -1,6 +1,4 @@
-(server-openapi)=
-
-# OpenAPI specification
+# OpenAPI specification { #server-openapi }
 
 % this page cannot be properly rendered in local environment, it should be build in CI first
 

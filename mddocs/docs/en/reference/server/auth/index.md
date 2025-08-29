@@ -1,6 +1,4 @@
-(auth-server)=
-
-# Authentication and Authorization
+# Authentication and Authorization { #auth-server }
 
 ## Overview
 

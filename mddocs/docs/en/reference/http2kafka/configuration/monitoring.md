@@ -1,6 +1,4 @@
-(configuration-http2kafka-monitoring)=
-
-# Setup monitoring
+# Setup monitoring { #configuration-http2kafka-monitoring }
 
 REST API server provides the following endpoints with Prometheus compatible metrics:
 
@@ -8,6 +6,4 @@ REST API server provides the following endpoints with Prometheus compatible metr
 
 These endpoints are enabled and configured using settings below:
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.server.settings.monitoring.MonitoringSettings
-```
+::: data_rentgen.server.settings.monitoring.MonitoringSettings
