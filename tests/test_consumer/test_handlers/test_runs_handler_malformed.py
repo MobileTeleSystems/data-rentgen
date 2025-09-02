@@ -23,7 +23,8 @@ async def test_runs_handler_malformed(test_broker: KafkaBroker, malformed_handle
     raw_message = message.raw_message
     assert raw_message.topic == "input.runs__malformed"
     assert raw_message.key == "abc"
-    assert raw_message.value == b'{"not":"valid event"}'
+    # serialization can be different depending on pydantic version
+    assert raw_message.value in (b'{"not": "valid event"}', b'{"not":"valid event"}')
     assert raw_message.timestamp == 1234
     assert raw_message.headers == [
         (
