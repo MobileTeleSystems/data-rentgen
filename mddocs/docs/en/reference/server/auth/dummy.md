@@ -1,6 +1,4 @@
-(auth-server-dummy)=
-
-# Dummy Auth provider
+# Dummy Auth provider { #auth-server-dummy }
 
 ## Description
 
@@ -10,10 +8,7 @@ After successful auth, username is saved to backend database.
 
 ## Interaction schema
 
-```{eval-rst}
-.. dropdown:: Interaction schema
-
-    .. plantuml::
+```plantuml title="Interaction schema"
 
         @startuml
             title DummyAuthProvider
@@ -70,10 +65,6 @@ After successful auth, username is saved to backend database.
 
 ## Configuration
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.server.settings.auth.dummy.DummyAuthProviderSettings
-```
+::: data_rentgen.server.settings.auth.dummy.DummyAuthProviderSettings
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.server.settings.auth.jwt.JWTSettings
-```
+::: data_rentgen.server.settings.auth.jwt.JWTSettings

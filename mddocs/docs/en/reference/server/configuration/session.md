@@ -1,9 +1,5 @@
-(configuration-server-session)=
-
-# Session cookie settings
+# Session cookie settings { #configuration-server-session }
 
 These settings used to control cookie settings used for storing user session data.
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.server.settings.session.SessionSettings
-```
+::: data_rentgen.server.settings.session.SessionSettings

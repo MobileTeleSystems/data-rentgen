@@ -1,6 +1,4 @@
-(configuration-server-debug)=
-
-# Enabling debug
+# Enabling debug { #configuration-server-debug }
 
 ## Return debug info in REST API responses
 

@@ -1,25 +1,13 @@
-(configuration-server-openapi)=
-
-# OpenAPI settings
+# OpenAPI settings { #configuration-server-openapi }
 
 These settings used to control exposing OpenAPI.json and SwaggerUI/ReDoc endpoints.
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.server.settings.openapi.OpenAPISettings
-```
+::: data_rentgen.server.settings.openapi.OpenAPISettings
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.server.settings.openapi.SwaggerSettings
-```
+::: data_rentgen.server.settings.openapi.SwaggerSettings
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.server.settings.openapi.RedocSettings
-```
+::: data_rentgen.server.settings.openapi.RedocSettings
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.server.settings.openapi.LogoSettings
-```
+::: data_rentgen.server.settings.openapi.LogoSettings
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.server.settings.openapi.FaviconSettings
-```
+::: data_rentgen.server.settings.openapi.FaviconSettings

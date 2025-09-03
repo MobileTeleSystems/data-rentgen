@@ -1,56 +1,34 @@
-```{toctree}
-:caption: Data.Rentgen
-:hidden: true
-:maxdepth: 2
+# Data.Rentgen
 
-self
-```
+## Quickstart
 
-```{toctree}
-:caption: Quickstart
-:hidden: true
-:maxdepth: 2
+[Install][overview-install]
+[Entities][entities]
 
-install
-entities/index
-```
+## Integrations
 
-```{toctree}
-:caption: Integrations
-:hidden: true
-:maxdepth: 2
+[Apache Spark integration][overview-setup-spark]
+[Apache Airflow integration][overview-setup-airflow]
+[Apache Flink 1.x integration][overview-setup-flink1]
+[Apache Flink 2.x integration][overview-setup-flink2]
+[Apache Hive integration][overview-setup-hive]
+[DBT integration][overview-setup-dbt]
 
-integrations/spark/index
-integrations/airflow/index
-integrations/flink1/index
-integrations/flink2/index
-integrations/hive/index
-integrations/dbt/index
-```
+## Reference
 
-```{toctree}
-:caption: Reference
-:hidden: true
-:maxdepth: 2
+[Architecture][architecture]
+[Relation Database][database]
+[Message Broker][message-broker]
+[Message Consumer][message-consumer]
+[Server][server]
+[Frontend][frontend]
+[HTTP2Kafka proxy][http2kafka]
 
-reference/architecture
-reference/database/index
-reference/broker/index
-reference/consumer/index
-reference/server/index
-reference/frontend/index
-reference/http2kafka/index
-```
+## Development
 
-```{toctree}
-:caption: Development
-:hidden: true
-:maxdepth: 2
-
-changelog
-contributing
-security
-```
+[Changelog][changelog]
+[Contributing][contributing]
+[Security][security]
 
 ```{eval-rst}
 .. include:: ../README.rst
@@ -69,27 +47,21 @@ security
     :end-before: documentation
 ```
 
-# Screenshots
+## Screenshots
 
-## Lineage graph
+### Lineage graph
 
 Dataset-level lineage graph
 
-```{image} entities/dataset_lineage.png
-:alt: Dataset-level lineage graph
-```
+![dataset lineage](entities/dataset_lineage.png)
 
 Dataset column-level lineage graph
 
-```{image} entities/dataset_column_lineage.png
-:alt: Dataset column-level lineage graph
-```
+![dataset column lineage](entities/dataset_column_lineage.png)
 
 Job-level lineage graph
 
-```{image} entities/job_lineage.png
-:alt: Job-level lineage graph
-```
+![job lineage](entities/job_lineage.png)
 
 Run-level lineage graph
 

@@ -1,23 +1,15 @@
 # REST API server configuration { #configuration-server }
 
-```{toctree}
-:caption: Configuration
-:hidden: true
-:maxdepth: 1
+## Configuration
 
-logging
-monitoring
-cors
-session
-static_files
-openapi
-debug
-```
+[logging][configuration-server-logging]
+[monitoring][configuration-server-monitoring]
+[cors][configuration-server-cors]
+[session][configuration-server-session]
+[static_files][configuration-server-static-files]
+[openapi][configuration-server-openapi]
+[debug][configuration-server-debug]
 
-```{eval-rst}
-.. autopydantic_settings:: data_rentgen.server.settings.ServerApplicationSettings
-```
+::: data_rentgen.server.settings.ServerApplicationSettings
 
-```{eval-rst}
-.. autopydantic_settings:: data_rentgen.server.settings.ServerSettings
-```
+::: data_rentgen.server.settings.ServerSettings

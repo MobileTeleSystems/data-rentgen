@@ -10,26 +10,18 @@ Authentication is implemented via middleware as follows: before each endpoint ca
 
 Data Rentgen supports different auth provider implementations. You can change implementation via settings:
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.server.settings.auth.AuthSettings
-```
+::: data_rentgen.server.settings.auth.AuthSettings
 
 Right now service has two scenarios for authentication:
 
 - [Dummy(JWT Tokens)](https://jwt.io/) a lightweight option for testing and development.
 - [Keycloak authentication](https://www.keycloak.org/) recommended option. Integrates with Keycloak for token-based authentication.
 
-```{toctree}
-:caption: Authentication Providers
-:maxdepth: 1
+### Authentication Providers
 
-dummy
-keycloak
-```
+[dummy][auth-server-dummy]
+[keycloak][auth-server-keycloak]
 
-```{toctree}
-:caption: For developers
-:maxdepth: 1
+### For developers
 
-custom
-```
+[custom][auth-server-custom]

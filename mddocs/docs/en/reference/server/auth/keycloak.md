@@ -1,6 +1,4 @@
-(auth-server-keycloak)=
-
-# Keycloak Provider
+# Keycloak Provider { #auth-server-keycloak }
 
 ## Description
 
@@ -13,10 +11,7 @@ If user is not found in Data.Rentgen database, KeycloakAuthProvider creates it. 
 
 ## Interaction schema
 
-```{eval-rst}
-.. dropdown:: Interaction schema
-
-    .. plantuml::
+```plantuml title="Interaction schema"
 
         @startuml
             title DummyAuthProvider
@@ -101,11 +96,6 @@ If user is not found in Data.Rentgen database, KeycloakAuthProvider creates it. 
 
 ## Basic Configuration
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.server.settings.auth.keycloak.KeycloakAuthProviderSettings
-```
+::: data_rentgen.server.settings.auth.keycloak.KeycloakAuthProviderSettings
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.server.settings.auth.keycloak.KeycloakSettings
-
-```
+::: data_rentgen.server.settings.auth.keycloak.KeycloakSettings

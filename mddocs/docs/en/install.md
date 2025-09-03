@@ -1,6 +1,4 @@
-(overview-install)=
-
-# Install Data.Rentgen
+# Install Data.Rentgen { #overview-install }
 
 ## Requirements
 
@@ -11,27 +9,22 @@
 
 Copy `docker-compose.yml` and `.env.docker` from this repo:
 
-```{eval-rst}
-.. dropdown:: ``docker-compose.yml``
+=== "docker-compose.yml"
 
     .. literalinclude:: ../docker-compose.yml
-```
 
-```{eval-rst}
-.. dropdown:: ``.env.docker``
+=== ".env.docker"
 
     .. literalinclude:: ../.env.docker
 
-```
-
 Then start containers using `docker-compose`:
 
-```console
-$ VERSION=latest docker compose --profile all up -d --wait
-```
+    ```console
+    $ VERSION=latest docker compose --profile all up -d --wait
+    ...
+    ```
 
-`docker-compose` will download required images, create containers and start them in a proper order.
-Options can be set via `.env.docker` file or `environment` section in `docker-compose.yml`.
+`docker-compose` will download required images, create containers and start them in a proper order. Options can be set via `.env.docker` file or `environment` section in `docker-compose.yml`.
 
 `VERSION` is a tag of docker image. You can find all available tags [here](https://hub.docker.com/r/mtsrus/data-rentgen/tags).
 

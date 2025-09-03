@@ -1,23 +1,15 @@
 # HTTP2Kafka configuration { #configuration-http2kafka }
 
-```{toctree}
-:caption: Configuration
-:hidden: true
-:maxdepth: 1
+## Configuration
 
-kafka
-producer-specific
-logging
-monitoring
-static_files
-openapi
-debug
-```
+[kafka][configuration-consumer-kafka]
+[producer-specific][configuration-producer-specific]
+[logging][configuration-http2kafka-logging]
+[monitoring][configuration-http2kafka-monitoring]
+[static_files][configuration-http2kafka-static-files]
+[openapi][configuration-http2kafka-openapi]
+[debug][configuration-http2kafka-debug]
 
-```{eval-rst}
-.. autopydantic_settings:: data_rentgen.http2kafka.settings.Http2KafkaApplicationSettings
-```
+::: data_rentgen.http2kafka.settings.Http2KafkaApplicationSettings
 
-```{eval-rst}
-.. autopydantic_settings:: data_rentgen.server.settings.ServerSettings
-```
+::: data_rentgen.server.settings.ServerSettings

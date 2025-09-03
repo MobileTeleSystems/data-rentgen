@@ -1,8 +1,7 @@
 # Changelog
 
-```{toctree}
-:caption: Changelog
-:maxdepth: 1
-
-changelog/index
-```
+[0.1.o][0.1.o]
+[0.2.o][0.2.o]
+[0.2.1][0.2.1]
+[0.3.o][0.3.o]
+[0.3.1][0.3.1]

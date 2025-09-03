@@ -1,23 +1,20 @@
-(architecture)=
-
-# Architecture
+# Architecture { #architecture }
 
 ## Components
 
 Data.Rentgen is build using following components:
 
 - [OpenLineage](https://openlineage.io/docs/) clients & integrations with third-party modules (e.g. Apache Spark, Apache Airflow).
-- {ref}`message-broker`, receiving events in JSON format.
-- {ref}`message-consumer`, parsing JSON messages.
-- {ref}`database` for storing consumed & cleaned up data.
-- {ref}`server`, serving database data.
-- {ref}`frontend`, accessing REST API to navigate created entities & lineage graph.
-- {ref}`http2kafka` (optional), proxy for sending OpenLineage events to Kafka using HTTP API.
+- [`message-broker`](message-broker), receiving events in JSON format.
+- [`message-consumer`](message-consumer), parsing JSON messages.
+- [`database`](database) for storing consumed & cleaned up data.
+- [`server`](server), serving database data.
+- [`frontend`](frontend), accessing REST API to navigate created entities & lineage graph.
+- [`http2kafka`](http2kafka) (optional), proxy for sending OpenLineage events to Kafka using HTTP API.
 
 ## Architecture diagram
 
-```{eval-rst}
-.. plantuml::
+```plantuml
 
     @startuml
         title Data.Rentgen artitecture
