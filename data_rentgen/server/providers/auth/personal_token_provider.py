@@ -9,6 +9,7 @@ from uuid import UUID
 from cachetools import LRUCache, TTLCache
 from fastapi import Depends, FastAPI, Request
 
+from data_rentgen.db.factory import AsyncSession
 from data_rentgen.db.models import PersonalToken, User
 from data_rentgen.dependencies import Stub
 from data_rentgen.exceptions.auth import AuthorizationError
@@ -16,6 +17,7 @@ from data_rentgen.exceptions.entity import EntityNotFoundError
 from data_rentgen.server.services.personal_token import PersonalTokenService
 from data_rentgen.server.settings.auth.personal_token import PersonalTokenSettings
 from data_rentgen.server.utils.jwt import decode_jwt, sign_jwt
+from data_rentgen.services.uow import UnitOfWork
 from data_rentgen.utils.uuid import extract_timestamp_from_uuid
 
 logger = logging.getLogger(__name__)
@@ -55,11 +57,9 @@ class PersonalTokenAuthProvider:
         self,
         settings: Annotated[PersonalTokenSettings, Depends(Stub(PersonalTokenSettings))],
         token_cache: Annotated[PersonalTokenCache, Depends(Stub(PersonalTokenCache))],
-        personal_token_service: Annotated[PersonalTokenService, Depends()],
     ) -> None:
         self._settings = settings
         self._token_cache = token_cache
-        self._personal_token_service = personal_token_service
 
     @classmethod
     def setup(cls, app: FastAPI) -> FastAPI:
@@ -145,7 +145,7 @@ class PersonalTokenAuthProvider:
             raise AuthorizationError(msg)
 
         user, token = self.extract_token(access_token)
-        is_revoked = await self.check_token_revoked(user, token)
+        is_revoked = await self.check_token_revoked(user, token, request)
         if is_revoked:
             details = f"PersonalToken name='{token.name}', id={token.id} is revoked"
             msg = "Invalid token"
@@ -162,7 +162,7 @@ class PersonalTokenAuthProvider:
             raise AuthorizationError(msg)
 
         user, token = self.extract_token(access_token)
-        is_revoked = await self.check_token_revoked(user, token)
+        is_revoked = await self.check_token_revoked(user, token, request)
         if is_revoked:
             details = f"PersonalToken name='{token.name}', id={token.id} is revoked"
             msg = "Invalid token"
@@ -170,16 +170,26 @@ class PersonalTokenAuthProvider:
         logger.debug("Got user %r from token %r", user, token)
         return user
 
-    async def check_token_revoked(self, user: User, token: PersonalToken) -> bool:
+    async def check_token_revoked(self, user: User, token: PersonalToken, request: Request) -> bool:
         is_revoked = self._token_cache.is_revoked(token.id)
         if is_revoked is not None:
             return is_revoked
 
-        try:
-            await self._personal_token_service.get(user, token.id)
-            is_revoked = False
-        except EntityNotFoundError:
-            is_revoked = True
+        is_revoked = False
+
+        # checking session in cache is fast, creating new session is slow,
+        # let's postpone it using a hack
+        session_generator = request.app.dependency_overrides[AsyncSession]
+        async for session in session_generator():
+            personal_token_service = PersonalTokenService(
+                uow=UnitOfWork(session),
+                settings=self._settings,
+            )
+            try:
+                await personal_token_service.get(user, token.id)
+                is_revoked = False
+            except EntityNotFoundError:
+                is_revoked = True
 
         if is_revoked:
             self._token_cache.revoke_token(token.id)
