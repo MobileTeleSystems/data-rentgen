@@ -54,7 +54,7 @@ jobs:
           sed -i "s#logo_wide_white_text.svg#logo_wide.svg#g" README.rst
 
       - name: Build package
-        run: uv python -m build
+        run: make build
 
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1

@@ -147,3 +147,6 @@ docs-fresh: docs-cleanup docs-build ##@Docs Cleanup & build docs
 docs-openapi: ##@Docs Generate OpenAPI schema
 	${PYTHON} -m data_rentgen.server.scripts.export_openapi_schema docs/_static/openapi_server.json
 	${PYTHON} -m data_rentgen.http2kafka.scripts.export_openapi_schema docs/_static/openapi_http2kafka.json
+
+build: ##@Build Build package
+	${PYTHON} -m build
