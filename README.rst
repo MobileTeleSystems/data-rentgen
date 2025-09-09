@@ -23,8 +23,9 @@
     :target: https://data-rentgen.readthedocs.io/
 .. |Build Status| image:: https://github.com/MobileTeleSystems/data-rentgen/workflows/Tests/badge.svg
     :target: https://github.com/MobileTeleSystems/data-rentgen/actions
-.. |Coverage| image:: https://codecov.io/github/MobileTeleSystems/data-rentgen/graph/badge.svg?token=s0JztGZbq3
-    :target: https://codecov.io/github/MobileTeleSystems/data-rentgen
+.. |Coverage| image:: https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/
+    MTSOnGithub/03e73a82ecc4709934540ce8201cc3b4/raw/data-rentgen_badge.json
+    :target: https://github.com/MobileTeleSystems/data-rentgen/actions
 .. |pre-commit.ci| image:: https://results.pre-commit.ci/badge/github/MobileTeleSystems/data-rentgen/develop.svg
     :target: https://results.pre-commit.ci/latest/github/MobileTeleSystems/data-rentgen/develop
 
