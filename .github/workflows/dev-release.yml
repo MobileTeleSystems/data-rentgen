@@ -44,10 +44,6 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v6
 
-      - name: Install dependencies
-        run: |
-          make venv
-
       - name: Fix logo in Readme
         run: |
           sed -i "s#image:: docs/#image:: https://raw.githubusercontent.com/MobileTeleSystems/data-rentgen/$GITHUB_SHA/docs/#g" README.rst
