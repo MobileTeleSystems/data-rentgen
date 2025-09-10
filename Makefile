@@ -39,7 +39,7 @@ venv-cleanup: ##@Env Cleanup venv
 	${PIP} install uv
 
 venv-install: ##@Env Install requirements to venv
-	${UV} sync --frozen --all-extras --all-groups $(ARGS)
+	${UV} sync --frozen --all-extras --all-groups  --no-install-project $(ARGS)
 
 
 db: db-start db-upgrade db-partitions ##@DB Prepare database (in docker)
