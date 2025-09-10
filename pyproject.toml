@@ -35,9 +35,6 @@ dependencies = [
 ]
 dynamic = ["version"]
 
-[tool.setuptools.dynamic]
-version = {file = "data_rentgen/VERSION"}
-
 [tool.setuptools.packages.find]
 where = ["data_rentgen"]
 
