@@ -20,9 +20,7 @@ from data_rentgen.openlineage.dataset import (
     OpenLineageInputDataset,
     OpenLineageOutputDataset,
 )
-from data_rentgen.openlineage.dataset_facets import (
-    OpenLineageSchemaField,
-)
+from data_rentgen.openlineage.dataset_facets import OpenLineageSchemaField
 from data_rentgen.openlineage.run_event import OpenLineageRunEvent
 
 METASTORE = DatasetSymlinkTypeDTO.METASTORE
@@ -74,12 +72,13 @@ class IOExtractorMixin(ABC):
 
         Time resolution is hardcoded, but can be made configurable in future.
         """
-        if operation.created_at > event.eventTime:
+        since_start = event.eventTime.timestamp() - operation.created_at.timestamp()
+
+        if since_start < 0:
             # avoid moving back in time
             return operation.created_at
 
-        since_start = event.eventTime - operation.created_at
-        whole_ticks_since_start = since_start // self.io_time_resolution
+        whole_ticks_since_start = timedelta(seconds=since_start) // self.io_time_resolution
         return operation.created_at + whole_ticks_since_start * self.io_time_resolution
 
     def extract_input(
