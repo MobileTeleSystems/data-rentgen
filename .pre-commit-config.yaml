@@ -91,7 +91,7 @@ repos:
     rev: 0.7.19
     hooks:
       - id: uv-lock
-        entry: env GITHUB_RUN_ID=1 uv lock
+        entry: env GITHUB_RUN_ID=1 uv lock # uv lock command try to build a package, so we add env like we run it in Github environment
 
   - repo: local
     hooks:
