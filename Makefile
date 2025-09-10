@@ -35,11 +35,11 @@ venv: venv-cleanup venv-install##@Env Init venv and install uv dependencies
 venv-cleanup: ##@Env Cleanup venv
 	@rm -rf .venv || true
 	python3.12 -m venv .venv
-	${PIP} install -U setuptools wheel pip
 	${PIP} install uv
 
 venv-install: ##@Env Install requirements to venv
-	${UV} sync --frozen --all-extras --all-groups --no-install-project $(ARGS)
+	${UV} sync --frozen --all-extras --all-groups $(ARGS)
+	${PIP} install -U setuptools wheel pip
 
 
 db: db-start db-upgrade db-partitions ##@DB Prepare database (in docker)
