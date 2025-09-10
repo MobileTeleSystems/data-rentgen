@@ -33,13 +33,13 @@ repos:
     hooks:
       - id: forbid-tabs
       - id: remove-tabs
-        args: [--whitespaces-count, "2"]
+        args: [--whitespaces-count, '2']
       - id: chmod
-        args: ["644"]
+        args: ['644']
         exclude_types: [shell]
         exclude: ^(.*__main__\.py|data_rentgen/server/scripts/.*\.py|data_rentgen/db/scripts/.*\.py|data_rentgen/http2kafka/scripts/.*\.py)$
       - id: chmod
-        args: ["755"]
+        args: ['755']
         files: ^(.*__main__\.py|data_rentgen/server/scripts/.*\.py|data_rentgen/db/scripts/.*\.py|data_rentgen/http2kafka/scripts/.*\.py)$
       - id: insert-license
         files: .*\.py$
@@ -77,7 +77,7 @@ repos:
     rev: v2.15.0
     hooks:
       - id: pretty-format-yaml
-        args: [--autofix, --indent, "2", --offset, "2"]
+        args: [--autofix, --indent, '2', --offset, '2']
 
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
