@@ -39,7 +39,7 @@ dynamic = ["version"]
 where = ["data_rentgen"]
 
 [tool.setuptools.package-data]
-data_rentgen = ["py.typed", "**/*.yml",  "**/*.ini", "VERSION"]
+"*" = ["py.typed", "*.yml",  "*.ini", "VERSION"]
 
 [project.urls]  # Optional
 "Homepage" = "https://github.com/MobileTeleSystems/data-rentgen"
