@@ -10,12 +10,6 @@ filters:
     (): asgi_correlation_id.CorrelationIdFilter
     uuid_length: 32
     default_value: '-'
-  faststream:
-    (): faststream.log.logging.ExtendedFilter
-    default_context:
-      topic: ''
-      group_id: ''
-    message_id_ln: 10
 
 formatters:
   colored:
@@ -25,7 +19,7 @@ formatters:
     datefmt: '%Y-%m-%d %H:%M:%S'
   kafka_colored:
     (): coloredlogs.ColoredFormatter
-    fmt: '%(asctime)s.%(msecs)03d %(processName)s:%(process)d %(name)s:%(lineno)d [%(levelname)s] %(topic)s %(group_id)s %(message_id)s %(message)s'
+    fmt: '%(asctime)s.%(msecs)03d %(processName)s:%(process)d %(name)s:%(lineno)d [%(levelname)s] %(message)s'
     datefmt: '%Y-%m-%d %H:%M:%S'
 
 handlers:
@@ -37,7 +31,7 @@ handlers:
   faststream:
     class: logging.StreamHandler
     formatter: kafka_colored
-    filters: [faststream]
+    filters: []
     stream: ext://sys.stdout
 
 loggers:

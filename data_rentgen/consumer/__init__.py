@@ -8,16 +8,18 @@ from typing import Any
 import anyio
 from fast_depends import dependency_provider
 from faststream import ContextRepo, FastStream
-from faststream._compat import ExceptionGroup
+from faststream._internal._compat import ExceptionGroup
 from faststream.asgi import AsgiFastStream, AsgiResponse, get
 from faststream.kafka import KafkaBroker
-from faststream.kafka.publisher.asyncapi import AsyncAPIDefaultPublisher
+from faststream.kafka.publisher import DefaultPublisher
+from faststream.kafka.subscriber.usecase import BatchSubscriber
+from faststream.specification.asyncapi import AsyncAPI
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import data_rentgen
 from data_rentgen.consumer.settings import ConsumerApplicationSettings
 from data_rentgen.consumer.subscribers import runs_events_subscriber
-from data_rentgen.db.factory import create_session_factory
+from data_rentgen.db.factory import session_generator
 from data_rentgen.logging.setup_logging import setup_logging
 
 logger = logging.getLogger(__name__)
@@ -43,7 +45,7 @@ def broker_factory(settings: ConsumerApplicationSettings) -> KafkaBroker:
     # register subscribers using settings
     consumer_settings = settings.consumer.model_dump(exclude={"topics_list", "topics_pattern", "malformed_topic"})
 
-    subscriber = broker.subscriber(
+    subscribe = broker.subscriber(
         *settings.consumer.topics_list,
         pattern=settings.consumer.topics_pattern,
         **consumer_settings,
@@ -51,13 +53,26 @@ def broker_factory(settings: ConsumerApplicationSettings) -> KafkaBroker:
         # Disable parsing JSONs on FastStream level
         decoder=lambda _: None,
     )
+
+    # register subscriber
+    batch_subscriber = subscribe(runs_events_subscriber)
+
+    async def get_subscriber():
+        return batch_subscriber
+
+    # FastStream uses WeakSet for subscribers, so we need to keep long lived reference somewhere
+    dependency_provider.override(BatchSubscriber, get_subscriber)
+
+    # register publisher
     publisher = broker.publisher(settings.producer.malformed_topic)
 
-    # perform registration
-    subscriber(runs_events_subscriber)
+    async def get_publisher():
+        return publisher
 
-    dependency_provider.override(AsyncSession, create_session_factory(settings.database))
-    dependency_provider.override(AsyncAPIDefaultPublisher, lambda: publisher)
+    dependency_provider.override(DefaultPublisher, get_publisher)
+
+    # Override session generator
+    dependency_provider.override(AsyncSession, session_generator(settings.database))
     return broker
 
 
@@ -78,11 +93,13 @@ def application_factory(settings: ConsumerApplicationSettings) -> AsgiFastStream
                 raise exception from None
 
     return FastStream(
-        broker=broker_factory(settings),
+        broker_factory(settings),
         lifespan=security_lifespan,
-        title="Data.Rentgen",
-        description="Data.Rentgen is a nextgen DataLineage service",
-        version=data_rentgen.__version__,
+        specification=AsyncAPI(
+            title="Data.Rentgen",
+            description="Data.Rentgen is a nextgen DataLineage service",
+            version=data_rentgen.__version__,
+        ),
         logger=logger,
     ).as_asgi(asgi_routes=[("/monitoring/ping", liveness)])
 

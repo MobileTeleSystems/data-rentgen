@@ -6,7 +6,7 @@ from typing import Annotated
 
 from asgi_correlation_id import correlation_id
 from fastapi import APIRouter, Body, Depends, Request, Response
-from faststream.kafka.publisher.asyncapi import AsyncAPIDefaultPublisher
+from faststream.kafka.publisher import DefaultPublisher
 
 from data_rentgen.db.models.user import User
 from data_rentgen.dependencies.stub import Stub
@@ -37,7 +37,7 @@ router = APIRouter(
 async def send_events_to_kafka(
     event: Annotated[OpenLineageRunEvent, Body()],
     request: Request,
-    kafka_publisher: Annotated[AsyncAPIDefaultPublisher, Depends(Stub(AsyncAPIDefaultPublisher))],
+    kafka_publisher: Annotated[DefaultPublisher, Depends(Stub(DefaultPublisher))],
     current_user: Annotated[User, Depends(get_user(personal_token_policy=PersonalTokenPolicy.REQUIRE))],
 ):
     body_json_bytes = await request.body()

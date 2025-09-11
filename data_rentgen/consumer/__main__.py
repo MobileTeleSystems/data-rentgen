@@ -8,7 +8,7 @@ import os
 import sys
 from pathlib import Path
 
-from faststream.cli.main import cli
+from faststream.cli import cli
 
 here = Path(__file__).resolve()
 

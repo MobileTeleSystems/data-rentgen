@@ -9,12 +9,6 @@ filters:
     (): asgi_correlation_id.CorrelationIdFilter
     uuid_length: 32
     default_value: '-'
-  faststream:
-    (): faststream.log.logging.ExtendedFilter
-    default_context:
-      topic: ''
-      group_id: ''
-    message_id_ln: 10
 
 formatters:
   json:
@@ -24,7 +18,7 @@ formatters:
     timestamp: true
   kafka_json:
     (): pythonjsonlogger.jsonlogger.JsonFormatter
-    fmt: '%(processName)s:%(process)d %(name)s:%(lineno)d [%(levelname)s] %(topic)s %(group_id)s %(message_id)s %(message)s'
+    fmt: '%(processName)s:%(process)d %(name)s:%(lineno)d [%(levelname)s] %(message)s'
     timestamp: true
 
 handlers:
@@ -36,7 +30,7 @@ handlers:
   faststream:
     class: logging.StreamHandler
     formatter: kafka_json
-    filters: [faststream]
+    filters: []
     stream: ext://sys.stdout
 
 loggers:
