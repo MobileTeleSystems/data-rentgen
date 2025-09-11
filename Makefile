@@ -35,7 +35,6 @@ venv: venv-cleanup venv-install##@Env Init venv and install uv dependencies
 venv-cleanup: ##@Env Cleanup venv
 	@rm -rf .venv || true
 	python3.12 -m venv .venv
-	${PIP} install -U setuptools wheel pip
 	${PIP} install uv
 
 venv-install: ##@Env Install requirements to venv

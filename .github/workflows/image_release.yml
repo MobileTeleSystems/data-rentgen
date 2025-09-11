@@ -37,13 +37,10 @@ jobs:
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
 
-      - name: Install poetry
-        uses: snok/install-poetry@v1
-
       - name: Get version
         id: get_version
         run: |
-          echo "VERSION=$(poetry version --short)" >> $GITHUB_ENV
+          echo "VERSION=$(cat data_rentgen/VERSION)" >> $GITHUB_ENV
 
       - name: Docker meta
         id: meta
