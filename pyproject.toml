@@ -31,7 +31,7 @@ keywords = ["Lineage", "FastAPI", "REST", "FastStream"]
 requires-python = ">=3.12"
 dependencies = [
   "pydantic~=2.11.2",
-  "typing-extensions~=4.13.1",
+  "typing-extensions~=4.15.0",
 ]
 dynamic = ["version"]
 
@@ -60,7 +60,7 @@ server = [
   "pydantic-settings~=2.10.1",
   "alembic~=1.16.2",
   "sqlalchemy~=2.0.41",
-  "sqlalchemy-utils~=0.41.2",
+  "sqlalchemy-utils~=0.42.0",
   "greenlet~=3.2",
   "pyyaml~=6.0.2",
   "python-json-logger~=3.3.0",
@@ -71,16 +71,16 @@ server = [
   "pyjwt~=2.10.1 ",
   "itsdangerous~=2.2.0",
   "python-multipart~=0.0.20",
-  "python-keycloak~=5.6.0",
-  "cachetools~=6.1.0",
+  "python-keycloak~=5.8.1",
+  "cachetools~=6.2.0",
 ]
 consumer = [
   "faststream[kafka,cli]~=0.5.44",
-  "cramjam~=2.10.0",
+  "cramjam~=2.11.0",
   "pydantic-settings~=2.10.1",
   "alembic~=1.16.2",
   "sqlalchemy~=2.0.41",
-  "sqlalchemy-utils~=0.41.2",
+  "sqlalchemy-utils~=0.42.0",
   "greenlet~=3.2",
   "pyyaml~=6.0.2",
   "python-json-logger~=3.3.0",
@@ -102,17 +102,17 @@ http2kafka = [
   "uuid6~=2025.0.0",
   "packaging~=25.0",
   "faststream[kafka,cli]~=0.5.44",
-  "cramjam~=2.10.0",
-  "cachetools~=6.1.0",
+  "cramjam~=2.11.0",
+  "cachetools~=6.2.0",
 ]
 postgres = [
   "asyncpg~=0.30.0",
 ]
 gssapi = [
-  "gssapi~=1.9.0",
+  "gssapi~=1.10.0",
 ]
 seed = [
-  "faker~=37.4.2"
+  "faker~=37.6.0"
 ]
 
 [dependency-groups]
@@ -120,24 +120,24 @@ test =[
   "pytest~=8.4.1",
   "httpx~=0.28.1",
   "pytest-asyncio~=0.21.0",
-  "pytest-randomly~=3.16.0",
+  "pytest-randomly~=4.0.0",
   "pytest-deadfixtures~=2.2.1",
   "pytest-rerunfailures~=16.0.1",
-  "coverage~=7.9.2",
+  "coverage~=7.10.6",
   "psycopg2-binary~=2.9.10",
-  "deepdiff~=8.5.0",
+  "deepdiff~=8.6.1",
   "respx~=0.22.0",
   "dirty_equals~=0.9.0",
-  "gevent~=25.5.1",
+  "gevent~=25.8.2",
 ]
 dev = [
-  "pre-commit~=4.2.0",
-  "mypy~=1.15.0",
+  "pre-commit~=4.3.0",
+  "mypy~=1.17.1",
   "sqlalchemy[mypy,uuid6]~=2.0.41",
   "types-pyyaml~=6.0.12",
   "types-python-dateutil~=2.9.0",
   "types-jwcrypto~=1.5.0",
-  "types-cachetools~=6.1.0",
+  "types-cachetools~=6.2.0",
 ]
 docs = [
   "setuptools-git-versioning~=2.1.0",
