@@ -36,7 +36,8 @@ dependencies = [
 dynamic = ["version"]
 
 [tool.setuptools.packages.find]
-where = ["data_rentgen"]
+include = ["data_rentgen*"]
+exclude = ["docs", "tests"]
 
 [tool.setuptools.package-data]
 "*" = ["py.typed", "*.yml",  "*.ini", "VERSION"]
