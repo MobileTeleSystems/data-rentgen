@@ -33,10 +33,12 @@ author = "DataOps.ETL"
 #
 # The short X.Y version.
 
-# this value is updated automatically by `poetry version ...` and poetry-bumpversion plugin
-ver = Version.parse("0.4.0")
-version = ver.base_version
+VERSION_FILE = PROJECT_ROOT_DIR / "data_rentgen" / "VERSION"
+ver = Version.parse(VERSION_FILE.read_text())
+
 # The full version, including alpha/beta/rc tags.
+version = ver.base_version
+# Release version
 release = ver.public
 
 # -- General configuration ---------------------------------------------------

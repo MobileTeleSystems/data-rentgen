@@ -87,15 +87,10 @@ repos:
         additional_dependencies:
           - tomli
 
-  - repo: https://github.com/sbrunner/hooks
-    rev: 1.6.1
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    rev: 0.7.19
     hooks:
-      - id: poetry-check
-        additional_dependencies:
-          - poetry
-      - id: poetry-lock
-        additional_dependencies:
-          - poetry
+      - id: uv-lock
 
   - repo: local
     hooks:

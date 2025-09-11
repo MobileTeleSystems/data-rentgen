@@ -44,24 +44,18 @@ RUN apt-get update \
         libkrb5-dev \
     && rm -rf /var/lib/apt/lists/* /var/cache/*
 
-ENV POETRY_VIRTUALENVS_IN_PROJECT=1 \
-    POETRY_VIRTUALENVS_CREATE=1
 
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip install poetry
+    pip install uv
 
-COPY ./pyproject.toml ./poetry.lock* ./
-RUN --mount=type=cache,target=/root/.cache/pypoetry \
-    poetry install \
-        --no-root \
-        --all-extras \
-        --without dev,test,docs \
+COPY ./pyproject.toml ./uv.lock ./
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv sync --frozen --no-install-project --all-extras \
     && python -m compileall -j 4 .venv
-
 
 FROM base AS prod
 
-# We don't need poetry and compilers in final image
+# We don't need uv and compilers in final image
 COPY --from=builder /app/.venv/ /app/.venv/
 COPY ./data_rentgen/ /app/data_rentgen/
 RUN python -m compileall data_rentgen

@@ -12,13 +12,11 @@ build:
     post_checkout:
       - git fetch --unshallow || true
     post_create_environment:
-      - python -m pip install poetry
-      - python -m pip install --no-deps sphinx-plantuml # remove after https://github.com/zqmillet/sphinx-plantuml/pull/4
-      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m poetry config virtualenvs.create false
-      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m poetry debug info
+      - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH python -m pip install uv
+
     post_install:
-      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m poetry install --no-root --extras server --extras consumer --extras postgres --extras seed --with docs --without dev,test
-      - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m poetry show -v
+      - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH uv sync --no-install-project --extra server --extra consumer --extra postgres --extra seed --group docs
+      - UV_PROJECT_ENVIRONMENT=$READTHEDOCS_VIRTUALENV_PATH uv pip install --no-deps sphinx-plantuml # remove after https://github.com/zqmillet/sphinx-plantuml/pull/4
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH python -m pip list -v
       - VIRTUAL_ENV=$READTHEDOCS_VIRTUALENV_PATH make docs-openapi
 

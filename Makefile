@@ -6,7 +6,7 @@ VERSION = develop
 VIRTUAL_ENV ?= .venv
 PYTHON = ${VIRTUAL_ENV}/bin/python
 PIP = ${VIRTUAL_ENV}/bin/pip
-POETRY = ${VIRTUAL_ENV}/bin/poetry
+UV = ${VIRTUAL_ENV}/bin/uv
 PYTEST = ${VIRTUAL_ENV}/bin/pytest
 COVERAGE = ${VIRTUAL_ENV}/bin/coverage
 
@@ -30,17 +30,16 @@ help: ##@Help Show this help
 
 
 
-venv: venv-init venv-install##@Env Init venv and install poetry dependencies
+venv: venv-cleanup venv-install##@Env Init venv and install uv dependencies
 
-venv-init: ##@Env Init venv
-	python -m venv ${VIRTUAL_ENV}
+venv-cleanup: ##@Env Cleanup venv
+	@rm -rf .venv || true
+	python3.12 -m venv .venv
 	${PIP} install -U setuptools wheel pip
-	${PIP} install poetry poetry-bumpversion
+	${PIP} install uv
 
 venv-install: ##@Env Install requirements to venv
-	${POETRY} config virtualenvs.create false
-	${POETRY} install --no-root --extras server --extras consumer --extras postgres --extras seed --with dev,test,docs $(ARGS)
-	${PIP} install --no-deps sphinx-plantuml
+	${UV} sync --inexact --frozen --all-extras --all-groups --no-extra gssapi $(ARGS)
 
 
 db: db-start db-upgrade db-partitions ##@DB Prepare database (in docker)
@@ -67,7 +66,7 @@ db-cleanup-partitions-ci: ##@DB Clean partitions in CI
 	${PYTHON} -m data_rentgen.db.scripts.cleanup_partitions $(ARGS)
 
 db-views: ##@DB Create views
-	${POETRY} run coverage run python -m data_rentgen.db.scripts.refresh_analytic_views $(ARGS)
+	${UV} run coverage run python -m data_rentgen.db.scripts.refresh_analytic_views $(ARGS)
 
 db-seed: ##@DB Seed database with random data
 	${PYTHON} -m data_rentgen.db.scripts.seed $(ARGS)
