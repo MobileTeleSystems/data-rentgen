@@ -1,4 +1,7 @@
 # Database settings { #configuration-database }
 
-<!-- TODO: check generation with original rst -->
 ::: data_rentgen.db.settings.DatabaseSettings
+    options:
+        docstring_style: sphinx
+        members:
+            - url

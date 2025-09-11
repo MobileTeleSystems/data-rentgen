@@ -22,19 +22,21 @@ Implemented using [FastAPI](https://fastapi.tiangolo.com/).
 
   Options can be set via `.env` file or `environment` section in `docker-compose.yml`
 
-=== "docker-compose.yml"
+??? note "docker-compose.yml"
 
-  ```yaml
-    .. literalinclude:: ../../../docker-compose.yml
-        :emphasize-lines: 71-99
-  ```
+    ```yaml hl_lines="71-99" linenums="1"
+    ----8<----
+    docker-compose.yml
+    ----8<----
+    ```
 
-=== ".env.docker"
+??? note ".env.docker"
 
-  ```yaml
-    .. literalinclude:: ../../../.env.docker
-        :emphasize-lines: 22-27
-  ```
+    ```ini hl_lines="22-27" linenums="1"
+    ----8<----
+    .env.docker
+    ----8<----
+    ```
 
 - After server is started and ready, open [http://localhost:8000/docs](http://localhost:8000/docs).
 
@@ -72,3 +74,7 @@ Implemented using [FastAPI](https://fastapi.tiangolo.com/).
 - After server is started and ready, open [http://localhost:8000/docs](http://localhost:8000/docs).
 
 ## See also
+
+- [Authentication and Authorization][auth-server]
+- [REST API server configuration][configuration-server]
+- [OpenAPI specification][server-openapi]

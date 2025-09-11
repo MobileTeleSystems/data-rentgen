@@ -52,11 +52,12 @@ This is done by `request_id` middleware, which is enabled by default and can con
 
 This is done by adding a specific filter to logging handler:
 
-=== "logging.yml"
+??? note "logging.yml"
 
-  ```yaml
-    .. literalinclude:: ../../../../data_rentgen/logging/presets/plain.yml
-        :emphasize-lines: 6-12,23-24,35
+  ```yaml hl_lines="6-12 23-24 35"
+    ----8<----
+    data_rentgen/logging/presets/plain.yml
+    ----8<----
   ```
 
 Resulting logs look like:

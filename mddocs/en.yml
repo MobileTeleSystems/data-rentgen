@@ -4,7 +4,7 @@ site_dir: 'generated/en'                      # Where to put the English HTML fi
 
 theme:
   name: material
-  # custom_dir: '../../overrides/'                    # This is where the customization of the theme lives
+  custom_dir: 'docs/overrides/'                    # This is where the customization of the theme lives
   # logo: assets/images/logo.svg                      # The logo is shared by all languages
   # favicon: assets/images/icon.svg                   # The favicon is shared by all languages
   language: en
@@ -32,7 +32,7 @@ extra_css:
   - assets/stylesheets/autodoc_pydantic.css         # CSS is shared by all languages
 
 extra:                                              # Language Selection
-  onetl_logo_wide: "[![onETL logo](../en/assets/images/logo_wide.svg)](https://github.com/MobileTeleSystems/onetl)"
+  datarentgen_logo_wide: "[![DataRentgen logo](../assets/images/logo_wide_original.svg)](https://github.com/MobileTeleSystems/onetl)"
   repo_status_badge: "[![Repo status - Active](https://www.repostatus.org/badges/latest/active.svg)](https://github.com/MobileTeleSystems/onetl)"
   pypi_release_bage: "[![PyPI - Latest Release](https://img.shields.io/pypi/v/onetl)](https://pypi.org/project/onetl/)"
   pypi_license_bage: "[![PyPI - License](https://img.shields.io/pypi/l/onetl.svg)](https://github.com/MobileTeleSystems/onetl/blob/develop/LICENSE.txt)"
@@ -64,13 +64,14 @@ plugins:
       default_handler: python
       handlers:
         python:
+          docstring_style: sphinx 
           options:
             show_source: false
             show_root_heading: false
             show_root_toc_entry: false
-            # extensions:
-            # - griffe_sphinx
-            # - griffe_pydantic: {schema: false}
+            extensions:
+            - griffe_sphinx
+            - griffe_pydantic: {schema: false}
   - macros
   - plantuml:
       puml_url: https://www.plantuml.com/plantuml/
@@ -95,7 +96,7 @@ markdown_extensions:
   - pymdownx.critic
   # - markdown_include.include
   - pymdownx.snippets:
-      base_path: ["../data_rentgen/"]
+      base_path: ["../"]
       check_paths: true
   - toc:
       permalink: true

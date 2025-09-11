@@ -1,4 +1,13 @@
 # CLI for seeding database { #db-seed-cli }
 
-<!-- TODO: check generation with original rst -->
-<!-- ::: data_rentgen.db.scripts.seed.__main__ -->
+<!-- TODO: 
+1. add to data_rentgen.db.scripts.seed module init script script
+"""
+Seed database with some random-generated data.
+
+Example:
+    python3 -m data_rentgen.db.scripts.seed
+"""
+-->
+
+::: data_rentgen.db.scripts.seed

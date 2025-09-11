@@ -1,4 +1,4 @@
-# Architecture { #architecture }
+# Architecture { #Architecture }
 
 ## Components
 

@@ -38,19 +38,21 @@ If this is not possible, http2kafka is the way to go.
 
 <!-- TODO везде, где literal include нужно сделать инклюды-->>
 
-=== "docker-compose.yml"
+??? note "docker-compose.yml"
 
-  ```yaml
-    .. literalinclude:: ../../../docker-compose.yml
-        :emphasize-lines: 155-173
-  ```
+    ```yaml hl_lines="155-173" linenums="1"
+    ----8<----
+    docker-compose.yml
+    ----8<----
+    ```
 
-=== ".env.docker"
+??? note ".env.docker"
 
-  ```yaml
-    .. literalinclude:: ../../../.env.docker
-        :emphasize-lines: 29-34
-  ```
+    ```ini hl_lines="29-34" linenums="1"
+    ----8<----
+    .env.docker
+    ----8<----
+    ```
 
 - After component is started and ready, open <http://localhost:8002/docs>.
 

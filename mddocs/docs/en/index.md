@@ -1,118 +1,95 @@
-# Data.Rentgen
+{{ datarentgen_logo_wide }}
 
-## Quickstart
+[![Repo Status](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip) [![Docker image](https://img.shields.io/docker/v/mtsrus/data-rentgen?sort=semver&label=docker)](https://hub.docker.com/r/mtsrus/data-rentgen) [![PyPI](https://img.shields.io/pypi/v/data-rentgen)](https://pypi.org/project/data-rentgen/) [![PyPI License](https://img.shields.io/pypi/l/data-rentgen.svg)](https://github.com/MobileTeleSystems/data-rentgen/blob/develop/LICENSE.txt) [![PyPI Python Version](https://img.shields.io/pypi/pyversions/data-rentgen.svg)](https://badge.fury.io/py/data-rentgen) [![Documentation](https://readthedocs.org/projects/data-rentgen/badge/?version=stable)](https://data-rentgen.readthedocs.io/)
+[![Build Status](https://github.com/MobileTeleSystems/data-rentgen/workflows/Tests/badge.svg)](https://github.com/MobileTeleSystems/data-rentgen/actions) [![Coverage](https://codecov.io/github/MobileTeleSystems/data-rentgen/graph/badge.svg?token=s0JztGZbq3)](https://codecov.io/github/MobileTeleSystems/data-rentgen) [![pre-commit.ci](https://results.pre-commit.ci/badge/github/MobileTeleSystems/data-rentgen/develop.svg)](https://results.pre-commit.ci/latest/github/MobileTeleSystems/data-rentgen/develop)
 
-[Install][overview-install]
-[Entities][entities]
+# What is Data.Rentgen?
 
-## Integrations
+Data.Rentgen is a Data Motion Lineage service, compatible with [OpenLineage](https://openlineage.io/) specification.
 
-[Apache Spark integration][overview-setup-spark]
-[Apache Airflow integration][overview-setup-airflow]
-[Apache Flink 1.x integration][overview-setup-flink1]
-[Apache Flink 2.x integration][overview-setup-flink2]
-[Apache Hive integration][overview-setup-hive]
-[DBT integration][overview-setup-dbt]
+Currently we support consuming lineage from:
 
-## Reference
+* Apache Spark
+* Apache Airflow
+* Apache Hive
+* Apache Flink
+* dbt
 
-[Architecture][architecture]
-[Relation Database][database]
-[Message Broker][message-broker]
-[Message Consumer][message-consumer]
-[Server][server]
-[Frontend][frontend]
-[HTTP2Kafka proxy][http2kafka]
+**Note**: service is under active development, so it doesn’t have stable API for now.
 
-## Development
+# Goals
 
-[Changelog][changelog]
-[Contributing][contributing]
-[Security][security]
+* Collect lineage events produced by OpenLineage clients & integrations.
+* Store operation-grained events for better detalization (instead of job grained [Marquez](https://marquezproject.ai/)).
+* Provide API for fetching both job/run ↔ dataset lineage and dataset ↔ dataset lineage.
 
-```{eval-rst}
-.. include:: ../README.rst
-    :end-before: |Logo|
-```
+# Features
 
-% include raw <svg> instead of <image source=".svg"> to make attribute fill="..." change text color depending on documentation theme
+* Support consuming large amounts of lineage events, use Apache Kafka as event buffer.
+* Store data in tables partitioned by event timestamp, to speed up lineage graph resolution.
+* Lineage graph is build with user-specified time boundaries (unlike Marquez where lineage is build only for last job run).
+* Lineage graph can be build with different granularity. e.g. merge all individual Spark commands into Spark applicationId or Spark applicationName.
+* Column-level lineage support.
+* Authentication support.
 
-```{raw} html
-:file: _static/logo_wide.svg
-```
+# Non-goals
 
-```{eval-rst}
-.. include:: ../README.rst
-    :start-after: |Logo|
-    :end-before: documentation
-```
+* This is **not** a Data Catalog. DataRentgen doesn’t track dataset schema change, owner and so on. Use [Datahub](https://datahubproject.io/) or [OpenMetadata](https://open-metadata.org/) instead.
+* Static Data Lineage like view → table is not supported.
 
-## Screenshots
+# Limitations
 
-### Lineage graph
+* OpenLineage have integrations with Trino, Debezium and some other lineage sources. DataRentgen support may be added later.
+* Unlike Marquez, DataRentgen parses only limited set of facets send by OpenLineage, and doesn’t store custom facets. This can be changed in future.
+
+# Screenshots
+
+## Lineage graph
 
 Dataset-level lineage graph
 
-![dataset lineage](entities/dataset_lineage.png)
+![Dataset-level lineage graph](entities/dataset_lineage.png)
 
 Dataset column-level lineage graph
 
-![dataset column lineage](entities/dataset_column_lineage.png)
+![Dataset column-level lineage graph](entities/dataset_column_lineage.png)
 
 Job-level lineage graph
 
-![job lineage](entities/job_lineage.png)
+![Job-level lineage graph](entities/job_lineage.png)
 
 Run-level lineage graph
 
-```{image} entities/run_lineage.png
-:alt: Job-level lineage graph
-```
+![Job-level lineage graph](entities/run_lineage.png)
 
 ## Datasets
 
-```{image} entities/dataset_list.png
-:alt: Datasets list
-```
+![Datasets list](entities/dataset_list.png)
 
 ## Runs
 
-```{image} entities/run_list.png
-:alt: Runs list
-```
+![Runs list](entities/run_list.png)
 
 ## Spark application
 
-```{image} integrations/spark/job_details.png
-:alt: Spark application details
-```
+![Spark application details](integrations/spark/job_details.png)
 
 ## Spark run
 
-```{image} integrations/spark/run_details.png
-:alt: Spark run details
-```
+![Spark run details](integrations/spark/run_details.png)
 
 ## Spark command
 
-```{image} integrations/spark/operation_details.png
-:alt: Spark command details
-```
+![Spark command details](integrations/spark/operation_details.png)
 
 ## Hive query
 
-```{image} integrations/hive/operation_details.png
-:alt: Hive query details
-```
+![Hive query details](integrations/hive/operation_details.png)
 
 ## Airflow DagRun
 
-```{image} integrations/airflow/dag_run_details.png
-:alt: Airflow DagRun details
-```
+![Airflow DagRun details](integrations/airflow/dag_run_details.png)
 
 ## Airflow TaskInstance
 
-```{image} integrations/airflow/task_run_details.png
-:alt: Airflow TaskInstance details
-```
+![Airflow TaskInstance details](integrations/airflow/task_run_details.png)

@@ -56,10 +56,9 @@ This is done by adding a specific filter to logging handler:
 
     ```yaml hl_lines="6-12 23-24 35"
     ----8<----
-    logging/presets/plain.yml
+    data_rentgen/logging/presets/plain.yml
     ----8<----
     ```
-<!-- # :emphasize-lines: 6-12,23-24,35 -->
 
 Resulting logs look like:
 
@@ -93,6 +92,4 @@ Server can add `X-Application-Version` header to responses, which allows to dete
 
 This is done by `application_version` middleware, which is enabled by default and can configured as described below:
 
-```{eval-rst}
-.. autopydantic_model:: data_rentgen.server.settings.application_version.ApplicationVersionSettings
-```
+::: data_rentgen.server.settings.application_version.ApplicationVersionSettings
