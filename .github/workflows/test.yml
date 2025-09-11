@@ -46,7 +46,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          make venv ARGS="--no-extra gssapi"
+          make venv
 
       - name: Run Tests
         run: |

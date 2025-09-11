@@ -40,7 +40,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          make venv ARGS="--no-extra gssapi"
+          make venv
 
       - name: Run mypy
         run: uv run mypy ./data_rentgen --config-file ./pyproject.toml
