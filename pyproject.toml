@@ -38,6 +38,9 @@ dynamic = ["version"]
 [tool.setuptools.packages.find]
 where = ["data_rentgen"]
 
+[tool.setuptools.package-data]
+data_rentgen = ["py.typed", "**/*.yml",  "**/*.ini", "VERSION"]
+
 [project.urls]  # Optional
 "Homepage" = "https://github.com/MobileTeleSystems/data-rentgen"
 "Documentation" = "https://data-rentgen.readthedocs.io/"
@@ -102,7 +105,7 @@ http2kafka = [
   "cachetools~=6.1.0",
 ]
 postgres = [
-  "asyncpg",
+  "asyncpg~=0.30.0",
 ]
 gssapi = [
   "gssapi~=1.9.0",

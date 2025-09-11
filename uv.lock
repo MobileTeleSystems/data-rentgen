@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 2
 requires-python = ">=3.12"
 
 [[package]]
@@ -578,7 +578,7 @@ requires-dist = [
     { name = "alembic", marker = "extra == 'server'", specifier = "~=1.16.2" },
     { name = "asgi-correlation-id", marker = "extra == 'http2kafka'", specifier = "~=4.3.4" },
     { name = "asgi-correlation-id", marker = "extra == 'server'", specifier = "~=4.3.4" },
-    { name = "asyncpg", marker = "extra == 'postgres'" },
+    { name = "asyncpg", marker = "extra == 'postgres'", specifier = "~=0.30.0" },
     { name = "cachetools", marker = "extra == 'http2kafka'", specifier = "~=6.1.0" },
     { name = "cachetools", marker = "extra == 'server'", specifier = "~=6.1.0" },
     { name = "coloredlogs", marker = "extra == 'consumer'", specifier = "~=15.0.1" },
