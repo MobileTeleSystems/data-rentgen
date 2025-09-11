@@ -5,17 +5,17 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator
-from typing import cast
+from typing import Annotated, cast
 
 from aiokafka import ConsumerRecord
 from faststream import Depends, Logger, NoCast
 from faststream.kafka import KafkaMessage
-from faststream.kafka.publisher.asyncapi import AsyncAPIDefaultPublisher
+from faststream.kafka.publisher import DefaultPublisher
 from pydantic import TypeAdapter
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.consumer.extractors import BatchExtractionResult, BatchExtractor
-from data_rentgen.dependencies import Stub
+from data_rentgen.dependencies.stub import Stub
 from data_rentgen.openlineage.run_event import OpenLineageRunEvent
 from data_rentgen.services.uow import UnitOfWork
 
@@ -30,8 +30,8 @@ async def runs_events_subscriber(
     _events: NoCast[list[OpenLineageRunEvent]],
     batch: KafkaMessage,
     logger: Logger,
-    publisher: AsyncAPIDefaultPublisher = Depends(Stub(AsyncAPIDefaultPublisher)),
-    session: AsyncSession = Depends(Stub(AsyncSession)),
+    publisher: Annotated[DefaultPublisher, Depends(Stub(DefaultPublisher))],
+    session: Annotated[AsyncSession, Depends(Stub(AsyncSession))],
 ):
     message_id = batch.message_id
     correlation_id = batch.correlation_id
@@ -182,7 +182,7 @@ async def report_malformed(
     messages: list[ConsumerRecord],
     message_id: str,
     correlation_id: str,
-    publisher: AsyncAPIDefaultPublisher,
+    publisher: DefaultPublisher,
 ):
     # Return malformed messages back to the broker
     for message in messages:

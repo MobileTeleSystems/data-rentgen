@@ -6,9 +6,9 @@ from contextlib import asynccontextmanager
 
 import anyio
 from fastapi import FastAPI
-from faststream._compat import ExceptionGroup
+from faststream._internal._compat import ExceptionGroup
 from faststream.kafka import KafkaBroker
-from faststream.kafka.publisher.asyncapi import AsyncAPIDefaultPublisher
+from faststream.kafka.publisher import DefaultPublisher
 from sqlalchemy.ext.asyncio import AsyncSession
 
 import data_rentgen
@@ -94,7 +94,7 @@ def application_factory(settings: Http2KafkaApplicationSettings) -> FastAPI:
     application.dependency_overrides.update(
         {
             Http2KafkaApplicationSettings: get_settings,
-            AsyncAPIDefaultPublisher: get_publisher,
+            DefaultPublisher: get_publisher,
             AsyncSession: session_generator(settings.database),  # type: ignore[dict-item]
         },
     )

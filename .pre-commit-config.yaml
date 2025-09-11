@@ -91,6 +91,7 @@ repos:
     rev: 0.8.17
     hooks:
       - id: uv-lock
+        args: [--prerelease=allow]
 
   - repo: local
     hooks:

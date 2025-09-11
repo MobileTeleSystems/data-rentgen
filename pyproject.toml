@@ -75,7 +75,7 @@ server = [
   "cachetools~=6.2.0",
 ]
 consumer = [
-  "faststream[kafka,cli]~=0.5.44",
+  "faststream[kafka,cli]~=0.6.0rc2",
   "cramjam~=2.11.0",
   "pydantic-settings~=2.10.1",
   "alembic~=1.16.2",
@@ -90,8 +90,8 @@ consumer = [
   "packaging~=25.0",
 ]
 http2kafka = [
-  "fastapi>=0.115.14,<0.117.0",
-  "starlette>=0.46.2,<0.48.0",
+  "fastapi~=0.116.1",
+  "starlette~=0.47.2",
   "uvicorn~=0.35.0",
   "starlette-exporter~=0.23.0",
   "asgi-correlation-id~=4.3.4",
@@ -101,7 +101,7 @@ http2kafka = [
   "coloredlogs~=15.0.1",
   "uuid6~=2025.0.0",
   "packaging~=25.0",
-  "faststream[kafka,cli]~=0.5.44",
+  "faststream[kafka,cli]~=0.6.0rc2",
   "cramjam~=2.11.0",
   "cachetools~=6.2.0",
 ]
@@ -155,7 +155,7 @@ docs = [
   # uncomment after https://github.com/zqmillet/sphinx-plantuml/pull/4
   # "sphinx-plantuml~=1.0.0",
   "sphinx-argparse~=0.5.2",
-  "sphinx-tabs>=3.4.7",
+  "sphinx-tabs~=3.4.7",
 ]
 
 [tool.pytest.ini_options]
