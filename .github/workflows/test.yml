@@ -45,9 +45,8 @@ jobs:
         uses: astral-sh/setup-uv@v6
 
       - name: Install dependencies
-        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
         run: |
-          make venv
+          make venv ARGS="--no-extra gssapi"
 
       - name: Run Tests
         run: |

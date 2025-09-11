@@ -13,7 +13,7 @@ dirty_template = "{tag}.dev{env:GITHUB_RUN_ID:{ccount}}"
 name = "data-rentgen"
 license = "Apache-2.0"
 description = "Data.Rentgen REST API + Kafka consumer"
-authors = [{name= "DataOps.ETL", email = "onetools@mts.ru"}]
+authors = [{name= "MWS Data Bridge", email = "onetools@mts.ru"}]
 readme = "README.rst"
 classifiers = [
     "Development Status :: 3 - Alpha",
@@ -30,8 +30,8 @@ classifiers = [
 keywords = ["Lineage", "FastAPI", "REST", "FastStream"]
 requires-python = ">=3.12"
 dependencies = [
-  "pydantic >= 2.11.2",
-  "typing-extensions >=4.13.1",
+  "pydantic~=2.11.2",
+  "typing-extensions~=4.13.1",
 ]
 dynamic = ["version"]
 
@@ -48,8 +48,8 @@ where = ["data_rentgen"]
 
 [project.optional-dependencies]
 server = [
-  "fastapi>=0.115.14,<0.117.0",
-  "starlette>=0.46.2,<0.48.0",
+  "fastapi~=0.116.1",
+  "starlette~=0.47.2",
   "uvicorn~=0.35.0",
   "starlette-exporter~=0.23.0",
   "asgi-correlation-id~=4.3.4",
@@ -247,6 +247,7 @@ follow_untyped_imports = true
 docstring_style = "sphinx"
 
 [tool.codespell]
+exclude-file="uv.lock"
 ignore-words-list = "selectin"
 
 [tool.towncrier]

@@ -50,7 +50,8 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 
 COPY ./pyproject.toml ./uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-install-project --all-extras
+    uv sync --frozen --no-install-project --all-extras \
+    && python -m compileall -j 4 .venv
 
 FROM base AS prod
 
