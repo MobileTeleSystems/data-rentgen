@@ -40,7 +40,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          make venv
+          make venv ARGS="--no-install-project"
 
       - name: Run mypy
         run: uv run mypy ./data_rentgen --config-file ./pyproject.toml
