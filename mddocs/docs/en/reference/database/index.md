@@ -16,22 +16,22 @@ Migration script is a thin wrapper around [Alembic cli](https://alembic.sqlalche
 
 ## Partitions
 
-After migrations are performed, it is required to run [`create-partitions-cli`](create-partitions-cli) which creates partitions for some tables in the database.
+After migrations are performed, it is required to run [`create-partitions-cli`][create-partitions-cli] which creates partitions for some tables in the database.
 By default, it creates monthly partitions, for current and next month. This can be changed by overriding command args.
 
 This script should run on schedule, depending on partitions granularity.
 Scheduling can be done by adding a dedicated entry to [crontab](https://help.ubuntu.com/community/CronHowto).
 
-It's strongly recommended also to add old partitions cleanup script to cron [`cleanup-partitions-cli`](cleanup-partitions-cli).
+It's strongly recommended also to add old partitions cleanup script to cron [`cleanup-partitions-cli`][cleanup-partitions-cli].
 Scheduling setup is same is for creating of partitions.
 
 ## Analytic views
 
-Along with migrations few analytics views are created. These are managed by [`refresh-analytic-views-cli`](refresh-analytic-views-cli), and should be executed by schedule.
+Along with migrations few analytics views are created. These are managed by [`refresh-analytic-views-cli`][refresh-analytic-views-cli], and should be executed by schedule.
 
 ## Seeding
 
-By default, database is created with no data. To seed database with some examples, use [`db-seed-cli`](db-seed-cli).
+By default, database is created with no data. To seed database with some examples, use [`db-seed-cli`][db-seed-cli].
 
 ## Requirements
 
@@ -64,19 +64,21 @@ By default, database is created with no data. To seed database with some example
 
   Options can be set via `.env` file or `environment` section in `docker-compose.yml`
 
-=== "docker-compose.yml"
+??? note "docker-compose.yml"
 
-  ```yaml
-    .. literalinclude:: ../../../docker-compose.yml
-        :emphasize-lines: 1-69,176
-  ```
+    ```yaml hl_lines="1-69 176" linenums="1"
+    ----8<----
+    docker-compose.yml
+    ----8<----
+    ```
 
-=== ".env.docker"
+??? note ".env.docker"
 
-  ```yaml
-    .. literalinclude:: ../../../.env.docker
-        :emphasize-lines: 1-5,23
-  ```
+    ```ini hl_lines="1-5 23" linenums="1"
+    ----8<----
+    .env.docker
+    ----8<----
+    ```
 
 - Add scripts to crontab:
 
@@ -110,7 +112,7 @@ By default, database is created with no data. To seed database with some example
   ...
   ```
 
-- Configure [`Database connection`](configuration-database) using environment variables, e.g. by creating `.env` file:
+- Configure [`Database connection`][configuration-database] using environment variables, e.g. by creating `.env` file:
 
   ```console title="/some/.env"
 
@@ -177,5 +179,5 @@ By default, database is created with no data. To seed database with some example
 [Create partitions cli][create-partitions-cli]
 [Cleanup partitions cli][cleanup-partitions-cli]
 [Refresh analytic views cli][refresh-analytic-views-cli]
-[Seed cli][seed-cli]
-[Structure][structure]
+[Seed cli][db-seed-cli]
+[Structure][database-structure]

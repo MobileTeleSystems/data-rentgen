@@ -9,7 +9,7 @@ Using [OpenLineage integration with Apache Flink 1.x](https://openlineage.io/doc
 
 ## Limitations
 
-- Only `standalone-job` (application mode) is supported, but not `jobmanager` (session mode): [https://github.com/OpenLineage/OpenLineage/issues/2150](OpenLineageissue)
+- Only `standalone-job` (application mode) is supported, but not `jobmanager` (session mode): (https://github.com/OpenLineage/OpenLineage/issues/2150)[OpenLineageissue]
 
 ## Entity mapping
 

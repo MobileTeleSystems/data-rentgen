@@ -57,7 +57,8 @@ extra:                                              # Language Selection
       lang: ru
 
 plugins:
-  - autorefs
+  - autorefs:
+      resolve_closest: true
   - literate-nav:
       nav_file: nav.md
   - mkdocstrings:

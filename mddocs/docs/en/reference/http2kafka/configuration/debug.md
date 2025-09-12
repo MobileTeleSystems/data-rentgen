@@ -38,7 +38,7 @@ File ".../site-packages/uvicorn/middleware/proxy_headers.py", line 84, in __call
 
 ## Print debug logs on backend
 
-See [`configuration-server-logging`](configuration-server-logging), but replace log level `INFO` with `DEBUG`.
+See [`configuration-server-logging`][configuration-server-logging], but replace log level `INFO` with `DEBUG`.
 
 ## Fill up `X-Request-ID` header on backend
 
