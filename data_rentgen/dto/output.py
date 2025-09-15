@@ -15,6 +15,8 @@ from data_rentgen.utils.uuid import generate_incremental_uuid
 
 
 class OutputTypeDTO(IntFlag):
+    UNKNOWN = 0
+
     APPEND = 1
 
     CREATE = 2
@@ -26,13 +28,17 @@ class OutputTypeDTO(IntFlag):
     DROP = 32
     TRUNCATE = 64
 
+    DELETE = 128
+    UPDATE = 256
+    MERGE = 512
+
 
 @dataclass(slots=True)
 class OutputDTO:
     created_at: datetime
     operation: OperationDTO
     dataset: DatasetDTO
-    type: OutputTypeDTO
+    type: OutputTypeDTO = OutputTypeDTO.UNKNOWN
     schema: SchemaDTO | None = None
     num_rows: int | None = None
     num_bytes: int | None = None

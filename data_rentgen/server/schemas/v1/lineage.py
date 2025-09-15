@@ -136,6 +136,10 @@ class OutputTypeV1(IntFlag):
     DROP = 32
     TRUNCATE = 64
 
+    DELETE = 128
+    UPDATE = 256
+    MERGE = 512
+
     def __str__(self) -> str:
         return f"{self.name}"
 

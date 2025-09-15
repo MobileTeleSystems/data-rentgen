@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from data_rentgen.consumer.extractors.generic import GenericExtractor
-from data_rentgen.dto import DatasetDTO, OperationDTO, RunDTO
-from data_rentgen.openlineage.dataset import OpenLineageDataset
+from data_rentgen.dto import DatasetDTO, OperationDTO, OutputTypeDTO, RunDTO
+from data_rentgen.openlineage.dataset import OpenLineageDataset, OpenLineageOutputDataset
 from data_rentgen.openlineage.dataset_facets import (
     OpenLineageColumnLineageDatasetFacetFieldRef,
     OpenLineageSymlinkIdentifier,
@@ -41,9 +41,18 @@ class DbtExtractor(GenericExtractor):
 
     def _extract_dataset_ref(
         self,
-        dataset_ref: OpenLineageDataset | OpenLineageColumnLineageDatasetFacetFieldRef | OpenLineageSymlinkIdentifier,
+        dataset: OpenLineageDataset | OpenLineageColumnLineageDatasetFacetFieldRef | OpenLineageSymlinkIdentifier,
     ) -> DatasetDTO:
-        dataset = super()._extract_dataset_ref(dataset_ref)
+        dataset_dto = super()._extract_dataset_ref(dataset)
         # https://github.com/OpenLineage/OpenLineage/pull/3707
-        dataset.name = dataset.name.replace("None.", "")
-        return dataset
+        dataset_dto.name = dataset.name.replace("None.", "")
+        return dataset_dto
+
+    def _extract_output_type(
+        self,
+        operation: OperationDTO,
+        dataset: OpenLineageOutputDataset,
+    ) -> OutputTypeDTO | None:
+        # by default, model is not materialized, and is either VIEW or INSERT INTO
+        result = super()._extract_output_type(operation, dataset)
+        return result or OutputTypeDTO.APPEND

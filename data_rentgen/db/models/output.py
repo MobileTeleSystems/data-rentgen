@@ -8,7 +8,7 @@ from enum import IntFlag
 from uuid import UUID
 
 from sqlalchemy import UUID as SQL_UUID
-from sqlalchemy import BigInteger, DateTime, PrimaryKeyConstraint, SmallInteger
+from sqlalchemy import BigInteger, DateTime, Integer, PrimaryKeyConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy_utils import ChoiceType
 
@@ -21,6 +21,8 @@ from data_rentgen.db.models.schema import Schema
 
 
 class OutputType(IntFlag):
+    UNKNOWN = 0
+
     APPEND = 1
 
     CREATE = 2
@@ -31,6 +33,10 @@ class OutputType(IntFlag):
 
     DROP = 32
     TRUNCATE = 64
+
+    DELETE = 128
+    UPDATE = 256
+    MERGE = 512
 
 
 # no foreign keys to avoid scanning all the partitions
@@ -102,9 +108,9 @@ class Output(Base):
     )
 
     type: Mapped[OutputType] = mapped_column(
-        ChoiceType(OutputType, impl=SmallInteger()),
+        ChoiceType(OutputType, impl=Integer()),
         nullable=False,
-        default=OutputType.APPEND,
+        default=OutputType.UNKNOWN,
         doc="Type of the output, e.g. READ, CREATE, APPEND",
     )
 

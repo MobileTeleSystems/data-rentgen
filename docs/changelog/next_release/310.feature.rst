@@ -1,0 +1,1 @@
+Set ``output.type`` based on executed SQL query, e.g. ``INSERT``, ``UPDATE``, ``DELETE``, and so on.

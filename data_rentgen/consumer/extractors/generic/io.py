@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import re
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 
@@ -22,6 +23,25 @@ from data_rentgen.openlineage.dataset import (
 )
 from data_rentgen.openlineage.dataset_facets import OpenLineageSchemaField
 from data_rentgen.openlineage.run_event import OpenLineageRunEvent
+
+SQL_QUERY_SYNTAX = re.compile(
+    r"\b(?P<query_type>MERGE|INSERT|UPDATE|DELETE|CREATE|RENAME|TRUNCATE|DROP(?!\sCOLUMN)|COPY)\s",
+    re.IGNORECASE | re.DOTALL,
+)
+# Alter has lowest priority
+ALTER_SYNTAX = re.compile(r"\bALTER\s", re.IGNORECASE | re.DOTALL)
+QUERY_TYPE_TO_OUTPUT_TYPE = {
+    "MERGE": OutputTypeDTO.MERGE,
+    "INSERT": OutputTypeDTO.APPEND,
+    "UPDATE": OutputTypeDTO.UPDATE,
+    "DELETE": OutputTypeDTO.DELETE,
+    "CREATE": OutputTypeDTO.CREATE,
+    "RENAME": OutputTypeDTO.RENAME,
+    "ALTER": OutputTypeDTO.ALTER,
+    "TRUNCATE": OutputTypeDTO.TRUNCATE,
+    "DROP": OutputTypeDTO.DROP,
+    "COPY": OutputTypeDTO.APPEND,
+}
 
 METASTORE = DatasetSymlinkTypeDTO.METASTORE
 WAREHOUSE = DatasetSymlinkTypeDTO.WAREHOUSE
@@ -121,7 +141,7 @@ class IOExtractorMixin(ABC):
             created_at=created_at,
             operation=operation,
             dataset=resolved_dataset_dto,
-            type=self._extract_output_type(operation, dataset),
+            type=self._extract_output_type(operation, dataset) or OutputTypeDTO.UNKNOWN,
             schema=self.extract_schema(dataset),
         )
         if dataset.outputFacets.outputStatistics:
@@ -135,10 +155,21 @@ class IOExtractorMixin(ABC):
         self,
         operation: OperationDTO,
         dataset: OpenLineageOutputDataset,
-    ) -> OutputTypeDTO:
+    ) -> OutputTypeDTO | None:
         if dataset.facets.lifecycleStateChange:
             return OutputTypeDTO[dataset.facets.lifecycleStateChange.lifecycleStateChange]
-        return OutputTypeDTO.APPEND
+        if operation.sql_query:
+            return self._extract_output_type_from_sql(operation.sql_query.query)
+        return None
+
+    def _extract_output_type_from_sql(self, sql: str) -> OutputTypeDTO | None:
+        found = SQL_QUERY_SYNTAX.search(sql)
+        if found:
+            return QUERY_TYPE_TO_OUTPUT_TYPE[found.group("query_type")]
+        found = ALTER_SYNTAX.search(sql)
+        if found:
+            return OutputTypeDTO.ALTER
+        return None
 
     def _schema_field_to_json(self, field: OpenLineageSchemaField):
         result: dict = {
