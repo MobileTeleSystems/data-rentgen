@@ -6,7 +6,16 @@ from unittest.mock import Mock
 import pytest
 
 from data_rentgen.consumer.extractors.generic import GenericExtractor
-from data_rentgen.dto import DatasetDTO, InputDTO, LocationDTO, OperationDTO, OutputDTO, OutputTypeDTO, SchemaDTO
+from data_rentgen.dto import (
+    DatasetDTO,
+    InputDTO,
+    LocationDTO,
+    OperationDTO,
+    OutputDTO,
+    OutputTypeDTO,
+    SchemaDTO,
+    SQLQueryDTO,
+)
 from data_rentgen.openlineage.dataset import (
     OpenLineageDataset,
     OpenLineageInputDataset,
@@ -199,7 +208,7 @@ def test_extractors_extract_input_for_long_operations():
         (None, None, None),
     ],
 )
-def test_extractors_extract_output_batch(
+def test_extractors_extract_output_batch_with_lifecycle(
     lifecycle_state_change: OpenLineageDatasetLifecycleStateChange,
     expected_type: OutputTypeDTO,
     row_count: int | None,
@@ -247,6 +256,58 @@ def test_extractors_extract_output_batch(
     )
 
 
+@pytest.mark.parametrize(
+    ["sql_query", "expected_type"],
+    [
+        ("CREATE TABLE AS SELECT * FROM mytable", OutputTypeDTO.CREATE),
+        ("INSERT INTO mytable SELECT * FROM mytable", OutputTypeDTO.APPEND),
+        ("UPDATE mytable SET a=1", OutputTypeDTO.UPDATE),
+        ("DELETE FROM mytable", OutputTypeDTO.DELETE),
+        ("COPY mytable FROM '...'", OutputTypeDTO.APPEND),
+        ("ALTER TABLE mytable RENAME TO mytable_new", OutputTypeDTO.RENAME),
+        ("ALTER TABLE mytable DROP COLUMN a", OutputTypeDTO.ALTER),
+        ("TRUNCATE TABLE mytable", OutputTypeDTO.TRUNCATE),
+        ("TRUNCATE TABLE mytable DROP STORAGE", OutputTypeDTO.TRUNCATE),
+        ("ALTER TABLE mytable TRUNCATE PARTITION (a=1, b=2)", OutputTypeDTO.TRUNCATE),
+        ("DROP TABLE mytable", OutputTypeDTO.DROP),
+        ("DROP TABLE mytable PURGE", OutputTypeDTO.DROP),
+        ("ALTER TABLE mytable DROP PARTITION (a=1, b=2)", OutputTypeDTO.DROP),
+        ("MERGE INTO mytable", OutputTypeDTO.MERGE),
+        ("CALL myproc()", OutputTypeDTO.UNKNOWN),
+    ],
+)
+def test_extractors_extract_output_batch_with_sql(
+    sql_query: str,
+    expected_type: OutputTypeDTO,
+):
+    output = OpenLineageOutputDataset(
+        namespace="hdfs://test-hadoop:9820",
+        name="/user/hive/warehouse/mydb.db/mytable",
+    )
+    operation = Mock(spec=OperationDTO)
+    operation.sql_query = SQLQueryDTO(query=sql_query)
+
+    event = Mock(spec=OpenLineageRunEvent)
+    operation.created_at = event.eventTime = datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
+
+    assert GenericExtractor().extract_output(operation, output, event) == (
+        OutputDTO(
+            created_at=operation.created_at,
+            type=expected_type,
+            operation=operation,
+            dataset=DatasetDTO(
+                name="/user/hive/warehouse/mydb.db/mytable",
+                location=LocationDTO(
+                    type="hdfs",
+                    name="test-hadoop:9820",
+                    addresses={"hdfs://test-hadoop:9820"},
+                ),
+            ),
+        ),
+        [],
+    )
+
+
 def test_extractors_extract_output_for_long_running_operations():
     output = OpenLineageOutputDataset(
         namespace="hdfs://test-hadoop:9820",
@@ -255,6 +316,7 @@ def test_extractors_extract_output_for_long_running_operations():
 
     # operation is streaming and created long time ago
     operation = Mock(spec=OperationDTO)
+    operation.sql_query = None
     operation.created_at = datetime(2024, 7, 5, tzinfo=timezone.utc)
 
     event = Mock(spec=OpenLineageRunEvent)
@@ -264,7 +326,7 @@ def test_extractors_extract_output_for_long_running_operations():
         OutputDTO(
             # count only whole hours since operation was created
             created_at=operation.created_at + timedelta(hours=9),
-            type=OutputTypeDTO.APPEND,
+            type=OutputTypeDTO.UNKNOWN,
             operation=operation,
             dataset=DatasetDTO(
                 name="/user/hive/warehouse/mydb.db/mytable",

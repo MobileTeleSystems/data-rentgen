@@ -77,16 +77,16 @@ class SparkExtractor(GenericExtractor):
 
     def _extract_dataset_ref(
         self,
-        dataset_ref: OpenLineageDataset | OpenLineageColumnLineageDatasetFacetFieldRef | OpenLineageSymlinkIdentifier,
+        dataset: OpenLineageDataset | OpenLineageColumnLineageDatasetFacetFieldRef | OpenLineageSymlinkIdentifier,
     ) -> DatasetDTO:
-        dataset = super()._extract_dataset_ref(dataset_ref)
+        dataset_dto = super()._extract_dataset_ref(dataset)
 
         # convert /some/long/path/with=partition/another=abc to /some/long/path
-        if "=" in dataset.name and "/" in dataset.name:
-            name_with_partitions = PARTITION_PATH_PATTERN.match(dataset.name)
+        if "=" in dataset_dto.name and "/" in dataset_dto.name:
+            name_with_partitions = PARTITION_PATH_PATTERN.match(dataset_dto.name)
             if name_with_partitions:
-                dataset.name = name_with_partitions.group(1)
-        return dataset
+                dataset_dto.name = name_with_partitions.group(1)
+        return dataset_dto
 
     def _extract_dataset_and_symlinks(
         self,

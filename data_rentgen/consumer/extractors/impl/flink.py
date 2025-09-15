@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 from data_rentgen.consumer.extractors.generic import GenericExtractor
-from data_rentgen.dto import DatasetDTO, DatasetSymlinkDTO, RunDTO
-from data_rentgen.openlineage.dataset import OpenLineageDataset
+from data_rentgen.dto import DatasetDTO, DatasetSymlinkDTO, OperationDTO, OutputTypeDTO, RunDTO
+from data_rentgen.openlineage.dataset import OpenLineageDataset, OpenLineageOutputDataset
 from data_rentgen.openlineage.dataset_facets import (
     OpenLineageSymlinkIdentifier,
     OpenLineageSymlinkType,
@@ -59,3 +59,12 @@ class FlinkExtractor(GenericExtractor):
             if not (identifier.namespace.startswith("kafka://") and identifier.type == OpenLineageSymlinkType.TABLE)
         ]
         return super()._extract_dataset_and_symlinks(dataset, symlink_identifiers)
+
+    def _extract_output_type(
+        self,
+        operation: OperationDTO,
+        dataset: OpenLineageOutputDataset,
+    ) -> OutputTypeDTO | None:
+        # In most real cases, Flink writes to Kafka with APPEND
+        result = super()._extract_output_type(operation, dataset)
+        return result or OutputTypeDTO.APPEND
