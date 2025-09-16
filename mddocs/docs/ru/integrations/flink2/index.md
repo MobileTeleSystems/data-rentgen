@@ -7,10 +7,10 @@
 - [Apache Flink](https://flink.apache.org/) 2.x
 - OpenLineage 1.31.0 или выше, рекомендуется 1.34.0+
 
-## Отображение сущностей
+## Сопоставление сущностей
 
-- Job Flink → Data.Rentgen Job
-- Run Flink → Data.Rentgen Run + Data.Rentgen Operation
+- Flink job → Data.Rentgen Job
+- Flink job run → Data.Rentgen Run + Data.Rentgen Operation
 
 ## Установка
 
@@ -27,14 +27,13 @@
   CLASSPATH=/path/to/openlineage/jars/
   ```
 
-- Настройте `JobManager` Flink для загрузки этих зависимостей с использованием собственного ClassLoader:
+- Настройте `JobManager` Flink для загрузки этих зависимостей, используя собственный ClassLoader:
 
   ```yaml title="config.yaml"
-
   classloader.parent-first-patterns.additional: ["io.openlineage.", "org.apache.kafka.","com.github.luben."]
   ```
 
-  В противном случае Flink загрузит все классы из загрузчика классов задания, что может привести к ошибкам типа:
+  В противном случае Flink будет загружать все классы из classloader задания, что может привести к ошибкам типа:
 
   ```text
   org.apache.kafka.common.KafkaException: class org.apache.kafka.common.serialization.StringSerializer is not an instance of org.apache.kafka.common.serialization.Serializer
@@ -48,20 +47,18 @@
 - Добавьте `OpenLineageJobStatusChangedListenerFactory` в файл `config.yaml` Flink:
 
   ```yaml title="config.yaml"
-
   classloader.parent-first-patterns.additional: ["io.openlineage.", "org.apache.kafka.","com.github.luben."]
-  execution.job-status-changed-listeners: io.openlineage.flink.listener.OpenLineageJobStatusChangedListenerFactory  # захват события задания
-  execution.attached: true  # захват событий остановки Job
-  execution.job-listener.openlineage.namespace: http://some.host.name:18081  # установите пространство имен, соответствующее адресу Flink
-  execution.job-listener.openlineage.job-name: flink_examples_stateful  # установите имя Job
+  execution.job-status-changed-listeners: io.openlineage.flink.listener.OpenLineageJobStatusChangedListenerFactory  # перехват событий задания
+  execution.attached: true  # перехват событий остановки задания
+  execution.job-listener.openlineage.namespace: http://some.host.name:18081  # установите пространство имен, чтобы соответствовать адресу Flink
+  execution.job-listener.openlineage.job-name: flink_examples_stateful  # установите имя задания
   ```
 
-- Создайте файл `openlineage.yml` с содержимым вида:
+- Создайте файл `openlineage.yml` со следующим содержимым:
 
   ```yaml title="openlineage.yml"
-
-  # Отправлять событие RUNNING каждые 10 минут.
-  # Использование интервала по умолчанию (1 минута) просто заполняет Kafka бесполезными событиями RUNNING.
+  # Отправлять событие RUNNING каждый час.
+  # Использование интервала по умолчанию (1 минута) просто перегружает Kafka бесполезными событиями RUNNING.
   trackingIntervalInSeconds: 600
 
   transport:
@@ -87,10 +84,9 @@
   OPENLINEAGE_CONFIG=/path/to/openlineage.yml
   ```
 
-В итоге это должно выглядеть так (см. [Официальную документацию](https://nightlies.apache.org/flink/flink-docs-release-2.0/docs/deployment/resource-providers/standalone/docker/)):
+В итоге конфигурация должна выглядеть так (см. [Официальную документацию](https://nightlies.apache.org/flink/flink-docs-release-2.0/docs/deployment/resource-providers/standalone/docker/)):
 
 ```yaml title="docker-compose.yml"
-
 services:
     jobmanager:
         image: flink:2.0.0-scala_2.12-java11
@@ -116,34 +112,34 @@ services:
         - ./config.yaml:/opt/flink/conf/config.yaml
 ```
 
-## Сбор и отправка lineage
+## Сбор и отправка данных о происхождении
 
-Просто запустите ваш Job Flink. Интеграция OpenLineage автоматически соберет и отправит lineage в DataRentgen.
+Просто запустите ваше задание (Job) Flink. Интеграция OpenLineage автоматически соберет и отправит данные о происхождении в DataRentgen.
 
 ## Просмотр результатов
 
-Просмотрите на странице [Jobs](http://localhost:3000/jobs), чтобы увидеть, какая информация была извлечена OpenLineage и DataRentgen.
+Просмотрите страницы фронтенда [Jobs](http://localhost:3000/jobs), чтобы увидеть, какая информация была извлечена OpenLineage и DataRentgen.
 
-### Страница списка Job
+### Страница списка заданий (Job)
 
-![список Job](../flink1/job_list.png)
+![список заданий (Job)](../flink1/job_list.png)
 
-### Страница сведений о Job
+### Страница сведений о задании (Job)
 
-![сведения о Job](../flink1/job_details.png)
+![сведения о задании (Job)](../flink1/job_details.png)
 
 ### Страница сведений о запуске (Run)
 
-![сведения о запуске (Run)](../flink1/run_details.png)
+![сведения о запуске (run)](../flink1/run_details.png)
 
-### lineage на уровне набора данных (dataset)
+### Граф lineage на уровне набора данных (dataset)
 
-![lineage уровня набора данных](../flink1/dataset_lineage.png)
+![dataset lineage](../flink1/dataset_lineage.png)
 
-### lineage на уровне Job
+### Граф lineage на уровне задания (Job)
 
-![lineage уровня Job](../flink1/job_lineage.png)
+![Job lineage](../flink1/job_lineage.png)
 
-### lineage на уровне запуска (Run)
+### Граф lineage на уровне запуска (Run)
 
-![lineage уровня запуска (Run)](../flink1/run_lineage.png)
+![run lineage](../flink1/run_lineage.png)

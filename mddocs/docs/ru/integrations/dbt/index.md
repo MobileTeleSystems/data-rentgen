@@ -4,8 +4,8 @@
 
 ## Требования
 
-- [dbt](https://www.getdbt.com/) 1.3 или выше
-- OpenLineage 1.19.0 или выше, рекомендуется 1.34.0+
+- [dbt](https://www.getdbt.com/) версии 1.3 или выше
+- OpenLineage версии 1.19.0 или выше, рекомендуется 1.34.0+
 
 ## Отображение сущностей
 
@@ -22,7 +22,7 @@ $ pip install "openlineage-dbt>=1.34.0" "openlineage-python[kafka]>=1.34.0" zstd
 
 ## Настройка
 
-- Создайте файл `openlineage.yml` с содержимым ниже:
+- Создайте файл `openlineage.yml` со следующим содержимым:
 
   ```yaml
   transport:
@@ -45,7 +45,7 @@ $ pip install "openlineage-dbt>=1.34.0" "openlineage-python[kafka]>=1.34.0" zstd
   OPENLINEAGE_CONFIG=/path/to/openlineage.yml
   ```
 
-## Сбор и отправка lineage
+## Сбор и отправка информации о происхождении данных
 
 Замените команды CLI `dbt`:
 
@@ -65,36 +65,36 @@ $ dbt-ol test myproject
 ...
 ```
 
-Lineage будет автоматически отправлен в Data.Rentgen интеграцией OpenLineage.
+Информация о происхождении данных будет автоматически отправлена в Data.Rentgen через интеграцию с OpenLineage.
 
 ## Просмотр результатов
 
-Просмотрите страницу интерфейса [Jobs](http://localhost:3000/jobs), чтобы увидеть, какая информация была извлечена OpenLineage и DataRentgen
+Перейдите на страницу [Jobs](http://localhost:3000/jobs) в интерфейсе, чтобы увидеть, какая информация была извлечена с помощью OpenLineage и DataRentgen.
 
-### Страница списка Job
+### Страница списка заданий (Job)
 
-![список заданий](job_list.png)
+![список заданий (Job)](job_list.png)
 
-### Страница сведений о Job
+### Страница деталей задания (Job)
 
-![сведения о задании](job_details.png)
+![детали задания (Job)](job_details.png)
 
-### Lineage уровня Job
+### Граф lineage для задания (Job)
 
-![lineage задания](job_lineage.png)
+![граф  lineage для задания (Job)](job_lineage.png)
 
-### Сведения о запуске (Run)
+### Детали запуска (Run)
 
-![сведения о запуске](run_details.png)
+![детали запуска (Run)](run_details.png)
 
-### Lineage запуска (Run)
+### Граф lineage запуска (Run)
 
-![lineage запуска](run_lineage.png)
+![граф lineage запуска (Run)](run_lineage.png)
 
-### Сведения об операции
+### Детали операции
 
-![сведения об операции](operation_details.png)
+![детали операции](operation_details.png)
 
-### Lineage операции
+### Граф lineage операции
 
-![lineage операции](operation_lineage.png)
+![граф lineage операции](operation_lineage.png)

@@ -8,7 +8,7 @@
 - OpenLineage 1.19.0 или выше, рекомендуется 1.34.0+
 - Интеграция OpenLineage для Airflow (см. ниже)
 
-## Отображение сущностей
+## Соответствие сущностей
 
 - Airflow DAG → Data.Rentgen Job
 - Airflow DAGRun → Data.Rentgen Run
@@ -24,7 +24,7 @@
   ...
   ```
 
-- Для Airflow 2.1.x-2.6.x используйте [интеграцию OpenLineage для Airflow](https://openlineage.io/docs/integrations/airflow/) 1.19.0 или выше
+- Для Airflow 2.1.x-2.6.x используйте [интеграцию OpenLineage для Airflow](https://openlineage.io/docs/integrations/airflow/) 1.19.0 или выше:
 
   ```console
   $ pip install "openlineage-airflow>=1.34.0" "openlineage-python[kafka]>=1.34.0" zstd
@@ -33,9 +33,9 @@
 
 ## Настройка
 
-### Через файл конфигурации OpenLineage
+### Через конфигурационный файл OpenLineage
 
-- Создайте файл `openlineage.yml` с содержимым вида:
+- Создайте файл `openlineage.yml` с содержимым:
 
   ```yaml
   transport:
@@ -51,16 +51,16 @@
           acks: all
   ```
 
-- Передайте путь к файлу конфигурации через переменную окружения `AIRFLOW__OPENLINEAGE__CONFIG_PATH`:
+- Укажите путь к файлу конфигурации через переменную окружения `AIRFLOW__OPENLINEAGE__CONFIG_PATH`:
 
   ```ini
   AIRFLOW__OPENLINEAGE__NAMESPACE=http://airflow.hostname.fqdn:8080
   AIRFLOW__OPENLINEAGE__CONFIG_PATH=/path/to/openlineage.yml
   ```
 
-### Через файл конфигурации Airflow
+### Через конфигурационный файл Airflow
 
-Настройте интеграцию OpenLineage используя файл конфигурации `airflow.cfg`:
+Настройте интеграцию OpenLineage, используя файл конфигурации `airflow.cfg`:
 
 ```ini
 [openlineage]
@@ -72,7 +72,7 @@ transport = {"type": "kafka", "config": {"bootstrap.servers": "localhost:9093", 
 
 ### Через переменные окружения Airflow
 
-Установите переменные окружения для всех компонентов Airflow (например, через `docker-compose.yml`)
+Установите переменные окружения для всех компонентов Airflow (например, через `docker-compose.yml`):
 
 ```ini
 AIRFLOW__OPENLINEAGE__NAMESPACE=http://airflow.hostname.fqdn:8080
@@ -81,36 +81,36 @@ AIRFLOW__OPENLINEAGE__TRANSPORT={"type": "kafka", "config": {"bootstrap.servers"
 
 ### Airflow 2.1.x и 2.2.x
 
-Для Airflow 2.1-2.2 интеграция OpenLineage должна быть включена явно путем добавления записи в конфигурационный файл `airflow.cfg`:
+Для Airflow 2.1-2.2 необходимо явно включить интеграцию OpenLineage, добавив запись в конфигурацию `airflow.cfg`:
 
 ```ini
 [lineage]
 backend=openlineage.lineage_backend.OpenLineageBackend
 ```
 
-Или путем установки переменной окружения:
+Или установив переменную окружения:
 
 ```ini
 AIRFLOW__LINEAGE__BACKEND=openlineage.lineage_backend.OpenLineageBackend
 ```
 
-## Сбор и отправка lineage
+## Сбор и отправка данных lineage
 
-Запустите какой-либо DAG Airflow с задачами и дождитесь завершения.
-Lineage будет автоматически отправлен в Data.Rentgen интеграцией с OpenLineage.
+Запустите любой DAG Airflow с задачами и дождитесь завершения.
+Данные о происхождении будут автоматически отправлены в Data.Rentgen с помощью интеграции OpenLineage.
 
 ## Просмотр результатов
 
-На странице веб-интерфейса [Jobs](http://localhost:3000/jobs) можно увидеть, какая информация была извлечена OpenLineage и DataRentgen.
+Перейдите на страницу [Jobs](http://localhost:3000/jobs) в интерфейсе, чтобы увидеть, какая информация была извлечена OpenLineage и DataRentgen.
 
-### Страница списка Job
+### Страница списка заданий (Job)
 
-![список заданий](job_list.png)
+![список задач (Job)](job_list.png)
 
-### Страница сведений о запуске ОАГ (DAG Run)
+### Страница деталей запуска DAG (Run)
 
-![сведения о запуске dag](dag_run_details.png)
+![детали запуска DAG (run)](dag_run_details.png)
 
-### Страница сведений о запуске задачи (Task Run)
+### Страница деталей запуска задачи
 
-![сведения о запуске задачи](task_run_details.png)
+![детали запуска задачи](task_run_details.png)

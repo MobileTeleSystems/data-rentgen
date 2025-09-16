@@ -9,27 +9,25 @@
 
 ## Ограничения
 
-- Поддерживается только `standalone-job` (режим приложения), но не `jobmanager` (режим сессии): [https://github.com/OpenLineage/OpenLineage/issues/2150](проблема OpenLineage)
+- Поддерживается только режим `standalone-job` (режим приложения), но не `jobmanager` (сессионный режим): [проблема OpenLineage](https://github.com/OpenLineage/OpenLineage/issues/2150)
 
-## Отображение сущностей
+## Сопоставление сущностей
 
-- Job Flink → Data.Rentgen Job
-- Run Flink → Data.Rentgen Run + Data.Rentgen Operation
+- Задача Flink → Задание Data.Rentgen
+- Запуск задачи Flink → Запуск Data.Rentgen + Операция Data.Rentgen
 
 ## Установка
 
-- Добавьте зависимости [openlineage-flink](https://mvnrepository.com/artifact/io.openlineage/openlineage-flink) и [kafka-clients](https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients) в ваш Job Flink:
+- Добавьте зависимости [openlineage-flink](https://mvnrepository.com/artifact/io.openlineage/openlineage-flink) и [kafka-clients](https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients) в вашу задачу Flink:
 
   ```groovy title="build.gradle"
-
   implementation "io.openlineage:openlineage-flink:1.34.0"
   implementation "org.apache.kafka:kafka-clients:3.9.0"
   ```
 
-- Зарегистрируйте `OpenLineageFlinkJobListener` в коде Job Flink:
+- Зарегистрируйте `OpenLineageFlinkJobListener` в коде вашей задачи Flink:
 
   ```java title="MyFlinkJob.java"
-
   import io.openlineage.flink.OpenLineageFlinkJobListener;
 
   StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
@@ -42,23 +40,21 @@
 
 ## Настройка
 
-- Измените файл `config.yaml` Flink, чтобы включить:
+- Измените файл `config.yaml` Flink, чтобы он включал:
 
   ```yaml title="config.yaml"
-
-  execution.attached: true  # захватывать события остановки задания
+  execution.attached: true  # захватывать события остановки задач
   ```
 
 - Создайте файл `openlineage.yml` с содержимым вида:
 
   ```yaml title="openlineage.yml"
-
   job:
       namespace: http://some.host.name:18081  # установите пространство имен, соответствующее адресу Flink
-      name: flink_examples_stateful  # установите имя задания
+      name: flink_examples_stateful  # установите имя задачи
 
-  # Отправлять событие RUNNING каждый час.
-  # Использование интервала по умолчанию (1 минута) просто заполняет Kafka бесполезными событиями RUNNING.
+  # Отправлять событие RUNNING каждый 1 час.
+  # Использование интервала по умолчанию (1 минута) просто перегружает Kafka бесполезными событиями RUNNING.
   trackingIntervalInSeconds: 3600
 
   transport:
@@ -87,7 +83,6 @@
 В итоге это должно выглядеть так (см. [Официальную документацию](https://nightlies.apache.org/flink/flink-docs-release-1.20/docs/deployment/resource-providers/standalone/docker/)):
 
 ```yaml title="docker-compose.yml"
-
 services:
     jobmanager:
         image: flink:1.20.1-scala_2.12-java11
@@ -96,7 +91,7 @@ services:
         # поддерживается только standalone-job
         command: standalone-job --job-classname my.awesome.FlinkStatefulApplication
         volumes:
-        - ./artifacts/:/opt/flink/usrlib/  # путь к файлам .jar вашего задания Flink
+        - ./artifacts/:/opt/flink/usrlib/  # путь к JAR-файлам вашей задачи Flink
         - ./config.yaml:/opt/flink/conf/config.yaml
         - ./openlineage.yml:/opt/flink/conf/openlineage.yml
         environment:
@@ -108,38 +103,38 @@ services:
         - jobmanager
         command: taskmanager
         volumes:
-        - ./artifacts/:/opt/flink/usrlib/  # путь к файлам .jar вашего задания Flink
+        - ./artifacts/:/opt/flink/usrlib/  # путь к JAR-файлам вашей задачи Flink
         - ./config.yaml:/opt/flink/conf/config.yaml
 ```
 
-## Сбор и отправка lineage
+## Сбор и отправка данных о происхождении данных
 
-Просто запустите ваш Job Flink. Интеграция OpenLineage автоматически соберет и отправит lineage в DataRentgen.
+Просто запустите вашу задачу Flink. Интеграция OpenLineage автоматически соберет и отправит данные о происхождении в DataRentgen.
 
 ## Просмотр результатов
 
-Увидеть, какая информация была извлечена OpenLineage и DataRentgen можно на странице веб-интерфейса [Jobs](http://localhost:3000/jobs).
+Просмотрите страницы интерфейса [Jobs](http://localhost:3000/jobs), чтобы увидеть, какая информация была извлечена OpenLineage и DataRentgen.
 
-### Страница списка Job
+### Страница списка заданий (Job)
 
-![список Job](job_list.png)
+![список заданий (Job)](job_list.png)
 
-### Страница сведений о Job
+### Страница сведений о задании (Job)
 
-![сведения о Job](job_details.png)
+![сведения о задании (Job)](job_details.png)
 
 ### Страница сведений о запуске (Run)
 
-![сведения о запуске (run)](run_details.png)
+![сведения о запуске (Run)](run_details.png)
 
-### lineage на уровне набора данных (dataset)
+### Lineage на уровне наборов данных (dataset)
 
-![lineage уровня dataset](dataset_lineage.png)
+![dataset lineage](dataset_lineage.png)
 
-### lineage на уровне Job
+### Lineage на уровне заданий (Job)
 
-![lineage уровня Job](job_lineage.png)
+![Job lineage](job_lineage.png)
 
-### lineage на уровне запуска (Run)
+### Lineage на уровне запусков (Run)
 
-![lineage уровня запуска (Run)](run_lineage.png)
+![Run lineage](run_lineage.png)
