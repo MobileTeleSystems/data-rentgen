@@ -261,6 +261,7 @@ def test_extractors_extract_output_batch_with_lifecycle(
     [
         ("CREATE TABLE AS SELECT * FROM mytable", OutputTypeDTO.CREATE),
         ("INSERT INTO mytable SELECT * FROM mytable", OutputTypeDTO.APPEND),
+        ("insert into mytable select * from mytable", OutputTypeDTO.APPEND),
         ("UPDATE mytable SET a=1", OutputTypeDTO.UPDATE),
         ("DELETE FROM mytable", OutputTypeDTO.DELETE),
         ("COPY mytable FROM '...'", OutputTypeDTO.APPEND),

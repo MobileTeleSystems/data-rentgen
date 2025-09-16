@@ -165,7 +165,7 @@ class IOExtractorMixin(ABC):
     def _extract_output_type_from_sql(self, sql: str) -> OutputTypeDTO | None:
         found = SQL_QUERY_SYNTAX.search(sql)
         if found:
-            return QUERY_TYPE_TO_OUTPUT_TYPE[found.group("query_type")]
+            return QUERY_TYPE_TO_OUTPUT_TYPE[found.group("query_type").upper()]
         found = ALTER_SYNTAX.search(sql)
         if found:
             return OutputTypeDTO.ALTER
