@@ -57,7 +57,14 @@ class Location(Base):
             # so name like 'my.host.name' is converted to tsvector `'host':2 'name':3`,
             # which does not match a tsquery like 'my:* & host:* & name:*'.
             # Instead prefer 'simple' dictionary as it does not use stemming.
-            "to_tsvector('simple', name || ' ' || (translate(name, '/.', ' ')) || ' ' || type)",
+            """
+            to_tsvector(
+                'simple'::regconfig,
+                type || ' ' ||
+                name || ' ' || (translate(name, '/.', ' ')) || ' ' ||
+                COALESCE(external_id, ''::text) || ' ' || (translate(COALESCE(external_id, ''::text), '/.', ' '))
+            )
+            """,
             persisted=True,
         ),
         nullable=False,
