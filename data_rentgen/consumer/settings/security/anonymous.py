@@ -16,4 +16,4 @@ class KafkaSecurityAnonymousSettings(KafkaSecurityBaseSettings):
         DATA_RENTGEN__KAFKA__SECURITY__TYPE=None
     """
 
-    type: Literal[None] = None
+    type: Literal[None] = None  # noqa: PYI061
