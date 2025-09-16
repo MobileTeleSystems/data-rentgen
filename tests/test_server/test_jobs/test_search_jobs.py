@@ -95,13 +95,13 @@ async def test_search_jobs_by_location_external_id(
     mocked_user: MockedUser,
 ) -> None:
     _, jobs_by_location, _ = jobs_search
-    # Job with id 6 has external_id: "My cluster name"
+    # Job with id 6 has location with external_id: "abc123"
     jobs = await enrich_jobs([jobs_by_location["with-external-id"]], async_session)
 
     response = await test_client.get(
         "/v1/jobs",
         headers={"Authorization": f"Bearer {mocked_user.access_token}"},
-        params={"search_query": "external"},
+        params={"search_query": "abc123"},
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()

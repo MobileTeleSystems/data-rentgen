@@ -122,8 +122,8 @@ async def jobs_search(
     |4          | 'random-job-name'                  | 'my-cluster'                | 'yarn'        | 'random-url'                       |
     |5          | 'random-job-name'                  | 'data-product-host'         | 'http'        | 'random-url'                       |
     |5          | 'random-job-name'                  | 'data-product-host'         | 'http'        | 'random-url'                       |
-    |6          | 'random-job-name'                  | 'with-external-id'          | 'http'        | 'random-url'                       |
-    |6          | 'random-job-name'                  | 'with-external-id'          | 'http'        | 'random-url'                       |
+    |6          | 'random-job-name'                  | 'with-external-id'          | 'random'      | 'random-url'                       |
+    |6          | 'random-job-name'                  | 'with-external-id'          | 'random'      | 'random-url'                       |
     |7          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'yarn://my_cluster_1'              |
     |7          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'yarn://my_cluster_2'              |
     |8          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'http://some.host.name:2080'       |
@@ -137,7 +137,7 @@ async def jobs_search(
         {"name": "dwh", "type": "yarn", "external_id": None},
         {"name": "my-cluster", "type": "yarn", "external_id": None},
         {"name": "data-product-host", "type": "http", "external_id": None},
-        {"name": "with-external-id", "type": "http", "external_id": "External ID"},
+        {"name": "with-external-id", "type": "random", "external_id": "abc123"},
     ]
     address_kwargs = [
         {"urls": ["yarn://my_cluster_1", "yarn://my_cluster_2"]},

@@ -203,20 +203,23 @@ async def datasets_search(
     |4          | 'random-dataset-name'              | 'postgres.history_location' | 'postgres'    | 'random-url'                       |
     |5          | 'random-dataset-name'              | 'my-cluster'                | 'hdfs'        | 'random-url'                       |
     |5          | 'random-dataset-name'              | 'my-cluster'                | 'hdfs'        | 'random-url'                       |
-    |6          | 'random-dataset-name'              | 'random-location-name'      | 'random'      | 'http://my-postgres-host:8012'     |
-    |6          | 'random-dataset-name'              | 'random-location-name'      | 'random'      | 'http://my-postgres-host:2108'     |
-    |7          | 'random-dataset-name'              | 'random-location-name'      | 'random'      | 'http://your-postgres-host:2108'   |
-    |7          | 'random-dataset-name'              | 'random-location-name'      | 'random'      | 'http://your-postgres-host:8012'   |
-    |8          | 'random-dataset-name'              | 'random-location-name'      | 'random'      | 'hdfs://my-cluster-namenode:2080'  |
-    |8          | 'random-dataset-name'              | 'random-location-name'      | 'random'      | 'hdfs://my-cluster-namenode:8020'  |
+    |6          | 'random-dataset-name'              | 'with-external-id'          | 'random'      | 'random-url'                       |
+    |6          | 'random-dataset-name'              | 'with-external-id'          | 'random'      | 'random-url'                       |
+    |7          | 'random-dataset-name'              | 'random-location-name'      | 'random'      | 'http://my-postgres-host:8012'     |
+    |7          | 'random-dataset-name'              | 'random-location-name'      | 'random'      | 'http://my-postgres-host:2108'     |
+    |8          | 'random-dataset-name'              | 'random-location-name'      | 'random'      | 'http://your-postgres-host:2108'   |
+    |8          | 'random-dataset-name'              | 'random-location-name'      | 'random'      | 'http://your-postgres-host:8012'   |
+    |9          | 'random-dataset-name'              | 'random-location-name'      | 'random'      | 'hdfs://my-cluster-namenode:2080'  |
+    |9          | 'random-dataset-name'              | 'random-location-name'      | 'random'      | 'hdfs://my-cluster-namenode:8020'  |
 
     Every location relate to two dataset and two addresses. 2-1-2
     tip: you can imagine it like identity matrix with not-random names on diagonal.
     """
     location_kwargs = [
-        {"name": "postgres.location", "type": "postgres"},
-        {"name": "postgres.history_location", "type": "postgres"},
-        {"name": "my-cluster", "type": "hdfs"},
+        {"name": "postgres.location", "type": "postgres", "external_id": None},
+        {"name": "postgres.history_location", "type": "postgres", "external_id": None},
+        {"name": "my-cluster", "type": "hdfs", "external_id": None},
+        {"name": "with-external-id", "type": "random", "external_id": "abc123"},
     ]
     address_kwargs = [
         {"urls": ["http://my-postgres-host:8012", "http://my-postgres-host:2108"]},
