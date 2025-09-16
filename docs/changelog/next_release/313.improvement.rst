@@ -1,0 +1,8 @@
+* Make matching for addresses and locations more deterministic by converting them to lowercase.
+  Items ``oracle://host:1521`` and ``ORACLE://HOST:1521`` are the same item ``oracle://host:1521``.
+
+* Make matching for datasets, jobs, tags and user names case-insensitive by using unique indexes on ``lower(name)`` expression.
+  Item ``database.schema.table`` and ``DATABASE.SCHEMA.TABLE`` are the same item.
+
+  As dataset canonical name depends on database naming convention (UPPERCASE for Oracle, lowercase for Postgres),
+  we can't convert them into one specific case (upper or lower). Instead we use first received value as canonical one.

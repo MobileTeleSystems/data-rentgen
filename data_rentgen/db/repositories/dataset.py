@@ -144,7 +144,10 @@ class DatasetRepository(Repository[Dataset]):
         return {row.location_id: row for row in query_result.all()}
 
     async def _get(self, dataset: DatasetDTO) -> Dataset | None:
-        statement = select(Dataset).where(Dataset.location_id == dataset.location.id, Dataset.name == dataset.name)
+        statement = select(Dataset).where(
+            Dataset.location_id == dataset.location.id,
+            func.lower(Dataset.name) == dataset.name.lower(),
+        )
         return await self._session.scalar(statement)
 
     async def _create(self, dataset: DatasetDTO) -> Dataset:

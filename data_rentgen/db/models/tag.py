@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from sqlalchemy import BigInteger, Computed, Index, String
+from sqlalchemy import BigInteger, Computed, Index, String, column, func
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -16,10 +16,13 @@ if TYPE_CHECKING:
 
 class Tag(Base):
     __tablename__ = "tag"
-    __table_args__ = (Index("ix__tag__search_vector", "search_vector", postgresql_using="gin"),)
+    __table_args__ = (
+        Index("ix__tag__name_lower", func.lower(column("name")), unique=True),
+        Index("ix__tag__search_vector", "search_vector", postgresql_using="gin"),
+    )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
-    name: Mapped[str] = mapped_column(String(32), nullable=False, unique=True)
+    name: Mapped[str] = mapped_column(String(32), nullable=False)
     tag_values: Mapped[list[TagValue]] = relationship(
         "TagValue",
         lazy="noload",
@@ -29,7 +32,7 @@ class Tag(Base):
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,
         Computed(
-            "to_tsvector('simple'::regconfig, name || ' ' || translate(name, '.', '  '))",
+            "to_tsvector('simple'::regconfig, name || ' ' || translate(name, '/.', '  '))",
             persisted=True,
         ),
         nullable=False,

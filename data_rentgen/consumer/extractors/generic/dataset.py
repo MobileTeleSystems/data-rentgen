@@ -43,7 +43,8 @@ class DatasetExtractorMixin:
         self,
         dataset: OpenLineageDataset | OpenLineageSymlinkIdentifier | OpenLineageColumnLineageDatasetFacetFieldRef,
     ) -> LocationDTO:
-        namespace = dataset.namespace
+        # hostname and scheme are normalized to lowercase for uniqueness
+        namespace = dataset.namespace.lower()
         if namespace == "file":
             # TODO: remove after https://github.com/OpenLineage/OpenLineage/issues/2709
             namespace = "file://"

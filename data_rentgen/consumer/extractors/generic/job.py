@@ -36,7 +36,8 @@ class JobExtractorMixin:
         )
 
     def _extract_job_location(self, job: OpenLineageJob | OpenLineageParentJob) -> LocationDTO:
-        url = urlparse(job.namespace)
+        # hostname and scheme are normalized to lowercase for uniqueness
+        url = urlparse(job.namespace.lower())
         scheme = url.scheme or "unknown"
         netloc = url.netloc or url.path
         return LocationDTO(
@@ -50,6 +51,7 @@ class JobExtractorMixin:
             integration_type = job.facets.jobType.integration
             job_type = job.facets.jobType.jobType
             type_ = f"{integration_type}_{job_type}" if job_type else integration_type
+            # job_type are always upper case
             return JobTypeDTO(type=type_.upper())
 
         return None
