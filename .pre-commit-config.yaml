@@ -37,10 +37,10 @@ repos:
       - id: chmod
         args: ['644']
         exclude_types: [shell]
-        exclude: ^(.*__main__\.py|data_rentgen/server/scripts/.*\.py|data_rentgen/db/scripts/.*\.py|data_rentgen/http2kafka/scripts/.*\.py)$
+        exclude: ^(.*__main__\.py|data_rentgen/server/scripts/.*\.py|data_rentgen/db/scripts/[^/]+\.py|data_rentgen/http2kafka/scripts/.*\.py)$
       - id: chmod
         args: ['755']
-        files: ^(.*__main__\.py|data_rentgen/server/scripts/.*\.py|data_rentgen/db/scripts/.*\.py|data_rentgen/http2kafka/scripts/.*\.py)$
+        files: ^(.*__main__\.py|data_rentgen/server/scripts/.*\.py|data_rentgen/db/scripts/[^/]+\.py|data_rentgen/http2kafka/scripts/.*\.py)$
       - id: insert-license
         files: .*\.py$
         exclude: ^(data_rentgen/dependencies/stub.py|docs/.*\.py|tests/.*\.py)$
@@ -64,7 +64,7 @@ repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.13.0
     hooks:
-      - id: ruff
+      - id: ruff-check
         args: [--fix]
       - id: ruff-format
 
