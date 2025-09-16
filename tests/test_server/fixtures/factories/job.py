@@ -122,19 +122,22 @@ async def jobs_search(
     |4          | 'random-job-name'                  | 'my-cluster'                | 'yarn'        | 'random-url'                       |
     |5          | 'random-job-name'                  | 'data-product-host'         | 'http'        | 'random-url'                       |
     |5          | 'random-job-name'                  | 'data-product-host'         | 'http'        | 'random-url'                       |
-    |6          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'yarn://my_cluster_1'              |
-    |6          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'yarn://my_cluster_2'              |
-    |7          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'http://some.host.name:2080'       |
-    |7          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'http://some.host.name:8020'       |
-    |8          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'http://airflow-host:8020'         |
-    |8          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'http://airflow-host:2080'         |
+    |6          | 'random-job-name'                  | 'with-external-id'          | 'http'        | 'random-url'                       |
+    |6          | 'random-job-name'                  | 'with-external-id'          | 'http'        | 'random-url'                       |
+    |7          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'yarn://my_cluster_1'              |
+    |7          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'yarn://my_cluster_2'              |
+    |8          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'http://some.host.name:2080'       |
+    |8          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'http://some.host.name:8020'       |
+    |9          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'http://airflow-host:8020'         |
+    |9          | 'random-job-name'                  | 'random-location-name'      | 'random'      | 'http://airflow-host:2080'         |
 
     tip: you can imagine it like identity matrix with not-random names on diagonal.
     """
     location_kwargs = [
-        {"name": "dwh", "type": "yarn"},
-        {"name": "my-cluster", "type": "yarn"},
-        {"name": "data-product-host", "type": "http"},
+        {"name": "dwh", "type": "yarn", "external_id": None},
+        {"name": "my-cluster", "type": "yarn", "external_id": None},
+        {"name": "data-product-host", "type": "http", "external_id": None},
+        {"name": "with-external-id", "type": "http", "external_id": "External ID"},
     ]
     address_kwargs = [
         {"urls": ["yarn://my_cluster_1", "yarn://my_cluster_2"]},

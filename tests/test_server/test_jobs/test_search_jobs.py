@@ -88,6 +88,44 @@ async def test_search_jobs_by_location_name(
     }
 
 
+async def test_search_jobs_by_location_external_id(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    jobs_search: tuple[dict[str, Job], dict[str, Job], dict[str, Job]],
+    mocked_user: MockedUser,
+) -> None:
+    _, jobs_by_location, _ = jobs_search
+    # Job with id 6 has external_id: "My cluster name"
+    jobs = await enrich_jobs([jobs_by_location["with-external-id"]], async_session)
+
+    response = await test_client.get(
+        "/v1/jobs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={"search_query": "external"},
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 1,
+        },
+        "items": [
+            {
+                "id": str(job.id),
+                "data": job_to_json(job),
+            }
+            for job in jobs
+        ],
+    }
+
+
 async def test_search_jobs_by_job_name(
     test_client: AsyncClient,
     async_session: AsyncSession,
@@ -96,7 +134,7 @@ async def test_search_jobs_by_job_name(
 ) -> None:
     jobs_by_name, _, jobs_by_address = jobs_search
     # Jobs with ids 0 and 2 has job name `airflow-task` and `airflow-task`
-    # Jobs with id 8 has two addresses urls: [http://airflow-host:2080, http://airflow-host:8020]
+    # Jobs with id 9 has two addresses urls: [http://airflow-host:2080, http://airflow-host:8020]
     jobs = await enrich_jobs(
         [
             # on top of the search are results with shorter name,
@@ -145,8 +183,14 @@ async def test_search_jobs_by_location_name_and_address_url(
 ) -> None:
     _, jobs_by_location, jobs_by_address = jobs_search
     # Job with id 4 has location name `my-cluster`
-    # Job with id 6 has address urls: [`yarn://my_cluster_1`, `yarn://my_cluster_2`]
-    jobs = await enrich_jobs([jobs_by_location["my-cluster"], jobs_by_address["yarn://my_cluster_1"]], async_session)
+    # Job with id 7 has address urls: [`yarn://my_cluster_1`, `yarn://my_cluster_2`]
+    jobs = await enrich_jobs(
+        [
+            jobs_by_location["my-cluster"],
+            jobs_by_address["yarn://my_cluster_1"],
+        ],
+        async_session,
+    )
 
     response = await test_client.get(
         "/v1/jobs",
