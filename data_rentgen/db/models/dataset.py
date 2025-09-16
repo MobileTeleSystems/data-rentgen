@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import BigInteger, Column, Computed, ForeignKey, Index, String, Table, UniqueConstraint
+from sqlalchemy import BigInteger, Column, Computed, ForeignKey, Index, String, Table, column, func
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -15,7 +15,7 @@ from data_rentgen.db.models.tag_value import TagValue
 class Dataset(Base):
     __tablename__ = "dataset"
     __table_args__ = (
-        UniqueConstraint("location_id", "name"),
+        Index("ix__dataset__location_id__name_lower", "location_id", func.lower(column("name")), unique=True),
         Index("ix__dataset__search_vector", "search_vector", postgresql_using="gin"),
     )
 
@@ -24,7 +24,6 @@ class Dataset(Base):
     location_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("location.id", ondelete="CASCADE"),
-        index=True,
         nullable=False,
         doc="Where dataset's data is actually located (database address, filesystem address)",
     )
@@ -36,7 +35,6 @@ class Dataset(Base):
 
     name: Mapped[str] = mapped_column(
         String,
-        index=True,
         nullable=False,
         doc="Dataset name, e.g. table name or filesystem path",
     )

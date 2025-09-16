@@ -123,7 +123,10 @@ class JobRepository(Repository[Job]):
         return {row.location_id: row for row in query_result.all()}
 
     async def _get(self, job: JobDTO) -> Job | None:
-        statement = select(Job).where(Job.location_id == job.location.id, Job.name == job.name)
+        statement = select(Job).where(
+            Job.location_id == job.location.id,
+            func.lower(Job.name) == job.name.lower(),
+        )
         return await self._session.scalar(statement)
 
     async def _create(self, job: JobDTO) -> Job:

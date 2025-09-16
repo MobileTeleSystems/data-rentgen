@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import BigInteger, Column, Computed, ForeignKey, Index, String, UniqueConstraint, select
+from sqlalchemy import BigInteger, Column, Computed, ForeignKey, Index, String, column, func, select
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
@@ -15,7 +15,7 @@ from data_rentgen.db.models.location import Location
 class Job(Base):
     __tablename__ = "job"
     __table_args__ = (
-        UniqueConstraint("location_id", "name"),
+        Index("ix__job__location_id_name_lower", "location_id", func.lower(column("name")), unique=True),
         Index("ix__job__search_vector", "search_vector", postgresql_using="gin"),
     )
 
@@ -24,7 +24,6 @@ class Job(Base):
     location_id: Mapped[int] = mapped_column(
         BigInteger,
         ForeignKey("location.id", ondelete="CASCADE"),
-        index=True,
         nullable=False,
         doc="Where job is located (Airflow instance, Spark cluster)",
     )
@@ -32,7 +31,6 @@ class Job(Base):
 
     name: Mapped[str] = mapped_column(
         String,
-        index=True,
         nullable=False,
         doc="Job name, e.g. Airflow DAG name + task name, or Spark applicationName",
     )

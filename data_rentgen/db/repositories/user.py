@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 
 from data_rentgen.db.models import User
 from data_rentgen.db.repositories.base import Repository
@@ -21,7 +21,7 @@ class UserRepository(Repository[User]):
         return await self._session.scalar(statement)
 
     async def _get(self, name: str) -> User | None:
-        statement = select(User).where(User.name == name)
+        statement = select(User).where(func.lower(User.name) == name.lower())
         return await self._session.scalar(statement)
 
     async def _create(self, user: UserDTO) -> User:
