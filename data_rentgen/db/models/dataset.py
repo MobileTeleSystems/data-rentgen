@@ -65,6 +65,6 @@ class Dataset(Base):
 dataset_tags_table: Table = Table(
     "dataset_tags",
     Base.metadata,
-    Column("dataset_id", ForeignKey("dataset.id"), primary_key=True),
-    Column("tag_value_id", ForeignKey("tag_value.id"), primary_key=True),
+    Column("dataset_id", ForeignKey("dataset.id", ondelete="CASCADE"), primary_key=True),
+    Column("tag_value_id", ForeignKey("tag_value.id", ondelete="CASCADE"), primary_key=True),
 )
