@@ -1,68 +1,68 @@
-# Relation Database { #database }
+# База данных { #database }
 
-Data.Rentgen uses relational database as a storage for lineage entities and relations.
+Data.Rentgen использует реляционную базу данных для хранения сущностей происхождения данных и связей между ними.
 
-Currently, Data.Rentgen supports only [PostgreSQL](https://www.postgresql.org/), as it relies on table partitioning, full-text search and specific aggregation functions.
+В настоящее время Data.Rentgen поддерживает только [PostgreSQL](https://www.postgresql.org/), поскольку полагается на партиционирование таблиц, полнотекстовый поиск и специфические функции агрегации.
 
-## Migrations
+## Миграции
 
-After a database is started, it is required to run migration script. If database is empty, it creates all the required tables and indexes. If database is not empty, it will perform database structure upgrade.
+После запуска базы данных необходимо выполнить скрипт миграции. Если база данных пуста, он создаст все необходимые таблицы и индексы. Если база данных не пуста, будет выполнено обновление структуры базы данных.
 
-Migration script is a thin wrapper around [Alembic cli](https://alembic.sqlalchemy.org/en/latest/tutorial.html#running-our-first-migration), options and commands are just the same.
+Скрипт миграции — это тонкая обертка над [Alembic cli](https://alembic.sqlalchemy.org/en/latest/tutorial.html#running-our-first-migration), параметры и команды точно такие же.
 
-!!! warning
+!!! warning "Внимание"
 
-  Other containers (consumer, server) should be stopped while running migrations, to prevent interference.
+  Другие контейнеры (consumer, server) должны быть остановлены во время выполнения миграций, чтобы предотвратить вмешательство.
 
-## Partitions
+## Партиции
 
-After migrations are performed, it is required to run [`create-partitions-cli`][create-partitions-cli] which creates partitions for some tables in the database.
-By default, it creates monthly partitions, for current and next month. This can be changed by overriding command args.
+После выполнения миграций необходимо запустить [`create-partitions-cli`][create-partitions-cli], который создает партиции для некоторых таблиц в базе данных.
+По умолчанию он создает ежемесячные партиции для текущего и следующего месяца. Это можно изменить, переопределив аргументы команды.
 
-This script should run on schedule, depending on partitions granularity.
-Scheduling can be done by adding a dedicated entry to [crontab](https://help.ubuntu.com/community/CronHowto).
+Этот скрипт должен выполняться по расписанию, в зависимости от гранулярности партиций.
+Планирование можно выполнить, добавив специальную запись в [crontab](https://help.ubuntu.com/community/CronHowto).
 
-It's strongly recommended also to add old partitions cleanup script to cron [`cleanup-partitions-cli`][cleanup-partitions-cli].
-Scheduling setup is same is for creating of partitions.
+Настоятельно рекомендуется также добавить в cron скрипт очистки старых партиций [`cleanup-partitions-cli`][cleanup-partitions-cli].
+Настройка планирования такая же, как и для создания партиций.
 
-## Analytic views
+## Аналитические представления
 
-Along with migrations few analytics views are created. These are managed by [`refresh-analytic-views-cli`][refresh-analytic-views-cli], and should be executed by schedule.
+Вместе с миграциями создается несколько аналитических представлений. Они управляются через [`refresh-analytic-views-cli`][refresh-analytic-views-cli] и должны выполняться по расписанию.
 
-## Seeding
+## Заполнение данными
 
-By default, database is created with no data. To seed database with some examples, use [`db-seed-cli`][db-seed-cli].
+По умолчанию база данных создается без данных. Для заполнения базы данных примерами используйте [`db-seed-cli`][db-seed-cli].
 
-## Requirements
+## Требования
 
-- PostgreSQL 12 or higher. It is recommended to use latest Postgres version.
+- PostgreSQL 12 или выше. Рекомендуется использовать последнюю версию Postgres.
 
-## Install & run
+## Установка и запуск
 
-### With Docker
+### С Docker
 
-- Install [Docker](https://docs.docker.com/engine/install/)
+- Установите [Docker](https://docs.docker.com/engine/install/)
 
-- Install [docker-compose](https://github.com/docker/compose/releases/)
+- Установите [docker-compose](https://github.com/docker/compose/releases/)
 
-- Run the following command:
+- Выполните следующую команду:
 
   ```console
   $ docker compose --profile analytics,cleanup,seed up -d
   ...
   ```
 
-  `docker-compose` will download PostgreSQL image, create container and volume, and then start container.
-  Image entrypoint will create database if volume is empty.
+  `docker-compose` загрузит образ PostgreSQL, создаст контейнер и том, а затем запустит контейнер.
+  Точка входа образа создаст базу данных, если том пуст.
 
-  After that, several one-off containers will start:
+  После этого запустится несколько одноразовых контейнеров:
 
-  - `db-create-partitions` will create necessary partitions in db.
-  - `db-cleanup-partitions` will cleanup old partitions.
-  - `db-refresh-views` will refresh analytic views.
-  - `db-seed` will seed database with some examples (optional, can be omitted).
+  - `db-create-partitions` создаст необходимые партиции в БД.
+  - `db-cleanup-partitions` очистит старые партиции.
+  - `db-refresh-views` обновит аналитические представления.
+  - `db-seed` заполнит базу данных примерами (необязательно, можно пропустить).
 
-  Options can be set via `.env` file or `environment` section in `docker-compose.yml`
+  Параметры можно установить через файл `.env` или секцию `environment` в `docker-compose.yml`
 
 ??? note "docker-compose.yml"
 
@@ -80,7 +80,7 @@ By default, database is created with no data. To seed database with some example
     ----8<----
     ```
 
-- Add scripts to crontab:
+- Добавьте скрипты в crontab:
 
   ```console
   $ crontab -e
@@ -91,13 +91,13 @@ By default, database is created with no data. To seed database with some example
   0 0 * * * docker compose -f "/path/to/docker-compose.yml" start db-create-partitions db-refresh-views db-cleanup-partitions
   ```
 
-### Without Docker
+### Без Docker
 
-- For installing PostgreSQL, please follow [installation instruction](https://www.postgresql.org/download/).
+- Для установки PostgreSQL следуйте [инструкции по установке](https://www.postgresql.org/download/).
 
-- Install Python 3.10 or above
+- Установите Python 3.10 или выше
 
-- Create virtual environment
+- Создайте виртуальное окружение
 
   ```console
   $ python -m venv /some/.venv
@@ -105,14 +105,14 @@ By default, database is created with no data. To seed database with some example
   $ source /some/.venv/activate
   ```
 
-- Install `data-rentgen` package with following *extra* dependencies:
+- Установите пакет `data-rentgen` со следующими *дополнительными* зависимостями:
 
   ```console
   $ pip install data-rentgen[postgres]
   ...
   ```
 
-- Configure [`Database connection`][configuration-database] using environment variables, e.g. by creating `.env` file:
+- Настройте [`подключение к базе данных`][configuration-database] используя переменные окружения, например, создав файл `.env`:
 
   ```console title="/some/.env"
 
@@ -120,46 +120,46 @@ By default, database is created with no data. To seed database with some example
   ...
   ```
 
-  And then read values from this file:
+  А затем прочитайте значения из этого файла:
 
   ```console
   $ source /some/.env
   ...
   ```
 
-- Run migrations:
+- Выполните миграции:
 
   ```console
   $ python -m data_rentgen.db.migrations upgrade head
   ...
   ```
 
-!!! note
+!!! note "Примечание"
 
-  This command should be executed after each upgrade to new Data.Rentgen version.
+  Эта команда должна выполняться после каждого обновления до новой версии Data.Rentgen.
 
-- Create partitions:
+- Создайте партиции:
 
   ```console
   $ python -m data_rentgen.db.scripts.create_partitions
   ...
   ```
 
-- Create analytic views:
+- Создайте аналитические представления:
 
   ```console
   $ python -m data_rentgen.db.scripts.refresh_analytic_views
   ...
   ```
 
-- Seed database with example data (optional, can be omitted):
+- Заполните базу данных примерами данных (необязательно, можно пропустить):
 
   ```console
   $ python -m data_rentgen.db.scripts.seed
   ...
   ```
 
-- Add scripts to crontab:
+- Добавьте скрипты в crontab:
 
   ```console
   $ crontab -e
@@ -167,17 +167,17 @@ By default, database is created with no data. To seed database with some example
   ```
 
   ```text
-  # read settings from .env file, and run script using a specific venv with all required dependencies
+  # читаем настройки из файла .env и запускаем скрипт используя определенное venv со всеми необходимыми зависимостями
   0 0 * * * /bin/bash -c "source /some/.env && /some/.venv/bin/python -m data_rentgen.db.scripts.create_partitions"
   0 0 * * * /bin/bash -c "source /some/.env && /some/.venv/bin/python -m data_rentgen.db.scripts.cleanup_partitions truncate --keep-after $(date --date='-1year' '+%Y-%m-%d')"
   0 0 * * * /bin/bash -c "source /some/.env && /some/.venv/bin/python -m data_rentgen.db.scripts.refresh_analytic_views"
   ```
 
-## See also
+## См. также
 
-[Configuration][configuration]
-[Create partitions cli][create-partitions-cli]
-[Cleanup partitions cli][cleanup-partitions-cli]
-[Refresh analytic views cli][refresh-analytic-views-cli]
-[Seed cli][db-seed-cli]
-[Structure][database-structure]
+[Конфигурация][configuration]
+[CLI создания партиций][create-partitions-cli]
+[CLI очистки партиций][cleanup-partitions-cli]
+[CLI обновления аналитических представлений][refresh-analytic-views-cli]
+[CLI заполнения данными][db-seed-cli]
+[Структура][database-structure]

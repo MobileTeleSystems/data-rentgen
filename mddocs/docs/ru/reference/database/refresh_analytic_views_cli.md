@@ -1,35 +1,35 @@
-# CLI for refreshing analytic views { #refresh-analytic-views-cli }
+# Командная строка для обновления аналитических представлений { #refresh-analytic-views-cli }
 
-Analytic views are:
+Аналитические представления включают:
 
 - `input_daily_stats`, `input_weekly_stats`, `input_monthly_stats`
 - `output_daily_stats`, `output_weekly_stats`, `output_monthly_stats`
 
-Views content is based on data in `output` and `input` tables and has such structure:
+Содержимое представлений основано на данных в таблицах `output` и `input` и имеет следующую структуру:
 
-- `dataset_name` - Name of dataset.
-- `dataset_location` - Name of dataset location (e.g. clusster name).
-- `dataset_location_type` - Type of dataset location (e.g. hive, hdfs, postgres).
-- `user_id` - Internal user id.
-- `user_name` - Internal user name (e.g. name of user which run spark job).
-- `last_interaction_dt` - Time when user lat time interact with dataset. Read or write depens on base table.
-- `num_of_interactions` - Number of interactions in given interval.
-- `sum_bytes` - Sum of bytes in given interval.
-- `sum_rows` - Sum of rows in given interval.
-- `sum_files` - Sum of files in given interval.
+- `dataset_name` - Название набора данных.
+- `dataset_location` - Название расположения набора данных (например: имя кластера).
+- `dataset_location_type` - Тип расположения набора данных (например: hive, hdfs, postgres).
+- `user_id` - Внутренний идентификатор пользователя.
+- `user_name` - Внутреннее имя пользователя (например: имя пользователя, который запустил Spark задачу).
+- `last_interaction_dt` - Время последнего взаимодействия пользователя с набором данных. Чтение или запись зависит от базовой таблицы.
+- `num_of_interactions` - Количество взаимодействий в заданном интервале.
+- `sum_bytes` - Сумма байтов в заданном интервале.
+- `sum_rows` - Сумма строк в заданном интервале.
+- `sum_files` - Сумма файлов в заданном интервале.
 
-We provide three types of views: `day`, `week` and `month`, based on the time period in which the aggregation occur.
+Мы предоставляем три типа представлений: `day` (день), `week` (неделя) и `month` (месяц), основанные на временном периоде, в котором происходит агрегация.
 
-By default these materialized views are empty(`WITH NO DATA`).
-In order to fill these tables with data you need to run refresh script (see below).
+По умолчанию эти материализованные представления пустые (`WITH NO DATA`).
+Для заполнения этих таблиц данными необходимо запустить скрипт обновления (см. ниже).
 
 <!-- TODO: 
-1. Add __init__.py to $REPO_HOME/data_rentgen/db/scripts
-2. add docstring to script
+1. Добавить __init__.py в $REPO_HOME/data_rentgen/db/scripts
+2. добавить docstring к скрипту
 """
-Create matherialized views based on input and output table with given depths.
+Создать материализованные представления на основе входных и выходных таблиц с заданными глубинами.
 
-Example:
+Пример:
     python3 -m data_rentgen.db.scripts.create_analytics_view --depths day
 """
 -->

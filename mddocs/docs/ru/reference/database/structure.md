@@ -1,4 +1,4 @@
-# Database structure { #database-structure }
+# Структура БД { #database-structure }
 
 % https://plantuml.com/en/ie-diagram
 

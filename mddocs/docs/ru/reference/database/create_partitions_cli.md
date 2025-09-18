@@ -1,4 +1,4 @@
-# CLI for creating partitions { #create-partitions-cli }
+# Командная строка для создания партиций { #create-partitions-cli }
 
 <!-- 
 TODO: 

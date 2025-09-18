@@ -1,4 +1,4 @@
-# Consumer configuration { #configuration-consumer }
+# Конфигурация консьюмера { #configuration-consumer }
 
 ::: data_rentgen.consumer.settings.ConsumerApplicationSettings
     options:

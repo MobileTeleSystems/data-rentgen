@@ -1,13 +1,13 @@
-# Install Data.Rentgen { #overview-install }
+# Установка Data.Rentgen { #overview-install }
 
-## Requirements
+## Требования
 
 - [Docker](https://docs.docker.com/engine/install/)
 - [docker-compose](https://github.com/docker/compose/releases/)
 
-## Install & run
+## Установка и запуск
 
-Copy `docker-compose.yml` and `.env.docker` from this repo:
+Скопируйте `docker-compose.yml` и `.env.docker` из этого репозитория:
 
 ??? note "docker-compose.yml"
 
@@ -25,20 +25,20 @@ Copy `docker-compose.yml` and `.env.docker` from this repo:
     ----8<----
     ```
 
-Then start containers using `docker-compose`:
+Затем запустите контейнеры с помощью `docker-compose`:
 
     ```console
     $ VERSION=latest docker compose --profile all up -d --wait
     ...
     ```
 
-`docker-compose` will download required images, create containers and start them in a proper order. Options can be set via `.env.docker` file or `environment` section in `docker-compose.yml`.
+`docker-compose` загрузит необходимые образы, создаст контейнеры и запустит их в правильном порядке. Параметры можно задать через файл `.env.docker` или секцию `environment` в `docker-compose.yml`.
 
-`VERSION` is a tag of docker image. You can find all available tags [here](https://hub.docker.com/r/mtsrus/data-rentgen/tags).
+`VERSION` — это тег docker-образа. Все доступные теги можно найти [здесь](https://hub.docker.com/r/mtsrus/data-rentgen/tags).
 
-### Access Data.Rentgen
+### Доступ к Data.Rentgen
 
-After all containers are started and ready, you can:
+После того как все контейнеры запущены и готовы к работе, вы можете:
 
-- Browse frontend at <http://localhost:3000>
-- Open REST API Swagger doc at <http://localhost:8000/docs>
+- Открыть веб-интерфейс по адресу <http://localhost:3000>
+- Просмотреть документацию REST API Swagger по адресу <http://localhost:8000/docs>

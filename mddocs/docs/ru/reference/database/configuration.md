@@ -1,4 +1,4 @@
-# Database settings { #configuration-database }
+# Настройки БД { #configuration-database }
 
 ::: data_rentgen.db.settings.DatabaseSettings
     options:

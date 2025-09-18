@@ -1,25 +1,25 @@
-# Message Consumer { #message-consumer }
+# Консьюмер сообщений { #message-consumer }
 
-Data.Rentgen fetches messages from a [`message-broker`][message-broker] using a [FastStream](https://faststream.airt.ai) based consumer, parses incoming messages, and creates all parsed entities in the [`database`][database]. Malformed messages are send back to broker, to different topic.
+Data.Rentgen получает сообщения из [`брокера сообщений`][message-broker] с использованием консьюмера на основе [FastStream](https://faststream.airt.ai), парсит входящие сообщения и создает все распознанные сущности в [`базе данных`][database]. Некорректные сообщения отправляются обратно в брокер в другой топик.
 
-## Install & run
+## Установка и запуск
 
-### With docker
+### С docker
 
-- Install [Docker](https://docs.docker.com/engine/install/)
+- Установите [Docker](https://docs.docker.com/engine/install/)
 
-- Install [docker-compose](https://github.com/docker/compose/releases/)
+- Установите [docker-compose](https://github.com/docker/compose/releases/)
 
-- Run the following command:
+- Выполните следующую команду:
 
   ```console
   $ docker compose --profile consumer up -d --wait
   ...
   ```
 
-  `docker-compose` will download all necessary images, create containers, and then start consumer process.
+  `docker-compose` загрузит все необходимые образы, создаст контейнеры, а затем запустит процесс консьюмера.
 
-  Options can be set via `.env` file or `environment` section in `docker-compose.yml`
+  Параметры можно задать через файл `.env` или секцию `environment` в `docker-compose.yml`
 
 ??? note "docker-compose.yml"
 
@@ -37,15 +37,15 @@ Data.Rentgen fetches messages from a [`message-broker`][message-broker] using a 
   ----8<----
   ```
 
-### Without docker
+### Без docker
 
-- Install Python 3.10 or above
+- Установите Python 3.10 или выше
 
-- Setup [`database`][database], run migrations and create partitions
+- Настройте [`базу данных`][database], выполните миграции и создайте партиции
 
-- Setup [`message-broker`][message-broker]
+- Настройте [`брокер сообщений`][message-broker]
 
-- Create virtual environment
+- Создайте виртуальное окружение
 
   ```console
   $ python -m venv /some/.venv
@@ -54,7 +54,7 @@ Data.Rentgen fetches messages from a [`message-broker`][message-broker] using a 
   ...
   ```
 
-- Install `data-rentgen` package with following *extra* dependencies:
+- Установите пакет `data-rentgen` со следующими *дополнительными* зависимостями:
 
   ```console
   $ pip install data-rentgen[consumer,postgres]
@@ -63,29 +63,29 @@ Data.Rentgen fetches messages from a [`message-broker`][message-broker] using a 
 
 !!! note
 
-    For `SASL_GSSAPI` auth mechanism you also need to install system packages providing `kinit` and `kdestroy` binaries:
+    Для механизма аутентификации `SASL_GSSAPI` вам также необходимо установить системные пакеты, предоставляющие бинарные файлы `kinit` и `kdestroy`:
 
     ```console
-    $ apt install libkrb5-dev krb5-user gcc make autoconf  # Debian-based
+    $ apt install libkrb5-dev krb5-user gcc make autoconf  # Основанные на Debian
     ...
     $ dnf install krb5-devel krb5-libs krb5-workstation gcc make autoconf  # CentOS, OracleLinux
     ...
     ```
 
-    And then install `gssapi` extra:
+    А затем установить дополнение `gssapi`:
 
     ```console
     $ pip install data-rentgen[consumer,postgres,gssapi]
     ...
     ```
 
-- Run consumer process
+- Запустите процесс консьюмера
 
   ```console
   $ python -m data_rentgen.consumer
   ...
   ```
 
-## See also
+## См. также
 
-[Consumer configuration][configuration-consumer]
+[Конфигурация консьюмера][configuration-consumer]

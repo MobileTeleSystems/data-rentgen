@@ -1,32 +1,32 @@
-# Architecture { #Architecture }
+# Архитектура { #Architecture }
 
-## Components
+## Компоненты
 
-Data.Rentgen is build using following components:
+Data.Rentgen построен с использованием следующих компонентов:
 
-- [OpenLineage](https://openlineage.io/docs/) clients & integrations with third-party modules (e.g. Apache Spark, Apache Airflow).
-- [`message-broker`][message-broker], receiving events in JSON format.
-- [`message-consumer`][message-consumer], parsing JSON messages.
-- [`database`][database] for storing consumed & cleaned up data.
-- [`server`][server], serving database data.
-- [`frontend`][frontend], accessing REST API to navigate created entities & lineage graph.
-- [`http2kafka`][http2kafka] (optional), proxy for sending OpenLineage events to Kafka using HTTP API.
+- Клиенты [OpenLineage](https://openlineage.io/docs/) и интеграции со сторонними модулями (например, Apache Spark, Apache Airflow).
+- [`message-broker`][message-broker], получающий события в формате JSON.
+- [`message-consumer`][message-consumer], обрабатывающий JSON-сообщения.
+- [`database`][database] для хранения обработанных и очищенных данных.
+- [`server`][server], предоставляющий данные из базы данных.
+- [`frontend`][frontend], обращающийся к REST API для навигации по созданным сущностям и графу линейности.
+- [`http2kafka`][http2kafka] (опционально), прокси для отправки событий OpenLineage в Kafka через HTTP API.
 
-## Architecture diagram
+## Диаграмма архитектуры
 
 ```plantuml
 
     @startuml
-        title Data.Rentgen artitecture
+        title Архитектура Data.Rentgen
         skinparam componentStyle rectangle
         left to right direction
 
         frame "Data.Rentgen" {
             queue "Kafka" as KAFKA
-            component "Message consumer" as CONSUMER
+            component "Потребитель сообщений" as CONSUMER
             database "PostgreSQL" as DB
-            component "REST API server" as API
-            component "Frontend" as FRONTEND
+            component "REST API сервер" as API
+            component "Фронтенд" as FRONTEND
             component "HTTP2Kafka" as HTTP2KAFKA
         }
 
@@ -36,12 +36,12 @@ Data.Rentgen is build using following components:
             agent "OpenLineage Hive" as HIVE
             agent "OpenLineage Flink" as FLINK
             agent "OpenLineage dbt" as DBT
-            agent "OpenLineage other" as OTHER
+            agent "OpenLineage прочие" as OTHER
             agent "OpenLineage KafkaTransport" as KAFKA_TRANSPORT
             agent "OpenLineage HttpTransport" as HTTP_TRANSPORT
         }
 
-        actor "User" as USER
+        actor "Пользователь" as USER
 
         [SPARK] --> [KAFKA_TRANSPORT]
         [AIRFLOW] --> [KAFKA_TRANSPORT]

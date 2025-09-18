@@ -1,4 +1,4 @@
-# Logging settings { #configuration-consumer-logging }
+# Настройки логирования { #configuration-consumer-logging }
 
 ::: data_rentgen.logging.settings.LoggingSettings
     options:

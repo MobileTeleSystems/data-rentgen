@@ -1,48 +1,42 @@
-# Message Broker { #message-broker }
+# Брокер сообщений { #message-broker }
 
-Message broker is component used by OpenLineage to store all received events. Then these avents are handled by [`message-consumer`][message-consumer], in batches.
+Брокер сообщений - это компонент, используемый OpenLineage для хранения всех получаемых событий. Затем эти события обрабатываются [`message-consumer`][message-consumer] в пакетном режиме.
 
-Currently, Data.Rentgen supports only [Apache Kafka](https://kafka.apache.org/) as message broker.
+В настоящее время Data.Rentgen поддерживает только [Apache Kafka](https://kafka.apache.org/) в качестве брокера сообщений.
 
-## Why Kafka?
+## Почему Kafka?
 
-Other popular OpenLineage server implementations use HTTP protocol for receiving events. In out experience, Kafka is much superior for this case:
+Другие популярные реализации серверов OpenLineage используют HTTP протокол для получения событий. По нашему опыту, Kafka гораздо лучше подходит для этого случая:
 
-- Kafka is designed to be scalable. If performance level is not enough, just add another broker to the cluster. For HTTP servers it's not that simple,
-  as this requires load balancing on reverse proxy side or DNS side.
-- Kafka is designed to receive A LOT of events per second, like millions, and store them on disk as fast as possible. So no events are lost
-  even if [`message-consumer`][message-consumer] is overloaded - events are already on disk, and will be handled later.
-- ETL scripts are mostly run on schedule The usual pattern is almost zero events during the day, but huge spikes at every whole hour
-  (e.g. at 00:00, 01:00, 03:00, 12:00). Kafka is used as an intermediate buffer which smooths these spikes.
-- Events stored in Kafka can be read in batches, even if OpenLineage integration initially send them one-by-one.
-  Batching gives x10 more performance than handling individual events.
-- HTTP/HTTPS protocol have higher latency than Kafka TCP protocol. Some OpenLineage integrations are sensitive to latency - for example,
-  [Flink job listener documentation](https://nightlies.apache.org/flink/flink-docs-master/api/java/org/apache/flink/core/execution/JobListener.html)
-  explicitly says: *If you block the thread the invoker of environment execute methods is possibly blocked*. The less time required for sending response, the better.
+- Kafka разработана для масштабирования. Если производительности недостаточно, просто добавьте еще один брокер в кластер. Для HTTP серверов это не так просто, поскольку требует балансировки нагрузки на стороне обратного прокси или DNS.
+- Kafka разработана для получения МНОЖЕСТВА событий в секунду, например миллионов, и максимально быстрого сохранения их на диск. Поэтому никакие события не теряются, даже если [`message-consumer`][message-consumer] перегружен - события уже сохранены на диск и будут обработаны позже.
+- ETL скрипты в основном запускаются по расписанию. Обычный паттерн - почти никаких событий в течение дня, но огромные всплески каждый полный час (например, в 00:00, 01:00, 03:00, 12:00). Kafka используется как промежуточный буфер, который сглаживает эти всплески.
+- События, хранящиеся в Kafka, могут читаться пакетами, даже если интеграция OpenLineage изначально отправляет их по одному. Пакетная обработка дает в 10 раз лучшую производительность по сравнению с обработкой отдельных событий.
+- HTTP/HTTPS протокол имеет более высокую задержку, чем TCP протокол Kafka. Некоторые интеграции OpenLineage чувствительны к задержкам - например, [документация слушателя заданий Flink](https://nightlies.apache.org/flink/flink-docs-master/api/java/org/apache/flink/core/execution/JobListener.html) явно говорит: *Если вы заблокируете поток, вызывающий методы execute среды, возможно, будет заблокирован*. Чем меньше времени требуется для отправки ответа, тем лучше.
 
-## Requirements
+## Требования
 
-- Apache Kafka 3.x. It is recommended to use latest Kafka version.
+- Apache Kafka 3.x. Рекомендуется использовать последнюю версию Kafka.
 
-### Setup
+### Настройка
 
-#### With Docker
+#### С Docker
 
-- Install [Docker](https://docs.docker.com/engine/install/)
+- Установите [Docker](https://docs.docker.com/engine/install/)
 
-- Install [docker-compose](https://github.com/docker/compose/releases/)
+- Установите [docker-compose](https://github.com/docker/compose/releases/)
 
-- Run the following command:
+- Выполните следующую команду:
 
   ```console
   $ docker compose --profile broker up -d --wait
   ...
   ```
 
-  `docker-compose` will download Apache Kafka image, create container and volume, and then start container.
+  `docker-compose` загрузит образ Apache Kafka, создаст контейнер и том, а затем запустит контейнер.
 
-  Image entrypoint will create database if volume is empty.
-  Options can be set via `.env` file or `environment` section in `docker-compose.yml`
+  Точка входа образа создаст базу данных, если том пустой.
+  Параметры можно задать через файл `.env` или секцию `environment` в `docker-compose.yml`
 
 ??? note "docker-compose.yml"
 
@@ -60,6 +54,6 @@ Other popular OpenLineage server implementations use HTTP protocol for receiving
     ----8<----
     ```
 
-#### Without Docker
+#### Без Docker
 
-Please follow [Apache Kafka installation instruction](https://kafka.apache.org/quickstart#quickstart_startserver).
+Пожалуйста, следуйте [инструкции по установке Apache Kafka](https://kafka.apache.org/quickstart#quickstart_startserver).

@@ -1,64 +1,64 @@
-# CLI for cleaning old partitions { #cleanup-partitions-cli }
+# Командная строка для очистки старых партиций { #cleanup-partitions-cli }
 
-This script is designed to manage PostgreSQL table partitions by providing functionalities to list, detach, remove, or truncate old partitions.
+Этот скрипт предназначен для управления партициями таблиц PostgreSQL, предоставляя функции для просмотра списка, отсоединения, удаления или очистки старых партиций.
 
 ```shell
 usage: python3 -m data_rentgen.db.scripts.cleanup_partitions truncate --keep-after 2025-01-01
 ```
 
-The `cleanup_partitions.py` script helps automate the cleanup of old table partitions based on a specified keep-after date. It supports different commands for dry runs, detaching partitions, removing data, and truncating partitions.
-It's automatically inditifies partitioned tables and their granularity.
+Скрипт `cleanup_partitions.py` помогает автоматизировать очистку старых партиций таблиц на основе указанной даты сохранения. Он поддерживает различные команды для пробных запусков, отсоединения партиций, удаления данных и очистки партиций.
+Он автоматически идентифицирует партиционированные таблицы и их гранулярность.
 
-## Arguments
+## Аргументы
 
-- `command`: (Optional) Specifies the operation mode.
-  - Choices: `dry_run`, `detach`, `truncate`, `drop`
-  - Default: `dry_run`
-  - Description:
-        - `dry_run`: Logs the names of partitions that would be affected by the cleanup without executing any SQL commands.
-        - `detach`: Generates and executes `ALTER TABLE ... DETACH PARTITION ...` commands for identified old partitions. This keeps partition data intact, but consumer & server will have no access to these partitions.
-        - `truncate`: Generates and executes `TRUNCATE TABLE ...` commands, removing all rows from the identified old partition tables but keeping the table structure. **This option is preferred if you have streaming operations, g.e. Flink or Spark Streaming jobs**.
-        - `drop`: First detaches partitions, then generates and executes `DROP TABLE ...` commands, permanently deleting the partition tables and their data.
-- `--keep-after`: (Optional) The cut-off date for partitions. Partitions with data before this date will be considered for cleanup.
-  - Type: Date (e.g., `YYYY-MM-DD`). The script uses isoparse for parsing, so various ISO formats are supported.
-  - Default: The current date - 1 year.
-  - Description: Only partitions whose date components are strictly before this specified date will be processed taking into account granularity of the table.
+- `command`: (Опционально) Указывает режим операции.
+  - Варианты: `dry_run`, `detach`, `truncate`, `drop`
+  - По умолчанию: `dry_run`
+  - Описание:
+        - `dry_run`: Записывает в лог имена партиций, которые будут затронуты очисткой, без выполнения каких-либо SQL-команд.
+        - `detach`: Генерирует и выполняет команды `ALTER TABLE ... DETACH PARTITION ...` для определенных старых партиций. Это сохраняет данные партиций нетронутыми, но потребители и сервер не будут иметь доступа к этим партициям.
+        - `truncate`: Генерирует и выполняет команды `TRUNCATE TABLE ...`, удаляя все строки из определенных старых таблиц партиций, но сохраняя структуру таблицы. **Этот вариант предпочтителен, если у вас есть операции потоковой обработки, например, задания Flink или Spark Streaming**.
+        - `drop`: Сначала отсоединяет партиции, затем генерирует и выполняет команды `DROP TABLE ...`, окончательно удаляя таблицы партиций и их данные.
+- `--keep-after`: (Опционально) Граничная дата для партиций. Партиции с данными до этой даты будут рассматриваться для очистки.
+  - Тип: Дата (например, `YYYY-MM-DD`). Скрипт использует isoparse для разбора, поэтому поддерживаются различные ISO форматы.
+  - По умолчанию: Текущая дата - 1 год.
+  - Описание: Будут обработаны только те партиции, компоненты даты которых строго предшествуют указанной дате с учетом гранулярности таблицы.
 
-## Examples
+## Примеры
 
-1. Perform a Dry Run (default):
+1. Выполнить пробный запуск (по умолчанию):
 
     ```shell
     python3 -m data_rentgen.db.scripts.cleanup_partitions dry_run --keep-after 2024-01-01
     ```
 
-    This command will log which partitions would be affected if you were to clean up partitions older than January 1, 2024, without making any changes to your database.
+    Эта команда запишет в лог, какие партиции будут затронуты при очистке партиций старше 1 января 2024 года, не внося никаких изменений в базу данных.
 
-2. Detach Partitions Older Than a Specific Date:
+2. Отсоединить партиции старше указанной даты:
 
     ```shell
     python3 -m data_rentgen.db.scripts.cleanup_partitions detach_partitions --keep-after 2024-01-01
     ```
 
-    This will detach all partitions created before January 1, 2024, from their parent tables. The detached tables will still exist with their data.
+    Это отсоединит все партиции, созданные до 1 января 2024 года, от их родительских таблиц. Отсоединенные таблицы по-прежнему будут существовать со своими данными.
 
-3. Remove Data and Drop Partitions Older Than a Specific Date:
+3. Удалить данные и сбросить партиции старше указанной даты:
 
     ```shell
     python3 -m data_rentgen.db.scripts.cleanup_partitions remove_data --keep-after 2024-01-01
     ```
 
-    This will detach and then **drop all partitions** created before January 1, 2024, permanently deleting their data.
+    Это отсоединит, а затем **удалит все партиции**, созданные до 1 января 2024 года, окончательно удалив их данные.
 
-4. Truncate Data in Partitions Older Than a Specific Date:
+4. Очистить данные в партициях старше указанной даты:
 
-    This option is preferred with streaming `Jobs`
+    Этот вариант предпочтителен при работе с потоковыми заданиями
 
     ```shell
     python3 -m data_rentgen.db.scripts.cleanup_partitions truncate --keep-after 2024-01-01
     ```
 
-    This will delete all rows from partitions created before January 1, 2024, but will keep the empty partition tables.
+    Это удалит все строки из партиций, созданных до 1 января 2024 года, но сохранит пустые таблицы партиций.
 
 <!-- TODO:
 1. dd __init__.py to $REPO_HOME/data_rentgen/db/scripts

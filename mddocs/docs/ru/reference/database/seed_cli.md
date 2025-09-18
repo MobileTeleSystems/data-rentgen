@@ -1,4 +1,4 @@
-# CLI for seeding database { #db-seed-cli }
+# Командная строка для первичного наполнения БД { #db-seed-cli }
 
 <!-- TODO: 
 1. add to data_rentgen.db.scripts.seed module init script script

@@ -1,4 +1,4 @@
-# Kafka settings { #configuration-consumer-kafka }
+# Настройки Kafka { #configuration-consumer-kafka }
 
 ::: data_rentgen.consumer.settings.kafka.KafkaSettings
 

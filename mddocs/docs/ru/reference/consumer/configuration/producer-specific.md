@@ -1,3 +1,3 @@
-# Producer-specific settings { #configuration-producer-specific }
+# Настройки продьюсера { #configuration-producer-specific }
 
 ::: data_rentgen.consumer.settings.producer.ProducerSettings
