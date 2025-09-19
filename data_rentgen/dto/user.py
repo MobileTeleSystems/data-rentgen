@@ -13,7 +13,7 @@ class UserDTO:
 
     @property
     def unique_key(self) -> tuple:
-        return (self.name,)
+        return (self.name.lower(),)
 
     def merge(self, new: UserDTO) -> UserDTO:
         self.id = new.id or self.id

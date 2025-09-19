@@ -16,7 +16,7 @@ class DatasetDTO:
 
     @property
     def unique_key(self) -> tuple:
-        return (self.location.unique_key, self.name)
+        return (self.location.unique_key, self.name.lower())
 
     def merge(self, new: DatasetDTO) -> DatasetDTO:
         self.location.merge(new.location)

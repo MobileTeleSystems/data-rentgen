@@ -18,7 +18,7 @@ class JobDTO:
 
     @property
     def unique_key(self) -> tuple:
-        return (self.location.unique_key, self.name)
+        return (self.location.unique_key, self.name.lower())
 
     def merge(self, new: JobDTO) -> JobDTO:
         self.id = new.id or self.id
