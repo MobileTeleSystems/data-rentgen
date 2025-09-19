@@ -3,16 +3,21 @@
 from collections.abc import Collection
 
 from sqlalchemy import (
+    ARRAY,
     ColumnElement,
     CompoundSelect,
+    Integer,
     Row,
     Select,
     SQLColumnExpression,
+    String,
     any_,
     asc,
+    cast,
     desc,
     func,
     select,
+    tuple_,
     union,
 )
 from sqlalchemy.orm import selectinload
@@ -81,17 +86,63 @@ class JobRepository(Repository[Job]):
             page_size=page_size,
         )
 
+    async def fetch_bulk(self, jobs_dto: list[JobDTO]) -> list[tuple[JobDTO, Job | None]]:
+        if not jobs_dto:
+            return []
+
+        location_ids = [job_dto.location.id for job_dto in jobs_dto]
+        names = [job_dto.name.lower() for job_dto in jobs_dto]
+        pairs = (
+            func.unnest(
+                cast(location_ids, ARRAY(Integer())),
+                cast(names, ARRAY(String())),
+            )
+            .table_valued("location_id", "name")
+            .render_derived()
+        )
+
+        statement = select(Job).where(tuple_(Job.location_id, func.lower(Job.name)).in_(select(pairs)))
+        scalars = await self._session.scalars(statement)
+        existing = {(job.location_id, job.name.lower()): job for job in scalars.all()}
+        return [
+            (
+                job_dto,
+                existing.get((job_dto.location.id, job_dto.name.lower())),  # type: ignore[arg-type]
+            )
+            for job_dto in jobs_dto
+        ]
+
     async def create_or_update(self, job: JobDTO) -> Job:
+        # if another worker already created the same row, just use it. if not - create with holding the lock.
+        await self._lock(job.location.id, job.name.lower())
         result = await self._get(job)
         if not result:
-            # try one more time, but with lock acquired.
-            # if another worker already created the same row, just use it. if not - create with holding the lock.
-            await self._lock(job.location.id, job.name)
-            result = await self._get(job)
-
-        if not result:
             return await self._create(job)
-        return await self._update(result, job)
+        return await self.update(result, job)
+
+    async def _get(self, job: JobDTO) -> Job | None:
+        statement = select(Job).where(
+            Job.location_id == job.location.id,
+            func.lower(Job.name) == job.name.lower(),
+        )
+        return await self._session.scalar(statement)
+
+    async def _create(self, job: JobDTO) -> Job:
+        result = Job(
+            location_id=job.location.id,
+            name=job.name,
+            type_id=job.type.id if job.type else UNKNOWN_JOB_TYPE,
+        )
+        self._session.add(result)
+        await self._session.flush([result])
+        return result
+
+    async def update(self, existing: Job, new: JobDTO) -> Job:
+        # almost of fields are immutable, so we can avoid UPDATE statements if row is unchanged
+        if new.type and new.type.id and existing.type_id != new.type.id:
+            existing.type_id = new.type.id
+            await self._session.flush([existing])
+        return existing
 
     async def list_by_ids(self, job_ids: Collection[int]) -> list[Job]:
         if not job_ids:
@@ -121,27 +172,3 @@ class JobRepository(Repository[Job]):
 
         query_result = await self._session.execute(query)
         return {row.location_id: row for row in query_result.all()}
-
-    async def _get(self, job: JobDTO) -> Job | None:
-        statement = select(Job).where(
-            Job.location_id == job.location.id,
-            func.lower(Job.name) == job.name.lower(),
-        )
-        return await self._session.scalar(statement)
-
-    async def _create(self, job: JobDTO) -> Job:
-        result = Job(
-            location_id=job.location.id,
-            name=job.name,
-            type_id=job.type.id if job.type else UNKNOWN_JOB_TYPE,
-        )
-        self._session.add(result)
-        await self._session.flush([result])
-        return result
-
-    async def _update(self, existing: Job, new: JobDTO) -> Job:
-        # almost of fields are immutable, so we can avoid UPDATE statements if row is unchanged
-        if new.type and new.type.id:
-            existing.type_id = new.type.id
-            await self._session.flush([existing])
-        return existing

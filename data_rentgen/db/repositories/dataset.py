@@ -3,17 +3,22 @@
 from collections.abc import Collection
 
 from sqlalchemy import (
+    ARRAY,
     ColumnElement,
     CompoundSelect,
+    Integer,
     Row,
     Select,
     SQLColumnExpression,
+    String,
     any_,
     asc,
+    cast,
     desc,
     distinct,
     func,
     select,
+    tuple_,
     union,
 )
 from sqlalchemy.orm import selectinload
@@ -25,18 +30,36 @@ from data_rentgen.dto import DatasetDTO, PaginationDTO
 
 
 class DatasetRepository(Repository[Dataset]):
-    async def get_or_create(self, dataset: DatasetDTO) -> Dataset:
-        result = await self._get(dataset)
+    async def fetch_bulk(self, datasets_dto: list[DatasetDTO]) -> list[tuple[DatasetDTO, Dataset | None]]:
+        if not datasets_dto:
+            return []
 
-        if not result:
-            # try one more time, but with lock acquired.
-            # if another worker already created the same row, just use it. if not - create with holding the lock.
-            await self._lock(dataset.location.id, dataset.name)
-            result = await self._get(dataset)
+        location_ids = [dataset_dto.location.id for dataset_dto in datasets_dto]
+        names = [dataset_dto.name.lower() for dataset_dto in datasets_dto]
+        pairs = (
+            func.unnest(
+                cast(location_ids, ARRAY(Integer())),
+                cast(names, ARRAY(String())),
+            )
+            .table_valued("location_id", "name")
+            .render_derived()
+        )
 
-        if not result:
-            return await self._create(dataset)
-        return result
+        statement = select(Dataset).where(tuple_(Dataset.location_id, func.lower(Dataset.name)).in_(select(pairs)))
+        scalars = await self._session.scalars(statement)
+        existing = {(dataset.location_id, dataset.name.lower()): dataset for dataset in scalars.all()}
+        return [
+            (
+                dto,
+                existing.get((dto.location.id, dto.name.lower())),  # type: ignore[arg-type]
+            )
+            for dto in datasets_dto
+        ]
+
+    async def create(self, dataset: DatasetDTO) -> Dataset:
+        # if another worker already created the same row, just use it. if not - create with holding the lock.
+        await self._lock(dataset.location.id, dataset.name.lower())
+        return await self._get(dataset) or await self._create(dataset)
 
     async def paginate(
         self,

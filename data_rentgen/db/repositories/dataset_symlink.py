@@ -3,7 +3,7 @@
 
 from collections.abc import Collection
 
-from sqlalchemy import BindParameter, any_, bindparam, or_, select
+from sqlalchemy import ARRAY, BindParameter, Integer, any_, bindparam, cast, func, or_, select, tuple_
 
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
 from data_rentgen.db.repositories.base import Repository
@@ -11,14 +11,42 @@ from data_rentgen.dto import DatasetSymlinkDTO
 
 
 class DatasetSymlinkRepository(Repository[DatasetSymlink]):
-    async def get_or_create(self, dataset_symlink: DatasetSymlinkDTO) -> DatasetSymlink:
-        result = await self._get(dataset_symlink)
-        if not result:
-            # try one more time, but with lock acquired.
-            # if another worker already created the same row, just use it. if not - create with holding the lock.
-            await self._lock(dataset_symlink.from_dataset.id, dataset_symlink.to_dataset.id)
-            result = await self._get(dataset_symlink) or await self._create(dataset_symlink)
-        return result
+    async def fetch_bulk(
+        self,
+        dataset_symlinks_dto: list[DatasetSymlinkDTO],
+    ) -> list[tuple[DatasetSymlinkDTO, DatasetSymlink | None]]:
+        if not dataset_symlinks_dto:
+            return []
+
+        from_dataset_ids = [dataset_symlink_dto.from_dataset.id for dataset_symlink_dto in dataset_symlinks_dto]
+        to_dataset_ids = [dataset_symlink_dto.to_dataset.id for dataset_symlink_dto in dataset_symlinks_dto]
+
+        pairs = (
+            func.unnest(
+                cast(from_dataset_ids, ARRAY(Integer())),
+                cast(to_dataset_ids, ARRAY(Integer())),
+            )
+            .table_valued("from_dataset_ids", "to_dataset_ids")
+            .render_derived()
+        )
+
+        statement = select(DatasetSymlink).where(
+            tuple_(DatasetSymlink.from_dataset_id, DatasetSymlink.to_dataset_id).in_(select(pairs)),
+        )
+        scalars = await self._session.scalars(statement)
+        existing = {(item.from_dataset_id, item.to_dataset_id): item for item in scalars.all()}
+        return [
+            (
+                dto,
+                existing.get((dto.from_dataset.id, dto.to_dataset.id)),  # type: ignore[arg-type]
+            )
+            for dto in dataset_symlinks_dto
+        ]
+
+    async def create(self, dataset_symlink: DatasetSymlinkDTO) -> DatasetSymlink:
+        # if another worker already created the same row, just use it. if not - create with holding the lock.
+        await self._lock(dataset_symlink.from_dataset.id, dataset_symlink.to_dataset.id)
+        return await self._get(dataset_symlink) or await self._create(dataset_symlink)
 
     async def list_by_dataset_ids(self, dataset_ids: Collection[int]) -> list[DatasetSymlink]:
         if not dataset_ids:
