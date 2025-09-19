@@ -24,20 +24,6 @@ from data_rentgen.exceptions.entity import EntityNotFoundError
 
 
 class LocationRepository(Repository[Location]):
-    async def create_or_update(self, location: LocationDTO) -> Location:
-        result = await self._get(location)
-        if not result:
-            # try one more time, but with lock acquired.
-            # if another worker already created the same row, just use it. if not - create with holding the lock.
-            await self._lock(location.type, location.name)
-            result = await self._get(location)
-
-        if not result:
-            result = await self._create(location)
-
-        await self._update_addresses(result, location)
-        return result
-
     async def paginate(
         self,
         page: int,
@@ -101,6 +87,20 @@ class LocationRepository(Repository[Location]):
         await self._session.flush([location])
         return location
 
+    async def create_or_update(self, location: LocationDTO) -> Location:
+        result = await self._get(location)
+        if not result:
+            # try one more time, but with lock acquired.
+            # if another worker already created the same row, just use it. if not - create with holding the lock.
+            await self._lock(location.type, location.name)
+            result = await self._get(location)
+
+        if not result:
+            result = await self._create(location)
+
+        await self._update_addresses(result, location)
+        return result
+
     async def _get(self, location: LocationDTO) -> Location | None:
         by_name = select(Location).where(Location.type == location.type, Location.name == location.name)
         by_addresses = (
@@ -114,7 +114,6 @@ class LocationRepository(Repository[Location]):
         statement = (
             select(Location).from_statement(by_name.union(by_addresses)).options(selectinload(Location.addresses))
         )
-
         return await self._session.scalar(statement)
 
     async def _create(self, location: LocationDTO) -> Location:

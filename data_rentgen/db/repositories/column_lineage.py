@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import NamedTuple
 from uuid import UUID
 
-from sqlalchemy import ColumnElement, any_, func, select, tuple_
+from sqlalchemy import ARRAY, ColumnElement, Integer, any_, cast, func, select, tuple_
 from sqlalchemy.dialects.postgresql import insert
 
 from data_rentgen.db.models import ColumnLineage, DatasetColumnRelation
@@ -123,9 +123,20 @@ class ColumnLineageRepository(Repository[ColumnLineage]):
         if not dataset_ids_pairs:
             return []
 
+        source_dataset_ids = [pair[0] for pair in dataset_ids_pairs]
+        target_dataset_ids = [pair[1] for pair in dataset_ids_pairs]
+        pairs = (
+            func.unnest(
+                cast(source_dataset_ids, ARRAY(Integer())),
+                cast(target_dataset_ids, ARRAY(Integer())),
+            )
+            .table_valued("source_dataset_id", "target_dataset_id")
+            .render_derived()
+        )
+
         where = [
             ColumnLineage.created_at >= since,
-            tuple_(ColumnLineage.source_dataset_id, ColumnLineage.target_dataset_id).in_(dataset_ids_pairs),
+            tuple_(ColumnLineage.source_dataset_id, ColumnLineage.target_dataset_id).in_(select(pairs)),
         ]
         if until:
             where.append(

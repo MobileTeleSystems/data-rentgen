@@ -14,11 +14,11 @@ from dateutil.parser import isoparse
 from faker import Faker
 
 from data_rentgen.consumer.extractors import BatchExtractionResult
+from data_rentgen.consumer.saver import DatabaseSaver
 from data_rentgen.db.factory import create_session_factory
 from data_rentgen.db.scripts.seed.dbt import generate_dbt_run
 from data_rentgen.db.scripts.seed.flink import generate_flink_run
 from data_rentgen.db.scripts.seed.hive import generate_hive_run
-from data_rentgen.db.scripts.seed.save import save_to_db
 from data_rentgen.db.scripts.seed.spark_local import generate_spark_run_local
 from data_rentgen.db.scripts.seed.spark_yarn import generate_spark_run_yarn
 from data_rentgen.db.settings import DatabaseSettings
@@ -110,8 +110,8 @@ async def main(args: list[str]) -> None:
     db_settings = DatabaseSettings()  # type: ignore[call-arg]
     session_factory = create_session_factory(db_settings)
     async with session_factory() as session:
-        await save_to_db(result, session, logger=logger)
-        await session.commit()
+        saver = DatabaseSaver(session, logger)
+        await saver.save(result)
     logger.info("  Done!")
 
 

@@ -14,10 +14,10 @@ from faststream.kafka.publisher import DefaultPublisher
 from pydantic import TypeAdapter
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.consumer.extractors import BatchExtractionResult, BatchExtractor
+from data_rentgen.consumer.extractors import BatchExtractor
+from data_rentgen.consumer.saver import DatabaseSaver
 from data_rentgen.dependencies.stub import Stub
 from data_rentgen.openlineage.run_event import OpenLineageRunEvent
-from data_rentgen.services.uow import UnitOfWork
 
 __all__ = [
     "runs_events_subscriber",
@@ -54,9 +54,8 @@ async def runs_events_subscriber(
     extracted = extractor.result
     logger.info("Got %r", extracted)
 
-    logger.info("Saving to database")
-    await save_to_db(extracted, session, logger)
-    logger.info("Saved successfully")
+    saver = DatabaseSaver(session, logger)
+    await saver.save(extracted)
 
     if malformed:
         logger.warning("Malformed messages: %d", len(malformed))
@@ -86,96 +85,6 @@ async def parse_messages(
             yield None, message
 
         await asyncio.sleep(0)
-
-
-async def save_to_db(
-    data: BatchExtractionResult,
-    session: AsyncSession,
-    logger: Logger,
-) -> None:
-    # To avoid deadlocks when parallel consumer instances insert/update the same row,
-    # commit changes for each row instead of committing the whole batch. Yes, this cloud be slow.
-
-    unit_of_work = UnitOfWork(session)
-
-    logger.debug("Creating locations")
-    for location_dto in data.locations():
-        async with unit_of_work:
-            location = await unit_of_work.location.create_or_update(location_dto)
-            location_dto.id = location.id
-
-    logger.debug("Creating datasets")
-    for dataset_dto in data.datasets():
-        async with unit_of_work:
-            dataset = await unit_of_work.dataset.get_or_create(dataset_dto)
-            dataset_dto.id = dataset.id
-
-    logger.debug("Creating symlinks")
-    for dataset_symlink_dto in data.dataset_symlinks():
-        async with unit_of_work:
-            dataset_symlink = await unit_of_work.dataset_symlink.get_or_create(dataset_symlink_dto)
-            dataset_symlink_dto.id = dataset_symlink.id
-
-    logger.debug("Creating job types")
-    for job_type_dto in data.job_types():
-        async with unit_of_work:
-            job_type = await unit_of_work.job_type.get_or_create(job_type_dto)
-            job_type_dto.id = job_type.id
-
-    logger.debug("Creating jobs")
-    for job_dto in data.jobs():
-        async with unit_of_work:
-            job = await unit_of_work.job.create_or_update(job_dto)
-            job_dto.id = job.id
-
-    logger.debug("Creating sql queries")
-    for sql_query_dto in data.sql_queries():
-        async with unit_of_work:
-            sql_query = await unit_of_work.sql_query.get_or_create(sql_query_dto)
-            sql_query_dto.id = sql_query.id
-
-    logger.debug("Creating users")
-    for user_dto in data.users():
-        async with unit_of_work:
-            user = await unit_of_work.user.get_or_create(user_dto)
-            user_dto.id = user.id
-
-    logger.debug("Creating schemas")
-    for schema_dto in data.schemas():
-        async with unit_of_work:
-            schema = await unit_of_work.schema.get_or_create(schema_dto)
-            schema_dto.id = schema.id
-
-    # Some events related to specific run are send to the same Kafka partition,
-    # but at the same time we have parent_run which may be already inserted/updated by other worker
-    # (Kafka key maybe different for run and it's parent).
-    # In this case we cannot insert all the rows in one transaction, as it may lead to deadlocks.
-    logger.debug("Creating runs")
-    for run_dto in data.runs():
-        async with unit_of_work:
-            await unit_of_work.run.create_or_update(run_dto)
-
-    # All events related to same operation are always send to the same Kafka partition,
-    # so other workers never insert/update the same operation in parallel.
-    # These rows can be inserted/updated in bulk, in one transaction.
-    async with unit_of_work:
-        logger.debug("Creating operations")
-        await unit_of_work.operation.create_or_update_bulk(data.operations())
-
-        logger.debug("Creating inputs")
-        await unit_of_work.input.create_or_update_bulk(data.inputs())
-
-        logger.debug("Creating outputs")
-        await unit_of_work.output.create_or_update_bulk(data.outputs())
-
-    # If something went wrong here, at least we will have inputs/outputs
-    async with unit_of_work:
-        column_lineage = data.column_lineage()
-        logger.debug("Creating dataset column relations")
-        await unit_of_work.dataset_column_relation.create_bulk_for_column_lineage(column_lineage)
-
-        logger.debug("Creating column lineage")
-        await unit_of_work.column_lineage.create_bulk(column_lineage)
 
 
 async def report_malformed(

@@ -1,0 +1,1 @@
+Improve consumer performance by reducing DB load on reading operations.

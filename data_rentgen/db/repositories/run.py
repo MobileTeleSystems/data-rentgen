@@ -27,18 +27,6 @@ from data_rentgen.utils.uuid import extract_timestamp_from_uuid
 
 
 class RunRepository(Repository[Run]):
-    async def create_or_update(self, run: RunDTO) -> Run:
-        result = await self._get(run)
-        if not result:
-            # try one more time, but with lock acquired.
-            # if another worker already created the same row, just use it. if not - create with holding the lock.
-            await self._lock(run.id)
-            result = await self._get(run)
-
-        if not result:
-            return await self._create(run)
-        return await self._update(result, run)
-
     async def paginate(
         self,
         page: int,
@@ -147,11 +135,30 @@ class RunRepository(Repository[Run]):
         result = await self._session.scalars(query)
         return list(result.all())
 
+    async def fetch_bulk(self, runs_dto: list[RunDTO]) -> list[tuple[RunDTO, Run | None]]:
+        if not runs_dto:
+            return []
+        ids = [run_dto.id for run_dto in runs_dto]
+        min_created_at = extract_timestamp_from_uuid(min(ids))
+        statement = select(Run).where(
+            Run.created_at >= min_created_at,
+            Run.id == any_(ids),  # type: ignore[arg-type]
+        )
+        scalars = await self._session.scalars(statement)
+        existing = {run.id: run for run in scalars.all()}
+        return [(run_dto, existing.get(run_dto.id)) for run_dto in runs_dto]
+
+    async def create_or_update(self, run: RunDTO) -> Run:
+        result = await self._get(run)
+        if not result:
+            return await self.create(run)
+        return await self.update(result, run)
+
     async def _get(self, run: RunDTO) -> Run | None:
         query = select(Run).where(Run.id == run.id, Run.created_at == run.created_at)
         return await self._session.scalar(query)
 
-    async def _create(self, run: RunDTO) -> Run:
+    async def create(self, run: RunDTO) -> Run:
         result = Run(
             created_at=run.created_at,
             id=run.id,
@@ -171,7 +178,7 @@ class RunRepository(Repository[Run]):
         await self._session.flush([result])
         return result
 
-    async def _update(
+    async def update(
         self,
         existing: Run,
         new: RunDTO,
