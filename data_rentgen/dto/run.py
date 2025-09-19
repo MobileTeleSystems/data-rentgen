@@ -53,14 +53,14 @@ class RunDTO:
         return (self.id,)
 
     def merge(self, new: RunDTO) -> RunDTO:
-        self.job.merge(new.job)
+        self.job = self.job.merge(new.job)
         if new.parent_run and self.parent_run:
-            self.parent_run.merge(new.parent_run)
+            self.parent_run = self.parent_run.merge(new.parent_run)
         else:
             self.parent_run = new.parent_run or self.parent_run
 
         if new.user and self.user:
-            self.user.merge(new.user)
+            self.user = self.user.merge(new.user)
         else:
             self.user = new.user or self.user
 

@@ -100,6 +100,7 @@ def test_extractors_extract_batch_spark_openlineage_emitted_unknown_name(
     spark_operation_run_event_stop: OpenLineageRunEvent,
     extracted_spark_location: LocationDTO,
     extracted_spark_app_job: JobDTO,
+    extracted_spark_unknown_job: JobDTO,
     extracted_user: UserDTO,
     extracted_spark_app_run: RunDTO,
     extracted_spark_operation: OperationDTO,
@@ -119,7 +120,7 @@ def test_extractors_extract_batch_spark_openlineage_emitted_unknown_name(
         extracted_spark_location,
     ]
 
-    assert extracted.jobs() == [extracted_spark_app_job]
+    assert extracted.jobs() == [extracted_spark_app_job, extracted_spark_unknown_job]
     assert extracted.users() == [extracted_user]
     assert extracted.runs() == [extracted_spark_app_run]
     assert extracted.operations() == [extracted_spark_operation]

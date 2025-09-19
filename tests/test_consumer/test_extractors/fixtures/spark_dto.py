@@ -42,6 +42,17 @@ def extracted_spark_app_job(
 
 
 @pytest.fixture
+def extracted_spark_unknown_job(
+    extracted_spark_location: LocationDTO,
+) -> JobDTO:
+    return JobDTO(
+        name="unknown",
+        location=extracted_spark_location,
+        type=JobTypeDTO(type="SPARK_APPLICATION"),
+    )
+
+
+@pytest.fixture
 def extracted_spark_app_run(
     extracted_spark_app_job: JobDTO,
     extracted_user: UserDTO,
