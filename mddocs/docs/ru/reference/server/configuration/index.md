@@ -1,14 +1,14 @@
-# REST API server configuration { #configuration-server }
+# Конфигурация сервера REST API { #configuration-server }
 
-## Configuration
+## Конфигурация
 
-[logging][configuration-server-logging]
-[monitoring][configuration-server-monitoring]
-[cors][configuration-server-cors]
-[session][configuration-server-session]
-[static_files][configuration-server-static-files]
-[openapi][configuration-server-openapi]
-[debug][configuration-server-debug]
+[Настройка логирования][configuration-server-logging]
+[Настройка мониторинга][configuration-server-monitoring]
+[Настройки CORS][configuration-server-cors]
+[Кофигурация сессии][configuration-server-session]
+[Кофигурация статических файлов][configuration-server-static-files]
+[Кофигурация openapi][configuration-server-openapi]
+[Настройка отладки][configuration-server-debug]
 
 ::: data_rentgen.server.settings.ServerApplicationSettings
 

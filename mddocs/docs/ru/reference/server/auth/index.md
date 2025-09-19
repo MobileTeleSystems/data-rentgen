@@ -1,27 +1,27 @@
-# Authentication and Authorization { #auth-server }
+# Аутентификация и Авторизация { #auth-server }
 
-## Overview
+## Обзор
 
-To access the service's endpoints, a client must authenticate. The service provides several options for authentication.
+Для доступа к эндпоинтам сервиса клиент должен пройти аутентификацию. Сервис предоставляет несколько вариантов для аутентификации.
 
-Currently, the service does not implement a role-based model, and all users have the same level of permissions.
+В настоящее время сервис не реализует ролевую модель, и все пользователи имеют одинаковый уровень разрешений.
 
-Authentication is implemented via middleware as follows: before each endpoint call, the `get_user()` function is invoked. This function attempts to retrieve the username from the provided token.
+Аутентификация реализована через middleware следующим образом: перед каждым вызовом эндпоинта вызывается функция `get_user()`. Эта функция пытается получить имя пользователя из предоставленного токена.
 
-Data Rentgen supports different auth provider implementations. You can change implementation via settings:
+Data Rentgen поддерживает различные реализации провайдеров аутентификации. Вы можете изменить реализацию через настройки:
 
 ::: data_rentgen.server.settings.auth.AuthSettings
 
-Right now service has two scenarios for authentication:
+На данный момент сервис имеет два сценария для аутентификации:
 
-- [Dummy(JWT Tokens)](https://jwt.io/) a lightweight option for testing and development.
-- [Keycloak authentication](https://www.keycloak.org/) recommended option. Integrates with Keycloak for token-based authentication.
+- [Dummy(JWT Tokens)](https://jwt.io/) легковесный вариант для тестирования и разработки.
+- [Аутентификация Keycloak](https://www.keycloak.org/) рекомендуемый вариант. Интегрируется с Keycloak для токен-ориентированной аутентификации.
 
-### Authentication Providers
+### Провайдеры Аутентификации
 
-[dummy][auth-server-dummy]
-[keycloak][auth-server-keycloak]
+[Фиктивный провайдер аутентификации][auth-server-dummy]
+[Провайдер Keycloak][auth-server-keycloak]
 
-### For developers
+### Для разработчиков
 
-[custom][auth-server-custom]
+[Пользовательский провайдер аутентификации][auth-server-custom]

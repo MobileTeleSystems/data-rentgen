@@ -1,40 +1,39 @@
-# HTTP2Kafka proxy { #http2kafka }
+# HTTP2Kafka прокси { #http2kafka }
 
-Some of OpenLineage integrations support only HttpTransport, but not KafkaTransport, e.g. Trino.
+Некоторые интеграции OpenLineage поддерживают только HttpTransport, но не KafkaTransport, например Trino.
 
-Data.Rentgen HTTP → Kafka proxy is optional component which provides a simple HTTP API receiving
-[OpenLineage run events](https://openlineage.io/docs/spec/object-model) in JSON format and sending them to Kafka topic as is,
-so they can be handled by {ref}`message-consumer` in a proper way.
+HTTP → Kafka прокси Data.Rentgen — это опциональный компонент, который предоставляет простой HTTP API для получения
+[событий выполнения OpenLineage](https://openlineage.io/docs/spec/object-model) в формате JSON и отправки их в топик Kafka как есть, чтобы они могли быть обработаны {ref}`message-consumer` соответствующим образом.
 
-## OpenLineage HttpTransport or KafkaTransport?
+## OpenLineage HttpTransport или KafkaTransport?
 
-Introducing http2kafka into the chain reduces performance a bit:
+Введение http2kafka в цепочку немного снижает производительность:
 
-- It parses all incoming events for validation and routing purposes. The larger the event, the slower the parsing.
-- HTTP/HTTPS protocol is far more complex than Kafka TCP protocol, and has much higher latency in the first place.
+- Он парсит все входящие события для целей валидации и маршрутизации. Чем больше событие, тем медленнее парсинг.
+- Протокол HTTP/HTTPS гораздо сложнее TCP протокола Kafka и изначально имеет гораздо большую задержку.
 
-If OpenLineage integration supports both HttpTransport and KafkaTransport, and Kafka doesn't use complex authentication not supported by OpenLineage (e.g. OAUTHBEARER), prefer KafkaTransport.
+Если интеграция OpenLineage поддерживает и HttpTransport, и KafkaTransport, а Kafka не использует сложную аутентификацию, не поддерживаемую OpenLineage (например, OAUTHBEARER), предпочтительно выбирать KafkaTransport.
 
-If this is not possible, http2kafka is the way to go.
+Если это невозможно, http2kafka — это правильный выбор.
 
-## Install & run
+## Установка и запуск
 
-### With docker
+### С помощью docker
 
-- Install [Docker](https://docs.docker.com/engine/install/)
+- Установите [Docker](https://docs.docker.com/engine/install/)
 
-- Install [docker-compose](https://github.com/docker/compose/releases/)
+- Установите [docker-compose](https://github.com/docker/compose/releases/)
 
-- Run the following command:
+- Выполните следующую команду:
 
   ```console
   $ docker compose --profile http2kafka up -d --wait
   ...
   ```
 
-  `docker-compose` will download all necessary images, create containers, and then start the component.
+  `docker-compose` загрузит все необходимые образы, создаст контейнеры и запустит компонент.
 
-  Options can be set via `.env` file or `environment` section in `docker-compose.yml`
+  Опции можно задать через файл `.env` или секцию `environment` в `docker-compose.yml`
 
 <!-- TODO везде, где literal include нужно сделать инклюды-->>
 
@@ -54,15 +53,15 @@ If this is not possible, http2kafka is the way to go.
     ----8<----
     ```
 
-- After component is started and ready, open <http://localhost:8002/docs>.
+- После запуска и готовности компонента откройте <http://localhost:8002/docs>.
 
-### Without docker
+### Без docker
 
-- Install Python 3.10 or above
+- Установите Python 3.10 или выше
 
-- Setup {ref}`message-broker`
+- Настройте {ref}`message-broker`
 
-- Create virtual environment
+- Создайте виртуальное окружение
 
   ```console
   $ python -m venv /some/.venv
@@ -70,27 +69,27 @@ If this is not possible, http2kafka is the way to go.
   $ source /some/.venv/activate
   ```
 
-- Install `data-rentgen` package with following *extra* dependencies:
+- Установите пакет `data-rentgen` со следующими *дополнительными* зависимостями:
 
   ```console
   $ pip install data-rentgen[http2kafka]
   ...
   ```
 
-- Run http2kafka process
+- Запустите процесс http2kafka
 
   ```console
   $ python -m data_rentgen.http2kafka --host 0.0.0.0 --port 8002
   ...
   ```
 
-  This is a thin wrapper around [uvicorn](https://www.uvicorn.org/#command-line-options) cli,
-  options and commands are just the same.
+  Это тонкая обертка вокруг [uvicorn](https://www.uvicorn.org/#command-line-options) cli,
+  опции и команды точно такие же.
 
-- After server is started and ready, open [http://localhost:8002/docs](http://localhost:8002/docs).
+- После запуска и готовности сервера откройте [http://localhost:8002/docs](http://localhost:8002/docs).
 
-## See also
+## См. также
 
-[Configuration][configuration-http2kafka]
+[Конфигурация][configuration-http2kafka]
 [OpenAPI][http2kafka-openapi]
-[Alternatives][http2kafka-alternatives]
+[Альтернативы][http2kafka-alternatives]

@@ -1,15 +1,14 @@
-# Enabling debug { #configuration-http2kafka-debug }
+# Включение отладки { #configuration-http2kafka-debug }
 
-## Return debug info in REST API responses
+## Возвращение отладочной информации в ответах REST API
 
-By default, server does not add error details to response bodies,
-to avoid exposing instance-specific information to end users.
+По умолчанию сервер не добавляет детали ошибок в ответы, чтобы избежать раскрытия информации, специфичной для экземпляра, конечным пользователям.
 
-You can change this by setting:
+Вы можете изменить это, установив:
 
 ```console
 $ export DATA_RENTGEN__SERVER__DEBUG=False
-$ # start REST API server
+$ # запустить сервер REST API
 $ curl -XPOST http://localhost:8002/failing/endpoint ...
 {
     "error": {
@@ -22,7 +21,7 @@ $ curl -XPOST http://localhost:8002/failing/endpoint ...
 
 ```console
 $ export DATA_RENTGEN__SERVER__DEBUG=True
-$ # start REST API server
+$ # запустить сервер REST API
 $ curl -XPOST http://localhost:8002/failing/endpoint ...
 Traceback (most recent call last):
 File ".../uvicorn/protocols/http/h11_impl.py", line 408, in run_asgi
@@ -34,23 +33,23 @@ File ".../site-packages/uvicorn/middleware/proxy_headers.py", line 84, in __call
 
 !!! warning
 
-    This is only for development environment only. Do **NOT** use on production!
+    Это только для среды разработки. **НЕ** используйте в продакшене!
 
-## Print debug logs on backend
+## Вывод отладочных логов на бэкенде
 
-See [`configuration-server-logging`][configuration-server-logging], but replace log level `INFO` with `DEBUG`.
+См. [`configuration-server-logging`][configuration-server-logging], но замените уровень логирования `INFO` на `DEBUG`.
 
-## Fill up `X-Request-ID` header on backend
+## Заполнение заголовка `X-Request-ID` на бэкенде
 
-Server can add `X-Request-ID` header to responses, which allows to match request on client with backend response.
+Сервер может добавлять заголовок `X-Request-ID` к ответам, что позволяет сопоставить запрос на клиенте с ответом бэкенда.
 
-This is done by `request_id` middleware, which is enabled by default and can configured as described below:
+Это делается с помощью промежуточного ПО `request_id`, которое включено по умолчанию и может быть настроено, как описано ниже:
 
 ::: data_rentgen.server.settings.request_id.RequestIDSettings
 
-## Print request ID to backend logs
+## Вывод идентификатора запроса в логи бэкенда
 
-This is done by adding a specific filter to logging handler:
+Это делается путем добавления специального фильтра к обработчику логирования:
 
 ??? note "logging.yml"
 
@@ -60,15 +59,15 @@ This is done by adding a specific filter to logging handler:
     ----8<----
   ```
 
-Resulting logs look like:
+Результирующие логи выглядят так:
 
 ```text
 2023-12-18 17:14:11.711 uvicorn.access:498 [INFO] 018c15e97a068ae09484f8c25e2799dd 127.0.0.1:34884 - "GET /monitoring/ping HTTP/1.1" 200
 ```
 
-## Use `X-Request-ID` header on client
+## Использование заголовка `X-Request-ID` на клиенте
 
-If client got `X-Request-ID` header from backend, it is printed to logs with `DEBUG` level:
+Если клиент получил заголовок `X-Request-ID` от бэкенда, он выводится в логи с уровнем `DEBUG`:
 
 ```pycon
 >>> import logging
@@ -78,7 +77,7 @@ DEBUG:urllib3.connectionpool:http://localhost:8002 "GET /monitoring/ping HTTP/1.
 DEBUG:data_rentgen.client.base:Request ID: '018c15e97a068ae09484f8c25e2799dd'
 ```
 
-Also, if REST API response was not successful, `Request ID` is added to exception message:
+Также, если ответ REST API был неуспешным, `Request ID` добавляется к сообщению об ошибке:
 
 ```pycon
 >>> client.get_namespace("unknown")
@@ -86,10 +85,10 @@ requests.exceptions.HTTPError: 404 Client Error: Not Found for url: http://local
 Request ID: '018c15eb80fa81a6b38c9eaa519cd322'
 ```
 
-## Fill up `X-Application-Version` header on REST API side
+## Заполнение заголовка `X-Application-Version` на стороне REST API
 
-Server can add `X-Application-Version` header to responses, which allows to determine which version of backend is deployed.
+Сервер может добавлять заголовок `X-Application-Version` к ответам, что позволяет определить, какая версия бэкенда развернута.
 
-This is done by `application_version` middleware, which is enabled by default and can configured as described below:
+Это делается с помощью промежуточного ПО `application_version`, которое включено по умолчанию и может быть настроено, как описано ниже:
 
 ::: data_rentgen.server.settings.application_version.ApplicationVersionSettings

@@ -1,16 +1,16 @@
-# HTTP2Kafka configuration { #configuration-http2kafka }
+# Конфигурация HTTP2Kafka { #configuration-http2kafka }
 
-## Configuration
+## Конфигурация
 
-[kafka][configuration-consumer-kafka]
-[producer-specific][configuration-producer-specific]
-[logging][configuration-http2kafka-logging]
-[monitoring][configuration-http2kafka-monitoring]
-[static_files][configuration-http2kafka-static-files]
-[openapi][configuration-http2kafka-openapi]
-[debug][configuration-http2kafka-debug]
+[Настройки Kafka][configuration-consumer-kafka]
+[Настройки продюсера][configuration-producer-specific]
+[Настройки логирования][configuration-http2kafka-logging]
+[Настройки мониторинга][configuration-http2kafka-monitoring]
+[Обслуживание статических файлов][configuration-http2kafka-static-files]
+[Настройки OpenAPI][configuration-http2kafka-openapi]
+[Отладка][configuration-http2kafka-debug]
 
-<!-- TODO: Check the place -->
+<!-- TODO: Проверить место -->
 <!-- ::: data_rentgen.http2kafka.settings.Http2KafkaApplicationSettings -->
 
 ::: data_rentgen.server.settings.ServerSettings

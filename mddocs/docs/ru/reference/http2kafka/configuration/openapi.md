@@ -1,4 +1,4 @@
-# OpenAPI settings { #configuration-http2kafka-openapi }
+# Настройки OpenAPI { #configuration-http2kafka-openapi }
 
 These settings used to control exposing OpenAPI.json and SwaggerUI/ReDoc endpoints.
 

@@ -1,5 +1,5 @@
-# Custom Auth provider { #auth-server-custom }
+# Пользовательский провайдер аутентификации { #auth-server-custom }
 
-You can implement custom auth provider by inheriting from class below and implementing necessary methods.
+Вы можете реализовать пользовательский провайдер аутентификации, наследуясь от класса ниже и реализуя необходимые методы.
 
 ::: data_rentgen.server.providers.auth.AuthProvider

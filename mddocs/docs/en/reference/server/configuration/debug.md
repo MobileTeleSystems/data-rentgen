@@ -2,8 +2,7 @@
 
 ## Return debug info in REST API responses
 
-By default, server does not add error details to response bodies,
-to avoid exposing instance-specific information to end users.
+By default, server does not add error details to response bodies, to avoid exposing instance-specific information to end users.
 
 You can change this by setting:
 
@@ -38,7 +37,7 @@ File ".../site-packages/uvicorn/middleware/proxy_headers.py", line 84, in __call
 
 ## Print debug logs on backend
 
-See {ref}`configuration-server-logging`, but replace log level `INFO` with `DEBUG`.
+See [Logging settings][configuration-server-logging], but replace log level `INFO` with `DEBUG`.
 
 ## Fill up `X-Request-ID` header on backend
 

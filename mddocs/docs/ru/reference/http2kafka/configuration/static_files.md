@@ -1,6 +1,6 @@
-# Serving static files { #configuration-http2kafka-static-files }
+# Обслуживание статических файлов { #configuration-http2kafka-static-files }
 
-These settings used to control serving static files by a http2kafka.
+Эти настройки используются для управления раздачей статических файлов через http2kafka.
 
 <!-- 
 inherited_members: true

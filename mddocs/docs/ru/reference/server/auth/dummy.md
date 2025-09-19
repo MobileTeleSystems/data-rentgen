@@ -1,69 +1,69 @@
-# Dummy Auth provider { #auth-server-dummy }
+# Фиктивный провайдер аутентификации { #auth-server-dummy }
 
-## Description
+## Описание
 
-This auth provider allows to sign-in with any username and password, and and then issues an access token.
+Этот провайдер аутентификации позволяет войти в систему с любым именем пользователя и паролем, а затем выдает токен доступа.
 
-After successful auth, username is saved to backend database.
+После успешной аутентификации имя пользователя сохраняется в базе данных бэкенда.
 
-## Interaction schema
+## Схема взаимодействия
 
-```plantuml title="Interaction schema"
+```plantuml title="Схема взаимодействия"
 
         @startuml
             title DummyAuthProvider
-            participant "Client"
-            participant "Backend"
+            participant "Клиент"
+            participant "Бэкенд"
 
             == POST v1/auth/token ==
 
-            activate "Client"
-            alt Successful case
-                "Client" -> "Backend" ++ : login + password
-                "Backend" --> "Backend" : Password is completely ignored
-                "Backend" --> "Backend" : Check user in internal backend database
-                "Backend" -> "Backend" : Create user if not exist
-                "Backend" -[#green]> "Client" -- : Generate and return access_token
+            activate "Клиент"
+            alt Успешный случай
+                "Клиент" -> "Бэкенд" ++ : логин + пароль
+                "Бэкенд" --> "Бэкенд" : Пароль полностью игнорируется
+                "Бэкенд" --> "Бэкенд" : Проверить пользователя во внутренней базе данных бэкенда
+                "Бэкенд" -> "Бэкенд" : Создать пользователя, если не существует
+                "Бэкенд" -[#green]> "Клиент" -- : Сгенерировать и вернуть access_token
 
-            else User is blocked
-                "Client" -> "Backend" ++ : login + password
-                "Backend" --> "Backend" : Password is completely ignored
-                "Backend" --> "Backend" : Check user in internal backend database
-                "Backend" x-[#red]> "Client" -- : 401 Unauthorized
+            else Пользователь заблокирован
+                "Клиент" -> "Бэкенд" ++ : логин + пароль
+                "Бэкенд" --> "Бэкенд" : Пароль полностью игнорируется
+                "Бэкенд" --> "Бэкенд" : Проверить пользователя во внутренней базе данных бэкенда
+                "Бэкенд" x-[#red]> "Клиент" -- : 401 Unauthorized
 
-            else User is deleted
-                "Client" -> "Backend" ++ : login + password
-                "Backend" --> "Backend" : Password is completely ignored
-                "Backend" --> "Backend" : Check user in internal backend database
-                "Backend" x-[#red]> "Client" -- : 404 Not found
+            else Пользователь удален
+                "Клиент" -> "Бэкенд" ++ : логин + пароль
+                "Бэкенд" --> "Бэкенд" : Пароль полностью игнорируется
+                "Бэкенд" --> "Бэкенд" : Проверить пользователя во внутренней базе данных бэкенда
+                "Бэкенд" x-[#red]> "Клиент" -- : 404 Not found
             end
 
             == GET v1/datasets ==
 
-            alt Successful case
-                "Client" -> "Backend" ++ : access_token
-                "Backend" --> "Backend" : Validate token
-                "Backend" --> "Backend" : Check user in internal backend database
-                "Backend" -> "Backend" : Get data
-                "Backend" -[#green]> "Client" -- : Return data
+            alt Успешный случай
+                "Клиент" -> "Бэкенд" ++ : access_token
+                "Бэкенд" --> "Бэкенд" : Валидировать токен
+                "Бэкенд" --> "Бэкенд" : Проверить пользователя во внутренней базе данных бэкенда
+                "Бэкенд" -> "Бэкенд" : Получить данные
+                "Бэкенд" -[#green]> "Клиент" -- : Вернуть данные
 
-            else Token is expired
-                "Client" -> "Backend" ++ : access_token
-                "Backend" --> "Backend" : Validate token
-                "Backend" x-[#red]> "Client" -- : 401 Unauthorized
+            else Токен истек
+                "Клиент" -> "Бэкенд" ++ : access_token
+                "Бэкенд" --> "Бэкенд" : Валидировать токен
+                "Бэкенд" x-[#red]> "Клиент" -- : 401 Unauthorized
 
-            else User is not found
-                "Client" -> "Backend" ++ : access_token
-                "Backend" --> "Backend" : Validate token
-                "Backend" --> "Backend" : Check user in internal backend database
-                "Backend" x-[#red]> "Client" -- : 404 Not found
+            else Пользователь не найден
+                "Клиент" -> "Бэкенд" ++ : access_token
+                "Бэкенд" --> "Бэкенд" : Валидировать токен
+                "Бэкенд" --> "Бэкенд" : Проверить пользователя во внутренней базе данных бэкенда
+                "Бэкенд" x-[#red]> "Клиент" -- : 404 Not found
             end
 
-            deactivate "Client"
+            deactivate "Клиент"
         @enduml
 ```
 
-## Configuration
+## Конфигурация
 
 ::: data_rentgen.server.settings.auth.dummy.DummyAuthProviderSettings
 

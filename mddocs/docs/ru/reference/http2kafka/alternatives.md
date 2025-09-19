@@ -1,26 +1,26 @@
-# Alternatives { #http2kafka-alternatives }
+# Альтернативы { #http2kafka-alternatives }
 
-HTTP → Kafka proxy is build with mandatory authentication using personal tokens. This may be a drawback for some use cases.
+HTTP → Kafka прокси реализован с обязательной аутентификацией, использующей персональные токены. Это может быть недостатком в некоторых ситуациях.
 
-If your use case requires sending OpenLineage events to DataRentgen via HTTP, but without any authentication, there are some alternatives described below.
+Если ваш случай использования требует отправки событий OpenLineage в DataRentgen через HTTP, но без какой-либо аутентификации, ниже описаны некоторые альтернативы.
 
 ## Fluentbit
 
-[Fluentbit](https://fluentbit.io/) is a lightweight yet powerful logging processor written on C.
-It can accept [HTTP requests](https://docs.fluentbit.io/manual/data-pipeline/inputs/http) and write body to [Kafka topic](https://docs.fluentbit.io/manual/data-pipeline/outputs/kafka).
+[Fluentbit](https://fluentbit.io/) — это легковесный, но мощный обработчик логов, написанный на C.
+Он может принимать [HTTP запросы](https://docs.fluentbit.io/manual/data-pipeline/inputs/http) и записывать тело в [топик Kafka](https://docs.fluentbit.io/manual/data-pipeline/outputs/kafka).
 
-Config example:
+Пример конфигурации:
 
 ```yaml title="fluent-bit.yml"
 
 pipeline:
-    # receive HTTP requests on port 8002
+    # принимаем HTTP запросы на порт 8002
     inputs:
       - name: http
         port: 8002
         mem_buf_limit: 50MB
 
-    # Route events to partition using message key
+    # Маршрутизация событий в партицию с использованием ключа сообщения
     filters:
       - name: lua
         match: '*'
@@ -40,7 +40,7 @@ pipeline:
             return 1, timestamp, new_record
             end
 
-    # Write data to Kafka topic
+    # Записываем данные в топик Kafka
     outputs:
       - name: kafka
         match: '*'
@@ -68,6 +68,6 @@ services:
         command: --config /fluent-bit/etc/fluent-bit.yml
         volumes:
         - ./fluent-bit.yml:/fluent-bit/etc/fluent-bit.yml
-        # Kafka hostnames should be resolvable from container network
+        # Имена хостов Kafka должны быть разрешимы из сети контейнера
         network_mode: host
 ```

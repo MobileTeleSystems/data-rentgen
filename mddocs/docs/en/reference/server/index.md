@@ -1,6 +1,6 @@
 # REST API Server { #server }
 
-Data.Rentgen REST API server provides simple HTTP API for accessing entities stored in {ref}`database`.
+Data.Rentgen REST API server provides simple HTTP API for accessing entities stored in [`database`][базе данных].
 Implemented using [FastAPI](https://fastapi.tiangolo.com/).
 
 ## Install & run

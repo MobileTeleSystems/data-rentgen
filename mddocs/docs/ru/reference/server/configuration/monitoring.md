@@ -1,9 +1,9 @@
-# Setup monitoring { #configuration-server-monitoring }
+# Настройка мониторинга { #configuration-server-monitoring }
 
-REST API server provides the following endpoints with Prometheus compatible metrics:
+REST API сервер предоставляет следующие эндпоинты с метриками, совместимыми с Prometheus:
 
-- `GET /monitoring/metrics` - server metrics, like number of requests per path and response status, CPU and RAM usage, and so on.
+- `GET /monitoring/metrics` - метрики сервера, такие как количество запросов по пути и статус ответа, использование CPU и RAM, и так далее.
 
-These endpoints are enabled and configured using settings below:
+Эти эндпоинты включаются и настраиваются с помощью следующих настроек:
 
 ::: data_rentgen.server.settings.monitoring.MonitoringSettings

@@ -1,5 +1,5 @@
-# Serving static files { #configuration-server-static-files }
+# Обслуживание статических файлов { #configuration-server-static-files }
 
-These settings used to control serving static files by a server.
+Эти настройки используются для управления обслуживанием статических файлов сервером.
 
 ::: data_rentgen.server.settings.static_files.StaticFilesSettings

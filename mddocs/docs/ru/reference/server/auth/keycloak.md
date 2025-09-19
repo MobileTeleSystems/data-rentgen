@@ -1,17 +1,16 @@
-# Keycloak Provider { #auth-server-keycloak }
+# Провайдер Keycloak { #auth-server-keycloak }
 
-## Description
+## Описание
 
-Keycloak auth provider uses [python-keycloak](https://pypi.org/project/python-keycloak/) library to interact with Keycloak server. During the authentication process,
-KeycloakAuthProvider redirects user to Keycloak authentication page.
+Провайдер аутентификации Keycloak использует библиотеку [python-keycloak](https://pypi.org/project/python-keycloak/) для взаимодействия с сервером Keycloak. В процессе аутентификации KeycloakAuthProvider перенаправляет пользователя на страницу аутентификации Keycloak.
 
-After successful authentication, Keycloak redirects user back to Data.Rentgen with authorization code.
-Then KeycloakAuthProvider exchanges authorization code for an access token and uses it to get user information from Keycloak server.
-If user is not found in Data.Rentgen database, KeycloakAuthProvider creates it. Finally, KeycloakAuthProvider returns user with access token.
+После успешной аутентификации Keycloak перенаправляет пользователя обратно в Data.Rentgen с кодом авторизации.
+Затем KeycloakAuthProvider обменивает код авторизации на токен доступа и использует его для получения информации о пользователе с сервера Keycloak.
+Если пользователь не найден в базе данных Data.Rentgen, KeycloakAuthProvider создает его. Наконец, KeycloakAuthProvider возвращает пользователя с токеном доступа.
 
-## Interaction schema
+## Схема взаимодействия
 
-```plantuml title="Interaction schema"
+```plantuml title="Схема взаимодействия"
 
         @startuml
             title DummyAuthProvider
@@ -19,73 +18,73 @@ If user is not found in Data.Rentgen database, KeycloakAuthProvider creates it. 
             participant "Backend"
             participant "Keycloak"
 
-            == Frontend Authentication at Keycloak ==
+            == Аутентификация Frontend в Keycloak ==
 
-            Frontend -> Backend : Request endpoint with authentication (/v1/locations)
+            Frontend -> Backend : Запрос к эндпоинту с аутентификацией (/v1/locations)
 
-            Backend x-[#red]> Frontend: 401 with redirect url in 'details' response field
+            Backend x-[#red]> Frontend: 401 с URL перенаправления в поле 'details' ответа
 
-            Frontend -> Keycloak : Redirect user to Keycloak login page
+            Frontend -> Keycloak : Перенаправление пользователя на страницу входа Keycloak
 
-            alt Successful login
-                Frontend --> Keycloak : Log in with login and password
-            else Login failed
-                Keycloak x-[#red]> Frontend -- : Display error (401 Unauthorized)
+            alt Успешный вход
+                Frontend --> Keycloak : Вход с логином и паролем
+            else Ошибка входа
+                Keycloak x-[#red]> Frontend -- : Отображение ошибки (401 Unauthorized)
             end
 
-            Keycloak -> Frontend : Callback to Frontend /callback which is proxy between Keycloak and Backend
+            Keycloak -> Frontend : Обратный вызов к Frontend /callback который является прокси между Keycloak и Backend
 
-            Frontend -> Backend : Send request to Backend '/v1/auth/callback'
+            Frontend -> Backend : Отправка запроса к Backend '/v1/auth/callback'
 
-            Backend -> Keycloak : Check original 'state' and exchange code for token's
-            Keycloak --> Backend : Return token's
-            Backend --> Frontend : Set token's in user's browser in cookies
+            Backend -> Keycloak : Проверка исходного 'state' и обмен кода на токены
+            Keycloak --> Backend : Возврат токенов
+            Backend --> Frontend : Установка токенов в браузере пользователя в cookies
 
-            Frontend --> Backend : Request to /v1/locations with session cookies
-            Backend -> Backend : Get user info from token and check user in internal backend database
-            Backend -> Backend : Create user in internal backend database if not exist
-            Backend -[#green]> Frontend -- : Return requested data
+            Frontend --> Backend : Запрос к /v1/locations с сессионными cookies
+            Backend -> Backend : Получение информации о пользователе из токена и проверка пользователя во внутренней базе данных backend
+            Backend -> Backend : Создание пользователя во внутренней базе данных backend, если не существует
+            Backend -[#green]> Frontend -- : Возврат запрашиваемых данных
 
 
             == GET v1/datasets ==
 
 
-            alt Successful case
+            alt Успешный случай
                 "Frontend" -> "Backend" ++ : access_token
-                "Backend" --> "Backend" : Validate token
-                "Backend" --> "Backend" : Check user in internal backend database
-                "Backend" -> "Backend" : Get data
-                "Backend" -[#green]> "Frontend" -- : Return data
+                "Backend" --> "Backend" : Проверка токена
+                "Backend" --> "Backend" : Проверка пользователя во внутренней базе данных backend
+                "Backend" -> "Backend" : Получение данных
+                "Backend" -[#green]> "Frontend" -- : Возврат данных
 
-            else Token is expired (Successful case)
+            else Токен истек (Успешный случай)
                 "Frontend" -> "Backend" ++ : access_token, refresh_token
-                "Backend" --> "Backend" : Validate token
-                "Backend" -[#yellow]> "Backend" : Token is expired
-                "Backend" --> "Keycloak" : Try to refresh token
-                "Backend" --> "Backend" : Validate new token
-                "Backend" --> "Backend" : Check user in internal backend database
-                "Backend" -> "Backend" : Get data
-                "Backend" -[#green]> "Frontend" -- : Return data
+                "Backend" --> "Backend" : Проверка токена
+                "Backend" -[#yellow]> "Backend" : Токен истек
+                "Backend" --> "Keycloak" : Попытка обновления токена
+                "Backend" --> "Backend" : Проверка нового токена
+                "Backend" --> "Backend" : Проверка пользователя во внутренней базе данных backend
+                "Backend" -> "Backend" : Получение данных
+                "Backend" -[#green]> "Frontend" -- : Возврат данных
 
-            else Create new User
+            else Создание нового пользователя
                 "Frontend" -> "Backend" ++ : access_token
-                "Backend" --> "Backend" : Validate token
-                "Backend" --> "Backend" : Check user in internal backend database
-                "Backend" --> "Backend" : Create new user
-                "Backend" -> "Backend" : Get data
-                "Backend" -[#green]> "Frontend" -- : Return data
+                "Backend" --> "Backend" : Проверка токена
+                "Backend" --> "Backend" : Проверка пользователя во внутренней базе данных backend
+                "Backend" --> "Backend" : Создание нового пользователя
+                "Backend" -> "Backend" : Получение данных
+                "Backend" -[#green]> "Frontend" -- : Возврат данных
 
-            else Token is expired and bad refresh token
+            else Токен истек и плохой refresh token
                 "Frontend" -> "Backend" ++ : access_token, refresh_token
-                "Backend" --> "Backend" : Validate token
-                "Backend" -[#yellow]> "Backend" : Token is expired
-                "Backend" --> "Keycloak" : Try to refresh token
-                "Backend" x-[#red]> "Frontend" -- : RedirectResponse can't refresh
+                "Backend" --> "Backend" : Проверка токена
+                "Backend" -[#yellow]> "Backend" : Токен истек
+                "Backend" --> "Keycloak" : Попытка обновления токена
+                "Backend" x-[#red]> "Frontend" -- : RedirectResponse не может обновить
 
-            else Bad Token payload
+            else Неверная полезная нагрузка токена
                 "Frontend" -> "Backend" ++ : access_token, refresh_token
-                "Backend" --> "Backend" : Validate token
-                "Backend" x-[#red]> "Frontend" -- : 307 Authorization error
+                "Backend" --> "Backend" : Проверка токена
+                "Backend" x-[#red]> "Frontend" -- : 307 Ошибка авторизации
 
             end
 
@@ -94,7 +93,7 @@ If user is not found in Data.Rentgen database, KeycloakAuthProvider creates it. 
 
 ```
 
-## Basic Configuration
+## Базовая конфигурация
 
 ::: data_rentgen.server.settings.auth.keycloak.KeycloakAuthProviderSettings
 

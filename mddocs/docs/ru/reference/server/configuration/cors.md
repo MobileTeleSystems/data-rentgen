@@ -1,5 +1,5 @@
-# CORS settings { #configuration-server-cors }
+# Настройки CORS { #configuration-server-cors }
 
-These settings used to control [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) options.
+Эти настройки используются для управления опциями [CORS](https://developer.mozilla.org/ru/docs/Web/HTTP/CORS).
 
 ::: data_rentgen.server.settings.cors.CORSSettings

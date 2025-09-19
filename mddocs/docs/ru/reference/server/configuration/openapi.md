@@ -1,6 +1,6 @@
-# OpenAPI settings { #configuration-server-openapi }
+# Настройки OpenAPI { #configuration-server-openapi }
 
-These settings used to control exposing OpenAPI.json and SwaggerUI/ReDoc endpoints.
+Эти настройки используются для управления предоставлением конечных точек OpenAPI.json и SwaggerUI/ReDoc.
 
 ::: data_rentgen.server.settings.openapi.OpenAPISettings
 

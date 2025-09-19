@@ -1,26 +1,25 @@
 # Frontend { #frontend }
 
-Data.Rentgen provides a [Frontend (UI)](https://github.com/MobileTeleSystems/data-rentgen-ui) based on [ReactAdmin](https://marmelab.com/react-admin/) and [ReactFlow](https://reactflow.dev/),
-providing users the ability to navigate entities and build lineage graph.
+Data.Rentgen предоставляет [Frontend (UI)](https://github.com/MobileTeleSystems/data-rentgen-ui) на основе [ReactAdmin](https://marmelab.com/react-admin/) и [ReactFlow](https://reactflow.dev/), предоставляя пользователям возможность навигации по сущностям и построения графа происхождения данных (lineage).
 
-## Install & run
+## Установка и запуск
 
-### With Docker
+### С Docker
 
-- Install [Docker](https://docs.docker.com/engine/install/)
+- Установите [Docker](https://docs.docker.com/engine/install/)
 
-- Install [docker-compose](https://github.com/docker/compose/releases/)
+- Установите [docker-compose](https://github.com/docker/compose/releases/)
 
-- Run the following command:
+- Выполните следующую команду:
 
   ```console
   $ docker compose --profile frontend up -d --wait
   ...
   ```
 
-  `docker-compose` will download Data.Rentgen UI image, create containers, and then start them.
+  `docker-compose` загрузит образ Data.Rentgen UI, создаст контейнеры и запустит их.
 
-  Options can be set via `.env` file or `environment` section in `docker-compose.yml`
+  Опции можно задать через файл `.env` или секцию `environment` в `docker-compose.yml`
 
 ??? note "docker-compose.yml"
 
@@ -38,8 +37,8 @@ providing users the ability to navigate entities and build lineage graph.
   ----8<----
   ```
 
-- After frontend is started and ready, open <http://localhost:3000>.
+- После запуска и готовности frontend, откройте <http://localhost:3000>.
 
-## See also
+## См. также
 
-[Configuration][configuration-frontend]
+[Конфигурация][configuration-frontend]

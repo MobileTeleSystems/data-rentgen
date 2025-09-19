@@ -1,5 +1,5 @@
-# Session cookie settings { #configuration-server-session }
+# Настройки cookie для сессий { #configuration-server-session }
 
-These settings used to control cookie settings used for storing user session data.
+Эти настройки используются для управления параметрами cookie, используемых для хранения данных пользовательской сессии.
 
 ::: data_rentgen.server.settings.session.SessionSettings

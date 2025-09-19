@@ -1,19 +1,19 @@
-# Frontend configuration { #configuration-frontend }
+# Конфигурация фронтенда { #configuration-frontend }
 
-## API url
+## URL API
 
-Data.Rentgen UI requires REST API to be accessible from browser. API url is set up using environment variable:
+Для работы интерфейса Data.Rentgen требуется доступ к REST API из браузера. URL API настраивается с помощью переменной окружения:
 
 ```bash
 DATA_RENTGEN__UI__API_BROWSER_URL=http://localhost:8000
 ```
 
-If both REST API and frontend are served on the same domain (e.g. through Nginx reverse proxy), for example:
+Если REST API и фронтенд обслуживаются на одном домене (например, через обратный прокси Nginx), например:
 
 - REST API → `/api`
-- Frontend → `/`
+- Фронтенд → `/`
 
-Then you can use relative path:
+Тогда вы можете использовать относительный путь:
 
 ```bash
 DATA_RENTGEN__UI__API_BROWSER_URL=/api

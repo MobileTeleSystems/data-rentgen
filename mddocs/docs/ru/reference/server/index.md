@@ -1,26 +1,26 @@
-# REST API Server { #server }
+# REST API сервер { #server }
 
-Data.Rentgen REST API server provides simple HTTP API for accessing entities stored in {ref}`database`.
-Implemented using [FastAPI](https://fastapi.tiangolo.com/).
+REST API сервер Data.Rentgen предоставляет простой HTTP API для доступа к сущностям, хранящимся в [`базе данных`][database].
+Реализован с использованием [FastAPI](https://fastapi.tiangolo.com/).
 
-## Install & run
+## Установка и запуск
 
-### With docker
+### С Docker
 
-- Install [Docker](https://docs.docker.com/engine/install/)
+- Установите [Docker](https://docs.docker.com/engine/install/)
 
-- Install [docker-compose](https://github.com/docker/compose/releases/)
+- Установите [docker-compose](https://github.com/docker/compose/releases/)
 
-- Run the following command:
+- Выполните следующую команду:
 
   ```console
   $ docker compose --profile server up -d --wait
   ...
   ```
 
-  `docker-compose` will download all necessary images, create containers, and then start the server.
+  `docker-compose` загрузит все необходимые образы, создаст контейнеры и запустит сервер.
 
-  Options can be set via `.env` file or `environment` section in `docker-compose.yml`
+  Параметры можно задать через файл `.env` или раздел `environment` в `docker-compose.yml`
 
 ??? note "docker-compose.yml"
 
@@ -38,15 +38,15 @@ Implemented using [FastAPI](https://fastapi.tiangolo.com/).
     ----8<----
     ```
 
-- After server is started and ready, open [http://localhost:8000/docs](http://localhost:8000/docs).
+- После запуска и готовности сервера откройте [http://localhost:8000/docs](http://localhost:8000/docs).
 
-### Without docker
+### Без Docker
 
-- Install Python 3.10 or above
+- Установите Python 3.10 или выше
 
-- Setup [`database`][database], run migrations and create partitions
+- Настройте [`базу данных`][database], выполните миграции и создайте партиции
 
-- Create virtual environment
+- Создайте виртуальное окружение
 
   ```console
   $ python -m venv /some/.venv
@@ -54,27 +54,26 @@ Implemented using [FastAPI](https://fastapi.tiangolo.com/).
   $ source /some/.venv/activate
   ```
 
-- Install `data-rentgen` package with following *extra* dependencies:
+- Установите пакет `data-rentgen` со следующими *дополнительными* зависимостями:
 
   ```console
   $ pip install data-rentgen[server,postgres]
   ...
   ```
 
-- Run server process
+- Запустите процесс сервера
 
   ```console
   $ python -m data_rentgen.server --host 0.0.0.0 --port 8000
   ...
   ```
 
-  This is a thin wrapper around [uvicorn](https://www.uvicorn.org/#command-line-options) cli,
-  options and commands are just the same.
+  Это тонкая обёртка вокруг CLI [uvicorn](https://www.uvicorn.org/#command-line-options), параметры и команды точно такие же.
 
-- After server is started and ready, open [http://localhost:8000/docs](http://localhost:8000/docs).
+- После запуска и готовности сервера откройте [http://localhost:8000/docs](http://localhost:8000/docs).
 
-## See also
+## См. также
 
-- [Authentication and Authorization][auth-server]
-- [REST API server configuration][configuration-server]
-- [OpenAPI specification][server-openapi]
+- [Аутентификация и авторизация][auth-server]
+- [Конфигурация REST API сервера][configuration-server]
+- [OpenAPI спецификация][server-openapi]

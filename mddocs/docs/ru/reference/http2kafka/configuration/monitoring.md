@@ -1,4 +1,4 @@
-# Setup monitoring { #configuration-http2kafka-monitoring }
+# Настройки мониторинга { #configuration-http2kafka-monitoring }
 
 REST API server provides the following endpoints with Prometheus compatible metrics:
 
