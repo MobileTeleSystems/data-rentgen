@@ -3,11 +3,19 @@
 
 from collections.abc import Collection
 
-from sqlalchemy import any_, select
+from sqlalchemy import any_, bindparam, select
 
 from data_rentgen.db.models import Schema
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.dto import SchemaDTO
+
+# schema JSON can be heavy, avoid loading it if not needed
+fetch_bulk_query = select(Schema.digest, Schema.id).where(
+    Schema.digest == any_(bindparam("digests")),
+)
+
+get_list_by_ids_query = select(Schema).where(Schema.id == any_(bindparam("schema_ids")))
+get_one_by_digest_query = select(Schema).where(Schema.digest == bindparam("digest"))
 
 
 class SchemaRepository(Repository[Schema]):
@@ -15,20 +23,19 @@ class SchemaRepository(Repository[Schema]):
         if not schema_ids:
             return []
 
-        query = select(Schema).where(Schema.id == any_(list(schema_ids)))  # type: ignore[arg-type]
-        result = await self._session.scalars(query)
+        result = await self._session.scalars(get_list_by_ids_query, {"schema_ids": list(schema_ids)})
         return list(result.all())
 
     async def fetch_known_ids(self, schemas_dto: list[SchemaDTO]) -> list[tuple[SchemaDTO, int | None]]:
         if not schemas_dto:
             return []
 
-        unique_digests = [schema_dto.digest for schema_dto in schemas_dto]
-        # schema JSON can be heavy, avoid loading it if not needed
-        statement = select(Schema.digest, Schema.id).where(
-            Schema.digest == any_(unique_digests),  # type: ignore[arg-type]
+        scalars = await self._session.execute(
+            fetch_bulk_query,
+            {
+                "digests": [item.digest for item in schemas_dto],
+            },
         )
-        scalars = await self._session.execute(statement)
         known_ids = {item.digest: item.id for item in scalars.all()}
         return [
             (
@@ -44,8 +51,7 @@ class SchemaRepository(Repository[Schema]):
         return await self._get(schema) or await self._create(schema)
 
     async def _get(self, schema: SchemaDTO) -> Schema | None:
-        result = select(Schema).where(Schema.digest == schema.digest)
-        return await self._session.scalar(result)
+        return await self._session.scalar(get_one_by_digest_query, {"digest": schema.digest})
 
     async def _create(self, schema: SchemaDTO) -> Schema:
         result = Schema(digest=schema.digest, fields=schema.fields)

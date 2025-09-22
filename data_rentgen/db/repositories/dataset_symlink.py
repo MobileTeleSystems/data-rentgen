@@ -3,11 +3,36 @@
 
 from collections.abc import Collection
 
-from sqlalchemy import ARRAY, BindParameter, Integer, any_, bindparam, cast, func, or_, select, tuple_
+from sqlalchemy import ARRAY, Integer, any_, bindparam, cast, func, or_, select, tuple_
 
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.dto import DatasetSymlinkDTO
+
+fetch_bulk_query = select(DatasetSymlink).where(
+    tuple_(DatasetSymlink.from_dataset_id, DatasetSymlink.to_dataset_id).in_(
+        select(
+            func.unnest(
+                cast(bindparam("from_dataset_ids"), ARRAY(Integer())),
+                cast(bindparam("to_dataset_ids"), ARRAY(Integer())),
+            )
+            .table_valued("from_dataset_ids", "to_dataset_ids")
+            .render_derived(),
+        ),
+    ),
+)
+
+get_list_query = select(DatasetSymlink).where(
+    or_(
+        DatasetSymlink.from_dataset_id == any_(bindparam("dataset_ids")),
+        DatasetSymlink.to_dataset_id == any_(bindparam("dataset_ids")),
+    ),
+)
+
+get_one_query = select(DatasetSymlink).where(
+    DatasetSymlink.from_dataset_id == bindparam("from_dataset_id"),
+    DatasetSymlink.to_dataset_id == bindparam("to_dataset_id"),
+)
 
 
 class DatasetSymlinkRepository(Repository[DatasetSymlink]):
@@ -18,22 +43,13 @@ class DatasetSymlinkRepository(Repository[DatasetSymlink]):
         if not dataset_symlinks_dto:
             return []
 
-        from_dataset_ids = [dataset_symlink_dto.from_dataset.id for dataset_symlink_dto in dataset_symlinks_dto]
-        to_dataset_ids = [dataset_symlink_dto.to_dataset.id for dataset_symlink_dto in dataset_symlinks_dto]
-
-        pairs = (
-            func.unnest(
-                cast(from_dataset_ids, ARRAY(Integer())),
-                cast(to_dataset_ids, ARRAY(Integer())),
-            )
-            .table_valued("from_dataset_ids", "to_dataset_ids")
-            .render_derived()
+        scalars = await self._session.scalars(
+            fetch_bulk_query,
+            {
+                "from_dataset_ids": [item.from_dataset.id for item in dataset_symlinks_dto],
+                "to_dataset_ids": [item.to_dataset.id for item in dataset_symlinks_dto],
+            },
         )
-
-        statement = select(DatasetSymlink).where(
-            tuple_(DatasetSymlink.from_dataset_id, DatasetSymlink.to_dataset_id).in_(select(pairs)),
-        )
-        scalars = await self._session.scalars(statement)
         existing = {(item.from_dataset_id, item.to_dataset_id): item for item in scalars.all()}
         return [
             (
@@ -52,22 +68,17 @@ class DatasetSymlinkRepository(Repository[DatasetSymlink]):
         if not dataset_ids:
             return []
 
-        param: BindParameter[list[int]] = bindparam("dataset_ids")
-        query = select(DatasetSymlink).where(
-            or_(
-                DatasetSymlink.from_dataset_id == any_(param),
-                DatasetSymlink.to_dataset_id == any_(param),
-            ),
-        )
-        scalars = await self._session.scalars(query, {"dataset_ids": list(dataset_ids)})
+        scalars = await self._session.scalars(get_list_query, {"dataset_ids": list(dataset_ids)})
         return list(scalars.all())
 
     async def _get(self, dataset_symlink: DatasetSymlinkDTO) -> DatasetSymlink | None:
-        query = select(DatasetSymlink).where(
-            DatasetSymlink.from_dataset_id == dataset_symlink.from_dataset.id,
-            DatasetSymlink.to_dataset_id == dataset_symlink.to_dataset.id,
+        return await self._session.scalar(
+            get_one_query,
+            {
+                "from_dataset_id": dataset_symlink.from_dataset.id,
+                "to_dataset_id": dataset_symlink.to_dataset.id,
+            },
         )
-        return await self._session.scalar(query)
 
     async def _create(self, dataset_symlink: DatasetSymlinkDTO) -> DatasetSymlink:
         result = DatasetSymlink(

@@ -3,6 +3,7 @@
 
 from sqlalchemy import (
     any_,
+    bindparam,
     select,
 )
 
@@ -10,14 +11,26 @@ from data_rentgen.db.models import JobType
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.dto import JobTypeDTO
 
+fetch_bulk_query = select(JobType).where(
+    JobType.type == any_(bindparam("types")),
+)
+
+get_one_query = select(JobType).where(
+    JobType.type == bindparam("type"),
+)
+
 
 class JobTypeRepository(Repository[JobType]):
     async def fetch_bulk(self, job_types_dto: list[JobTypeDTO]) -> list[tuple[JobTypeDTO, JobType | None]]:
-        unique_keys = [job_type_dto.type for job_type_dto in job_types_dto]
-        statement = select(JobType).where(
-            JobType.type == any_(unique_keys),  # type: ignore[arg-type]
+        if not job_types_dto:
+            return []
+
+        scalars = await self._session.scalars(
+            fetch_bulk_query,
+            {
+                "types": [job_type_dto.type for job_type_dto in job_types_dto],
+            },
         )
-        scalars = await self._session.scalars(statement)
         existing = {job.type: job for job in scalars.all()}
         return [(job_type_dto, existing.get(job_type_dto.type)) for job_type_dto in job_types_dto]
 
@@ -27,8 +40,7 @@ class JobTypeRepository(Repository[JobType]):
         return await self._get(job_type_dto) or await self._create(job_type_dto)
 
     async def _get(self, job_type_dto: JobTypeDTO) -> JobType | None:
-        query = select(JobType).where(JobType.type == job_type_dto.type)
-        return await self._session.scalar(query)
+        return await self._session.scalar(get_one_query, {"type": job_type_dto.type})
 
     async def _create(self, job_type_dto: JobTypeDTO) -> JobType:
         result = JobType(type=job_type_dto.type)
