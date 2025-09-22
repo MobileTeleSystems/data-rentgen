@@ -23,7 +23,7 @@ from data_rentgen.db.models import Job, Run, RunStartReason, RunStatus
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.search import make_tsquery, ts_match, ts_rank
 from data_rentgen.dto import PaginationDTO, RunDTO
-from data_rentgen.utils.uuid import extract_timestamp_from_uuid
+from data_rentgen.utils.uuid import extract_timestamp_from_uuid, get_max_uuid, get_min_uuid
 
 # Do not use `tuple_(Run.created_at, Run.id).in_(...),
 # as this is too complex filter for Postgres to make an optimal query plan.
@@ -41,6 +41,7 @@ get_list_by_id_query = (
 get_list_by_job_ids_query = (
     select(Run)
     .where(
+        Run.id >= bindparam("min_id"),
         Run.created_at >= bindparam("since"),
         Run.job_id == any_(bindparam("job_ids")),
     )
@@ -97,11 +98,16 @@ class RunRepository(Repository[Run]):
         # do not use `tuple_(Run.created_at, Run.id).in_(...),
         # as this is too complex filter for Postgres to make an optimal query plan
         where = []
+
+        # created_at and id are always correlated,
+        # and primary key starts with id, so we need to apply filter on both
+        # to get the most optimal query plan
         if run_ids:
             min_run_created_at = extract_timestamp_from_uuid(min(run_ids))
             max_run_created_at = extract_timestamp_from_uuid(max(run_ids))
-            min_created_at = max(since, min_run_created_at) if since else min_run_created_at
-            max_created_at = min(until, max_run_created_at) if until else max_run_created_at
+            # narrow created_at range
+            min_created_at = max(filter(None, [since, min_run_created_at]))
+            max_created_at = min(filter(None, [until, max_run_created_at]))
             where = [
                 Run.created_at >= min_created_at,
                 Run.created_at <= max_created_at,
@@ -109,12 +115,17 @@ class RunRepository(Repository[Run]):
             ]
         else:
             if since:
-                where.append(Run.created_at >= since)
-            if until:
-                where.append(Run.created_at <= until)
+                where = [
+                    Run.created_at >= since,
+                    Run.id >= get_min_uuid(since),
+                ]
 
-        if run_ids:
-            where.append(Run.id == any_(list(run_ids)))  # type: ignore[arg-type]
+            if until:
+                where += [
+                    Run.created_at <= until,
+                    Run.id <= get_max_uuid(until),
+                ]
+
         if job_id:
             where.append(Run.job_id == job_id)
         if parent_run_id:
@@ -181,7 +192,14 @@ class RunRepository(Repository[Run]):
             # until is rarely used, avoid making query too complicated
             query = query.where(Run.created_at <= until)
 
-        result = await self._session.scalars(query, {"since": since, "job_ids": list(job_ids)})
+        result = await self._session.scalars(
+            query,
+            {
+                "min_id": get_min_uuid(since),
+                "since": since,
+                "job_ids": list(job_ids),
+            },
+        )
         return list(result.all())
 
     async def fetch_bulk(self, runs_dto: list[RunDTO]) -> list[tuple[RunDTO, Run | None]]:

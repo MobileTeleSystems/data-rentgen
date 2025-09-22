@@ -11,12 +11,13 @@ from sqlalchemy.dialects.postgresql import insert
 from data_rentgen.db.models import Operation, OperationStatus, OperationType
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.dto import OperationDTO, PaginationDTO
-from data_rentgen.utils.uuid import extract_timestamp_from_uuid
+from data_rentgen.utils.uuid import extract_timestamp_from_uuid, get_max_uuid, get_min_uuid
 
 insert_statement = insert(Operation).on_conflict_do_nothing()
 update_statement = update(Operation)
 
 get_list_by_run_ids_query = select(Operation).where(
+    Operation.id >= bindparam("min_id"),
     Operation.created_at >= bindparam("since"),
     Operation.run_id == any_(bindparam("run_ids")),
 )
@@ -36,6 +37,7 @@ get_stats_by_run_ids = (
         func.count(Operation.id.distinct()).label("total_operations"),
     )
     .where(
+        Operation.id >= bindparam("min_id"),
         Operation.created_at >= bindparam("since"),
         Operation.run_id == any_(bindparam("run_ids")),
     )
@@ -101,25 +103,43 @@ class OperationRepository(Repository[Operation]):
         # do not use `tuple_(Operation.created_at, Operation.id).in_(...),
         # as this is too complex filter for Postgres to make an optimal query plan
         where = []
+
+        # created_at and id are always correlated,
+        # and primary key starts with id, so we need to apply filter on both
+        # to get the most optimal query plan
         if operation_ids:
             min_operation_created_at = extract_timestamp_from_uuid(min(operation_ids))
             max_operation_created_at = extract_timestamp_from_uuid(max(operation_ids))
-            min_created_at = max(since, min_operation_created_at) if since else min_operation_created_at
-            max_created_at = min(until, max_operation_created_at) if until else max_operation_created_at
+            # narrow created_at range
+            min_created_at = max(filter(None, [since, min_operation_created_at]))
+            max_created_at = min(filter(None, [until, max_operation_created_at]))
             where = [
                 Operation.created_at >= min_created_at,
                 Operation.created_at <= max_created_at,
+                Operation.id == any_(list(operation_ids)),  # type: ignore[arg-type]
             ]
-        else:
-            if since:
-                where.append(Operation.created_at >= since)
-            if until:
-                where.append(Operation.created_at <= until)
 
-        if run_id:
-            where.append(Operation.run_id == run_id)
-        if operation_ids:
-            where.append(Operation.id == any_(list(operation_ids)))  # type: ignore[arg-type]
+        elif run_id:
+            run_created_at = extract_timestamp_from_uuid(run_id)
+            # narrow created_at range
+            min_created_at = max(filter(None, [since, run_created_at]))
+            where = [
+                Operation.run_id == run_id,
+                Operation.created_at >= min_created_at,
+                Operation.id >= get_min_uuid(min_created_at),
+            ]
+
+        elif since:
+            where = [
+                Operation.created_at >= since,
+                Operation.id >= get_min_uuid(since),
+            ]
+
+        if until and not operation_ids:
+            where += [
+                Operation.created_at <= until,
+                Operation.id <= get_max_uuid(until),
+            ]
 
         query = select(Operation).where(*where)
         order_by: list[UnaryExpression] = [Operation.created_at.desc(), Operation.id.desc()]
@@ -151,6 +171,7 @@ class OperationRepository(Repository[Operation]):
         result = await self._session.scalars(
             query,
             {
+                "min_id": get_min_uuid(min_operation_created_at),
                 "since": min_operation_created_at,
                 "run_ids": list(run_ids),
             },
@@ -175,11 +196,13 @@ class OperationRepository(Repository[Operation]):
         if not run_ids:
             return {}
 
+        # All operations are created after run
+        since = extract_timestamp_from_uuid(min(run_ids))
         query_result = await self._session.execute(
             get_stats_by_run_ids,
             {
-                # All operations are created after run
-                "since": extract_timestamp_from_uuid(min(run_ids)),
+                "since": since,
+                "min_id": get_min_uuid(since),
                 "run_ids": list(run_ids),
             },
         )

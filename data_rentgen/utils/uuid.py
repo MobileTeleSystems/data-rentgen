@@ -80,6 +80,21 @@ def _build_uuidv7(timestamp: int, node: int) -> NewUUID:
     return NewUUID(int=uuid_int)
 
 
+def get_min_uuid(timestamp: datetime) -> NewUUID:
+    """Get minimal possible UUID for timestamp"""
+    timestamp_int = int(timestamp.timestamp() * 1000)
+    uuid_int = (timestamp_int & 0xFFFFFFFFFFFF) << 80
+    return NewUUID(int=uuid_int)
+
+
+def get_max_uuid(timestamp: datetime) -> NewUUID:
+    """Get maximal possible UUID for timestamp"""
+    timestamp_int = int(timestamp.timestamp() * 1000)
+    uuid_int = (timestamp_int & 0xFFFFFFFFFFFF) << 80
+    uuid_int |= 0xFFFFFFFFFFFFFFFFFFFF
+    return NewUUID(int=uuid_int)
+
+
 def generate_static_uuid(data: str) -> BaseUUID:
     """Generate static UUID for data. Each function call returns the same UUID value.
 
