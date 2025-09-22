@@ -1,9 +1,12 @@
 from datetime import UTC, datetime, timedelta
+from uuid import UUID
 
 from data_rentgen.utils.uuid import (
     generate_incremental_uuid,
     generate_new_uuid,
     generate_static_uuid,
+    get_max_uuid,
+    get_min_uuid,
 )
 
 
@@ -70,3 +73,15 @@ def test_generate_incremental_uuid_sorted_like_timestamp():
     uuid1 = generate_incremental_uuid(current, "test")
     uuid2 = generate_incremental_uuid(following, "test")
     assert uuid1 < uuid2
+
+
+def test_get_min_uuid():
+    timestamp = datetime(2025, 9, 21, 23, 35, 49, 123456, tzinfo=UTC)
+    uuid = get_min_uuid(timestamp)
+    assert uuid == UUID("01996ea2-3883-0000-0000-000000000000")
+
+
+def test_get_max_uuid():
+    timestamp = datetime(2025, 9, 21, 23, 35, 49, 123456, tzinfo=UTC)
+    uuid = get_max_uuid(timestamp)
+    assert uuid == UUID("01996ea2-3883-ffff-ffff-ffffffffffff")
