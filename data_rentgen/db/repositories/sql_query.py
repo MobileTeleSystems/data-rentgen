@@ -2,11 +2,18 @@
 # SPDX-License-Identifier: Apache-2.0
 
 
-from sqlalchemy import any_, select
+from sqlalchemy import any_, bindparam, select
 
 from data_rentgen.db.models.sql_query import SQLQuery
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.dto import SQLQueryDTO
+
+# SQLQuery text can be heavy, avoid loading it if not needed
+fetch_bulk_query = select(SQLQuery.fingerprint, SQLQuery.id).where(
+    SQLQuery.fingerprint == any_(bindparam("fingerprints")),
+)
+
+get_one_by_fingerprint_query = select(SQLQuery).where(SQLQuery.fingerprint == bindparam("fingerprint"))
 
 
 class SQLQueryRepository(Repository[SQLQuery]):
@@ -14,12 +21,12 @@ class SQLQueryRepository(Repository[SQLQuery]):
         if not sql_queries_dto:
             return []
 
-        unique_fingerprints = [sql_query_dto.fingerprint for sql_query_dto in sql_queries_dto]
-        # query text can be heavy, avoid loading it if not needed
-        statement = select(SQLQuery.fingerprint, SQLQuery.id).where(
-            SQLQuery.fingerprint == any_(unique_fingerprints),  # type: ignore[arg-type]
+        scalars = await self._session.execute(
+            fetch_bulk_query,
+            {
+                "fingerprints": [item.fingerprint for item in sql_queries_dto],
+            },
         )
-        scalars = await self._session.execute(statement)
         known_ids = {item.fingerprint: item.id for item in scalars.all()}
         return [
             (
@@ -35,8 +42,10 @@ class SQLQueryRepository(Repository[SQLQuery]):
         return await self._get(sql_query) or await self._create(sql_query)
 
     async def _get(self, sql_query: SQLQueryDTO) -> SQLQuery | None:
-        result = select(SQLQuery).where(SQLQuery.fingerprint == sql_query.fingerprint)
-        return await self._session.scalar(result)
+        return await self._session.scalar(
+            get_one_by_fingerprint_query,
+            {"fingerprint": sql_query.fingerprint},
+        )
 
     async def _create(self, sql_query: SQLQueryDTO) -> SQLQuery:
         result = SQLQuery(fingerprint=sql_query.fingerprint, query=sql_query.query)

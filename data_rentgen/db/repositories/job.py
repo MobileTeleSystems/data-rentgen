@@ -13,6 +13,7 @@ from sqlalchemy import (
     String,
     any_,
     asc,
+    bindparam,
     cast,
     desc,
     func,
@@ -28,6 +29,44 @@ from data_rentgen.db.utils.search import make_tsquery, ts_match, ts_rank
 from data_rentgen.dto import JobDTO, PaginationDTO
 
 UNKNOWN_JOB_TYPE = 0
+
+
+fetch_bulk_query = select(Job).where(
+    tuple_(Job.location_id, func.lower(Job.name)).in_(
+        select(
+            func.unnest(
+                cast(bindparam("location_ids"), ARRAY(Integer())),
+                cast(bindparam("names_lower"), ARRAY(String())),
+            )
+            .table_valued("location_id", "name_lower")
+            .render_derived(),
+        ),
+    ),
+)
+
+get_one_query = select(Job).where(
+    Job.location_id == bindparam("location_id"),
+    func.lower(Job.name) == bindparam("name_lower"),
+)
+
+get_list_query = (
+    select(Job)
+    .where(
+        Job.id == any_(bindparam("job_ids")),
+    )
+    .options(selectinload(Job.location).selectinload(Location.addresses))
+)
+
+get_stats_query = (
+    select(
+        Job.location_id.label("location_id"),
+        func.count(Job.id.distinct()).label("total_jobs"),
+    )
+    .where(
+        Job.location_id == any_(bindparam("location_ids")),
+    )
+    .group_by(Job.location_id)
+)
 
 
 class JobRepository(Repository[Job]):
@@ -90,19 +129,13 @@ class JobRepository(Repository[Job]):
         if not jobs_dto:
             return []
 
-        location_ids = [job_dto.location.id for job_dto in jobs_dto]
-        names = [job_dto.name.lower() for job_dto in jobs_dto]
-        pairs = (
-            func.unnest(
-                cast(location_ids, ARRAY(Integer())),
-                cast(names, ARRAY(String())),
-            )
-            .table_valued("location_id", "name")
-            .render_derived()
+        scalars = await self._session.scalars(
+            fetch_bulk_query,
+            {
+                "location_ids": [item.location.id for item in jobs_dto],
+                "names_lower": [item.name.lower() for item in jobs_dto],
+            },
         )
-
-        statement = select(Job).where(tuple_(Job.location_id, func.lower(Job.name)).in_(select(pairs)))
-        scalars = await self._session.scalars(statement)
         existing = {(job.location_id, job.name.lower()): job for job in scalars.all()}
         return [
             (
@@ -121,11 +154,13 @@ class JobRepository(Repository[Job]):
         return await self.update(result, job)
 
     async def _get(self, job: JobDTO) -> Job | None:
-        statement = select(Job).where(
-            Job.location_id == job.location.id,
-            func.lower(Job.name) == job.name.lower(),
+        return await self._session.scalar(
+            get_one_query,
+            {
+                "location_id": job.location.id,
+                "name_lower": job.name.lower(),
+            },
         )
-        return await self._session.scalar(statement)
 
     async def _create(self, job: JobDTO) -> Job:
         result = Job(
@@ -147,28 +182,13 @@ class JobRepository(Repository[Job]):
     async def list_by_ids(self, job_ids: Collection[int]) -> list[Job]:
         if not job_ids:
             return []
-        query = (
-            select(Job)
-            .where(Job.id == any_(list(job_ids)))  # type: ignore[arg-type]
-            .options(selectinload(Job.location).selectinload(Location.addresses))
-        )
-        result = await self._session.scalars(query)
+
+        result = await self._session.scalars(get_list_query, {"job_ids": list(job_ids)})
         return list(result.all())
 
     async def get_stats_by_location_ids(self, location_ids: Collection[int]) -> dict[int, Row]:
         if not location_ids:
             return {}
 
-        query = (
-            select(
-                Job.location_id.label("location_id"),
-                func.count(Job.id.distinct()).label("total_jobs"),
-            )
-            .where(
-                Job.location_id == any_(list(location_ids)),  # type: ignore[arg-type]
-            )
-            .group_by(Job.location_id)
-        )
-
-        query_result = await self._session.execute(query)
+        query_result = await self._session.execute(get_stats_query, {"location_ids": list(location_ids)})
         return {row.location_id: row for row in query_result.all()}

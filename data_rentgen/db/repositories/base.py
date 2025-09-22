@@ -13,6 +13,7 @@ from sqlalchemy import (
     ScalarResult,
     Select,
     SQLColumnExpression,
+    bindparam,
     func,
     select,
 )
@@ -23,6 +24,8 @@ from data_rentgen.db.models import Base
 from data_rentgen.dto import PaginationDTO
 
 Model = TypeVar("Model", bound=Base)
+
+advisory_lock_statement = select(func.pg_advisory_xact_lock(bindparam("key")))
 
 
 class Repository(ABC, Generic[Model]):
@@ -81,5 +84,4 @@ class Repository(ABC, Generic[Model]):
         digest = sha1(data.encode("utf-8"), usedforsecurity=False).digest()
         # sha1 returns 160bit hash, we need only first 64 bits
         lock_key = int.from_bytes(digest[:8], byteorder="big", signed=True)
-        statement = select(func.pg_advisory_xact_lock(lock_key))
-        await self._session.execute(statement)
+        await self._session.execute(advisory_lock_statement, {"key": lock_key})

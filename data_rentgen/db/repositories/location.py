@@ -9,6 +9,7 @@ from sqlalchemy import (
     SQLColumnExpression,
     any_,
     asc,
+    bindparam,
     desc,
     func,
     select,
@@ -21,6 +22,26 @@ from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.search import make_tsquery, ts_match, ts_rank
 from data_rentgen.dto import LocationDTO, PaginationDTO
 from data_rentgen.exceptions.entity import EntityNotFoundError
+
+get_one_by_name_query = select(Location).where(
+    Location.type == bindparam("type"),
+    Location.name == bindparam("name"),
+)
+get_one_by_addresses_query = (
+    select(Location)
+    .join(Location.addresses)
+    .where(
+        Location.type == bindparam("type"),
+        Address.url == any_(bindparam("addresses")),
+    )
+)
+get_one_query = (
+    select(Location)
+    .from_statement(
+        get_one_by_name_query.union(get_one_by_addresses_query),
+    )
+    .options(selectinload(Location.addresses))
+)
 
 
 class LocationRepository(Repository[Location]):
@@ -102,19 +123,14 @@ class LocationRepository(Repository[Location]):
         return result
 
     async def _get(self, location: LocationDTO) -> Location | None:
-        by_name = select(Location).where(Location.type == location.type, Location.name == location.name)
-        by_addresses = (
-            select(Location)
-            .join(Location.addresses)
-            .where(
-                Location.type == location.type,
-                Address.url == any_(list(location.addresses)),  # type: ignore[arg-type]
-            )
+        return await self._session.scalar(
+            get_one_query,
+            {
+                "type": location.type,
+                "name": location.name,
+                "addresses": list(location.addresses),
+            },
         )
-        statement = (
-            select(Location).from_statement(by_name.union(by_addresses)).options(selectinload(Location.addresses))
-        )
-        return await self._session.scalar(statement)
 
     async def _create(self, location: LocationDTO) -> Location:
         result = Location(type=location.type, name=location.name)

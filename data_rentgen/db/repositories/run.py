@@ -25,6 +25,62 @@ from data_rentgen.db.utils.search import make_tsquery, ts_match, ts_rank
 from data_rentgen.dto import PaginationDTO, RunDTO
 from data_rentgen.utils.uuid import extract_timestamp_from_uuid
 
+# Do not use `tuple_(Run.created_at, Run.id).in_(...),
+# as this is too complex filter for Postgres to make an optimal query plan.
+# Primary key starts with id already, and created_at filter is used to select specific partitions
+get_list_by_id_query = (
+    select(Run)
+    .where(
+        Run.created_at >= bindparam("since"),
+        Run.created_at <= bindparam("until"),
+        Run.id == any_(bindparam("run_ids")),
+    )
+    .options(selectinload(Run.started_by_user))
+)
+
+get_list_by_job_ids_query = (
+    select(Run)
+    .where(
+        Run.created_at >= bindparam("since"),
+        Run.job_id == any_(bindparam("job_ids")),
+    )
+    .options(selectinload(Run.started_by_user))
+)
+
+fetch_bulk_query = select(Run).where(
+    Run.created_at >= bindparam("since"),
+    Run.id == any_(bindparam("run_ids")),
+)
+
+insert_statement = insert(Run).values(
+    created_at=bindparam("created_at"),
+    id=bindparam("id"),
+    job_id=bindparam("job_id"),
+    status=bindparam("status"),
+    parent_run_id=bindparam("parent_run_id"),
+    started_at=bindparam("started_at"),
+    started_by_user_id=bindparam("started_by_user_id"),
+    start_reason=bindparam("start_reason"),
+    ended_at=bindparam("ended_at"),
+)
+inserted_row = insert_statement.excluded
+insert_statement = insert_statement.on_conflict_do_update(
+    index_elements=[Run.created_at, Run.id],
+    set_={
+        "job_id": inserted_row.job_id,
+        "status": func.greatest(inserted_row.status, Run.status),
+        "parent_run_id": func.coalesce(inserted_row.parent_run_id, Run.parent_run_id),
+        "started_at": func.coalesce(inserted_row.started_at, Run.started_at),
+        "started_by_user_id": func.coalesce(inserted_row.started_by_user_id, Run.started_by_user_id),
+        "start_reason": func.coalesce(inserted_row.start_reason, Run.start_reason),
+        "ended_at": func.coalesce(inserted_row.ended_at, Run.ended_at),
+        "external_id": func.coalesce(inserted_row.external_id, Run.external_id),
+        "attempt": func.coalesce(inserted_row.attempt, Run.attempt),
+        "persistent_log_url": func.coalesce(inserted_row.persistent_log_url, Run.persistent_log_url),
+        "running_log_url": func.coalesce(inserted_row.running_log_url, Run.running_log_url),
+    },
+)
+
 
 class RunRepository(Repository[Run]):
     async def paginate(
@@ -105,46 +161,41 @@ class RunRepository(Repository[Run]):
     async def list_by_ids(self, run_ids: Collection[UUID]) -> list[Run]:
         if not run_ids:
             return []
-        # do not use `tuple_(Run.created_at, Run.id).in_(...),
-        # as this is too complex filter for Postgres to make an optimal query plan
-        query = (
-            select(Run)
-            .where(
-                Run.created_at >= extract_timestamp_from_uuid(min(run_ids)),
-                Run.created_at <= extract_timestamp_from_uuid(max(run_ids)),
-                Run.id == any_(list(run_ids)),  # type: ignore[arg-type]
-            )
-            .options(selectinload(Run.started_by_user))
+
+        result = await self._session.scalars(
+            get_list_by_id_query,
+            {
+                "since": extract_timestamp_from_uuid(min(run_ids)),
+                "until": extract_timestamp_from_uuid(max(run_ids)),
+                "run_ids": list(run_ids),
+            },
         )
-        result = await self._session.scalars(query)
         return list(result.all())
 
     async def list_by_job_ids(self, job_ids: Collection[int], since: datetime, until: datetime | None) -> list[Run]:
         if not job_ids:
             return []
-        query = (
-            select(Run)
-            .where(
-                Run.created_at >= since,
-                Run.job_id == any_(list(job_ids)),  # type: ignore[arg-type]
-            )
-            .options(selectinload(Run.started_by_user))
-        )
+
+        query = get_list_by_job_ids_query
         if until:
+            # until is rarely used, avoid making query too complicated
             query = query.where(Run.created_at <= until)
-        result = await self._session.scalars(query)
+
+        result = await self._session.scalars(query, {"since": since, "job_ids": list(job_ids)})
         return list(result.all())
 
     async def fetch_bulk(self, runs_dto: list[RunDTO]) -> list[tuple[RunDTO, Run | None]]:
         if not runs_dto:
             return []
+
         ids = [run_dto.id for run_dto in runs_dto]
-        min_created_at = extract_timestamp_from_uuid(min(ids))
-        statement = select(Run).where(
-            Run.created_at >= min_created_at,
-            Run.id == any_(ids),  # type: ignore[arg-type]
+        scalars = await self._session.scalars(
+            fetch_bulk_query,
+            {
+                "since": extract_timestamp_from_uuid(min(ids)),
+                "run_ids": ids,
+            },
         )
-        scalars = await self._session.scalars(statement)
         existing = {run.id: run for run in scalars.all()}
         return [(run_dto, existing.get(run_dto.id)) for run_dto in runs_dto]
 
@@ -209,54 +260,27 @@ class RunRepository(Repository[Run]):
         return existing
 
     async def create_or_update_bulk(self, runs: list[RunDTO]) -> None:
-        # used only by db seed script
         if not runs:
             return
 
-        data = [
-            {
-                "created_at": run.created_at,
-                "id": run.id,
-                "job_id": run.job.id,
-                "status": RunStatus(run.status),
-                "parent_run_id": run.parent_run.id if run.parent_run else None,
-                "started_at": run.started_at,
-                "started_by_user_id": run.user.id if run.user else None,
-                "start_reason": RunStartReason(run.start_reason) if run.start_reason else None,
-                "ended_at": run.ended_at,
-                "external_id": run.external_id,
-                "attempt": run.attempt,
-                "persistent_log_url": run.persistent_log_url,
-                "running_log_url": run.running_log_url,
-            }
-            for run in runs
-        ]
-
-        statement = insert(Run).values(
-            created_at=bindparam("created_at"),
-            id=bindparam("id"),
-            job_id=bindparam("job_id"),
-            status=bindparam("status"),
-            parent_run_id=bindparam("parent_run_id"),
-            started_at=bindparam("started_at"),
-            started_by_user_id=bindparam("started_by_user_id"),
-            start_reason=bindparam("start_reason"),
-            ended_at=bindparam("ended_at"),
+        await self._session.execute(
+            insert_statement,
+            [
+                {
+                    "created_at": run.created_at,
+                    "id": run.id,
+                    "job_id": run.job.id,
+                    "status": RunStatus(run.status),
+                    "parent_run_id": run.parent_run.id if run.parent_run else None,
+                    "started_at": run.started_at,
+                    "started_by_user_id": run.user.id if run.user else None,
+                    "start_reason": RunStartReason(run.start_reason) if run.start_reason else None,
+                    "ended_at": run.ended_at,
+                    "external_id": run.external_id,
+                    "attempt": run.attempt,
+                    "persistent_log_url": run.persistent_log_url,
+                    "running_log_url": run.running_log_url,
+                }
+                for run in runs
+            ],
         )
-        statement = statement.on_conflict_do_update(
-            index_elements=[Run.created_at, Run.id],
-            set_={
-                "job_id": statement.excluded.job_id,
-                "status": func.greatest(statement.excluded.status, Run.status),
-                "parent_run_id": func.coalesce(statement.excluded.parent_run_id, Run.parent_run_id),
-                "started_at": func.coalesce(statement.excluded.started_at, Run.started_at),
-                "started_by_user_id": func.coalesce(statement.excluded.started_by_user_id, Run.started_by_user_id),
-                "start_reason": func.coalesce(statement.excluded.start_reason, Run.start_reason),
-                "ended_at": func.coalesce(statement.excluded.ended_at, Run.ended_at),
-                "external_id": func.coalesce(statement.excluded.external_id, Run.external_id),
-                "attempt": func.coalesce(statement.excluded.attempt, Run.attempt),
-                "persistent_log_url": func.coalesce(statement.excluded.persistent_log_url, Run.persistent_log_url),
-                "running_log_url": func.coalesce(statement.excluded.running_log_url, Run.running_log_url),
-            },
-        )
-        await self._session.execute(statement, data)

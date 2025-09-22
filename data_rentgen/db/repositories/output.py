@@ -16,6 +16,18 @@ from data_rentgen.utils.uuid import (
     extract_timestamp_from_uuid,
 )
 
+insert_statement = insert(Output)
+inserted_row = insert_statement.excluded
+insert_statement = insert_statement.on_conflict_do_update(
+    index_elements=[Output.created_at, Output.id],
+    set_={
+        "type": inserted_row.type.op("|")(Output.type),
+        "num_bytes": func.greatest(inserted_row.num_bytes, Output.num_bytes),
+        "num_rows": func.greatest(inserted_row.num_rows, Output.num_rows),
+        "num_files": func.greatest(inserted_row.num_files, Output.num_files),
+    },
+)
+
 
 @dataclass
 class OutputRow:
@@ -38,20 +50,8 @@ class OutputRepository(Repository[Output]):
         if not outputs:
             return
 
-        insert_statement = insert(Output)
-        new_row = insert_statement.excluded
-        statement = insert_statement.on_conflict_do_update(
-            index_elements=[Output.created_at, Output.id],
-            set_={
-                "type": new_row.type.op("|")(Output.type),
-                "num_bytes": func.greatest(new_row.num_bytes, Output.num_bytes),
-                "num_rows": func.greatest(new_row.num_rows, Output.num_rows),
-                "num_files": func.greatest(new_row.num_files, Output.num_files),
-            },
-        )
-
         await self._session.execute(
-            statement,
+            insert_statement,
             [
                 {
                     "id": item.generate_id(),

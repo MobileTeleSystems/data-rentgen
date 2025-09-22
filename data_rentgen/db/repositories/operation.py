@@ -13,6 +13,35 @@ from data_rentgen.db.repositories.base import Repository
 from data_rentgen.dto import OperationDTO, PaginationDTO
 from data_rentgen.utils.uuid import extract_timestamp_from_uuid
 
+insert_statement = insert(Operation).on_conflict_do_nothing()
+update_statement = update(Operation)
+
+get_list_by_run_ids_query = select(Operation).where(
+    Operation.created_at >= bindparam("since"),
+    Operation.run_id == any_(bindparam("run_ids")),
+)
+
+# Do not use `tuple_(Operation.created_at, Operation.id).in_(...),
+# as this is too complex filter for Postgres to make an optimal query plan.
+# Primary key starts with id already, and created_at filter is used to select specific partitions
+get_list_by_ids = select(Operation).where(
+    Operation.created_at >= bindparam("since"),
+    Operation.created_at <= bindparam("until"),
+    Operation.id == any_(bindparam("operation_ids")),
+)
+
+get_stats_by_run_ids = (
+    select(
+        Operation.run_id.label("run_id"),
+        func.count(Operation.id.distinct()).label("total_operations"),
+    )
+    .where(
+        Operation.created_at >= bindparam("since"),
+        Operation.run_id == any_(bindparam("run_ids")),
+    )
+    .group_by(Operation.run_id)
+)
+
 
 class OperationRepository(Repository[Operation]):
     async def create_or_update_bulk(self, operations: list[OperationDTO]) -> None:
@@ -38,13 +67,13 @@ class OperationRepository(Repository[Operation]):
 
         # this replaces all null values with defaults
         await self._session.execute(
-            insert(Operation).on_conflict_do_nothing(),
+            insert_statement,
             data,
         )
 
         # if value is still none, keep existing one
         await self._session.execute(
-            update(Operation).values(
+            update_statement.values(
                 {
                     "name": func.coalesce(bindparam("name"), Operation.name),
                     "type": func.coalesce(bindparam("type"), Operation.type),
@@ -113,46 +142,45 @@ class OperationRepository(Repository[Operation]):
         # All operations are created after run
         min_run_created_at = extract_timestamp_from_uuid(min(run_ids))
         min_operation_created_at = max(min_run_created_at, since.astimezone(timezone.utc))
-        query = select(Operation).where(
-            Operation.created_at >= min_operation_created_at,
-            Operation.run_id == any_(list(run_ids)),  # type: ignore[arg-type]
-        )
+
+        query = get_list_by_run_ids_query
         if until:
+            # until is rarely used, avoid making query too complicated
             query = query.where(Operation.created_at <= until)
-        result = await self._session.scalars(query)
+
+        result = await self._session.scalars(
+            query,
+            {
+                "since": min_operation_created_at,
+                "run_ids": list(run_ids),
+            },
+        )
         return list(result.all())
 
     async def list_by_ids(self, operation_ids: Collection[UUID]) -> list[Operation]:
         if not operation_ids:
             return []
 
-        # Do not use `tuple_(Operation.created_at, Operation.id).in_(...),
-        # as this is too complex filter for Postgres to make an optimal query plan
-        query = select(Operation).where(
-            Operation.created_at >= extract_timestamp_from_uuid(min(operation_ids)),
-            Operation.created_at <= extract_timestamp_from_uuid(max(operation_ids)),
-            Operation.id == any_(list(operation_ids)),  # type: ignore[arg-type]
+        result = await self._session.scalars(
+            get_list_by_ids,
+            {
+                "since": extract_timestamp_from_uuid(min(operation_ids)),
+                "until": extract_timestamp_from_uuid(max(operation_ids)),
+                "operation_ids": list(operation_ids),
+            },
         )
-        result = await self._session.scalars(query)
         return list(result.all())
 
     async def get_stats_by_run_ids(self, run_ids: Collection[UUID]) -> dict[UUID, Row]:
         if not run_ids:
             return {}
 
-        # unlike list_by_run_ids, we need to get all statistics for specific runs, regardless of time range
-        min_created_at = extract_timestamp_from_uuid(min(run_ids))
-        query = (
-            select(
-                Operation.run_id.label("run_id"),
-                func.count(Operation.id.distinct()).label("total_operations"),
-            )
-            .where(
-                Operation.created_at >= min_created_at,
-                Operation.run_id == any_(list(run_ids)),  # type: ignore[arg-type]
-            )
-            .group_by(Operation.run_id)
+        query_result = await self._session.execute(
+            get_stats_by_run_ids,
+            {
+                # All operations are created after run
+                "since": extract_timestamp_from_uuid(min(run_ids)),
+                "run_ids": list(run_ids),
+            },
         )
-
-        query_result = await self._session.execute(query)
         return {row.run_id: row for row in query_result.all()}

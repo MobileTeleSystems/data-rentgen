@@ -13,6 +13,7 @@ from sqlalchemy import (
     String,
     any_,
     asc,
+    bindparam,
     cast,
     desc,
     distinct,
@@ -28,25 +29,55 @@ from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.search import make_tsquery, ts_match, ts_rank
 from data_rentgen.dto import DatasetDTO, PaginationDTO
 
+fetch_bulk_query = select(Dataset).where(
+    tuple_(Dataset.location_id, func.lower(Dataset.name)).in_(
+        select(
+            func.unnest(
+                cast(bindparam("location_ids"), ARRAY(Integer())),
+                cast(bindparam("names_lower"), ARRAY(String())),
+            )
+            .table_valued("location_id", "name_lower")
+            .render_derived(),
+        ),
+    ),
+)
+
+get_list_query = (
+    select(Dataset)
+    .where(Dataset.id == any_(bindparam("dataset_ids")))
+    .options(selectinload(Dataset.location).selectinload(Location.addresses))
+    .options(selectinload(Dataset.tag_values).selectinload(TagValue.tag))
+)
+
+get_one_query = select(Dataset).where(
+    Dataset.location_id == bindparam("location_id"),
+    func.lower(Dataset.name) == bindparam("name_lower"),
+)
+
+get_stats_query = (
+    select(
+        Dataset.location_id.label("location_id"),
+        func.count(Dataset.id.distinct()).label("total_datasets"),
+    )
+    .where(
+        Dataset.location_id == any_(bindparam("location_ids")),
+    )
+    .group_by(Dataset.location_id)
+)
+
 
 class DatasetRepository(Repository[Dataset]):
     async def fetch_bulk(self, datasets_dto: list[DatasetDTO]) -> list[tuple[DatasetDTO, Dataset | None]]:
         if not datasets_dto:
             return []
 
-        location_ids = [dataset_dto.location.id for dataset_dto in datasets_dto]
-        names = [dataset_dto.name.lower() for dataset_dto in datasets_dto]
-        pairs = (
-            func.unnest(
-                cast(location_ids, ARRAY(Integer())),
-                cast(names, ARRAY(String())),
-            )
-            .table_valued("location_id", "name")
-            .render_derived()
+        scalars = await self._session.scalars(
+            fetch_bulk_query,
+            {
+                "location_ids": [item.location.id for item in datasets_dto],
+                "names_lower": [item.name.lower() for item in datasets_dto],
+            },
         )
-
-        statement = select(Dataset).where(tuple_(Dataset.location_id, func.lower(Dataset.name)).in_(select(pairs)))
-        scalars = await self._session.scalars(statement)
         existing = {(dataset.location_id, dataset.name.lower()): dataset for dataset in scalars.all()}
         return [
             (
@@ -139,39 +170,24 @@ class DatasetRepository(Repository[Dataset]):
     async def list_by_ids(self, dataset_ids: Collection[int]) -> list[Dataset]:
         if not dataset_ids:
             return []
-        query = (
-            select(Dataset)
-            .where(Dataset.id == any_(list(dataset_ids)))  # type: ignore[arg-type]
-            .options(selectinload(Dataset.location).selectinload(Location.addresses))
-            .options(selectinload(Dataset.tag_values).selectinload(TagValue.tag))
-        )
-        result = await self._session.scalars(query)
+        result = await self._session.scalars(get_list_query, {"dataset_ids": list(dataset_ids)})
         return list(result.all())
 
     async def get_stats_by_location_ids(self, location_ids: Collection[int]) -> dict[int, Row]:
         if not location_ids:
             return {}
 
-        query = (
-            select(
-                Dataset.location_id.label("location_id"),
-                func.count(Dataset.id.distinct()).label("total_datasets"),
-            )
-            .where(
-                Dataset.location_id == any_(list(location_ids)),  # type: ignore[arg-type]
-            )
-            .group_by(Dataset.location_id)
-        )
-
-        query_result = await self._session.execute(query)
+        query_result = await self._session.execute(get_stats_query, {"location_ids": list(location_ids)})
         return {row.location_id: row for row in query_result.all()}
 
     async def _get(self, dataset: DatasetDTO) -> Dataset | None:
-        statement = select(Dataset).where(
-            Dataset.location_id == dataset.location.id,
-            func.lower(Dataset.name) == dataset.name.lower(),
+        return await self._session.scalar(
+            get_one_query,
+            {
+                "location_id": dataset.location.id,
+                "name_lower": dataset.name.lower(),
+            },
         )
-        return await self._session.scalar(statement)
 
     async def _create(self, dataset: DatasetDTO) -> Dataset:
         result = Dataset(location_id=dataset.location.id, name=dataset.name)
