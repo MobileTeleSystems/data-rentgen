@@ -215,3 +215,70 @@ async def jobs_search(
 
     async with async_session_maker() as async_session:
         await clean_db(async_session)
+
+
+@pytest_asyncio.fixture
+async def jobs_search_with_different_types(
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
+) -> AsyncGenerator[tuple[Job]]:
+    async with async_session_maker() as async_session:
+        location = await create_location(async_session)
+        airflow_dag_type = await create_job_type(async_session, {"type": "AIRFLOW_DAG"})
+        airflow_task_type = await create_job_type(async_session, {"type": "AIRFLOW_TASK"})
+
+        job_with_dag_type = await create_job(
+            async_session,
+            location_id=location.id,
+            job_type_id=airflow_dag_type.id,
+            job_kwargs={"name": "airflow-dag"},
+        )
+        job_with_task_type = await create_job(
+            async_session,
+            location_id=location.id,
+            job_type_id=airflow_task_type.id,
+            job_kwargs={"name": "airflow-task"},
+        )
+        async_session.expunge_all()
+
+    yield (job_with_dag_type, job_with_task_type)
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)
+
+
+@pytest_asyncio.fixture
+async def jobs_search_with_different_locations(
+    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
+) -> AsyncGenerator[tuple[Job]]:
+    async with async_session_maker() as async_session:
+        cluster_location = await create_location(async_session, location_kwargs={"name": "my-cluster", "type": "yarn"})
+        airflow_location = await create_location(
+            async_session,
+            location_kwargs={"name": "airflow-host", "type": "http"},
+        )
+        job_type = await create_job_type(async_session)
+        cluster_job = await create_job(
+            async_session,
+            location_id=cluster_location.id,
+            job_type_id=job_type.id,
+            job_kwargs={"name": "my-job_cluster"},
+        )
+        dag_job = await create_job(
+            async_session,
+            location_id=airflow_location.id,
+            job_type_id=job_type.id,
+            job_kwargs={"name": "my-job_dag"},
+        )
+        task_job = await create_job(
+            async_session,
+            location_id=airflow_location.id,
+            job_type_id=job_type.id,
+            job_kwargs={"name": "my-job_task"},
+        )
+
+        async_session.expunge_all()
+
+    yield (cluster_job, dag_job, task_job)
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)

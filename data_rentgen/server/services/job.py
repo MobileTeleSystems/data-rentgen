@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from typing import Annotated
 
@@ -31,12 +31,16 @@ class JobService:
         page_size: int,
         job_ids: Collection[int],
         search_query: str | None,
+        location_id: int | None,
+        job_type: str | None,
     ) -> JobServicePaginatedResult:
         pagination = await self._uow.job.paginate(
             page=page,
             page_size=page_size,
             job_ids=job_ids,
             search_query=search_query,
+            location_id=location_id,
+            job_type=job_type,
         )
 
         return JobServicePaginatedResult(
@@ -45,3 +49,6 @@ class JobService:
             total_count=pagination.total_count,
             items=[JobServiceResult(id=job.id, data=job) for job in pagination.items],
         )
+
+    async def get_job_types(self) -> Sequence[str]:
+        return await self._uow.job_type.get_job_types()

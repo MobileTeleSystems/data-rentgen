@@ -12,6 +12,7 @@ from data_rentgen.server.schemas.v1 import (
     JobDetailedResponseV1,
     JobLineageQueryV1,
     JobPaginateQueryV1,
+    JobTypesResponseV1,
     LineageResponseV1,
     PageResponseV1,
 )
@@ -36,6 +37,8 @@ async def paginate_jobs(
         page_size=query_args.page_size,
         job_ids=query_args.job_id,
         search_query=query_args.search_query,
+        location_id=query_args.location_id,
+        job_type=query_args.job_type,
     )
     return PageResponseV1[JobDetailedResponseV1].from_pagination(pagination)
 
@@ -57,3 +60,12 @@ async def get_jobs_lineage(
     )
 
     return build_lineage_response(lineage)
+
+
+@router.get("/job_types", summary="Get distinct types of Jobs")
+async def get_job_types(
+    job_service: Annotated[JobService, Depends()],
+    current_user: Annotated[User, Depends(get_user())],
+) -> JobTypesResponseV1:
+    job_types = await job_service.get_job_types()
+    return JobTypesResponseV1(job_types=sorted(job_types))

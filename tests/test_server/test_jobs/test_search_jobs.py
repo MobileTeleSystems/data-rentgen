@@ -4,7 +4,7 @@ import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.db.models import Job
+from data_rentgen.db.models import Job, JobType
 from tests.fixtures.mocks import MockedUser
 from tests.test_server.utils.convert_to_json import job_to_json
 from tests.test_server.utils.enrich import enrich_jobs
@@ -233,6 +233,203 @@ async def test_search_jobs_no_results(
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 0,
+        },
+        "items": [],
+    }
+
+
+async def test_get_job_types(
+    test_client: AsyncClient,
+    job_types: list[JobType],
+    mocked_user: MockedUser,
+) -> None:
+    unique_job_type = {item.type for item in job_types}
+    response = await test_client.get(
+        "/v1/jobs/job_types",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {"job_types": sorted(unique_job_type)}
+
+
+async def test_search_jobs_by_location_id(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    jobs_search_with_different_locations: tuple[Job],
+    mocked_user: MockedUser,
+) -> None:
+    jobs = await enrich_jobs(jobs_search_with_different_locations, async_session)
+    response = await test_client.get(
+        "/v1/jobs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={"search_query": "my-job"},
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 3,
+        },
+        "items": [
+            {
+                "id": str(job.id),
+                "data": job_to_json(job),
+            }
+            for job in jobs
+        ],
+    }
+
+    # first job in jobs has a different location unlike two others
+    [_, dag_job, task_job] = jobs
+    response_with_location_id_filter = await test_client.get(
+        "/v1/jobs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={"search_query": "my-job", "location_id": dag_job.location_id},
+    )
+
+    assert response_with_location_id_filter.status_code == HTTPStatus.OK, response_with_location_id_filter.json()
+    assert response_with_location_id_filter.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 2,
+        },
+        "items": [
+            {
+                "id": str(job.id),
+                "data": job_to_json(job),
+            }
+            for job in [dag_job, task_job]
+        ],
+    }
+
+
+async def test_search_jobs_by_location_id_non_existen_id(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    jobs_search_with_different_locations: tuple[Job],
+    mocked_user: MockedUser,
+):
+    response_with_location_id_filter = await test_client.get(
+        "/v1/jobs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={"search_query": "my-job", "location_id": -1},
+    )
+
+    assert response_with_location_id_filter.status_code == HTTPStatus.OK, response_with_location_id_filter.json()
+    assert response_with_location_id_filter.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 0,
+        },
+        "items": [],
+    }
+
+
+async def test_search_jobs_by_name_and_type(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    jobs_search_with_different_types: tuple[Job],
+    mocked_user: MockedUser,
+) -> None:
+    jobs = await enrich_jobs(jobs_search_with_different_types, async_session)
+    job_with_dag_type = jobs[0]
+    response = await test_client.get(
+        "/v1/jobs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={"search_query": "airflow"},
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 2,
+        },
+        "items": [
+            {
+                "id": str(job.id),
+                "data": job_to_json(job),
+            }
+            for job in jobs
+        ],
+    }
+
+    response_with_type_filter = await test_client.get(
+        "/v1/jobs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={"job_type": "AIRFLOW_DAG", "search_query": "airflow"},
+    )
+
+    assert response_with_type_filter.status_code == HTTPStatus.OK, response_with_type_filter.json()
+    assert response_with_type_filter.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 1,
+        },
+        "items": [
+            {
+                "id": str(job_with_dag_type.id),
+                "data": job_to_json(job_with_dag_type),
+            },
+        ],
+    }
+
+
+async def test_search_jobs_by_name_and_type_non_existen_type(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    jobs_search_with_different_types: tuple[Job],
+    mocked_user: MockedUser,
+) -> None:
+    response_with_type_filter = await test_client.get(
+        "/v1/jobs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={"job_type": "NO_EXISTEN_TYPE", "search_query": "airflow"},
+    )
+
+    assert response_with_type_filter.status_code == HTTPStatus.OK, response_with_type_filter.json()
+    assert response_with_type_filter.json() == {
         "meta": {
             "has_next": False,
             "has_previous": False,

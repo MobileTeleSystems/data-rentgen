@@ -26,6 +26,14 @@ class JobDetailedResponseV1(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class JobTypesResponseV1(BaseModel):
+    """JobTypes"""
+
+    job_types: list[str] = Field(description="List of distinct job types")
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class JobPaginateQueryV1(PaginateQueryV1):
     """Query params for Jobs paginate request."""
 
@@ -34,6 +42,14 @@ class JobPaginateQueryV1(PaginateQueryV1):
         default=None,
         min_length=3,
         description="Search query",
+    )
+    job_type: str | None = Field(
+        default=None,
+        description="Filter for searching",
+    )
+    location_id: int | None = Field(
+        default=None,
+        description="",
     )
 
     model_config = ConfigDict(extra="forbid")

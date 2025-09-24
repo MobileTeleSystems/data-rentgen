@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
+from collections.abc import Sequence
 
 from sqlalchemy import (
     any_,
@@ -38,6 +39,11 @@ class JobTypeRepository(Repository[JobType]):
         # if another worker already created the same row, just use it. if not - create with holding the lock.
         await self._lock("job_type", job_type_dto.type)
         return await self._get(job_type_dto) or await self._create(job_type_dto)
+
+    async def get_job_types(self) -> Sequence[str]:
+        query = select(JobType.type).distinct(JobType.type)
+        result = await self._session.scalars(query)
+        return result.all()
 
     async def _get(self, job_type_dto: JobTypeDTO) -> JobType | None:
         return await self._session.scalar(get_one_query, {"type": job_type_dto.type})
