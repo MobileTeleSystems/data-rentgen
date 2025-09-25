@@ -91,12 +91,7 @@ repos:
     rev: 0.8.19
     hooks:
       - id: uv-lock
-        # https://github.com/astral-sh/uv/issues/10176
-        additional_dependencies:
-          - setuptools
-          - wheel
-          - setuptools-git-versioning
-        args: [--prerelease=allow, --offline]
+        args: [--prerelease=allow]
 
   - repo: local
     hooks:
@@ -118,3 +113,4 @@ ci:
     - mypy # checked with Github Actions
     - docker-compose-check # cannot run on pre-commit.ci
     - chmod # failing in pre-commit.ci
+    - uv-lock # failing in pre-commit.ci in cause of https://github.com/astral-sh/uv/issues/10167
