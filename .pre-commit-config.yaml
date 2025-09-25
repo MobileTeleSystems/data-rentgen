@@ -91,7 +91,8 @@ repos:
     rev: 0.8.19
     hooks:
       - id: uv-lock
-        args: [--prerelease=allow]
+        # https://github.com/astral-sh/uv/issues/10176
+        args: [--prerelease=allow, --locked, --offline]
 
   - repo: local
     hooks:
