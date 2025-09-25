@@ -22,7 +22,9 @@ from data_rentgen.server.utils.lineage_response import build_lineage_response
 router = APIRouter(
     prefix="/jobs",
     tags=["Jobs"],
-    responses=get_error_responses(include={NotAuthorizedSchema, NotAuthorizedRedirectSchema, InvalidRequestSchema}),
+    responses=get_error_responses(
+        include={NotAuthorizedSchema, NotAuthorizedRedirectSchema, InvalidRequestSchema},
+    ),
 )
 
 
@@ -62,7 +64,7 @@ async def get_jobs_lineage(
     return build_lineage_response(lineage)
 
 
-@router.get("/job_types", summary="Get distinct types of Jobs")
+@router.get("/job-types", summary="Get distinct types of Jobs")
 async def get_job_types(
     job_service: Annotated[JobService, Depends()],
     current_user: Annotated[User, Depends(get_user())],

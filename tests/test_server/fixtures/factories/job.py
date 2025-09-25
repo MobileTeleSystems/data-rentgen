@@ -155,7 +155,10 @@ async def jobs_search(
             await create_location(
                 async_session,
                 location_kwargs=kwargs,
-                address_kwargs={"urls": [random_string(32), random_string(32)]},  # Each location has 2 addresses
+                # Each location has 2 addresses
+                address_kwargs={
+                    "urls": [random_string(32), random_string(32)],
+                },
             )
             for kwargs in location_kwargs
         ]
@@ -170,7 +173,9 @@ async def jobs_search(
             await create_location(
                 async_session,
                 location_kwargs={"type": "random"},
-                address_kwargs={"urls": [random_string(32), random_string(32)]},
+                address_kwargs={
+                    "urls": [random_string(32), random_string(32)],
+                },
             )
             for _ in range(3)
         ]
@@ -207,9 +212,19 @@ async def jobs_search(
 
     jobs_by_name = {job.name: job for job in jobs_with_names}
     jobs_by_location = dict(
-        zip([location.name for location in locations_with_names], jobs_with_location_names, strict=False),
+        zip(
+            [location.name for location in locations_with_names],
+            jobs_with_location_names,
+            strict=False,
+        ),
     )
-    jobs_by_address = dict(zip(addresses_url, [job for job in jobs_with_address_urls for _ in range(2)], strict=False))
+    jobs_by_address = dict(
+        zip(
+            addresses_url,
+            [job for job in jobs_with_address_urls for _ in range(2)],
+            strict=False,
+        ),
+    )
 
     yield jobs_by_name, jobs_by_location, jobs_by_address
 
@@ -218,36 +233,7 @@ async def jobs_search(
 
 
 @pytest_asyncio.fixture
-async def jobs_search_with_different_types(
-    async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
-) -> AsyncGenerator[tuple[Job]]:
-    async with async_session_maker() as async_session:
-        location = await create_location(async_session)
-        airflow_dag_type = await create_job_type(async_session, {"type": "AIRFLOW_DAG"})
-        airflow_task_type = await create_job_type(async_session, {"type": "AIRFLOW_TASK"})
-
-        job_with_dag_type = await create_job(
-            async_session,
-            location_id=location.id,
-            job_type_id=airflow_dag_type.id,
-            job_kwargs={"name": "airflow-dag"},
-        )
-        job_with_task_type = await create_job(
-            async_session,
-            location_id=location.id,
-            job_type_id=airflow_task_type.id,
-            job_kwargs={"name": "airflow-task"},
-        )
-        async_session.expunge_all()
-
-    yield (job_with_dag_type, job_with_task_type)
-
-    async with async_session_maker() as async_session:
-        await clean_db(async_session)
-
-
-@pytest_asyncio.fixture
-async def jobs_search_with_different_locations(
+async def jobs_with_locations_and_types(
     async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
 ) -> AsyncGenerator[tuple[Job]]:
     async with async_session_maker() as async_session:
@@ -256,23 +242,25 @@ async def jobs_search_with_different_locations(
             async_session,
             location_kwargs={"name": "airflow-host", "type": "http"},
         )
-        job_type = await create_job_type(async_session)
+        cluster_type = await create_job_type(async_session, {"type": "SPARK_APPLICATION"})
+        airflow_dag_type = await create_job_type(async_session, {"type": "AIRFLOW_DAG"})
+        airflow_task_type = await create_job_type(async_session, {"type": "AIRFLOW_TASK"})
         cluster_job = await create_job(
             async_session,
             location_id=cluster_location.id,
-            job_type_id=job_type.id,
+            job_type_id=cluster_type.id,
             job_kwargs={"name": "my-job_cluster"},
         )
         dag_job = await create_job(
             async_session,
             location_id=airflow_location.id,
-            job_type_id=job_type.id,
+            job_type_id=airflow_dag_type.id,
             job_kwargs={"name": "my-job_dag"},
         )
         task_job = await create_job(
             async_session,
             location_id=airflow_location.id,
-            job_type_id=job_type.id,
+            job_type_id=airflow_task_type.id,
             job_kwargs={"name": "my-job_task"},
         )
 

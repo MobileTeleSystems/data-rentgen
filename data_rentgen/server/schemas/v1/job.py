@@ -43,13 +43,13 @@ class JobPaginateQueryV1(PaginateQueryV1):
         min_length=3,
         description="Search query",
     )
-    job_type: str | None = Field(
-        default=None,
-        description="Filter for searching",
+    job_type: list[str] = Field(
+        default_factory=list,
+        description="Specify job types",
     )
     location_id: int | None = Field(
         default=None,
-        description="",
+        description="The location id which jobs belong",
     )
 
     model_config = ConfigDict(extra="forbid")
