@@ -92,7 +92,9 @@ repos:
     hooks:
       - id: uv-lock
         # https://github.com/astral-sh/uv/issues/10176
-        args: [--prerelease=allow, --check]
+        additional_dependencies:
+          - setuptools-git-versioning
+        args: [--prerelease=allow]
 
   - repo: local
     hooks:

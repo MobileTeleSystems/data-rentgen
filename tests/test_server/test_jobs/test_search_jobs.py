@@ -254,7 +254,7 @@ async def test_get_job_types(
 ) -> None:
     unique_job_type = {item.type for item in job_types}
     response = await test_client.get(
-        "/v1/jobs/job-types",
+        "/v1/jobs/types",
         headers={"Authorization": f"Bearer {mocked_user.access_token}"},
     )
 
