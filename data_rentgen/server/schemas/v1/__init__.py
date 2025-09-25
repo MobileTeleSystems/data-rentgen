@@ -12,6 +12,7 @@ from data_rentgen.server.schemas.v1.job import (
     JobDetailedResponseV1,
     JobPaginateQueryV1,
     JobResponseV1,
+    JobTypesResponseV1,
 )
 from data_rentgen.server.schemas.v1.lineage import (
     ColumnLineageInteractionTypeV1,
@@ -87,6 +88,7 @@ __all__ = [
     "JobLineageQueryV1",
     "JobPaginateQueryV1",
     "JobResponseV1",
+    "JobTypesResponseV1",
     "LineageDirectionV1",
     "LineageEntityKindV1",
     "LineageEntityV1",

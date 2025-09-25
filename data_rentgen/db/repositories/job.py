@@ -76,6 +76,8 @@ class JobRepository(Repository[Job]):
         page_size: int,
         job_ids: Collection[int],
         search_query: str | None,
+        location_id: int | None,
+        job_type: Collection[str],
     ) -> PaginationDTO[Job]:
         where = []
         if job_ids:
@@ -83,6 +85,11 @@ class JobRepository(Repository[Job]):
 
         query: Select | CompoundSelect
         order_by: list[ColumnElement | SQLColumnExpression]
+        if job_type:
+            where.append(Job.type == any_(list(job_type)))  # type: ignore[arg-type]
+        if location_id:
+            where.append(Job.location_id == location_id)  # type: ignore[arg-type]
+
         if search_query:
             tsquery = make_tsquery(search_query)
 

@@ -1,0 +1,5 @@
+Add new filters for ``/v1/jobs`` endpoint.
+- ``location_id: int``  id to filter by specific location
+- ``job_type: list[str]`` filter by job's type
+
+Add new endpoint GET ``/v1/jobs/types`` - to get distinct job types from DataRentgen.

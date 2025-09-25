@@ -113,3 +113,4 @@ ci:
     - mypy # checked with Github Actions
     - docker-compose-check # cannot run on pre-commit.ci
     - chmod # failing in pre-commit.ci
+    - uv-lock # failing in pre-commit.ci in cause of https://github.com/astral-sh/uv/issues/10167
