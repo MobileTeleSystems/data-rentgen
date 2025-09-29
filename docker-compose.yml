@@ -99,7 +99,7 @@ services:
       - all
 
   broker:
-    image: bitnami/kafka:3.9
+    image: bitnamilegacy/kafka:3.9
     restart: unless-stopped
     env_file: .env.docker
     ports:
