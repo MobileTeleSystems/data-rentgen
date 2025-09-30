@@ -94,8 +94,8 @@ class RunRepository(Repository[Run]):
         job_id: int | None,
         parent_run_id: UUID | None,
         search_query: str | None,
-        job_types: Collection[str],
-        statuses: Collection[str],
+        job_type: Collection[str],
+        status: Collection[str],
     ) -> PaginationDTO[Run]:
         # do not use `tuple_(Run.created_at, Run.id).in_(...),
         # as this is too complex filter for Postgres to make an optimal query plan
@@ -132,9 +132,9 @@ class RunRepository(Repository[Run]):
             where.append(Run.job_id == job_id)
         if parent_run_id:
             where.append(Run.parent_run_id == parent_run_id)
-        if statuses:
-            serialize_statuses: Collection[RunStatus] = [RunStatus[status] for status in statuses]
-            where.append(Run.status == any_(serialize_statuses))  # type: ignore[arg-type]
+        if status:
+            serialize_status: Collection[RunStatus] = [RunStatus[status] for status in status]
+            where.append(Run.status == any_(serialize_status))  # type: ignore[arg-type]
 
         query: Select | CompoundSelect
         order_by: list[ColumnElement | SQLColumnExpression]
@@ -165,8 +165,8 @@ class RunRepository(Repository[Run]):
             query = select(Run).where(*where)
             order_by = [Run.created_at.desc(), Run.id.desc()]
 
-        if job_types:
-            query = query.join(Job, Run.job_id == Job.id).where(Job.type == any_(job_types))  # type: ignore[arg-type]
+        if job_type:
+            query = query.join(Job, Run.job_id == Job.id).where(Job.type == any_(job_type))  # type: ignore[arg-type]
 
         options = [selectinload(Run.started_by_user)]
         return await self._paginate_by_query(

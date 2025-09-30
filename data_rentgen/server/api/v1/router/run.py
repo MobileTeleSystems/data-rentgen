@@ -39,8 +39,8 @@ async def runs(
         job_id=query_args.job_id,
         parent_run_id=query_args.parent_run_id,
         search_query=query_args.search_query,
-        job_types=query_args.job_types,
-        statuses=query_args.statuses,
+        job_type=query_args.job_type,
+        status=query_args.status,
     )
     return PageResponseV1[RunDetailedResponseV1].from_pagination(pagination)
 

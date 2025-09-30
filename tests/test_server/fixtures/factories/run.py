@@ -195,10 +195,13 @@ async def runs_search(
         {"name": "airflow_dag_name", "type": "AIRFLOW_DAG"},
     ]
     runs_kwargs = [
-        {"external_id": "application_1638922609021_0001", "status": 3},
-        {"external_id": "application_1638922609021_0002", "status": 1},
-        {"external_id": "extract_task_0001", "status": 0},
-        {"external_id": "extract_task_0002", "status": 2},
+        {"external_id": "application_1638922609021_0001", "status": RunStatus.KILLED},
+        {
+            "external_id": "application_1638922609021_0002",
+            "status": RunStatus.SUCCEEDED,
+        },
+        {"external_id": "extract_task_0001", "status": RunStatus.STARTED},
+        {"external_id": "extract_task_0002", "status": RunStatus.FAILED},
     ]
     started_at = datetime.now(tz=UTC)
     async with async_session_maker() as async_session:

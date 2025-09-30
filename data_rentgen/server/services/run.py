@@ -80,8 +80,8 @@ class RunService:
         job_id: int | None,
         parent_run_id: UUID | None,
         search_query: str | None,
-        job_types: Collection[str],
-        statuses: Collection[str],
+        job_type: Collection[str],
+        status: Collection[str],
     ) -> RunServicePaginatedResult:
         pagination = await self._uow.run.paginate(
             page=page,
@@ -92,8 +92,8 @@ class RunService:
             job_id=job_id,
             parent_run_id=parent_run_id,
             search_query=search_query,
-            job_types=job_types,
-            statuses=statuses,
+            job_type=job_type,
+            status=status,
         )
         run_ids = [item.id for item in pagination.items]
         input_stats = await self._uow.input.get_stats_by_run_ids(run_ids)

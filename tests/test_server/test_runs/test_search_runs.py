@@ -37,8 +37,8 @@ async def test_search_runs_missing_since(
                     "message": "Value error, 'search_query' can be passed only with 'since'",
                     "context": {},
                     "input": {
-                        "statuses": [],
-                        "job_types": [],
+                        "status": [],
+                        "job_type": [],
                         "page": 1,
                         "page_size": 20,
                         "run_id": [],
@@ -200,7 +200,7 @@ async def test_search_runs_by_job_type(
         headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
-            "job_types": ["SPARK_APPLICATION"],
+            "job_type": ["SPARK_APPLICATION"],
         },
     )
 
@@ -251,7 +251,6 @@ async def test_search_runs_by_status(
 ) -> None:
     runs = await enrich_runs(
         [
-            # runs sorted by id in descending order
             runs_search["extract_task_0001"],
             runs_search["application_1638922609021_0002"],
         ],
@@ -264,7 +263,7 @@ async def test_search_runs_by_status(
         headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
-            "statuses": ["SUCCEEDED", "STARTED"],
+            "status": ["SUCCEEDED", "STARTED"],
         },
     )
 

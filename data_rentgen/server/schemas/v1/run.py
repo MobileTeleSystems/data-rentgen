@@ -147,12 +147,12 @@ class RunsQueryV1(PaginateQueryV1):
         examples=["01913217-b761-7b1a-bb52-489da9c8b9c8"],
     )
 
-    job_types: list[str] = Field(
+    job_type: list[str] = Field(
         default_factory=list,
         description="Filter runs by type of a Job",
         examples=["SPARK_APPLICATION", "AIRFLOW_TASK"],
     )
-    statuses: list[RunStatusForQueryV1] = Field(default_factory=list, description="Filter runs by status")
+    status: list[RunStatusForQueryV1] = Field(default_factory=list, description="Filter runs by status")
 
     search_query: str | None = Field(
         default=None,
