@@ -36,6 +36,8 @@ async def test_get_runs_missing_fields(
                     "message": "Value error, input should contain either 'since', 'run_id', 'job_id', 'parent_run_id' or 'search_query' field",
                     "context": {},
                     "input": {
+                        "status": [],
+                        "job_type": [],
                         "page": 1,
                         "page_size": 20,
                         "run_id": [],

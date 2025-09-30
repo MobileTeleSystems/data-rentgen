@@ -38,6 +38,8 @@ async def test_get_runs_by_job_id_missing_since(
                     "message": "Value error, 'parent_run_id' can be passed only with 'since'",
                     "context": {},
                     "input": {
+                        "status": [],
+                        "job_type": [],
                         "page": 1,
                         "page_size": 20,
                         "parent_run_id": str(new_run.parent_run_id),
