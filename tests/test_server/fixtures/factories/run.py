@@ -135,7 +135,8 @@ async def runs_with_same_job(
                 async_session,
                 run_kwargs={
                     "job_id": job.id,
-                    "created_at": started_at + timedelta(seconds=s),  # To be sure runs has different timestamps
+                    # To be sure runs has different timestamps
+                    "created_at": started_at + timedelta(seconds=s),
                     "started_by_user_id": user.id,
                     **params,
                 },
@@ -167,7 +168,8 @@ async def runs_with_same_parent(
                 async_session,
                 run_kwargs={
                     "parent_run_id": parent_run_id,
-                    "created_at": started_at + timedelta(seconds=s),  # To be sure runs has different timestamps
+                    # To be sure runs has different timestamps
+                    "created_at": started_at + timedelta(seconds=s),
                     "started_by_user_id": user.id,
                     **params,
                 },
@@ -193,10 +195,10 @@ async def runs_search(
         {"name": "airflow_dag_name", "type": "AIRFLOW_DAG"},
     ]
     runs_kwargs = [
-        {"external_id": "application_1638922609021_0001"},
-        {"external_id": "application_1638922609021_0002"},
-        {"external_id": "extract_task_0001"},
-        {"external_id": "extract_task_0002"},
+        {"external_id": "application_1638922609021_0001", "status": 3},
+        {"external_id": "application_1638922609021_0002", "status": 1},
+        {"external_id": "extract_task_0001", "status": 0},
+        {"external_id": "extract_task_0002", "status": 2},
     ]
     started_at = datetime.now(tz=UTC)
     async with async_session_maker() as async_session:

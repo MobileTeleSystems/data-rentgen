@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import IntEnum
+from enum import IntEnum, StrEnum
 from uuid import UUID
 
 from pydantic import (
@@ -39,6 +39,14 @@ class RunStatusV1(IntEnum):
 
     def __str__(self) -> str:
         return self.name
+
+
+class RunStatusForQueryV1(StrEnum):
+    UNKNOWN = "UNKNOWN"
+    STARTED = "STARTED"
+    SUCCEEDED = "SUCCEEDED"
+    FAILED = "FAILED"
+    KILLED = "KILLED"
 
 
 class RunResponseV1(BaseModel):
@@ -138,6 +146,13 @@ class RunsQueryV1(PaginateQueryV1):
         description="Parent run id, can be used only with 'since' and 'until'",
         examples=["01913217-b761-7b1a-bb52-489da9c8b9c8"],
     )
+
+    job_types: list[str] = Field(
+        default_factory=list,
+        description="Filter runs by type of a Job",
+        examples=["SPARK_APPLICATION", "AIRFLOW_TASK"],
+    )
+    statuses: list[RunStatusForQueryV1] = Field(default_factory=list, description="Filter runs by status")
 
     search_query: str | None = Field(
         default=None,
