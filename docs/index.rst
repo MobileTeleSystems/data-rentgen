@@ -4,6 +4,7 @@
     :hidden:
 
     self
+    comparison
 
 .. toctree::
     :maxdepth: 2
