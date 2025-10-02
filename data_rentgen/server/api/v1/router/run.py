@@ -40,7 +40,13 @@ async def runs(
         parent_run_id=query_args.parent_run_id,
         search_query=query_args.search_query,
         job_type=query_args.job_type,
+        job_location_id=query_args.job_location_id,
         status=query_args.status,
+        started_by_user=query_args.started_by_user,
+        started_since=query_args.started_since,
+        started_until=query_args.started_until,
+        ended_since=query_args.ended_since,
+        ended_until=query_args.ended_until,
     )
     return PageResponseV1[RunDetailedResponseV1].from_pagination(pagination)
 

@@ -12,6 +12,7 @@ from tests.test_server.fixtures.factories.base import random_datetime, random_st
 from tests.test_server.fixtures.factories.job import create_job
 from tests.test_server.fixtures.factories.job_type import create_job_type
 from tests.test_server.fixtures.factories.location import create_location
+from tests.test_server.fixtures.factories.user import create_user
 from tests.test_server.utils.delete import clean_db
 
 if TYPE_CHECKING:
@@ -188,50 +189,95 @@ async def runs_with_same_parent(
 @pytest_asyncio.fixture()
 async def runs_search(
     async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]],
-    user: User,
 ) -> AsyncGenerator[dict[str | None, Run], None]:
-    job_kwargs = [
-        {"name": "spark_application_name", "type": "SPARK_APPLICATION"},
-        {"name": "airflow_dag_name", "type": "AIRFLOW_DAG"},
-    ]
-    runs_kwargs = [
-        {"external_id": "application_1638922609021_0001", "status": RunStatus.KILLED},
-        {
-            "external_id": "application_1638922609021_0002",
-            "status": RunStatus.SUCCEEDED,
-        },
-        {"external_id": "extract_task_0001", "status": RunStatus.STARTED},
-        {"external_id": "extract_task_0002", "status": RunStatus.FAILED},
-    ]
-    started_at = datetime.now(tz=UTC)
+    created_at = datetime.now(tz=UTC)
     async with async_session_maker() as async_session:
-        jobs = []
-        for kwargs in job_kwargs:
-            location = await create_location(async_session)
-            job_type = await create_job_type(async_session, job_type_kwargs={"type": kwargs["type"]})
-            jobs.append(
-                await create_job(
-                    async_session,
-                    location_id=location.id,
-                    job_type_id=job_type.id,
-                    job_kwargs=kwargs,
-                ),
-            )
-        runs = [
-            await create_run(
-                async_session,
-                run_kwargs={
-                    "created_at": started_at + timedelta(seconds=0.1 * i),
-                    "job_id": job.id,
-                    "started_by_user_id": user.id,
-                    **kwargs,
-                },
-            )
-            for i, (job, kwargs) in enumerate(zip([job for job in jobs for _ in range(2)], runs_kwargs, strict=False))
-        ]
+        spark_location = await create_location(async_session)
+        airflow_location = await create_location(async_session)
 
-        async_session.expunge_all()
+        spark_user = await create_user(async_session)
+        airflow_user = await create_user(async_session)
 
+        spark_application_job_type = await create_job_type(async_session, job_type_kwargs={"type": "SPARK_APPLICATION"})
+        airflow_dag_job_type = await create_job_type(async_session, job_type_kwargs={"type": "AIRFLOW_DAG"})
+        airflow_task_job_type = await create_job_type(async_session, job_type_kwargs={"type": "AIRFLOW_TASK"})
+
+        spark_application = await create_job(
+            async_session,
+            location_id=spark_location.id,
+            job_type_id=spark_application_job_type.id,
+            job_kwargs={"name": "spark_application_name"},
+        )
+        airflow_dag = await create_job(
+            async_session,
+            location_id=airflow_location.id,
+            job_type_id=airflow_dag_job_type.id,
+            job_kwargs={"name": "airflow_dag_name"},
+        )
+        airflow_task = await create_job(
+            async_session,
+            location_id=airflow_location.id,
+            job_type_id=airflow_task_job_type.id,
+            job_kwargs={"name": "airflow_task_name"},
+        )
+
+        spark_app_run1 = await create_run(
+            async_session,
+            run_kwargs={
+                "job_id": spark_application.id,
+                "started_by_user_id": spark_user.id,
+                "external_id": "application_1638922609021_0001",
+                "status": RunStatus.KILLED,
+                "created_at": created_at + timedelta(seconds=0.1),
+                "started_at": created_at + timedelta(seconds=1),
+                "ended_at": created_at + timedelta(seconds=60),
+            },
+        )
+        spark_app_run2 = await create_run(
+            async_session,
+            run_kwargs={
+                "job_id": spark_application.id,
+                "started_by_user_id": spark_user.id,
+                "external_id": "application_1638922609021_0002",
+                "status": RunStatus.SUCCEEDED,
+                "created_at": created_at + timedelta(seconds=0.2),
+                "started_at": created_at + timedelta(seconds=2),
+                "ended_at": created_at + timedelta(seconds=120),
+            },
+        )
+
+        airflow_dag_run1 = await create_run(
+            async_session,
+            run_kwargs={
+                "job_id": airflow_dag.id,
+                "started_by_user_id": airflow_user.id,
+                "external_id": "dag_0001",
+                "status": RunStatus.STARTED,
+                "created_at": created_at + timedelta(seconds=0.3),
+                "started_at": created_at + timedelta(seconds=3),
+                "ended_at": None,
+            },
+        )
+        airflow_task_run1 = await create_run(
+            async_session,
+            run_kwargs={
+                "job_id": airflow_task.id,
+                "parent_run_id": airflow_dag_run1.id,
+                "started_by_user_id": airflow_user.id,
+                "external_id": "task_0001",
+                "status": RunStatus.FAILED,
+                "created_at": created_at + timedelta(seconds=0.4),
+                "started_at": created_at + timedelta(seconds=4),
+                "ended_at": created_at + timedelta(seconds=240),
+            },
+        )
+
+    runs = [
+        spark_app_run1,
+        spark_app_run2,
+        airflow_dag_run1,
+        airflow_task_run1,
+    ]
     yield {run.external_id: run for run in runs}
 
     async with async_session_maker() as async_session:

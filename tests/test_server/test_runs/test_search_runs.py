@@ -121,21 +121,18 @@ async def test_search_runs_by_job_name(
     runs_search: dict[str, Run],
     mocked_user: MockedUser,
 ) -> None:
-    runs = await enrich_runs(
+    [run] = await enrich_runs(
         [
-            # runs sorted by id in descending order
-            runs_search["extract_task_0002"],
-            runs_search["extract_task_0001"],
+            runs_search["dag_0001"],
         ],
         async_session,
     )
-    since = min(run.created_at for run in runs)
 
     response = await test_client.get(
         "/v1/runs",
         headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
-            "since": since.isoformat(),
+            "since": run.created_at.isoformat(),
             "search_query": "airflow_dag",
         },
     )
@@ -150,7 +147,7 @@ async def test_search_runs_by_job_name(
             "page_size": 20,
             "pages_count": 1,
             "previous_page": None,
-            "total_count": 2,
+            "total_count": 1,
         },
         "items": [
             {
@@ -173,135 +170,7 @@ async def test_search_runs_by_job_name(
                         "total_operations": 0,
                     },
                 },
-            }
-            for run in runs
-        ],
-    }
-
-
-async def test_search_runs_by_job_type(
-    test_client: AsyncClient,
-    async_session: AsyncSession,
-    runs_search: dict[str, Run],
-    mocked_user: MockedUser,
-) -> None:
-    runs = await enrich_runs(
-        [
-            # runs sorted by id in descending order
-            runs_search["application_1638922609021_0002"],
-            runs_search["application_1638922609021_0001"],
-        ],
-        async_session,
-    )
-    since = min(run.created_at for run in runs)
-
-    response = await test_client.get(
-        "/v1/runs",
-        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
-        params={
-            "since": since.isoformat(),
-            "job_type": ["SPARK_APPLICATION"],
-        },
-    )
-
-    assert response.status_code == HTTPStatus.OK, response.json()
-    assert response.json() == {
-        "meta": {
-            "has_next": False,
-            "has_previous": False,
-            "next_page": None,
-            "page": 1,
-            "page_size": 20,
-            "pages_count": 1,
-            "previous_page": None,
-            "total_count": 2,
-        },
-        "items": [
-            {
-                "id": str(run.id),
-                "data": run_to_json(run),
-                "statistics": {
-                    "inputs": {
-                        "total_datasets": 0,
-                        "total_bytes": 0,
-                        "total_rows": 0,
-                        "total_files": 0,
-                    },
-                    "outputs": {
-                        "total_datasets": 0,
-                        "total_bytes": 0,
-                        "total_rows": 0,
-                        "total_files": 0,
-                    },
-                    "operations": {
-                        "total_operations": 0,
-                    },
-                },
-            }
-            for run in runs
-        ],
-    }
-
-
-async def test_search_runs_by_status(
-    test_client: AsyncClient,
-    async_session: AsyncSession,
-    runs_search: dict[str, Run],
-    mocked_user: MockedUser,
-) -> None:
-    runs = await enrich_runs(
-        [
-            runs_search["extract_task_0001"],
-            runs_search["application_1638922609021_0002"],
-        ],
-        async_session,
-    )
-    since = min(run.created_at for run in runs)
-
-    response = await test_client.get(
-        "/v1/runs",
-        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
-        params={
-            "since": since.isoformat(),
-            "status": ["SUCCEEDED", "STARTED"],
-        },
-    )
-
-    assert response.status_code == HTTPStatus.OK, response.json()
-    assert response.json() == {
-        "meta": {
-            "has_next": False,
-            "has_previous": False,
-            "next_page": None,
-            "page": 1,
-            "page_size": 20,
-            "pages_count": 1,
-            "previous_page": None,
-            "total_count": 2,
-        },
-        "items": [
-            {
-                "id": str(run.id),
-                "data": run_to_json(run),
-                "statistics": {
-                    "inputs": {
-                        "total_datasets": 0,
-                        "total_bytes": 0,
-                        "total_rows": 0,
-                        "total_files": 0,
-                    },
-                    "outputs": {
-                        "total_datasets": 0,
-                        "total_bytes": 0,
-                        "total_rows": 0,
-                        "total_files": 0,
-                    },
-                    "operations": {
-                        "total_operations": 0,
-                    },
-                },
-            }
-            for run in runs
+            },
         ],
     }
 
