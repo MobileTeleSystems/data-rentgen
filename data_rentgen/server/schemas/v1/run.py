@@ -43,10 +43,19 @@ class RunStatusV1(IntEnum):
 
 class RunStatusForQueryV1(StrEnum):
     UNKNOWN = "UNKNOWN"
+    """No data about status"""
+
     STARTED = "STARTED"
+    """Received START event"""
+
     SUCCEEDED = "SUCCEEDED"
+    """Finished successfully"""
+
     FAILED = "FAILED"
+    """Internal failure"""
+
     KILLED = "KILLED"
+    """Killed externally, e.g. by user request or in case of OOM"""
 
 
 class RunResponseV1(BaseModel):
@@ -150,14 +159,52 @@ class RunsQueryV1(PaginateQueryV1):
     job_type: list[str] = Field(
         default_factory=list,
         description="Filter runs by type of a Job",
-        examples=["SPARK_APPLICATION", "AIRFLOW_TASK"],
+        examples=[["SPARK_APPLICATION", "AIRFLOW_TASK"]],
     )
-    status: list[RunStatusForQueryV1] = Field(default_factory=list, description="Filter runs by status")
+    job_location_id: int | None = Field(
+        default=None,
+        description="Filter runs by location of a Job",
+        examples=[123, 234],
+    )
+
+    status: list[RunStatusForQueryV1] = Field(
+        default_factory=list,
+        description="Filter runs by status",
+        examples=[["SUCCEEDED", "FAILED"]],
+    )
+
+    started_by_user: list[str] | None = Field(
+        default=None,
+        description="User who started the Run",
+        examples=[["someuser1", "someuser2"]],
+    )
 
     search_query: str | None = Field(
         default=None,
         min_length=3,
         description="Search query",
+    )
+
+    started_since: datetime | None = Field(
+        default=None,
+        description="Minimum value of Run 'started_at' field, in ISO 8601 format",
+        examples=["2008-09-15T15:53:00+05:00"],
+    )
+    started_until: datetime | None = Field(
+        default=None,
+        description="Maximum value of Run 'started_at' field, in ISO 8601 format",
+        examples=["2008-09-15T15:53:00+05:00"],
+    )
+
+    ended_since: datetime | None = Field(
+        default=None,
+        description="Minimum value of Run 'ended_at' field, in ISO 8601 format",
+        examples=["2008-09-15T15:53:00+05:00"],
+    )
+    ended_until: datetime | None = Field(
+        default=None,
+        description="Maximum value of Run 'ended_at' field, in ISO 8601 format",
+        examples=["2008-09-15T15:53:00+05:00"],
     )
 
     model_config = ConfigDict(extra="forbid")

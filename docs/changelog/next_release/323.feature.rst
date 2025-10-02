@@ -1,0 +1,9 @@
+Add new query parameters for ``GET /v1/runs`` endpoint:
+
+- started_since: ``datetime | None``
+- started_until: ``datetime | None``
+- ended_since: ``datetime | None``
+- ended_until: ``datetime | None``
+- job_location_id: ``int | None``
+- started_by_user: ``list[str] | None``
+

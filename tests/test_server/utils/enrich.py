@@ -8,7 +8,14 @@ from data_rentgen.db.models.tag import Tag
 
 async def enrich_runs(runs: list[Run], async_session: AsyncSession) -> list[Run]:
     run_ids = [run.id for run in runs]
-    query = select(Run).where(Run.id.in_(run_ids)).options(selectinload(Run.started_by_user))
+    query = (
+        select(Run)
+        .where(Run.id.in_(run_ids))
+        .options(
+            selectinload(Run.job).selectinload(Job.location).selectinload(Location.addresses),
+            selectinload(Run.started_by_user),
+        )
+    )
     result = await async_session.scalars(query)
     runs_by_id = {run.id: run for run in result.all()}
     # preserve original order

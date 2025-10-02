@@ -198,6 +198,396 @@ async def test_get_runs_with_until(
     }
 
 
+async def test_get_runs_with_job_type(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    runs_search: dict[str, Run],
+    mocked_user: MockedUser,
+) -> None:
+    runs = await enrich_runs(
+        [
+            # runs sorted by id in descending order
+            runs_search["application_1638922609021_0002"],
+            runs_search["application_1638922609021_0001"],
+        ],
+        async_session,
+    )
+    since = min(run.created_at for run in runs)
+
+    response = await test_client.get(
+        "/v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "job_type": ["SPARK_APPLICATION"],
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 2,
+        },
+        "items": [
+            {
+                "id": str(run.id),
+                "data": run_to_json(run),
+                "statistics": {
+                    "inputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "outputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "operations": {
+                        "total_operations": 0,
+                    },
+                },
+            }
+            for run in runs
+        ],
+    }
+
+
+async def test_get_runs_with_status(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    runs_search: dict[str, Run],
+    mocked_user: MockedUser,
+) -> None:
+    runs = await enrich_runs(
+        [
+            # runs sorted by id in descending order
+            runs_search["dag_0001"],
+            runs_search["application_1638922609021_0002"],
+        ],
+        async_session,
+    )
+    since = min(run.created_at for run in runs)
+
+    response = await test_client.get(
+        "/v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "status": ["SUCCEEDED", "STARTED"],
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 2,
+        },
+        "items": [
+            {
+                "id": str(run.id),
+                "data": run_to_json(run),
+                "statistics": {
+                    "inputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "outputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "operations": {
+                        "total_operations": 0,
+                    },
+                },
+            }
+            for run in runs
+        ],
+    }
+
+
+async def test_get_runs_with_started_at(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    runs_search: dict[str, Run],
+    mocked_user: MockedUser,
+) -> None:
+    runs = await enrich_runs(
+        [
+            runs_search["application_1638922609021_0001"],
+            runs_search["application_1638922609021_0002"],
+            runs_search["dag_0001"],
+            runs_search["task_0001"],
+        ],
+        async_session,
+    )
+
+    response = await test_client.get(
+        "/v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": runs[0].created_at.isoformat(),
+            "started_since": runs[1].started_at.isoformat(),
+            "started_until": runs[2].started_at.isoformat(),
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 2,
+        },
+        "items": [
+            {
+                "id": str(run.id),
+                "data": run_to_json(run),
+                "statistics": {
+                    "inputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "outputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "operations": {
+                        "total_operations": 0,
+                    },
+                },
+            }
+            # runs sorted by id in descending order
+            for run in [runs[2], runs[1]]
+        ],
+    }
+
+
+async def test_get_runs_with_ended_at(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    runs_search: dict[str, Run],
+    mocked_user: MockedUser,
+) -> None:
+    runs = await enrich_runs(
+        [
+            runs_search["application_1638922609021_0001"],
+            runs_search["application_1638922609021_0002"],
+            runs_search["dag_0001"],
+            runs_search["task_0001"],
+        ],
+        async_session,
+    )
+
+    response = await test_client.get(
+        "/v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": runs[0].created_at.isoformat(),
+            "ended_since": runs[1].ended_at.isoformat(),
+            "ended_until": runs[3].ended_at.isoformat(),
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 2,
+        },
+        "items": [
+            {
+                "id": str(run.id),
+                "data": run_to_json(run),
+                "statistics": {
+                    "inputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "outputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "operations": {
+                        "total_operations": 0,
+                    },
+                },
+            }
+            # runs sorted by id in descending order
+            for run in [runs[3], runs[1]]
+        ],
+    }
+
+
+async def test_get_runs_with_location_id(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    runs_search: dict[str, Run],
+    mocked_user: MockedUser,
+) -> None:
+    runs = await enrich_runs(
+        [
+            # runs sorted by id in descending order
+            runs_search["application_1638922609021_0002"],
+            runs_search["application_1638922609021_0001"],
+        ],
+        async_session,
+    )
+    since = min(run.created_at for run in runs)
+    job = runs[0].job
+
+    response = await test_client.get(
+        "/v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "job_location_id": job.location_id,
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 2,
+        },
+        "items": [
+            {
+                "id": str(run.id),
+                "data": run_to_json(run),
+                "statistics": {
+                    "inputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "outputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "operations": {
+                        "total_operations": 0,
+                    },
+                },
+            }
+            for run in runs
+        ],
+    }
+
+
+async def test_get_runs_with_started_by_user(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    runs_search: dict[str, Run],
+    mocked_user: MockedUser,
+) -> None:
+    runs = await enrich_runs(
+        [
+            # runs sorted by id in descending order
+            runs_search["application_1638922609021_0002"],
+            runs_search["application_1638922609021_0001"],
+        ],
+        async_session,
+    )
+    since = min(run.created_at for run in runs)
+    started_by_user = runs[0].started_by_user
+
+    response = await test_client.get(
+        "/v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "started_by_user": [started_by_user.name],
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 2,
+        },
+        "items": [
+            {
+                "id": str(run.id),
+                "data": run_to_json(run),
+                "statistics": {
+                    "inputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "outputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "operations": {
+                        "total_operations": 0,
+                    },
+                },
+            }
+            for run in runs
+        ],
+    }
+
+
 async def test_get_runs_unauthorized(
     test_client: AsyncClient,
 ):

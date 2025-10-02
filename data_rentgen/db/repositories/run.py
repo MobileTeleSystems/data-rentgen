@@ -9,6 +9,7 @@ from sqlalchemy import (
     CompoundSelect,
     Select,
     SQLColumnExpression,
+    and_,
     any_,
     bindparam,
     desc,
@@ -19,7 +20,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import selectinload
 
-from data_rentgen.db.models import Job, Run, RunStartReason, RunStatus
+from data_rentgen.db.models import Job, Run, RunStartReason, RunStatus, User
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.search import make_tsquery, ts_match, ts_rank
 from data_rentgen.dto import PaginationDTO, RunDTO
@@ -84,7 +85,7 @@ insert_statement = insert_statement.on_conflict_do_update(
 
 
 class RunRepository(Repository[Run]):
-    async def paginate(
+    async def paginate(  # noqa: PLR0912, C901
         self,
         page: int,
         page_size: int,
@@ -95,7 +96,13 @@ class RunRepository(Repository[Run]):
         parent_run_id: UUID | None,
         search_query: str | None,
         job_type: Collection[str],
-        status: Collection[str],
+        job_location_id: int | None,
+        status: Collection[RunStatus],
+        started_by_user: Collection[str] | None,
+        started_since: datetime | None,
+        started_until: datetime | None,
+        ended_since: datetime | None,
+        ended_until: datetime | None,
     ) -> PaginationDTO[Run]:
         # do not use `tuple_(Run.created_at, Run.id).in_(...),
         # as this is too complex filter for Postgres to make an optimal query plan
@@ -133,8 +140,15 @@ class RunRepository(Repository[Run]):
         if parent_run_id:
             where.append(Run.parent_run_id == parent_run_id)
         if status:
-            serialize_status: Collection[RunStatus] = [RunStatus[status] for status in status]
-            where.append(Run.status == any_(serialize_status))  # type: ignore[arg-type]
+            where.append(Run.status == any_(status))  # type: ignore[arg-type]
+        if started_since:
+            where.append(Run.started_at >= started_since)
+        if started_until:
+            where.append(Run.started_at <= started_until)
+        if ended_since:
+            where.append(Run.ended_at >= ended_since)
+        if ended_until:
+            where.append(Run.ended_at <= ended_until)
 
         query: Select | CompoundSelect
         order_by: list[ColumnElement | SQLColumnExpression]
@@ -165,8 +179,22 @@ class RunRepository(Repository[Run]):
             query = select(Run).where(*where)
             order_by = [Run.created_at.desc(), Run.id.desc()]
 
+        job_where = []
         if job_type:
-            query = query.join(Job, Run.job_id == Job.id).where(Job.type == any_(job_type))  # type: ignore[arg-type]
+            job_where.append(Job.type == any_(list(job_type)))  # type: ignore[arg-type]
+        if job_location_id is not None:
+            job_where.append(Job.location_id == job_location_id)
+        if job_where:
+            query = query.join(Job, and_(Run.job_id == Job.id, *job_where))
+
+        if started_by_user:
+            query = query.join(
+                User,
+                and_(
+                    Run.started_by_user_id == User.id,
+                    func.lower(User.name) == any_([name.lower() for name in started_by_user]),  # type: ignore[arg-type]
+                ),
+            )
 
         options = [selectinload(Run.started_by_user)]
         return await self._paginate_by_query(

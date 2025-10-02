@@ -9,7 +9,7 @@ from uuid import UUID
 from fastapi import Depends
 from sqlalchemy import Row
 
-from data_rentgen.db.models.run import Run
+from data_rentgen.db.models import Run, RunStatus
 from data_rentgen.dto.pagination import PaginationDTO
 from data_rentgen.services.uow import UnitOfWork
 
@@ -81,7 +81,13 @@ class RunService:
         parent_run_id: UUID | None,
         search_query: str | None,
         job_type: Collection[str],
+        job_location_id: int | None,
         status: Collection[str],
+        started_by_user: Collection[str] | None,
+        started_since: datetime | None,
+        started_until: datetime | None,
+        ended_since: datetime | None,
+        ended_until: datetime | None,
     ) -> RunServicePaginatedResult:
         pagination = await self._uow.run.paginate(
             page=page,
@@ -93,7 +99,13 @@ class RunService:
             parent_run_id=parent_run_id,
             search_query=search_query,
             job_type=job_type,
-            status=status,
+            job_location_id=job_location_id,
+            status=[RunStatus[s] for s in status],
+            started_by_user=started_by_user,
+            started_since=started_since,
+            started_until=started_until,
+            ended_since=ended_since,
+            ended_until=ended_until,
         )
         run_ids = [item.id for item in pagination.items]
         input_stats = await self._uow.input.get_stats_by_run_ids(run_ids)
