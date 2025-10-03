@@ -4,7 +4,7 @@
 Features
 --------
 
-- Introduce new HTTP2Kafka component. (:issue:`281`)
+- Introduce new :ref:`http2kafka` component. (:issue:`281`)
 
   It allows using DataRentgen with OpenLineage HttpTransport.
   Authentication is done using personal tokens.
