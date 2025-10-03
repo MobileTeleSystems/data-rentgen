@@ -39,6 +39,7 @@ venv-cleanup: ##@Env Cleanup venv
 
 venv-install: ##@Env Install requirements to venv
 	${UV} sync --inexact --frozen --all-extras --all-groups --no-extra gssapi $(ARGS)
+	${UV} pip install --no-deps sphinx-plantuml
 
 
 db: db-start db-upgrade db-partitions ##@DB Prepare database (in docker)
