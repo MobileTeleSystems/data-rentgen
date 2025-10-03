@@ -1,4 +1,0 @@
-Add new query parameters for ``GET /v1/runs`` endpoint:
-
-- job_type: ``list[str]`` - filter by corresponding job type. For example ``SPARK_APLICATION``. You can use ``/api/v1/jobs/types`` to get all job types.
-- status: ``list[RunStatus]`` - filter by runs statuses.
