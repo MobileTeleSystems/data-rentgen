@@ -61,7 +61,7 @@ jobs:
       - name: Generate SBOM
         run: |
           uv pip install cyclonedx-bom
-          cyclonedx-py uv sync --group server,consumer,postgres,gssapi > sbom.cyclonedx.json
+          uv export --all-extras --format requirements.txt | uv run cyclonedx-py requirements - > sbom.cyclonedx.json
 
       - name: Get changelog
         run: |
