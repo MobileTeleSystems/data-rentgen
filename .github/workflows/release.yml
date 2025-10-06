@@ -25,8 +25,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
@@ -53,6 +51,9 @@ jobs:
         run: |
           sed -i "s#image:: docs/#image:: https://raw.githubusercontent.com/MobileTeleSystems/data-rentgen/$GITHUB_SHA/docs/#g" README.rst
           sed -i "s#logo_wide_white_text.svg#logo_wide.svg#g" README.rst
+
+      - name: Patch release version rules
+        run: sed -i 's#dirty_template = ".*"#dirty_template = "{tag}"#' pyproject.toml
 
       - name: Build package
         run: uv build

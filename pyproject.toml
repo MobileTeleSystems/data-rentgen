@@ -7,7 +7,7 @@ enabled = true
 version_file = "data_rentgen/VERSION"
 count_commits_from_version_file = true
 dev_template = "{tag}.dev{env:GITHUB_RUN_ID:{ccount}}"
-dirty_template = "{tag}"
+dirty_template = "{tag}.dev{env:GITHUB_RUN_ID:{ccount}}"
 
 [project]
 name = "data-rentgen"
