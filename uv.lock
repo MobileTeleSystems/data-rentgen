@@ -2,9 +2,6 @@ version = 1
 revision = 3
 requires-python = ">=3.12"
 
-[options]
-prerelease-mode = "allow"
-
 [[package]]
 name = "accessible-pygments"
 version = "0.0.5"
@@ -639,10 +636,10 @@ requires-dist = [
     { name = "itsdangerous", marker = "extra == 'server'", specifier = "~=2.2.0" },
     { name = "packaging", specifier = "~=25.0" },
     { name = "pydantic", specifier = "~=2.11.2" },
-    { name = "pydantic-settings", specifier = "~=2.10.1" },
+    { name = "pydantic-settings", specifier = ">=2.10.1,<2.12.0" },
     { name = "pyjwt", marker = "extra == 'server'", specifier = "~=2.10.1" },
     { name = "python-dateutil", specifier = "~=2.9.0.post0" },
-    { name = "python-json-logger", specifier = "~=3.3.0" },
+    { name = "python-json-logger", specifier = ">=3.3,<4.1" },
     { name = "python-keycloak", marker = "extra == 'server'", specifier = "~=5.8.1" },
     { name = "python-multipart", marker = "extra == 'server'", specifier = "~=0.0.20" },
     { name = "pyyaml", specifier = "~=6.0.2" },
@@ -655,7 +652,7 @@ requires-dist = [
     { name = "typing-extensions", specifier = "~=4.15.0" },
     { name = "uuid6", specifier = "~=2025.0.0" },
     { name = "uvicorn", marker = "extra == 'http2kafka'", specifier = "~=0.36.1" },
-    { name = "uvicorn", marker = "extra == 'server'", specifier = "~=0.36.1" },
+    { name = "uvicorn", marker = "extra == 'server'", specifier = ">=0.36.1,<0.38.0" },
 ]
 provides-extras = ["server", "consumer", "http2kafka", "postgres", "gssapi", "seed"]
 
@@ -925,25 +922,25 @@ wheels = [
 
 [[package]]
 name = "gssapi"
-version = "1.10.0"
+version = "1.10.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "decorator" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/72/c8/90912e90208bd20ed9384f299384cc9ee8f354758bd8650155eba33d4655/gssapi-1.10.0.tar.gz", hash = "sha256:f1495e0dc20bee3ad2839724d98ae723c7dae78c1ddea37a7c861c3c4bd77763", size = 94201, upload-time = "2025-09-01T18:32:05.681Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/b7/bf/95eed332e3911e2b113ceef5e6b0da807b22e45dbf897d8371e83b0a4958/gssapi-1.10.1.tar.gz", hash = "sha256:7b54335dc9a3c55d564624fb6e25fcf9cfc0b80296a5c51e9c7cf9781c7d295b", size = 94262, upload-time = "2025-10-03T03:08:49.778Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3e/12/892d4a1147ec05a22de1e7b1300afe0a7dfeed01194b61c84db8eea4aa6b/gssapi-1.10.0-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:ee8c4c657748d52c6b27a24b27f4b481d04ed3e5971f5f12d1ea39354448a8f0", size = 672819, upload-time = "2025-09-01T18:31:43.011Z" },
-    { url = "https://files.pythonhosted.org/packages/95/75/ace7a08fa9078ab6439e9d1e6ced60641d5cc2e62a9023f162cb87b92ce6/gssapi-1.10.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:90b5391c81516e6267518c10f85e9ac9a87ef01d0ed95017f616b1ba857c51ec", size = 696408, upload-time = "2025-09-01T18:31:44.676Z" },
-    { url = "https://files.pythonhosted.org/packages/ea/e4/522c1ddeaabee60a6bcc89568b7c6c57b7cbd9d11fc97fc518ac756928a9/gssapi-1.10.0-cp312-cp312-win32.whl", hash = "sha256:9b3b29ccac8c9ebf0bfd92c5da761dce6f2016d99bd3e06a68c3e6b2e292bbc2", size = 732056, upload-time = "2025-09-01T18:31:46.151Z" },
-    { url = "https://files.pythonhosted.org/packages/a4/73/32bed23fe808d5cd3707a5fe9e612a171b97351ea0f2c34593ed204b6272/gssapi-1.10.0-cp312-cp312-win_amd64.whl", hash = "sha256:30033d9cfd6cfbe8cf69cd9947ebcdfc11cda65586cafaa197bfe522d19c286f", size = 826932, upload-time = "2025-09-01T18:31:47.478Z" },
-    { url = "https://files.pythonhosted.org/packages/56/63/328dfa1354702b580eafa43c6bfcc25157fbf7b5561748a4c1c63784c171/gssapi-1.10.0-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:07b570f45ac494a9cc5d848dfab7cab4deb5c9ac9c93fe8b80a71cbf864ca8a2", size = 658864, upload-time = "2025-09-01T18:31:49.191Z" },
-    { url = "https://files.pythonhosted.org/packages/83/66/0b1304334bba51f071d0caa4f024d5ea9abe8c7c8281e4dd183cc6b95107/gssapi-1.10.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:7d600024194e1a1584ef7b16d10d1b3136eaaf9012e790dbb40c632e18fb14f3", size = 682282, upload-time = "2025-09-01T18:31:50.372Z" },
-    { url = "https://files.pythonhosted.org/packages/2c/a4/dbdc0b41c76cf7a3ba725923a66dd96a5c04105e8c12ab8d059d7202a33d/gssapi-1.10.0-cp313-cp313-win32.whl", hash = "sha256:428368b3448fed2c7a998a65ad287b760c5ad5f915eeca0b9278fee253af698d", size = 719582, upload-time = "2025-09-01T18:31:51.819Z" },
-    { url = "https://files.pythonhosted.org/packages/94/de/53ef2c288eadbd142f1acb2fee4363564c1fe39190ef0bad32ab4d59a413/gssapi-1.10.0-cp313-cp313-win_amd64.whl", hash = "sha256:3e8efe4a84dda296cb5363904dca4406a586fc45207783d09731dabe3b77c738", size = 808082, upload-time = "2025-09-01T18:31:53.152Z" },
-    { url = "https://files.pythonhosted.org/packages/37/d4/d73dd29ab1485656c3a1bafc788ecd124f290b4b7b73396bc401b5696f00/gssapi-1.10.0-cp314-cp314-macosx_10_13_x86_64.whl", hash = "sha256:20bbf8613372f0f6d64c14c5caa4e949e9a0bd9ea97a975f61e7bdf85505566d", size = 657397, upload-time = "2025-09-01T18:31:54.354Z" },
-    { url = "https://files.pythonhosted.org/packages/49/68/ccc2add50e507234f8f8ffb49e710be4fc8fa09ee34b8e8888967a0daaaa/gssapi-1.10.0-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:79a0bd830bf8f0ff792e4c4fb9f283f2e4d5b6ddcd7c95bc4d4638dd224e9271", size = 685590, upload-time = "2025-09-01T18:31:55.804Z" },
-    { url = "https://files.pythonhosted.org/packages/ea/b0/da88db2bde251d42a58fbb415e0bb46e56a44a8e086340df69859f6d64ff/gssapi-1.10.0-cp314-cp314-win32.whl", hash = "sha256:74ee022d399f58d359bd59a459c9a428a2415e5c7f3bacb3fa64d429698ac17b", size = 740099, upload-time = "2025-09-01T18:31:57.145Z" },
-    { url = "https://files.pythonhosted.org/packages/d1/8b/a9fb3ce3f63f1eaa0329ae1736dca3e540c036414fd4162bcd3e35876fdf/gssapi-1.10.0-cp314-cp314-win_amd64.whl", hash = "sha256:83758eb1ee189b577aeba5f6941537329568ae0aa7356b4196dcb4ee2aeb47ae", size = 826897, upload-time = "2025-09-01T18:31:58.658Z" },
+    { url = "https://files.pythonhosted.org/packages/fa/6f/b2dd133e3accf4be9106258331735b5d56959c018fb4b1952f70b35a3055/gssapi-1.10.1-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:b5c08ae5b5fa3faae1ad5bf9d4821a27da6974df0bf994066bf8e437ff101429", size = 672855, upload-time = "2025-10-03T03:08:24.649Z" },
+    { url = "https://files.pythonhosted.org/packages/a8/42/6f499af7de07d1a3e7ad6af789a4a9b097d13b0342629bb152171bfee45f/gssapi-1.10.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:4ec74a5e70241655b79c7de7dc750c58dae80482947973e019c67c8d53311981", size = 696430, upload-time = "2025-10-03T03:08:26.331Z" },
+    { url = "https://files.pythonhosted.org/packages/20/81/4f70ad5ee531800fecbddd38870c16922d18cb9b5d4be2e1f4354a160f9b/gssapi-1.10.1-cp312-cp312-win32.whl", hash = "sha256:ed40213beec30115302bac3849134fbbfd5b0fdb60d8e4f2d9027cd44765f42b", size = 732078, upload-time = "2025-10-03T03:08:27.965Z" },
+    { url = "https://files.pythonhosted.org/packages/35/34/99ebc21b95765491af00d92b8332dba9ae5d357707ba81f05ba537acc4f8/gssapi-1.10.1-cp312-cp312-win_amd64.whl", hash = "sha256:f0d5e5e6031e879d4050e0373cf854f5082ca234127b6553026a29c64ddf64ed", size = 826944, upload-time = "2025-10-03T03:08:29.642Z" },
+    { url = "https://files.pythonhosted.org/packages/b2/a9/39b5eefe1f7881d3021925c0a3183f1aa1a64d1cfe3ff6a5ab3253ddc2ef/gssapi-1.10.1-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:952c900ced1cafe7e7938052e24d01d4ba48f234a0ca7347c854c6d96f94ae26", size = 658891, upload-time = "2025-10-03T03:08:31.001Z" },
+    { url = "https://files.pythonhosted.org/packages/15/09/9def6b103752da8e9d51a4258ffe2d4a97191e1067a1581324480b752471/gssapi-1.10.1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:df86f1dcc2a1c19c1771565661d05dd09cb1ce7ff2c3be261b3b5312458969f3", size = 682324, upload-time = "2025-10-03T03:08:32.685Z" },
+    { url = "https://files.pythonhosted.org/packages/8b/24/615e0544dbf8bcb002d7f15bff44af502be99ed4ed2a64190779f47b0bc7/gssapi-1.10.1-cp313-cp313-win32.whl", hash = "sha256:37c2abb85e76d9e4bef967a752354aa6a365bb965eb18067f1f012aad0f7a446", size = 719627, upload-time = "2025-10-03T03:08:34.193Z" },
+    { url = "https://files.pythonhosted.org/packages/16/b4/3c1c5dad78b193626a035661196dc3bed4d1544dd57e609fb6cc0e8838e5/gssapi-1.10.1-cp313-cp313-win_amd64.whl", hash = "sha256:d821d37afd61c326ba729850c9836d84e5d38ad42acec21784fb22dd467345f4", size = 808059, upload-time = "2025-10-03T03:08:35.875Z" },
+    { url = "https://files.pythonhosted.org/packages/5b/60/6c6bba3a06bc9e5c7fd7a8b4337c392b3074cbbce11525c94e8b7af856e9/gssapi-1.10.1-cp314-cp314-macosx_10_13_x86_64.whl", hash = "sha256:a4d2aa439bcd08cd524a6e0c566137850e681b0fed62480aa765c097344387d7", size = 657421, upload-time = "2025-10-03T03:08:37.406Z" },
+    { url = "https://files.pythonhosted.org/packages/55/3a/414e9cfa3c4f14682e40a5d61b8181936c78abf4aff0f1a91e9adaa20b5c/gssapi-1.10.1-cp314-cp314-macosx_11_0_arm64.whl", hash = "sha256:86758d03906e10cb7feeedf26b5ead6661e844c54ef09d5e7de8e5ffb1154932", size = 685642, upload-time = "2025-10-03T03:08:39.115Z" },
+    { url = "https://files.pythonhosted.org/packages/29/e4/812ef20519f020122b5207600fda2906a3d4fcc6536c8aeb764012c28470/gssapi-1.10.1-cp314-cp314-win32.whl", hash = "sha256:2ef6e30c37676fbb2f635467e560c9a5e7b3f49ee9536ecb363939efa81c82bc", size = 740154, upload-time = "2025-10-03T03:08:40.46Z" },
+    { url = "https://files.pythonhosted.org/packages/4c/fc/838a46df536111602d6582f8e8efecccaaf828b690c6305a2ef276c71e5e/gssapi-1.10.1-cp314-cp314-win_amd64.whl", hash = "sha256:8f311cec5eabe0ce417908bcf50f60afa91a5b455884794eb02eb35a41d410c7", size = 826869, upload-time = "2025-10-03T03:08:42.524Z" },
 ]
 
 [[package]]
@@ -1310,7 +1307,7 @@ wheels = [
 
 [[package]]
 name = "pydantic"
-version = "2.11.9"
+version = "2.11.10"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "annotated-types" },
@@ -1318,9 +1315,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "typing-inspection" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ff/5d/09a551ba512d7ca404d785072700d3f6727a02f6f3c24ecfd081c7cf0aa8/pydantic-2.11.9.tar.gz", hash = "sha256:6b8ffda597a14812a7975c90b82a8a2e777d9257aba3453f973acd3c032a18e2", size = 788495, upload-time = "2025-09-13T11:26:39.325Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ae/54/ecab642b3bed45f7d5f59b38443dcb36ef50f85af192e6ece103dbfe9587/pydantic-2.11.10.tar.gz", hash = "sha256:dc280f0982fbda6c38fada4e476dc0a4f3aeaf9c6ad4c28df68a666ec3c61423", size = 788494, upload-time = "2025-10-04T10:40:41.338Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/3e/d3/108f2006987c58e76691d5ae5d200dd3e0f532cb4e5fa3560751c3a1feba/pydantic-2.11.9-py3-none-any.whl", hash = "sha256:c42dd626f5cfc1c6950ce6205ea58c93efa406da65f479dcb4029d5934857da2", size = 444855, upload-time = "2025-09-13T11:26:36.909Z" },
+    { url = "https://files.pythonhosted.org/packages/bd/1f/73c53fcbfb0b5a78f91176df41945ca466e71e9d9d836e5c522abda39ee7/pydantic-2.11.10-py3-none-any.whl", hash = "sha256:802a655709d49bd004c31e865ef37da30b540786a46bfce02333e0e24b5fe29a", size = 444823, upload-time = "2025-10-04T10:40:39.055Z" },
 ]
 
 [[package]]
@@ -1367,16 +1364,16 @@ wheels = [
 
 [[package]]
 name = "pydantic-settings"
-version = "2.10.1"
+version = "2.11.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pydantic" },
     { name = "python-dotenv" },
     { name = "typing-inspection" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/68/85/1ea668bbab3c50071ca613c6ab30047fb36ab0da1b92fa8f17bbc38fd36c/pydantic_settings-2.10.1.tar.gz", hash = "sha256:06f0062169818d0f5524420a360d632d5857b83cffd4d42fe29597807a1614ee", size = 172583, upload-time = "2025-06-24T13:26:46.841Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/20/c5/dbbc27b814c71676593d1c3f718e6cd7d4f00652cefa24b75f7aa3efb25e/pydantic_settings-2.11.0.tar.gz", hash = "sha256:d0e87a1c7d33593beb7194adb8470fc426e95ba02af83a0f23474a04c9a08180", size = 188394, upload-time = "2025-09-24T14:19:11.764Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/58/f0/427018098906416f580e3cf1366d3b1abfb408a0652e9f31600c24a1903c/pydantic_settings-2.10.1-py3-none-any.whl", hash = "sha256:a60952460b99cf661dc25c29c0ef171721f98bfcb52ef8d9ea4c943d7c8cc796", size = 45235, upload-time = "2025-06-24T13:26:45.485Z" },
+    { url = "https://files.pythonhosted.org/packages/83/d6/887a1ff844e64aa823fb4905978d882a633cfe295c32eacad582b78a7d8b/pydantic_settings-2.11.0-py3-none-any.whl", hash = "sha256:fe2cea3413b9530d10f3a5875adffb17ada5c1e1bab0b2885546d7310415207c", size = 48608, upload-time = "2025-09-24T14:19:10.015Z" },
 ]
 
 [[package]]
@@ -1495,11 +1492,11 @@ wheels = [
 
 [[package]]
 name = "python-json-logger"
-version = "3.3.0"
+version = "4.0.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/9e/de/d3144a0bceede957f961e975f3752760fbe390d57fbe194baf709d8f1f7b/python_json_logger-3.3.0.tar.gz", hash = "sha256:12b7e74b17775e7d565129296105bbe3910842d9d0eb083fc83a6a617aa8df84", size = 16642, upload-time = "2025-03-07T07:08:27.301Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/29/bf/eca6a3d43db1dae7070f70e160ab20b807627ba953663ba07928cdd3dc58/python_json_logger-4.0.0.tar.gz", hash = "sha256:f58e68eb46e1faed27e0f574a55a0455eecd7b8a5b88b85a784519ba3cff047f", size = 17683, upload-time = "2025-10-06T04:15:18.984Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/08/20/0f2523b9e50a8052bc6a8b732dfc8568abbdc42010aef03a2d750bdab3b2/python_json_logger-3.3.0-py3-none-any.whl", hash = "sha256:dd980fae8cffb24c13caf6e158d3d61c0d6d22342f932cb6e9deedab3d35eec7", size = 15163, upload-time = "2025-03-07T07:08:25.627Z" },
+    { url = "https://files.pythonhosted.org/packages/51/e5/fecf13f06e5e5f67e8837d777d1bc43fac0ed2b77a676804df5c34744727/python_json_logger-4.0.0-py3-none-any.whl", hash = "sha256:af09c9daf6a813aa4cc7180395f50f2a9e5fa056034c9953aec92e381c5ba1e2", size = 15548, upload-time = "2025-10-06T04:15:17.553Z" },
 ]
 
 [[package]]
