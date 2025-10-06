@@ -75,7 +75,7 @@ server = [
   "python-keycloak~=5.8.1",
 ]
 consumer = [
-  "faststream[kafka,cli]~=0.6.0rc2",
+  "faststream[kafka,cli]~=0.6.0rc4",
   "cramjam~=2.11.0",
 ]
 http2kafka = [

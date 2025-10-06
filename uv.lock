@@ -632,7 +632,7 @@ requires-dist = [
     { name = "faker", marker = "extra == 'seed'", specifier = "~=37.8.0" },
     { name = "fastapi", marker = "extra == 'http2kafka'", specifier = "~=0.118.0" },
     { name = "fastapi", marker = "extra == 'server'", specifier = "~=0.118.0" },
-    { name = "faststream", extras = ["cli", "kafka"], marker = "extra == 'consumer'", specifier = "~=0.6.0rc2" },
+    { name = "faststream", extras = ["cli", "kafka"], marker = "extra == 'consumer'", specifier = "~=0.6.0rc4" },
     { name = "faststream", extras = ["cli", "kafka"], marker = "extra == 'http2kafka'", specifier = "~=0.6.0rc2" },
     { name = "greenlet", specifier = "~=3.2" },
     { name = "gssapi", marker = "extra == 'gssapi'", specifier = "~=1.10.0" },
@@ -806,16 +806,16 @@ wheels = [
 
 [[package]]
 name = "faststream"
-version = "0.6.0rc2"
+version = "0.6.0rc4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
     { name = "fast-depends", extra = ["pydantic"] },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/24/c9/e8225edb539e6124f53968918fa62026e97c948b9b742ba59994781e78e6/faststream-0.6.0rc2.tar.gz", hash = "sha256:0ea328fb2a9b7993b4e2b1833fa8137f276dff9604a31adad0b4a8b774af802d", size = 288434, upload-time = "2025-09-04T21:29:54.395Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6e/b0/21432b5a0228a41a6111ae8f642c18ae6ea3c899ea2fdc352a2a305fbdd1/faststream-0.6.0rc4.tar.gz", hash = "sha256:bedf056aa09aaa2aef0ba58a440895ccc0d23fc1b22db8255d86f6e6c0f714b1", size = 291883, upload-time = "2025-10-04T15:26:17.827Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/db/5c/803bca8b0874ac8c92d47d024db047689dc71db517f05e30f162a762bb5d/faststream-0.6.0rc2-py3-none-any.whl", hash = "sha256:a0d3011b9bdbf1f58b53cafe6db72b98b1e5d79146254d28daf3a1207d200380", size = 489948, upload-time = "2025-09-04T21:29:52.616Z" },
+    { url = "https://files.pythonhosted.org/packages/c2/12/e5a8189f1095fee9a1c840a933991a98397ac3faa05d5ee414f061fe6a16/faststream-0.6.0rc4-py3-none-any.whl", hash = "sha256:ba531f4ba88105cead279b04c6c7df0f7f3335e12b514975c5db1f4e0e52106b", size = 495349, upload-time = "2025-10-04T15:26:16.097Z" },
 ]
 
 [package.optional-dependencies]
