@@ -62,7 +62,7 @@ class LocationService:
         page: int,
         page_size: int,
         location_ids: Collection[int],
-        location_type: str | None,
+        location_type: Collection[str],
         search_query: str | None,
     ) -> LocationServicePaginatedResult:
         pagination = await self._uow.location.paginate(

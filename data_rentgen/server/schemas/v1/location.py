@@ -66,10 +66,10 @@ class LocationPaginateQueryV1(PaginateQueryV1):
     """Query params for Location paginate request."""
 
     location_id: list[int] = Field(default_factory=list, description="Location id")
-    location_type: str | None = Field(
-        default=None,
+    location_type: list[str] = Field(
+        default_factory=list,
         description="Location type",
-        examples=["kafka", "hdfs", "yarn"],
+        examples=[["kafka", "hdfs"], ["yarn"]],
     )
     search_query: str | None = Field(
         default=None,

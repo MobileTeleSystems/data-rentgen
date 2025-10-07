@@ -82,7 +82,7 @@ async def test_get_locations_with_type_filter(
     response = await test_client.get(
         "v1/locations",
         headers={"Authorization": f"Bearer {mocked_user.access_token}"},
-        params={"location_type": location_type},
+        params={"location_type": location_type.upper()},  # case-insensitive
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
