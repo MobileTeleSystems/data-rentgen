@@ -14,6 +14,7 @@ from data_rentgen.server.schemas.v1 import (
     PageResponseV1,
     UpdateLocationRequestV1,
 )
+from data_rentgen.server.schemas.v1.location import LocationTypesResponseV1
 from data_rentgen.server.services import LocationService, get_user
 
 router = APIRouter(
@@ -57,3 +58,12 @@ async def update_location(
 ) -> LocationDetailedResponseV1:
     location = await location_service.update_external_id(location_id, location_data.external_id)
     return LocationDetailedResponseV1.model_validate(location)
+
+
+@router.get("/types", summary="Get distinct types of Locations")
+async def get_location_types(
+    location_service: Annotated[LocationService, Depends()],
+    current_user: Annotated[User, Depends(get_user())],
+) -> LocationTypesResponseV1:
+    location_types = await location_service.get_location_types()
+    return LocationTypesResponseV1(location_types=list(location_types))

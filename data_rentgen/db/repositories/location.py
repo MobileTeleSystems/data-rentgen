@@ -42,6 +42,7 @@ get_one_query = (
     )
     .options(selectinload(Location.addresses))
 )
+get_distinct_query = select(Location.type).distinct(Location.type).order_by(Location.type)
 
 
 class LocationRepository(Repository[Location]):
@@ -161,3 +162,7 @@ class LocationRepository(Repository[Location]):
         existing.addresses.extend(addresses)
         await self._session.flush([existing])
         return existing
+
+    async def get_location_types(self):
+        scalars = await self._session.scalars(get_distinct_query)
+        return scalars.all()

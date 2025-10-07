@@ -27,7 +27,7 @@ class JobDetailedResponseV1(BaseModel):
 
 
 class JobTypesResponseV1(BaseModel):
-    """JobTypes"""
+    """Job types"""
 
     job_types: list[str] = Field(description="List of distinct job types")
 
