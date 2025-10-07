@@ -29,7 +29,10 @@ class JobDetailedResponseV1(BaseModel):
 class JobTypesResponseV1(BaseModel):
     """Job types"""
 
-    job_types: list[str] = Field(description="List of distinct job types")
+    job_types: list[str] = Field(
+        description="List of distinct job types",
+        examples=[["SPARK_APPLICATION", "AIRFLOW_DAG"]],
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -42,14 +45,22 @@ class JobPaginateQueryV1(PaginateQueryV1):
         default=None,
         min_length=3,
         description="Search query",
+        examples=["my job"],
     )
     job_type: list[str] = Field(
         default_factory=list,
         description="Specify job types",
+        examples=[["SPARK_APPLICATION", "AIRFLOW_DAG"]],
     )
     location_id: int | None = Field(
         default=None,
         description="The location id which jobs belong",
+        examples=[123],
+    )
+    location_type: list[str] = Field(
+        default_factory=list,
+        description="Specify location types",
+        examples=[["yarn"]],
     )
 
     model_config = ConfigDict(extra="forbid")

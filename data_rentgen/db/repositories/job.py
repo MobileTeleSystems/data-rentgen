@@ -77,35 +77,40 @@ class JobRepository(Repository[Job]):
         job_ids: Collection[int],
         search_query: str | None,
         location_id: int | None,
+        location_type: Collection[str],
         job_type: Collection[str],
     ) -> PaginationDTO[Job]:
         where = []
+        location_join_clause = Location.id == Job.location_id
         if job_ids:
             where.append(Job.id == any_(list(job_ids)))  # type: ignore[arg-type]
-
-        query: Select | CompoundSelect
-        order_by: list[ColumnElement | SQLColumnExpression]
         if job_type:
             where.append(Job.type == any_(list(job_type)))  # type: ignore[arg-type]
         if location_id:
             where.append(Job.location_id == location_id)  # type: ignore[arg-type]
+        if location_type:
+            location_type_lower = [location_type.lower() for location_type in location_type]
+            where.append(Location.type == any_(location_type_lower))  # type: ignore[arg-type]
 
+        query: Select | CompoundSelect
+        order_by: list[ColumnElement | SQLColumnExpression]
         if search_query:
             tsquery = make_tsquery(search_query)
 
-            job_stmt = select(Job, ts_rank(Job.search_vector, tsquery).label("search_rank")).where(
-                ts_match(Job.search_vector, tsquery),
-                *where,
+            job_stmt = (
+                select(Job, ts_rank(Job.search_vector, tsquery).label("search_rank"))
+                .join(Location, location_join_clause)
+                .where(ts_match(Job.search_vector, tsquery), *where)
             )
             location_stmt = (
                 select(Job, ts_rank(Location.search_vector, tsquery).label("search_rank"))
-                .join(Job, Location.id == Job.location_id)
+                .join(Location, location_join_clause)
                 .where(ts_match(Location.search_vector, tsquery), *where)
             )
             address_stmt = (
                 select(Job, func.max(ts_rank(Address.search_vector, tsquery).label("search_rank")))
-                .join(Location, Address.location_id == Location.id)
-                .join(Job, Location.id == Job.location_id)
+                .join(Location, location_join_clause)
+                .join(Address, Address.location_id == Job.location_id)
                 .where(ts_match(Address.search_vector, tsquery), *where)
                 .group_by(Job.id, Location.id, Address.id)
             )
@@ -120,7 +125,7 @@ class JobRepository(Repository[Job]):
             ).group_by(*job_columns)
             order_by = [desc("search_rank"), asc("name")]
         else:
-            query = select(Job).where(*where)
+            query = select(Job).join(Location, location_join_clause).where(*where)
             order_by = [Job.name]
 
         options = [selectinload(Job.location).selectinload(Location.addresses)]

@@ -44,6 +44,7 @@ async def paginate_jobs(
         job_ids=query_args.job_id,
         search_query=query_args.search_query,
         location_id=query_args.location_id,
+        location_type=query_args.location_type,
         job_type=query_args.job_type,
     )
     return PageResponseV1[JobDetailedResponseV1].from_pagination(pagination)
