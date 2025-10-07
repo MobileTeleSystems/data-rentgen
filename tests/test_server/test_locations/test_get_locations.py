@@ -54,6 +54,21 @@ async def test_get_locations_no_filters(
     }
 
 
+async def test_get_location_types(
+    test_client: AsyncClient,
+    locations: list[Location],
+    mocked_user: MockedUser,
+) -> None:
+    unique_location_type = {item.type for item in locations}
+    response = await test_client.get(
+        "/v1/locations/types",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {"location_types": sorted(unique_location_type)}
+
+
 async def test_get_locations_with_type_filter(
     test_client: AsyncClient,
     locations: list[Location],

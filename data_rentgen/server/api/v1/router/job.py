@@ -74,4 +74,4 @@ async def get_job_types(
     current_user: Annotated[User, Depends(get_user())],
 ) -> JobTypesResponseV1:
     job_types = await job_service.get_job_types()
-    return JobTypesResponseV1(job_types=sorted(job_types))
+    return JobTypesResponseV1(job_types=list(job_types))
