@@ -32,6 +32,7 @@ class JobService:
         job_ids: Collection[int],
         search_query: str | None,
         location_id: int | None,
+        location_type: Collection[str],
         job_type: Collection[str],
     ) -> JobServicePaginatedResult:
         pagination = await self._uow.job.paginate(
@@ -40,6 +41,7 @@ class JobService:
             job_ids=job_ids,
             search_query=search_query,
             location_id=location_id,
+            location_type=location_type,
             job_type=job_type,
         )
 
