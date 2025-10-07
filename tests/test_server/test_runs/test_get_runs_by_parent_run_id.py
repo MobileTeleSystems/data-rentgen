@@ -13,7 +13,7 @@ from tests.test_server.utils.enrich import enrich_runs
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
-async def test_get_runs_by_job_id_missing_since(
+async def test_get_runs_by_parent_run_id_missing_since(
     test_client: AsyncClient,
     new_run: Run,
     mocked_user: MockedUser,
@@ -38,12 +38,15 @@ async def test_get_runs_by_job_id_missing_since(
                     "message": "Value error, 'parent_run_id' can be passed only with 'since'",
                     "context": {},
                     "input": {
-                        "status": [],
+                        "job_id": [],
+                        "job_location_id": [],
                         "job_type": [],
-                        "page": 1,
                         "page_size": 20,
-                        "parent_run_id": str(new_run.parent_run_id),
+                        "page": 1,
+                        "parent_run_id": [str(new_run.parent_run_id)],
                         "run_id": [],
+                        "started_by_user": [],
+                        "status": [],
                     },
                 },
             ],

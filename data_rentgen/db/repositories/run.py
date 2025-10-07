@@ -18,7 +18,7 @@ from sqlalchemy import (
     union,
 )
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import aliased, selectinload
 
 from data_rentgen.db.models import Job, Run, RunStartReason, RunStatus, User
 from data_rentgen.db.repositories.base import Repository
@@ -85,24 +85,24 @@ insert_statement = insert_statement.on_conflict_do_update(
 
 
 class RunRepository(Repository[Run]):
-    async def paginate(  # noqa: PLR0912, C901
+    async def paginate(  # noqa: PLR0912, C901, PLR0915
         self,
         page: int,
         page_size: int,
         since: datetime | None,
         until: datetime | None,
         run_ids: Collection[UUID],
-        job_id: int | None,
-        parent_run_id: UUID | None,
-        search_query: str | None,
-        job_type: Collection[str],
-        job_location_id: int | None,
-        status: Collection[RunStatus],
-        started_by_user: Collection[str] | None,
+        parent_run_ids: Collection[UUID],
+        job_ids: Collection[int],
+        job_types: Collection[str],
+        job_location_ids: Collection[int],
+        statuses: Collection[RunStatus],
+        started_by_users: Collection[str],
         started_since: datetime | None,
         started_until: datetime | None,
         ended_since: datetime | None,
         ended_until: datetime | None,
+        search_query: str | None,
     ) -> PaginationDTO[Run]:
         # do not use `tuple_(Run.created_at, Run.id).in_(...),
         # as this is too complex filter for Postgres to make an optimal query plan
@@ -135,12 +135,12 @@ class RunRepository(Repository[Run]):
                     Run.id <= get_max_uuid(until),
                 ]
 
-        if job_id:
-            where.append(Run.job_id == job_id)
-        if parent_run_id:
-            where.append(Run.parent_run_id == parent_run_id)
-        if status:
-            where.append(Run.status == any_(status))  # type: ignore[arg-type]
+        if job_ids:
+            where.append(Run.job_id == any_(list(job_ids)))  # type: ignore[arg-type]
+        if parent_run_ids:
+            where.append(Run.parent_run_id == any_(list(parent_run_ids)))  # type: ignore[arg-type]
+        if statuses:
+            where.append(Run.status == any_(statuses))  # type: ignore[arg-type]
         if started_since:
             where.append(Run.started_at >= started_since)
         if started_until:
@@ -159,10 +159,11 @@ class RunRepository(Repository[Run]):
                 ts_match(Run.search_vector, tsquery),
                 *where,
             )
+            job_search = aliased(Job, name="job_search")
             job_stmt = (
-                select(Run, ts_rank(Job.search_vector, tsquery).label("search_rank"))
-                .join(Job, Job.id == Run.job_id)
-                .where(ts_match(Job.search_vector, tsquery), *where)
+                select(Run, ts_rank(job_search.search_vector, tsquery).label("search_rank"))
+                .join(job_search, job_search.id == Run.job_id)
+                .where(ts_match(job_search.search_vector, tsquery), *where)
             )
 
             union_cte = union(run_stmt, job_stmt).cte()
@@ -179,20 +180,21 @@ class RunRepository(Repository[Run]):
             query = select(Run).where(*where)
             order_by = [Run.created_at.desc(), Run.id.desc()]
 
-        job_where = []
-        if job_type:
-            job_where.append(Job.type == any_(list(job_type)))  # type: ignore[arg-type]
-        if job_location_id is not None:
-            job_where.append(Job.location_id == job_location_id)
-        if job_where:
-            query = query.join(Job, and_(Run.job_id == Job.id, *job_where))
+        if job_types or job_location_ids:
+            job = aliased(Job, name="job_type")
+            query = query.join(job, and_(Run.job_id == job.id))
+            if job_types:
+                query = query.where(job.type == any_(list(job_types)))  # type: ignore[arg-type]
+            if job_location_ids:
+                query = query.where(job.location_id == any_(list(job_location_ids)))  # type: ignore[arg-type]
 
-        if started_by_user:
+        if started_by_users:
+            usernames_lower = [name.lower() for name in started_by_users]
             query = query.join(
                 User,
                 and_(
                     Run.started_by_user_id == User.id,
-                    func.lower(User.name) == any_([name.lower() for name in started_by_user]),  # type: ignore[arg-type]
+                    func.lower(User.name) == any_(usernames_lower),  # type: ignore[arg-type]
                 ),
             )
 
