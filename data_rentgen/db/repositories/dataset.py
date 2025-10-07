@@ -98,18 +98,18 @@ class DatasetRepository(Repository[Dataset]):
         page_size: int,
         dataset_ids: Collection[int],
         tag_value_ids: Collection[int],
-        location_id: int | None,
-        location_type: Collection[str],
+        location_ids: Collection[int],
+        location_types: Collection[str],
         search_query: str | None,
     ) -> PaginationDTO[Dataset]:
         where = []
         location_join_clause = Location.id == Dataset.location_id
         if dataset_ids:
             where.append(Dataset.id == any_(list(dataset_ids)))  # type: ignore[arg-type]
-        if location_id:
-            where.append(Dataset.location_id == location_id)
-        if location_type:
-            location_type_lower = [location_type.lower() for location_type in location_type]
+        if location_ids:
+            where.append(Dataset.location_id == any_(list(location_ids)))  # type: ignore[arg-type]
+        if location_types:
+            location_type_lower = [location_type.lower() for location_type in location_types]
             where.append(Location.type == any_(location_type_lower))  # type: ignore[arg-type]
 
         if tag_value_ids:

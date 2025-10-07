@@ -62,7 +62,7 @@ class OperationService:
         since: datetime | None,
         until: datetime | None,
         operation_ids: Collection[UUID],
-        run_id: UUID | None,
+        run_ids: Collection[UUID],
     ) -> OperationServicePaginatedResult:
         pagination = await self._uow.operation.paginate(
             page=page,
@@ -70,7 +70,7 @@ class OperationService:
             since=since,
             until=until,
             operation_ids=operation_ids,
-            run_id=run_id,
+            run_ids=run_ids,
         )
         operation_ids = [item.id for item in pagination.items]
         input_stats = await self._uow.input.get_stats_by_operation_ids(operation_ids)

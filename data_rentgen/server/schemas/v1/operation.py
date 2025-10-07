@@ -113,10 +113,12 @@ class OperationQueryV1(PaginateQueryV1):
     operation_id: list[UUID7] = Field(
         default_factory=list,
         description="Operation ids, for exact match",
+        examples=[["01913217-b761-7b1a-bb52-489da9c8b9c8"]],
     )
-    run_id: UUID7 | None = Field(
-        default=None,
-        description="Run id, can be used only with 'since'",
+    run_id: list[UUID7] = Field(
+        default_factory=list,
+        description="Run ids, can be used only with 'since'",
+        examples=[["01913217-b761-7b1a-bb52-489da9c8b9c8"]],
     )
 
     model_config = ConfigDict(extra="forbid")

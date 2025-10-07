@@ -65,7 +65,10 @@ class LocationTypesResponseV1(BaseModel):
 class LocationPaginateQueryV1(PaginateQueryV1):
     """Query params for Location paginate request."""
 
-    location_id: list[int] = Field(default_factory=list, description="Location id")
+    location_id: list[int] = Field(
+        default_factory=list,
+        description="Ids of locations to fetch specific items only",
+    )
     location_type: list[str] = Field(
         default_factory=list,
         description="Location type",
@@ -74,8 +77,8 @@ class LocationPaginateQueryV1(PaginateQueryV1):
     search_query: str | None = Field(
         default=None,
         min_length=3,
-        description="Search query",
-        examples=[["localhost:8123"]],
+        description="Search query, partial matching by location name or any address",
+        examples=["clickhouse://localhost:8123"],
     )
 
     model_config = ConfigDict(extra="forbid")

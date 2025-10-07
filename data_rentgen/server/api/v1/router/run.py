@@ -12,7 +12,7 @@ from data_rentgen.server.schemas.v1 import (
     PageResponseV1,
     RunDetailedResponseV1,
     RunLineageQueryV1,
-    RunsQueryV1,
+    RunsPaginateQueryV1,
 )
 from data_rentgen.server.services import LineageService, RunService, get_user
 from data_rentgen.server.utils.lineage_response import build_lineage_response
@@ -26,7 +26,7 @@ router = APIRouter(
 
 @router.get("", summary="Paginated list of Runs")
 async def runs(
-    query_args: Annotated[RunsQueryV1, Query()],
+    query_args: Annotated[RunsPaginateQueryV1, Query()],
     run_service: Annotated[RunService, Depends()],
     current_user: Annotated[User, Depends(get_user())],
 ) -> PageResponseV1[RunDetailedResponseV1]:
@@ -36,13 +36,13 @@ async def runs(
         since=query_args.since,
         until=query_args.until,
         run_ids=query_args.run_id,
-        job_id=query_args.job_id,
-        parent_run_id=query_args.parent_run_id,
+        parent_run_ids=query_args.parent_run_id,
+        job_ids=query_args.job_id,
+        job_types=query_args.job_type,
+        job_location_ids=query_args.job_location_id,
         search_query=query_args.search_query,
-        job_type=query_args.job_type,
-        job_location_id=query_args.job_location_id,
-        status=query_args.status,
-        started_by_user=query_args.started_by_user,
+        statuses=query_args.status,
+        started_by_users=query_args.started_by_user,
         started_since=query_args.started_since,
         started_until=query_args.started_until,
         ended_since=query_args.ended_since,

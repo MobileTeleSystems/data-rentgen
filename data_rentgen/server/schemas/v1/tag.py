@@ -30,11 +30,16 @@ class TagDetailedResponseV1(BaseModel):
 class TagPaginateQueryV1(PaginateQueryV1):
     """Query params for Tag paginate request."""
 
-    tag_id: list[int] = Field(default_factory=list, description="Tag id")
+    tag_id: list[int] = Field(
+        default_factory=list,
+        description="Ids of tags to fetch specific items only",
+        examples=[[123]],
+    )
     search_query: str | None = Field(
         default=None,
         min_length=3,
-        description="Search query",
+        description="Search query, partial match by tag name or any value",
+        examples=["my tag"],
     )
 
     model_config = ConfigDict(extra="forbid")

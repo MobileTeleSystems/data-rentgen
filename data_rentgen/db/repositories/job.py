@@ -75,21 +75,21 @@ class JobRepository(Repository[Job]):
         page: int,
         page_size: int,
         job_ids: Collection[int],
+        job_types: Collection[str],
+        location_ids: Collection[int],
+        location_types: Collection[str],
         search_query: str | None,
-        location_id: int | None,
-        location_type: Collection[str],
-        job_type: Collection[str],
     ) -> PaginationDTO[Job]:
         where = []
         location_join_clause = Location.id == Job.location_id
         if job_ids:
             where.append(Job.id == any_(list(job_ids)))  # type: ignore[arg-type]
-        if job_type:
-            where.append(Job.type == any_(list(job_type)))  # type: ignore[arg-type]
-        if location_id:
-            where.append(Job.location_id == location_id)  # type: ignore[arg-type]
-        if location_type:
-            location_type_lower = [location_type.lower() for location_type in location_type]
+        if job_types:
+            where.append(Job.type == any_(list(job_types)))  # type: ignore[arg-type]
+        if location_ids:
+            where.append(Job.location_id == any_(list(location_ids)))  # type: ignore[arg-type]
+        if location_types:
+            location_type_lower = [location_type.lower() for location_type in location_types]
             where.append(Location.type == any_(location_type_lower))  # type: ignore[arg-type]
 
         query: Select | CompoundSelect
