@@ -39,6 +39,7 @@ async def paginate_datasets(
         dataset_ids=query_args.dataset_id,
         tag_value_ids=query_args.tag_value_id,
         location_id=query_args.location_id,
+        location_type=query_args.location_type,
         search_query=query_args.search_query,
     )
     return PageResponseV1[DatasetDetailedResponseV1].from_pagination(pagination)

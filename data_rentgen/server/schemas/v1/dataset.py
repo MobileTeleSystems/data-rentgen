@@ -55,13 +55,28 @@ class DatasetDetailedResponseV1(BaseModel):
 class DatasetPaginateQueryV1(PaginateQueryV1):
     """Query params for Dataset paginate request."""
 
-    dataset_id: list[int] = Field(default_factory=list, description="Dataset id")
-    tag_value_id: list[int] = Field(default_factory=list, description="Tag value id")
-    location_id: int | None = Field(default=None, description="Location id to filter dataset")
+    dataset_id: list[int] = Field(
+        default_factory=list,
+        description="Get specific datasets by their ids",
+    )
+    tag_value_id: list[int] = Field(
+        default_factory=list,
+        description="Get datasets with specific tag values (AND)",
+    )
+    location_id: int | None = Field(
+        default=None,
+        description="Get datasets by location id",
+    )
+    location_type: list[str] = Field(
+        default_factory=list,
+        description="Get datasets by location types",
+        examples=[["yarn"]],
+    )
     search_query: str | None = Field(
         default=None,
         min_length=3,
         description="Search query",
+        examples=[["my dataset"]],
     )
 
     model_config = ConfigDict(extra="forbid")
