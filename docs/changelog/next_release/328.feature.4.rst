@@ -1,1 +1,0 @@
-Allow passing multiple ``location_type`` filters to ``GET /v1/locations``.

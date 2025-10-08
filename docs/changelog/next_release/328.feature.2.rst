@@ -1,2 +1,0 @@
-Add new filter to ``GET /v1/jobs``:
-  - location_type: ``list[str]``
