@@ -27,9 +27,12 @@ class JobDetailedResponseV1(BaseModel):
 
 
 class JobTypesResponseV1(BaseModel):
-    """JobTypes"""
+    """Job types"""
 
-    job_types: list[str] = Field(description="List of distinct job types")
+    job_types: list[str] = Field(
+        description="List of distinct job types",
+        examples=[["SPARK_APPLICATION", "AIRFLOW_DAG"]],
+    )
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -37,19 +40,30 @@ class JobTypesResponseV1(BaseModel):
 class JobPaginateQueryV1(PaginateQueryV1):
     """Query params for Jobs paginate request."""
 
-    job_id: list[int] = Field(default_factory=list, description="Job id")
+    job_id: list[int] = Field(
+        default_factory=list,
+        description="Ids of jobs to fetch specific items only",
+    )
     search_query: str | None = Field(
         default=None,
         min_length=3,
-        description="Search query",
+        description="Search query, partial match by job name or location name/address",
+        examples=["my job"],
     )
     job_type: list[str] = Field(
         default_factory=list,
-        description="Specify job types",
+        description="Types of jobs",
+        examples=[["SPARK_APPLICATION", "AIRFLOW_DAG"]],
     )
-    location_id: int | None = Field(
-        default=None,
-        description="The location id which jobs belong",
+    location_id: list[int] = Field(
+        default_factory=list,
+        description="Ids of locations the job started at",
+        examples=[[123]],
+    )
+    location_type: list[str] = Field(
+        default_factory=list,
+        description="Types of location the job started at",
+        examples=[["yarn"]],
     )
 
     model_config = ConfigDict(extra="forbid")

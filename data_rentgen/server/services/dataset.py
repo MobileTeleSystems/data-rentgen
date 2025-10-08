@@ -42,7 +42,8 @@ class DatasetService:
         page_size: int,
         dataset_ids: Collection[int],
         tag_value_ids: Collection[int],
-        location_id: int | None,
+        location_ids: Collection[int],
+        location_types: Collection[str],
         search_query: str | None,
     ) -> DatasetServicePaginatedResult:
         pagination = await self._uow.dataset.paginate(
@@ -50,7 +51,8 @@ class DatasetService:
             page_size=page_size,
             dataset_ids=dataset_ids,
             tag_value_ids=tag_value_ids,
-            location_id=location_id,
+            location_ids=location_ids,
+            location_types=location_types,
             search_query=search_query,
         )
 

@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
-from collections.abc import Collection
+from collections.abc import Collection, Sequence
 from dataclasses import dataclass
 from typing import Annotated
 
@@ -62,7 +62,7 @@ class LocationService:
         page: int,
         page_size: int,
         location_ids: Collection[int],
-        location_type: str | None,
+        location_type: Collection[str],
         search_query: str | None,
     ) -> LocationServicePaginatedResult:
         pagination = await self._uow.location.paginate(
@@ -109,3 +109,6 @@ class LocationService:
                 jobs=LocationServiceJobStatistics.from_row(job_stats.get(location.id)),
             ),
         )
+
+    async def get_location_types(self) -> Sequence[str]:
+        return await self._uow.location.get_location_types()

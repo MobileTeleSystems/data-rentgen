@@ -42,6 +42,7 @@ get_one_query = (
     )
     .options(selectinload(Location.addresses))
 )
+get_distinct_query = select(Location.type).distinct(Location.type).order_by(Location.type)
 
 
 class LocationRepository(Repository[Location]):
@@ -50,16 +51,15 @@ class LocationRepository(Repository[Location]):
         page: int,
         page_size: int,
         location_ids: Collection[int],
-        location_type: str | None,
+        location_type: Collection[str],
         search_query: str | None,
     ) -> PaginationDTO[Location]:
         where = []
-
         if location_ids:
             where.append(Location.id == any_(list(location_ids)))  # type: ignore[arg-type]
-
         if location_type:
-            where.append(Location.type == location_type)
+            location_type_lower = [location_type.lower() for location_type in location_type]
+            where.append(Location.type == any_(location_type_lower))  # type: ignore[arg-type]
 
         query: Select | CompoundSelect
         order_by: list[ColumnElement | SQLColumnExpression]
@@ -161,3 +161,7 @@ class LocationRepository(Repository[Location]):
         existing.addresses.extend(addresses)
         await self._session.flush([existing])
         return existing
+
+    async def get_location_types(self):
+        scalars = await self._session.scalars(get_distinct_query)
+        return scalars.all()

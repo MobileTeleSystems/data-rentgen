@@ -20,6 +20,8 @@ get_one_query = select(JobType).where(
     JobType.type == bindparam("type"),
 )
 
+get_distinct_query = select(JobType.type).distinct(JobType.type).order_by(JobType.type)
+
 
 class JobTypeRepository(Repository[JobType]):
     async def fetch_bulk(self, job_types_dto: list[JobTypeDTO]) -> list[tuple[JobTypeDTO, JobType | None]]:
@@ -41,8 +43,7 @@ class JobTypeRepository(Repository[JobType]):
         return await self._get(job_type_dto) or await self._create(job_type_dto)
 
     async def get_job_types(self) -> Sequence[str]:
-        query = select(JobType.type).distinct(JobType.type)
-        result = await self._session.scalars(query)
+        result = await self._session.scalars(get_distinct_query)
         return result.all()
 
     async def _get(self, job_type_dto: JobTypeDTO) -> JobType | None:

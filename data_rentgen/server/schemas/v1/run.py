@@ -128,7 +128,7 @@ class RunDetailedResponseV1(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
-class RunsQueryV1(PaginateQueryV1):
+class RunsPaginateQueryV1(PaginateQueryV1):
     """Query params for Runs paginate request."""
 
     since: datetime | None = Field(
@@ -143,67 +143,70 @@ class RunsQueryV1(PaginateQueryV1):
     )
     run_id: list[UUID7] = Field(
         default_factory=list,
-        description="Run ids, for exact match",
-    )
-    job_id: int | None = Field(
-        default=None,
-        description="Job id, can be used only with 'since'",
-    )
-
-    parent_run_id: UUID7 | None = Field(
-        default=None,
-        description="Parent run id, can be used only with 'since' and 'until'",
-        examples=["01913217-b761-7b1a-bb52-489da9c8b9c8"],
-    )
-
-    job_type: list[str] = Field(
-        default_factory=list,
-        description="Filter runs by type of a Job",
-        examples=[["SPARK_APPLICATION", "AIRFLOW_TASK"]],
-    )
-    job_location_id: int | None = Field(
-        default=None,
-        description="Filter runs by location of a Job",
-        examples=[123, 234],
-    )
-
-    status: list[RunStatusForQueryV1] = Field(
-        default_factory=list,
-        description="Filter runs by status",
-        examples=[["SUCCEEDED", "FAILED"]],
-    )
-
-    started_by_user: list[str] | None = Field(
-        default=None,
-        description="User who started the Run",
-        examples=[["someuser1", "someuser2"]],
+        description="Ids of runs to fetch specific items only",
+        examples=[["01913217-b761-7b1a-bb52-489da9c8b9c8"]],
     )
 
     search_query: str | None = Field(
         default=None,
         min_length=3,
-        description="Search query",
+        description="Search query, partial match by external_id or job name",
+        examples=["application_123_234"],
+    )
+
+    parent_run_id: list[UUID7] = Field(
+        default_factory=list,
+        description="Filter by parent run ids, can be used only with 'since' and 'until'",
+        examples=[["01913217-b761-7b1a-bb52-489da9c8b9c8"]],
+    )
+
+    job_id: list[int] = Field(
+        default_factory=list,
+        description="Filter by job ids, can be used only with 'since'",
+        examples=[[123]],
+    )
+    job_type: list[str] = Field(
+        default_factory=list,
+        description="Filter by types of a job",
+        examples=[["SPARK_APPLICATION", "AIRFLOW_TASK"]],
+    )
+    job_location_id: list[int] = Field(
+        default_factory=list,
+        description="Filter by locations of a job",
+        examples=[[123, 234]],
+    )
+
+    status: list[RunStatusForQueryV1] = Field(
+        default_factory=list,
+        description="Filter by statuses",
+        examples=[["SUCCEEDED", "FAILED"]],
+    )
+
+    started_by_user: list[str] = Field(
+        default_factory=list,
+        description="Users who started the run",
+        examples=[["someuser1", "someuser2"]],
     )
 
     started_since: datetime | None = Field(
         default=None,
-        description="Minimum value of Run 'started_at' field, in ISO 8601 format",
+        description="Minimum value of 'started_at' field, in ISO 8601 format",
         examples=["2008-09-15T15:53:00+05:00"],
     )
     started_until: datetime | None = Field(
         default=None,
-        description="Maximum value of Run 'started_at' field, in ISO 8601 format",
+        description="Maximum value of 'started_at' field, in ISO 8601 format",
         examples=["2008-09-15T15:53:00+05:00"],
     )
 
     ended_since: datetime | None = Field(
         default=None,
-        description="Minimum value of Run 'ended_at' field, in ISO 8601 format",
+        description="Minimum value of 'ended_at' field, in ISO 8601 format",
         examples=["2008-09-15T15:53:00+05:00"],
     )
     ended_until: datetime | None = Field(
         default=None,
-        description="Maximum value of Run 'ended_at' field, in ISO 8601 format",
+        description="Maximum value of 'ended_at' field, in ISO 8601 format",
         examples=["2008-09-15T15:53:00+05:00"],
     )
 

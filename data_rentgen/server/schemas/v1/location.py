@@ -51,15 +51,34 @@ class LocationDetailedResponseV1(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class LocationTypesResponseV1(BaseModel):
+    """Location types"""
+
+    location_types: list[str] = Field(
+        description="List of distinct location types",
+        examples=[["kafka", "hdfs", "yarn"]],
+    )
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 class LocationPaginateQueryV1(PaginateQueryV1):
     """Query params for Location paginate request."""
 
-    location_id: list[int] = Field(default_factory=list, description="Location id")
-    location_type: str | None = Field(default=None, description="Location type")
+    location_id: list[int] = Field(
+        default_factory=list,
+        description="Ids of locations to fetch specific items only",
+    )
+    location_type: list[str] = Field(
+        default_factory=list,
+        description="Location type",
+        examples=[["kafka", "hdfs"], ["yarn"]],
+    )
     search_query: str | None = Field(
         default=None,
         min_length=3,
-        description="Search query",
+        description="Search query, partial matching by location name or any address",
+        examples=["clickhouse://localhost:8123"],
     )
 
     model_config = ConfigDict(extra="forbid")

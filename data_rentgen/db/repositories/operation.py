@@ -98,7 +98,7 @@ class OperationRepository(Repository[Operation]):
         operation_ids: Collection[UUID],
         since: datetime | None,
         until: datetime | None,
-        run_id: UUID | None,
+        run_ids: Collection[UUID],
     ) -> PaginationDTO[Operation]:
         # do not use `tuple_(Operation.created_at, Operation.id).in_(...),
         # as this is too complex filter for Postgres to make an optimal query plan
@@ -119,12 +119,12 @@ class OperationRepository(Repository[Operation]):
                 Operation.id == any_(list(operation_ids)),  # type: ignore[arg-type]
             ]
 
-        elif run_id:
-            run_created_at = extract_timestamp_from_uuid(run_id)
+        elif run_ids:
+            run_created_at = extract_timestamp_from_uuid(min(run_ids))
             # narrow created_at range
             min_created_at = max(filter(None, [since, run_created_at]))
             where = [
-                Operation.run_id == run_id,
+                Operation.run_id == any_(list(run_ids)),  # type: ignore[arg-type]
                 Operation.created_at >= min_created_at,
                 Operation.id >= get_min_uuid(min_created_at),
             ]

@@ -42,9 +42,10 @@ async def paginate_jobs(
         page=query_args.page,
         page_size=query_args.page_size,
         job_ids=query_args.job_id,
+        job_types=query_args.job_type,
+        location_ids=query_args.location_id,
+        location_types=query_args.location_type,
         search_query=query_args.search_query,
-        location_id=query_args.location_id,
-        job_type=query_args.job_type,
     )
     return PageResponseV1[JobDetailedResponseV1].from_pagination(pagination)
 
@@ -74,4 +75,4 @@ async def get_job_types(
     current_user: Annotated[User, Depends(get_user())],
 ) -> JobTypesResponseV1:
     job_types = await job_service.get_job_types()
-    return JobTypesResponseV1(job_types=sorted(job_types))
+    return JobTypesResponseV1(job_types=list(job_types))

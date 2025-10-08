@@ -98,15 +98,19 @@ class DatasetRepository(Repository[Dataset]):
         page_size: int,
         dataset_ids: Collection[int],
         tag_value_ids: Collection[int],
-        location_id: int | None,
+        location_ids: Collection[int],
+        location_types: Collection[str],
         search_query: str | None,
     ) -> PaginationDTO[Dataset]:
         where = []
+        location_join_clause = Location.id == Dataset.location_id
         if dataset_ids:
             where.append(Dataset.id == any_(list(dataset_ids)))  # type: ignore[arg-type]
-
-        if location_id:
-            where.append(Dataset.location_id == location_id)
+        if location_ids:
+            where.append(Dataset.location_id == any_(list(location_ids)))  # type: ignore[arg-type]
+        if location_types:
+            location_type_lower = [location_type.lower() for location_type in location_types]
+            where.append(Location.type == any_(location_type_lower))  # type: ignore[arg-type]
 
         if tag_value_ids:
             tv_ids = list(tag_value_ids)
@@ -125,19 +129,20 @@ class DatasetRepository(Repository[Dataset]):
         if search_query:
             tsquery = make_tsquery(search_query)
 
-            dataset_stmt = select(Dataset, ts_rank(Dataset.search_vector, tsquery).label("search_rank")).where(
-                ts_match(Dataset.search_vector, tsquery),
-                *where,
+            dataset_stmt = (
+                select(Dataset, ts_rank(Dataset.search_vector, tsquery).label("search_rank"))
+                .join(Location, location_join_clause)
+                .where(ts_match(Dataset.search_vector, tsquery), *where)
             )
             location_stmt = (
                 select(Dataset, ts_rank(Location.search_vector, tsquery).label("search_rank"))
-                .join(Dataset, Location.id == Dataset.location_id)
+                .join(Location, location_join_clause)
                 .where(ts_match(Location.search_vector, tsquery), *where)
             )
             address_stmt = (
                 select(Dataset, func.max(ts_rank(Address.search_vector, tsquery)).label("search_rank"))
-                .join(Location, Address.location_id == Location.id)
-                .join(Dataset, Location.id == Dataset.location_id)
+                .join(Location, location_join_clause)
+                .join(Address, Address.location_id == Dataset.location_id)
                 .where(ts_match(Address.search_vector, tsquery), *where)
                 .group_by(Dataset.id, Location.id, Address.id)
             )
@@ -152,7 +157,7 @@ class DatasetRepository(Repository[Dataset]):
             ).group_by(*dataset_columns)
             order_by = [desc("search_rank"), asc("name")]
         else:
-            query = select(Dataset).where(*where)
+            query = select(Dataset).join(Location, location_join_clause).where(*where)
             order_by = [Dataset.name]
 
         options = [

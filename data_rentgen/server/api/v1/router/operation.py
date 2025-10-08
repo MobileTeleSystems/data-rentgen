@@ -38,7 +38,7 @@ async def operations(
         since=query_args.since,
         until=query_args.until,
         operation_ids=query_args.operation_id,
-        run_id=query_args.run_id,
+        run_ids=query_args.run_id,
     )
     return PageResponseV1[OperationDetailedResponseV1].from_pagination(pagination)
 

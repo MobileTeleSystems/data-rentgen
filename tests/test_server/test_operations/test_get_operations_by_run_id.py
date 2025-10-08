@@ -38,7 +38,7 @@ async def test_get_operations_missing_since(
                     "input": {
                         "page": 1,
                         "page_size": 20,
-                        "run_id": str(new_operation.run_id),
+                        "run_id": [str(new_operation.run_id)],
                         "operation_id": [],
                     },
                 },

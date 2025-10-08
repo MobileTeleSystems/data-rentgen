@@ -90,15 +90,18 @@ def mock_keycloak_well_known(server_app_settings, respx_mock):
     server_url = keycloak_settings.server_url
     realm_name = keycloak_settings.realm_name
 
-    respx_mock.get(f"{server_url}/realms/{realm_name}/.well-known/openid-configuration").respond(
+    realm_url = f"{server_url}/realms/{realm_name}"
+    well_known_url = f"{realm_url}/.well-known/openid-configuration"
+    openid_url = f"{realm_url}/protocol/openid-connect"
+    respx_mock.get(well_known_url).respond(
         status_code=200,
         json={
-            "authorization_endpoint": f"{server_url}/realms/{realm_name}/protocol/openid-connect/auth",
-            "token_endpoint": f"{server_url}/realms/{realm_name}/protocol/openid-connect/token",
-            "userinfo_endpoint": f"{server_url}/realms/{realm_name}/protocol/openid-connect/userinfo",
-            "end_session_endpoint": f"{server_url}/realms/{realm_name}/protocol/openid-connect/logout",
-            "jwks_uri": f"{server_url}/realms/{realm_name}/protocol/openid-connect/certs",
-            "issuer": f"{server_url}/realms/{realm_name}",
+            "issuer": realm_url,
+            "authorization_endpoint": f"{openid_url}/auth",
+            "token_endpoint": f"{openid_url}/token",
+            "userinfo_endpoint": f"{openid_url}/userinfo",
+            "end_session_endpoint": f"{openid_url}/logout",
+            "jwks_uri": f"{openid_url}/certs",
         },
         content_type="application/json",
     )
@@ -111,13 +114,15 @@ def mock_keycloak_realm(server_app_settings, rsa_keys, respx_mock):
     realm_name = keycloak_settings.realm_name
     public_pem_str = get_public_key_pem(rsa_keys["public_key"])
 
-    respx_mock.get(f"{server_url}/realms/{realm_name}").respond(
+    realm_url = f"{server_url}/realms/{realm_name}"
+    openid_url = f"{realm_url}/protocol/openid-connect"
+    respx_mock.get(realm_url).respond(
         status_code=200,
         json={
             "realm": realm_name,
             "public_key": public_pem_str,
-            "token-service": f"{server_url}/realms/{realm_name}/protocol/openid-connect/token",
-            "account-service": f"{server_url}/realms/{realm_name}/account",
+            "token-service": f"{openid_url}/token",
+            "account-service": f"{realm_url}/account",
         },
         content_type="application/json",
     )
@@ -149,7 +154,9 @@ def mock_keycloak_token_refresh(user, server_app_settings, rsa_keys, respx_mock)
     )
     new_refresh_token = "mock_new_refresh_token"
 
-    respx_mock.post(f"{server_url}/realms/{realm_name}/protocol/openid-connect/token").respond(
+    realm_url = f"{server_url}/realms/{realm_name}"
+    openid_url = f"{realm_url}/protocol/openid-connect"
+    respx_mock.post(f"{openid_url}/token").respond(
         status_code=200,
         json={
             "access_token": new_access_token,
@@ -162,22 +169,28 @@ def mock_keycloak_token_refresh(user, server_app_settings, rsa_keys, respx_mock)
 
 
 @pytest.fixture
-def mock_keycloak_logout(user, server_app_settings, rsa_keys, respx_mock):
+def mock_keycloak_logout(server_app_settings, respx_mock):
     keycloak_settings = KeycloakSettings.model_validate(server_app_settings.auth.keycloak)
     server_url = keycloak_settings.server_url
     realm_name = keycloak_settings.realm_name
-    respx_mock.post(f"{server_url}/realms/{realm_name}/protocol/openid-connect/logout").respond(
+
+    realm_url = f"{server_url}/realms/{realm_name}"
+    openid_url = f"{realm_url}/protocol/openid-connect"
+    respx_mock.post(f"{openid_url}/logout").respond(
         status_code=204,
         content_type="application/json",
     )
 
 
 @pytest.fixture
-def mock_keycloak_logout_bad_request(user, server_app_settings, rsa_keys, respx_mock):
+def mock_keycloak_logout_bad_request(server_app_settings, respx_mock):
     keycloak_settings = KeycloakSettings.model_validate(server_app_settings.auth.keycloak)
     server_url = keycloak_settings.server_url
     realm_name = keycloak_settings.realm_name
-    respx_mock.post(f"{server_url}/realms/{realm_name}/protocol/openid-connect/logout").respond(
+
+    realm_url = f"{server_url}/realms/{realm_name}"
+    openid_url = f"{realm_url}/protocol/openid-connect"
+    respx_mock.post(f"{openid_url}/logout").respond(
         status_code=400,
         content_type="application/json",
     )
