@@ -103,5 +103,3 @@ Basic Configuration
 
 .. autopydantic_model:: data_rentgen.server.settings.auth.keycloak.KeycloakAuthProviderSettings
 .. autopydantic_model:: data_rentgen.server.settings.auth.keycloak.KeycloakSettings
-
-
