@@ -160,6 +160,60 @@ async def test_search_locations_by_location_name_and_address_url(
     }
 
 
+async def test_search_locations_by_name_and_type(
+    test_client: AsyncClient,
+    async_session: AsyncSession,
+    locations_search: tuple[dict[str, Location], dict[str, Location]],
+    mocked_user: MockedUser,
+) -> None:
+    _, locations_by_address = locations_search
+    # Location name `my-cluster` and address url `hdfs://my-cluster-namenode:8020`
+    # Location name `warehouse` and address url `hdfs://warehouse-cluster-namenode:2080`
+    [location] = await enrich_locations(
+        [
+            locations_by_address["hdfs://warehouse-cluster-namenode:2080"],
+        ],
+        async_session,
+    )
+
+    response = await test_client.get(
+        "/v1/locations",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "location_type": "hdfs",
+            "search_query": "cluster",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "page": 1,
+            "page_size": 20,
+            "total_count": 1,
+            "pages_count": 1,
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "previous_page": None,
+        },
+        "items": [
+            {
+                "id": str(location.id),
+                "data": location_to_json(location),
+                "statistics": {
+                    "datasets": {
+                        "total_datasets": 0,
+                    },
+                    "jobs": {
+                        "total_jobs": 0,
+                    },
+                },
+            },
+        ],
+    }
+
+
 async def test_search_locations_no_results(
     test_client: AsyncClient,
     locations_search: tuple[dict[str, Location], dict[str, Location]],

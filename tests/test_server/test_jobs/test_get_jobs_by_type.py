@@ -35,6 +35,7 @@ async def test_get_jobs_by_job_type(
 ) -> None:
     jobs = await enrich_jobs(jobs_with_locations_and_types, async_session)
     [_, dag_job, task_job] = jobs
+
     response = await test_client.get(
         "/v1/jobs",
         headers={"Authorization": f"Bearer {mocked_user.access_token}"},
@@ -59,6 +60,36 @@ async def test_get_jobs_by_job_type(
                 "data": job_to_json(job),
             }
             for job in (dag_job, task_job)
+        ],
+    }
+
+    response = await test_client.get(
+        "/v1/jobs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "job_type": ["AIRFLOW_DAG", "AIRFLOW_TASK"],
+            # test multiple filters
+            "search_query": "my-job_dag",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 1,
+        },
+        "items": [
+            {
+                "id": str(dag_job.id),
+                "data": job_to_json(dag_job),
+            },
         ],
     }
 
