@@ -76,7 +76,7 @@ jobs:
           dest: ./logs
 
       - name: Upload Coverage Results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: raw-coverage-${{ env.DEFAULT_PYTHON }}
           path: reports/.coverage*
@@ -89,7 +89,7 @@ jobs:
           docker compose -f docker-compose.test.yml down -v --remove-orphans
 
       - name: Upload DB logs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: failure()
         with:
           name: db-logs
@@ -123,7 +123,7 @@ jobs:
         run: pip install -I coverage
 
       - name: Download all raw coverage data
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           path: coverage-data/
           pattern: raw-coverage-*
