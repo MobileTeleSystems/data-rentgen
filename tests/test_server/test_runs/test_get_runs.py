@@ -223,7 +223,7 @@ async def test_get_runs_with_job_type(
         headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
-            "job_type": ["SPARK_APPLICATION"],
+            "job_type": "SPARK_APPLICATION",
         },
     )
 
@@ -262,6 +262,55 @@ async def test_get_runs_with_job_type(
                 },
             }
             for run in runs
+        ],
+    }
+
+    response = await test_client.get(
+        "/v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "job_type": ["SPARK_APPLICATION"],
+            # multiple filters
+            "search_query": "0002",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 1,
+        },
+        "items": [
+            {
+                "id": str(run.id),
+                "data": run_to_json(run),
+                "statistics": {
+                    "inputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "outputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "operations": {
+                        "total_operations": 0,
+                    },
+                },
+            }
+            for run in runs[:1]
         ],
     }
 
@@ -326,6 +375,54 @@ async def test_get_runs_with_status(
                 },
             }
             for run in runs
+        ],
+    }
+
+    response = await test_client.get(
+        "/v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "status": ["SUCCEEDED", "STARTED"],
+            "search_query": "dag",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 1,
+        },
+        "items": [
+            {
+                "id": str(run.id),
+                "data": run_to_json(run),
+                "statistics": {
+                    "inputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "outputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "operations": {
+                        "total_operations": 0,
+                    },
+                },
+            }
+            for run in runs[:1]
         ],
     }
 
@@ -526,6 +623,55 @@ async def test_get_runs_with_location_id(
         ],
     }
 
+    response = await test_client.get(
+        "/v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "job_location_id": [job.location_id],
+            # test multiple filters
+            "search_query": "0002",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 1,
+        },
+        "items": [
+            {
+                "id": str(run.id),
+                "data": run_to_json(run),
+                "statistics": {
+                    "inputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "outputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "operations": {
+                        "total_operations": 0,
+                    },
+                },
+            }
+            for run in runs[:1]
+        ],
+    }
+
 
 async def test_get_runs_with_started_by_user(
     test_client: AsyncClient,
@@ -549,7 +695,7 @@ async def test_get_runs_with_started_by_user(
         headers={"Authorization": f"Bearer {mocked_user.access_token}"},
         params={
             "since": since.isoformat(),
-            "started_by_user": [started_by_user.name],
+            "started_by_user": started_by_user.name,
         },
     )
 
@@ -588,6 +734,55 @@ async def test_get_runs_with_started_by_user(
                 },
             }
             for run in runs
+        ],
+    }
+
+    response = await test_client.get(
+        "/v1/runs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "since": since.isoformat(),
+            "started_by_user": [started_by_user.name],
+            # test multiple filters
+            "search_query": "0002",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 1,
+        },
+        "items": [
+            {
+                "id": str(run.id),
+                "data": run_to_json(run),
+                "statistics": {
+                    "inputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "outputs": {
+                        "total_datasets": 0,
+                        "total_bytes": 0,
+                        "total_rows": 0,
+                        "total_files": 0,
+                    },
+                    "operations": {
+                        "total_operations": 0,
+                    },
+                },
+            }
+            for run in runs[:1]
         ],
     }
 

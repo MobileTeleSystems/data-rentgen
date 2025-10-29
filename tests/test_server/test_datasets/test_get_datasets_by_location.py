@@ -102,7 +102,47 @@ async def test_get_datasets_by_location_type(
     response = await test_client.get(
         "/v1/datasets",
         headers={"Authorization": f"Bearer {mocked_user.access_token}"},
-        params={"location_type": ["HDFS"]},  # case-insensitive
+        params={"location_type": "HDFS"},  # case-insensitive
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": len(datasets),
+        },
+        "items": [
+            {
+                "id": str(dataset.id),
+                "data": dataset_to_json(dataset),
+                "tags": [],
+            }
+            for dataset in datasets
+        ],
+    }
+
+    _, datasets_by_location, _ = datasets_search
+    datasets = await enrich_datasets(
+        [
+            datasets_by_location["postgres.history_location"],
+        ],
+        async_session,
+    )
+
+    response = await test_client.get(
+        "/v1/datasets",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "location_type": ["postgres"],
+            # test multiple filters
+            "search_query": "postgres.history_location",
+        },
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
@@ -130,7 +170,6 @@ async def test_get_datasets_by_location_type(
 
 async def test_get_datasets_by_location_type_non_existent(
     test_client: AsyncClient,
-    async_session: AsyncSession,
     datasets_search: tuple[dict[str, Dataset], ...],
     mocked_user: MockedUser,
 ) -> None:

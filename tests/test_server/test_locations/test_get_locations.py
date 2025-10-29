@@ -69,15 +69,15 @@ async def test_get_location_types(
     assert response.json() == {"location_types": sorted(unique_location_type)}
 
 
-async def test_get_locations_with_type_filter(
+async def test_get_locations_with_type(
     test_client: AsyncClient,
     locations: list[Location],
     async_session: AsyncSession,
     mocked_user: MockedUser,
 ):
     location_type = locations[0].type
-    locations = [location for location in locations if location.type == location_type]
-    locations = await enrich_locations(locations, async_session)
+    matching_locations = [location for location in locations if location.type == location_type]
+    matching_locations = await enrich_locations(matching_locations, async_session)
 
     response = await test_client.get(
         "v1/locations",
@@ -90,7 +90,7 @@ async def test_get_locations_with_type_filter(
         "meta": {
             "page": 1,
             "page_size": 20,
-            "total_count": len(locations),
+            "total_count": len(matching_locations),
             "pages_count": 1,
             "has_next": False,
             "has_previous": False,
@@ -110,8 +110,36 @@ async def test_get_locations_with_type_filter(
                     },
                 },
             }
-            for location in sorted(locations, key=lambda x: x.name)
+            for location in sorted(matching_locations, key=lambda x: x.name)
         ],
+    }
+
+
+async def test_get_locations_with_non_existent_type(
+    test_client: AsyncClient,
+    locations: list[Location],
+    async_session: AsyncSession,
+    mocked_user: MockedUser,
+):
+    response = await test_client.get(
+        "v1/locations",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={"location_type": "whatever"},
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "page": 1,
+            "page_size": 20,
+            "total_count": 0,
+            "pages_count": 1,
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "previous_page": None,
+        },
+        "items": [],
     }
 
 

@@ -6,12 +6,9 @@ from uuid import UUID
 
 from sqlalchemy import (
     ColumnElement,
-    CompoundSelect,
-    Select,
-    SQLColumnExpression,
-    and_,
     any_,
     bindparam,
+    column,
     desc,
     func,
     select,
@@ -150,20 +147,35 @@ class RunRepository(Repository[Run]):
         if ended_until:
             where.append(Run.ended_at <= ended_until)
 
-        query: Select | CompoundSelect
-        order_by: list[ColumnElement | SQLColumnExpression]
+        run = select(Run).where(*where)
+
+        if job_types or job_location_ids:
+            job = aliased(Job, name="job_type")
+            run = run.join(job, Run.job_id == job.id)
+            if job_types:
+                where.append(job.type == any_(list(job_types)))  # type: ignore[arg-type]
+            if job_location_ids:
+                where.append(job.location_id == any_(list(job_location_ids)))  # type: ignore[arg-type]
+
+        if started_by_users:
+            usernames_lower = [name.lower() for name in started_by_users]
+            run = run.join(User, Run.started_by_user_id == User.id)
+            where.append(func.lower(User.name) == any_(usernames_lower))  # type: ignore[arg-type]
+
+        query = run.where(*where)
+        order_by: list[ColumnElement] = [desc("created_at"), desc("id")]
         if search_query:
             tsquery = make_tsquery(search_query)
 
-            run_stmt = select(Run, ts_rank(Run.search_vector, tsquery).label("search_rank")).where(
-                ts_match(Run.search_vector, tsquery),
-                *where,
+            run_cte = query.cte()
+            run_stmt = select(run_cte, ts_rank(column("search_vector"), tsquery).label("search_rank")).where(
+                ts_match(column("search_vector"), tsquery),
             )
             job_search = aliased(Job, name="job_search")
             job_stmt = (
-                select(Run, ts_rank(job_search.search_vector, tsquery).label("search_rank"))
-                .join(job_search, job_search.id == Run.job_id)
-                .where(ts_match(job_search.search_vector, tsquery), *where)
+                select(run_cte, ts_rank(job_search.search_vector, tsquery).label("search_rank"))
+                .join(job_search, job_search.id == column("job_id"))
+                .where(ts_match(job_search.search_vector, tsquery))
             )
 
             union_cte = union(run_stmt, job_stmt).cte()
@@ -176,27 +188,6 @@ class RunRepository(Repository[Run]):
             ).group_by(*run_columns)
             # place the most recent runs on top
             order_by = [desc("search_rank"), desc("created_at"), desc("id")]
-        else:
-            query = select(Run).where(*where)
-            order_by = [Run.created_at.desc(), Run.id.desc()]
-
-        if job_types or job_location_ids:
-            job = aliased(Job, name="job_type")
-            query = query.join(job, and_(Run.job_id == job.id))
-            if job_types:
-                query = query.where(job.type == any_(list(job_types)))  # type: ignore[arg-type]
-            if job_location_ids:
-                query = query.where(job.location_id == any_(list(job_location_ids)))  # type: ignore[arg-type]
-
-        if started_by_users:
-            usernames_lower = [name.lower() for name in started_by_users]
-            query = query.join(
-                User,
-                and_(
-                    Run.started_by_user_id == User.id,
-                    func.lower(User.name) == any_(usernames_lower),  # type: ignore[arg-type]
-                ),
-            )
 
         options = [selectinload(Run.started_by_user)]
         return await self._paginate_by_query(
@@ -308,9 +299,9 @@ class RunRepository(Repository[Run]):
             "persistent_log_url": new.persistent_log_url,
             "running_log_url": new.running_log_url,
         }
-        for column, value in optional_fields.items():
+        for col_name, value in optional_fields.items():
             if value is not None:
-                setattr(existing, column, value)
+                setattr(existing, col_name, value)
 
         await self._session.flush([existing])
         return existing

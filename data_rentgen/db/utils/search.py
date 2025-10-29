@@ -5,7 +5,7 @@ from enum import IntFlag
 from string import punctuation
 
 from sqlalchemy import ColumnElement, func
-from sqlalchemy.orm import InstrumentedAttribute
+from sqlalchemy.sql import SQLColumnExpression
 
 # left some punctuation to match file paths, URLs and host names
 TSQUERY_UNSUPPORTED_CHARS = "".join(sorted(set(punctuation) - {"/", ".", "_", "-"}))
@@ -25,7 +25,7 @@ class SearchRankNormalization(IntFlag):
     RANK_PLUS_ONE = 32
 
 
-def ts_rank(search_vector: InstrumentedAttribute, ts_query: ColumnElement) -> ColumnElement:
+def ts_rank(search_vector: SQLColumnExpression, ts_query: ColumnElement) -> ColumnElement:
     """Get ts_rank for search query ranking.
 
     Places results with smaller number of total words (like table name) to the top,
@@ -48,7 +48,7 @@ def make_tsquery(user_input: str) -> ColumnElement:
     return func.to_tsquery("simple", build_tsquery(user_input))
 
 
-def ts_match(search_vector: InstrumentedAttribute, ts_query: ColumnElement) -> ColumnElement:
+def ts_match(search_vector: SQLColumnExpression, ts_query: ColumnElement) -> ColumnElement:
     """Build an expression to get only search_vector matching ts_query."""
     return search_vector.op("@@")(ts_query)
 

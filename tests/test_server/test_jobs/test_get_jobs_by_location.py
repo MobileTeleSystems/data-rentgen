@@ -22,6 +22,7 @@ async def test_get_jobs_by_location_id(
 
     # first job in jobs has a different location unlike two others
     [_, dag_job, task_job] = jobs
+
     response = await test_client.get(
         "/v1/jobs",
         headers={"Authorization": f"Bearer {mocked_user.access_token}"},
@@ -46,6 +47,36 @@ async def test_get_jobs_by_location_id(
                 "data": job_to_json(job),
             }
             for job in [dag_job, task_job]
+        ],
+    }
+
+    response = await test_client.get(
+        "/v1/jobs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "location_id": dag_job.location_id,
+            # test multiple filters
+            "search_query": "my-job_dag",
+        },
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 1,
+        },
+        "items": [
+            {
+                "id": str(dag_job.id),
+                "data": job_to_json(dag_job),
+            },
         ],
     }
 
@@ -78,17 +109,52 @@ async def test_get_jobs_by_location_id_non_existent(
     }
 
 
-async def test_get_lobs_by_location_type(
+async def test_get_jobs_by_location_type(
     test_client: AsyncClient,
     async_session: AsyncSession,
     jobs_with_locations_and_types: tuple[Job, ...],
     mocked_user: MockedUser,
 ) -> None:
-    spark_job, *_ = await enrich_jobs(jobs_with_locations_and_types, async_session)
+    jobs = await enrich_jobs(jobs_with_locations_and_types, async_session)
+
+    # first job in jobs has a different location unlike two others
+    [_, dag_job, task_job] = jobs
+
     response = await test_client.get(
         "/v1/jobs",
         headers={"Authorization": f"Bearer {mocked_user.access_token}"},
-        params={"location_type": ["YARN"]},  # case-insensitive
+        params={"location_type": "HTTP"},  # case-insensitive
+    )
+
+    assert response.status_code == HTTPStatus.OK, response.json()
+    assert response.json() == {
+        "meta": {
+            "has_next": False,
+            "has_previous": False,
+            "next_page": None,
+            "page": 1,
+            "page_size": 20,
+            "pages_count": 1,
+            "previous_page": None,
+            "total_count": 2,
+        },
+        "items": [
+            {
+                "id": str(job.id),
+                "data": job_to_json(job),
+            }
+            for job in [dag_job, task_job]
+        ],
+    }
+
+    response = await test_client.get(
+        "/v1/jobs",
+        headers={"Authorization": f"Bearer {mocked_user.access_token}"},
+        params={
+            "location_type": ["http"],
+            # test multiple filters
+            "search_query": "my-job_dag",
+        },
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
@@ -105,8 +171,8 @@ async def test_get_lobs_by_location_type(
         },
         "items": [
             {
-                "id": str(spark_job.id),
-                "data": job_to_json(spark_job),
+                "id": str(dag_job.id),
+                "data": job_to_json(dag_job),
             },
         ],
     }
