@@ -64,9 +64,9 @@ exclude = ["docs", "tests"]
 
 [project.optional-dependencies]
 server = [
-  "fastapi~=0.119.1",
-  "starlette~=0.48.0",
-  "uvicorn~=0.37.0",
+  "fastapi>=0.119.1,<0.122.0",
+  "starlette>=0.48,<0.51",
+  "uvicorn>=0.37,<0.39",
   "starlette-exporter~=0.23.0",
   "asgi-correlation-id~=4.3.4",
   "pyjwt~=2.10.1 ",
@@ -94,7 +94,7 @@ gssapi = [
   "gssapi~=1.10.0",
 ]
 seed = [
-  "faker~=37.11.0"
+  "faker>=37.11,<37.13"
 ]
 
 [dependency-groups]
