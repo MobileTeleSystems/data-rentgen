@@ -12,7 +12,7 @@ DEFAULT_MAX_AGE = 1_209_600
 class SessionSettings(BaseModel):
     """Session Middleware Settings.
 
-    Required for :ref:`keycloak-auth-provider`.
+    Required for :ref:`auth-server-keycloak`.
 
     See `SessionMiddleware <https://www.starlette.io/middleware/#sessionmiddleware>`_ documentation.
 
@@ -75,7 +75,7 @@ class SessionSettings(BaseModel):
 
     model_config = ConfigDict(extra="allow")
 
-    @field_validator("secret_key")
+    @field_validator("secret_key", mode="after")
     @classmethod
     def _validate_secret_key(cls, value: SecretStr | None, info: ValidationInfo) -> SecretStr | None:
         if not value and info.data.get("enabled"):
