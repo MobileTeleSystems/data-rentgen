@@ -310,7 +310,34 @@ def test_extractors_extract_operation_spark_job_finished(
     )
 
 
-def test_extractors_extract_operation_spark_job_sql_query():
+@pytest.mark.parametrize(
+    ["sql_query", "expected_query"],
+    [
+        pytest.param(
+            "select id, name\nfrom schema.table\nwhere id = 1 \t\n\r",
+            "select id, name\nfrom schema.table\nwhere id = 1",
+            id="spaces and newlines",
+        ),
+        pytest.param(
+            """
+                select id, name
+                from schema.table
+                where id = 1
+            """,
+            "select id, name\nfrom schema.table\nwhere id = 1",
+            id="indentation",
+        ),
+        pytest.param(
+            "[\x00-\x1f\x20abc\x7e\x7f\x80\xff]",
+            "[\\x00-\\x1f\x20abc\x7e\\x7f\x80\xff]",
+            id="ascii encoding",
+        ),
+    ],
+)
+def test_extractors_extract_operation_spark_job_sql_query(
+    sql_query: str,
+    expected_query: str,
+):
     now = datetime(2024, 7, 5, 9, 6, 29, 462000, tzinfo=timezone.utc)
     run_id = UUID("01908224-8410-79a2-8de6-a769ad6944c9")
     operation_id = UUID("01908225-1fd7-746b-910c-70d24f2898b1")
@@ -328,11 +355,7 @@ def test_extractors_extract_operation_spark_job_sql_query():
                     jobType="SQL_JOB",
                 ),
                 sql=OpenLineageSqlJobFacet(
-                    query="""
-                        select id, name
-                        from schema.table
-                        where id = 1
-                    """,
+                    query=sql_query,
                 ),
             ),
         ),
@@ -369,7 +392,7 @@ def test_extractors_extract_operation_spark_job_sql_query():
         position=None,
         description=None,
         status=OperationStatusDTO.STARTED,
-        sql_query=SQLQueryDTO(query="select id, name\nfrom schema.table\nwhere id = 1"),
+        sql_query=SQLQueryDTO(query=expected_query),
         started_at=now,
         ended_at=None,
     )
