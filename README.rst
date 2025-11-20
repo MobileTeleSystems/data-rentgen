@@ -48,7 +48,7 @@ Goals
 -----
 
 * Collect lineage events produced by OpenLineage clients & integrations.
-* Store operation-grained events for better detalization (instead of job grained `Marquez <https://marquezproject.ai/>`_).
+* Store operation-grained events for better detalization.
 * Provide API for fetching both job/run ↔ dataset lineage and dataset ↔ dataset lineage.
 
 Features
@@ -56,7 +56,7 @@ Features
 
 * Support consuming large amounts of lineage events, use Apache Kafka as event buffer.
 * Store data in tables partitioned by event timestamp, to speed up lineage graph resolution.
-* Lineage graph is build with user-specified time boundaries (unlike Marquez where lineage is build only for last job run).
+* Lineage graph is build with user-specified time boundaries.
 * Lineage graph can be build with different granularity. e.g. merge all individual Spark commands into Spark applicationId or Spark applicationName.
 * Column-level lineage support.
 * Authentication support.
@@ -71,7 +71,7 @@ Limitations
 -----------
 
 * OpenLineage have integrations with Trino, Debezium and some other lineage sources. DataRentgen support may be added later.
-* Unlike Marquez, DataRentgen parses only limited set of facets send by OpenLineage, and doesn't store custom facets. This can be changed in future.
+* DataRentgen parses only limited set of OpenLineage facets, and doesn't store custom facets. This can be changed in future.
 
 .. documentation
 
