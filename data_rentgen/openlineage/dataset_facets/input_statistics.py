@@ -23,7 +23,6 @@ class OpenLineageInputStatisticsInputDatasetFacet(OpenLineageInputDatasetFacet):
     @classmethod
     def value_must_be_sane(cls, value: int | None):
         if value and value >= MAX_LONG:
-            # https://github.com/apache/spark/blob/v3.5.7/sql/catalyst/src/main/scala/org/apache/spark/sql/internal/SQLConf.scala#L2565
-            # https://github.com/apache/spark/blob/v3.5.7/sql/core/src/main/scala/org/apache/spark/sql/sources/interfaces.scala#L209
+            # https://github.com/OpenLineage/OpenLineage/pull/4165
             return None
         return value

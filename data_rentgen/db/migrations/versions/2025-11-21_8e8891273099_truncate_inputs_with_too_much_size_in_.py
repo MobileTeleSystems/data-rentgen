@@ -19,6 +19,7 @@ depends_on = None
 
 
 def upgrade() -> None:
+    # https://github.com/OpenLineage/OpenLineage/pull/4165
     op.execute(sa.text("UPDATE input SET num_bytes = NULL WHERE num_bytes >= 9223372036854775807"))
 
 
