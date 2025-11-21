@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from pydantic import Field, PositiveInt, field_validator
+from pydantic import Field, NonNegativeInt, field_validator
 
 from data_rentgen.openlineage.dataset_facets.base import (
     OpenLineageInputDatasetFacet,
@@ -15,9 +15,9 @@ class OpenLineageInputStatisticsInputDatasetFacet(OpenLineageInputDatasetFacet):
     See [InputStatisticsInputDatasetFacet](https://github.com/OpenLineage/OpenLineage/blob/main/spec/facets/InputStatisticsInputDatasetFacet.json).
     """
 
-    rows: PositiveInt | None = Field(default=None, alias="rowCount", examples=[1_000_000])
-    bytes: PositiveInt | None = Field(default=None, alias="size", examples=[2**30])
-    files: PositiveInt | None = Field(default=None, alias="fileCount", examples=[0])
+    rows: NonNegativeInt | None = Field(default=None, alias="rowCount", examples=[1_000_000])
+    bytes: NonNegativeInt | None = Field(default=None, alias="size", examples=[2**30])
+    files: NonNegativeInt | None = Field(default=None, alias="fileCount", examples=[0])
 
     @field_validator("bytes", "rows", "files", mode="after")
     @classmethod

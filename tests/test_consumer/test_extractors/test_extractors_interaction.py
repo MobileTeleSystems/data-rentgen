@@ -116,6 +116,7 @@ def test_extractors_extract_input_output_schema_no_fields(dataset_type: type[Ope
     ["row_count", "byte_count", "file_count"],
     [
         (1_000_000, 1000 * 1024 * 1024, 10),
+        (0, 0, 0),
         (None, None, None),
     ],
 )
@@ -205,6 +206,7 @@ def test_extractors_extract_input_for_long_operations():
     ["row_count", "byte_count", "file_count"],
     [
         (1_000_000, 1000 * 1024 * 1024, 10),
+        (0, 0, 0),
         (None, None, None),
     ],
 )
