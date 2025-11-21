@@ -102,7 +102,6 @@ async def report_malformed(
         await publisher.publish(
             message.value,
             key=message.key,
-            partition=message.partition,
             timestamp_ms=message.timestamp,
             headers=headers or None,
             reply_to=message_id,
