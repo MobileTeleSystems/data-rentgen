@@ -1,11 +1,13 @@
 # SPDX-FileCopyrightText: 2024-2025 MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from pydantic import Field
+from pydantic import Field, PositiveInt, field_validator
 
 from data_rentgen.openlineage.dataset_facets.base import (
     OpenLineageInputDatasetFacet,
 )
+
+MAX_LONG = 2**63 - 1
 
 
 class OpenLineageInputStatisticsInputDatasetFacet(OpenLineageInputDatasetFacet):
@@ -13,6 +15,15 @@ class OpenLineageInputStatisticsInputDatasetFacet(OpenLineageInputDatasetFacet):
     See [InputStatisticsInputDatasetFacet](https://github.com/OpenLineage/OpenLineage/blob/main/spec/facets/InputStatisticsInputDatasetFacet.json).
     """
 
-    rows: int | None = Field(default=None, alias="rowCount", examples=[1_000_000])
-    bytes: int | None = Field(default=None, alias="size", examples=[2**30])
-    files: int | None = Field(default=None, alias="fileCount", examples=[0])
+    rows: PositiveInt | None = Field(default=None, alias="rowCount", examples=[1_000_000])
+    bytes: PositiveInt | None = Field(default=None, alias="size", examples=[2**30])
+    files: PositiveInt | None = Field(default=None, alias="fileCount", examples=[0])
+
+    @field_validator("bytes", "rows", "files", mode="after")
+    @classmethod
+    def value_must_be_sane(cls, value: int | None):
+        if value and value >= MAX_LONG:
+            # https://github.com/apache/spark/blob/v3.5.7/sql/catalyst/src/main/scala/org/apache/spark/sql/internal/SQLConf.scala#L2565
+            # https://github.com/apache/spark/blob/v3.5.7/sql/core/src/main/scala/org/apache/spark/sql/sources/interfaces.scala#L209
+            return None
+        return value

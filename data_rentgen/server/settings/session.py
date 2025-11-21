@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import textwrap
 
-from pydantic import BaseModel, ConfigDict, Field, SecretStr
+from pydantic import BaseModel, ConfigDict, Field, SecretStr, ValidationInfo, field_validator
 
 DEFAULT_MAX_AGE = 1_209_600
 
 
 class SessionSettings(BaseModel):
     """Session Middleware Settings.
+
+    Required for :ref:`auth-server-keycloak`.
 
     See `SessionMiddleware <https://www.starlette.io/middleware/#sessionmiddleware>`_ documentation.
 
@@ -24,6 +26,7 @@ class SessionSettings(BaseModel):
 
     .. code-block:: bash
 
+        DATA_RENTGEN__SERVER__SESSION__ENABLED=True
         DATA_RENTGEN__SERVER__SESSION__SECRET_KEY=secret
         DATA_RENTGEN__SERVER__SESSION__SESSION_COOKIE=custom_cookie_name
         DATA_RENTGEN__SERVER__SESSION__MAX_AGE=None  # cookie will last as long as the browser session
@@ -33,7 +36,12 @@ class SessionSettings(BaseModel):
 
     """
 
-    secret_key: SecretStr = Field(
+    enabled: bool = Field(
+        default=False,
+        description="Set to ``True`` to enable SessionMiddleware",
+    )
+    secret_key: SecretStr | None = Field(
+        default=None,
         description=textwrap.dedent(
             """
             Secret key for encrypting cookies.
@@ -66,3 +74,11 @@ class SessionSettings(BaseModel):
     )
 
     model_config = ConfigDict(extra="allow")
+
+    @field_validator("secret_key", mode="after")
+    @classmethod
+    def _validate_secret_key(cls, value: SecretStr | None, info: ValidationInfo) -> SecretStr | None:
+        if not value and info.data.get("enabled"):
+            msg = "secret_key is required"
+            raise ValueError(msg)
+        return value

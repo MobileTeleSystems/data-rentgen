@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+import codecs
+import re
 from abc import ABC, abstractmethod
 from textwrap import dedent
 
@@ -16,6 +18,13 @@ from data_rentgen.openlineage.run_event import (
     OpenLineageRunEvent,
     OpenLineageRunEventType,
 )
+
+# https://www.ascii-code.com/, but left \n intact
+ASCII_UNPRINTABLE = re.compile(r"[\x00-\x09\x0b-\x1f\x7f]", re.UNICODE)
+
+
+def encode_char(char: re.Match[str]) -> str:
+    return codecs.encode(char.group(0), "unicode-escape").decode("utf-8")
 
 
 class OperationExtractorMixin(ABC):
@@ -74,5 +83,7 @@ class OperationExtractorMixin(ABC):
     def _extract_sql_query(self, event: OpenLineageRunEvent) -> SQLQueryDTO | None:
         if event.job.facets.sql:
             query = dedent(event.job.facets.sql.query).strip()
+            # https://stackoverflow.com/questions/56237415/removing-encoding-utf8-0x00-chars-from-pandas-dataframe-for-psycopg2-cursor
+            query = ASCII_UNPRINTABLE.sub(encode_char, query)
             return SQLQueryDTO(query=query)
         return None
