@@ -53,6 +53,7 @@ jobs:
           sed -i "s#logo_wide_white_text.svg#logo_wide.svg#g" README.rst
 
       - name: Patch version template
+        # Due to change above, git stage area is dirty, so we need to patch the template
         run: sed -i 's#dirty_template = ".*"#dirty_template = "{tag}"#' pyproject.toml
 
       - name: Build package
