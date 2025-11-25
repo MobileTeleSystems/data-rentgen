@@ -49,6 +49,9 @@ jobs:
           sed -i "s#image:: docs/#image:: https://raw.githubusercontent.com/MobileTeleSystems/data-rentgen/$GITHUB_SHA/docs/#g" README.rst
           sed -i "s#logo_wide_white_text.svg#logo_wide.svg#g" README.rst
 
+      - name: Patch version template
+        run: sed -i 's#dirty_template = ".*"#dirty_template = "{tag}.dev{env:GITHUB_RUN_ID:{ccount}}"#' pyproject.toml
+
       - name: Build package
         run: uv build
 
