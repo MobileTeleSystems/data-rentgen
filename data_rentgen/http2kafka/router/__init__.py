@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024-2025 MTS PJSC
+# SPDX-FileCopyrightText: 2025-present MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 import logging
 from http import HTTPStatus

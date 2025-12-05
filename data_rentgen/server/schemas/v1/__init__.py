@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024-2025 MTS PJSC
+# SPDX-FileCopyrightText: 2024-present MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 from data_rentgen.server.schemas.v1.address import AddressResponseV1
 from data_rentgen.server.schemas.v1.dataset import (
