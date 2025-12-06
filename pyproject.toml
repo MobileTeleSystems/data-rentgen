@@ -30,20 +30,20 @@ classifiers = [
 keywords = ["Lineage", "FastAPI", "REST", "FastStream"]
 requires-python = ">=3.12"
 dependencies = [
-  "pydantic~=2.12.3",
+  "pydantic~=2.12.5",
   "pydantic-settings~=2.12.0",
   "typing-extensions~=4.15.0",
-  "alembic~=1.17.1",
-  "sqlalchemy~=2.0.41",
+  "alembic~=1.17.2",
+  "sqlalchemy~=2.0.44",
   "sqlalchemy-utils~=0.42.0",
-  "greenlet~=3.2",
-  "pyyaml~=6.0.2",
+  "greenlet~=3.2.4",
+  "pyyaml~=6.0.3",
   "python-json-logger~=4.0.0",
   "coloredlogs~=15.0.1",
   "uuid6~=2025.0.0",
   "python-dateutil~=2.9.0.post0",
   "packaging~=25.0",
-  "cachetools~=6.2.0",
+  "cachetools~=6.2.2",
 ]
 dynamic = ["version"]
 
@@ -64,8 +64,8 @@ exclude = ["docs", "tests"]
 
 [project.optional-dependencies]
 server = [
-  "fastapi>=0.121.3,<0.124.0",
-  "starlette>=0.49.3,<0.51.0",
+  "fastapi~=0.123.10",
+  "starlette~=0.50.0",
   "uvicorn~=0.38.0",
   "starlette-exporter~=0.23.0",
   "asgi-correlation-id~=4.3.4",
@@ -75,20 +75,20 @@ server = [
   "python-keycloak~=5.8.1",
 ]
 consumer = [
-  "faststream[kafka,cli]~=0.6.2",
+  "faststream[kafka,cli]~=0.6.3",
   "cramjam~=2.11.0",
 ]
 http2kafka = [
-  "fastapi>=0.121.3,<0.124.0",
-  "starlette>=0.49.3,<0.51.0",
+  "fastapi~=0.123.10",
+  "starlette~=0.50.0",
   "uvicorn~=0.38.0",
   "starlette-exporter~=0.23.0",
   "asgi-correlation-id~=4.3.4",
-  "faststream[kafka,cli]~=0.6.0rc2",
+  "faststream[kafka,cli]~=0.6.3",
   "cramjam~=2.11.0",
 ]
 postgres = [
-  "asyncpg>=0.30,<0.32",
+  "asyncpg~=0.31.0",
 ]
 gssapi = [
   "gssapi~=1.10.0",
@@ -105,17 +105,17 @@ test =[
   "pytest-randomly~=4.0.0",
   "pytest-deadfixtures~=3.0.0",
   "pytest-rerunfailures~=16.1",
-  "coverage>=7.11,<7.13",
-  "psycopg2-binary~=2.9.10",
+  "coverage~=7.12.0",
+  "psycopg2-binary~=2.9.11",
   "deepdiff~=8.6.1",
   "respx~=0.22.0",
   "dirty_equals~=0.9.0",
   "gevent~=25.9.1",
 ]
 dev = [
-  "pre-commit>=4.4,<4.6",
-  "mypy>=1.18.2,<1.20.0",
-  "sqlalchemy[mypy]~=2.0.41",
+  "pre-commit~=4.5.0",
+  "mypy~=1.19.0",
+  "sqlalchemy[mypy]~=2.0.44",
   "types-pyyaml~=6.0.12",
   "types-python-dateutil~=2.9.0",
   "types-jwcrypto~=1.5.0",
@@ -125,11 +125,12 @@ docs = [
   "setuptools-git-versioning~=2.1.0",
   "autodoc-pydantic~=2.2.0",
   "numpydoc~=1.9.0",
-  "sphinx>=8.2.3,<9.1.0",
+  # sphinx-design doesn't support sphinx 9
+  "sphinx~=8.2.3",
   "furo~=2025.9.25",
   "sphinx-copybutton~=0.5.2",
   "sphinxcontrib-towncrier~=0.5.0a0",
-  "towncrier~=24.8.0",
+  "towncrier~=25.8.0",
   "sphinx-issues~=5.0.1",
   "sphinx-design~=0.6.1",
   "sphinx-favicon~=1.0.1",
