@@ -36,7 +36,7 @@ dependencies = [
   "alembic~=1.17.2",
   "sqlalchemy~=2.0.44",
   "sqlalchemy-utils~=0.42.0",
-  "greenlet~=3.2.4",
+  "greenlet>=3.2.4,<3.4.0",
   "pyyaml~=6.0.3",
   "python-json-logger~=4.0.0",
   "coloredlogs~=15.0.1",
@@ -64,7 +64,7 @@ exclude = ["docs", "tests"]
 
 [project.optional-dependencies]
 server = [
-  "fastapi~=0.123.10",
+  "fastapi>=0.123.10,<0.125.0",
   "starlette~=0.50.0",
   "uvicorn~=0.38.0",
   "starlette-exporter~=0.23.0",
@@ -79,7 +79,7 @@ consumer = [
   "cramjam~=2.11.0",
 ]
 http2kafka = [
-  "fastapi~=0.123.10",
+  "fastapi>=0.123.10,<0.125.0",
   "starlette~=0.50.0",
   "uvicorn~=0.38.0",
   "starlette-exporter~=0.23.0",
@@ -124,7 +124,7 @@ dev = [
 docs = [
   "setuptools-git-versioning~=2.1.0",
   "autodoc-pydantic~=2.2.0",
-  "numpydoc~=1.9.0",
+  "numpydoc>=1.9,<1.11",
   # sphinx-design doesn't support sphinx 9
   "sphinx~=8.2.3",
   "furo~=2025.9.25",
