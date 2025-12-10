@@ -9,7 +9,7 @@ Requirements
 ------------
 
 * `Apache Hive <https://hive.apache.org/>`_ 3.1.3 (4.0 is not yet supported)
-* OpenLineage 1.34.0 or higher, recommended 1.37.0+
+* OpenLineage 1.34.0 or higher, recommended 1.40.1+
 * Running :ref:`message-broker`
 * (Optional) :ref:`http2kafka`
 
@@ -17,17 +17,17 @@ Limitations
 -----------
 
 * **Hive CLI** is not supported. HiveServer2 is required.
-* As for OpenLineage 1.37.0 version only these queries are parsed as containing lineage:
+* As for OpenLineage 1.40.1 version only these queries are parsed as containing lineage:
 
   * ``CREATE TABLE .. AS SELECT ...``
   * ``INSERT INTO ... SELECT ...``
+  * ``LOAD DATA``, ``EXPORT``, ``IMPORT``
 
   Other query types are ignored by OpenLineage integration, including:
 
-  * ``CREATE TABLE ...``, ``ALTER TABLE ...``, ``TRUNCATE TABLE ...``, ``DROP TABLE ...``.
-  * ``INSERT INTO ... VALUES ...``, ``UPDATE``, ``DELETE``, ``MERGE``.
-  * ``LOAD DATA``, ``EXPORT``, ``IMPORT``.
-  * ``SELECT`` data directly to JDBC client.
+  * ``CREATE TABLE ...``, ``ALTER TABLE ...``, ``TRUNCATE TABLE ...``, ``DROP TABLE ...``
+  * ``INSERT INTO ... VALUES ...``, ``UPDATE``, ``DELETE``, ``MERGE``
+  * ``SELECT`` and return data directly to JDBC client
 
 * Hive sends events when user session started, but not when stopped. So all Hive sessions in Data.Rentgen are in ``STARTED`` status.
 

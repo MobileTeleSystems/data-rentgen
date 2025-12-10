@@ -9,7 +9,7 @@ Requirements
 ------------
 
 * `Apache Flink <https://flink.apache.org/>`_ 1.x
-* OpenLineage 1.31.0 or higher, recommended 1.37.0+
+* OpenLineage 1.31.0 or higher, recommended 1.40.1+
 * Running :ref:`message-broker`
 * (Optional) :ref:`http2kafka`
 
@@ -32,7 +32,7 @@ Installation
   .. code-block:: groovy
     :caption: build.gradle
 
-    implementation "io.openlineage:openlineage-flink:1.37.0"
+    implementation "io.openlineage:openlineage-flink:1.40.1"
     // For KafkaTransport only
     implementation "org.apache.kafka:kafka-clients:3.9.0"
 

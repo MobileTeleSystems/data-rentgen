@@ -9,7 +9,7 @@ Requirements
 ------------
 
 * `Apache Flink <https://flink.apache.org/>`_ 2.x
-* OpenLineage 1.31.0 or higher, recommended 1.37.0+
+* OpenLineage 1.31.0 or higher, recommended 1.40.1+
 * Running :ref:`message-broker`
 * (Optional) :ref:`http2kafka`
 

@@ -9,7 +9,7 @@ Requirements
 ------------
 
 * `Apache Airflow <https://airflow.apache.org/>`_ 2.x or 3.x
-* OpenLineage 1.19.0 or higher, recommended 1.37.0+
+* OpenLineage 1.19.0 or higher, recommended 1.40.1+
 * OpenLineage integration for Airflow (see below)
 * Running :ref:`message-broker`
 * (Optional) :ref:`http2kafka`
@@ -31,7 +31,7 @@ Install
 
     .. code-tab:: console KafkaTransport
 
-      $ pip install "apache-airflow-providers-openlineage>=2.6.1" "openlineage-python[kafka]>=1.37.0" zstd
+      $ pip install "apache-airflow-providers-openlineage>=2.6.1" "openlineage-python[kafka]>=1.40.1" zstd
 
     .. code-tab:: console HttpTransport (requires HTTP2Kafka)
 
@@ -43,11 +43,11 @@ Install
 
     .. code-tab:: console KafkaTransport
 
-      $ pip install "openlineage-airflow>=1.37.0" "openlineage-python[kafka]>=1.37.0" zstd
+      $ pip install "openlineage-airflow>=1.40.1" "openlineage-python[kafka]>=1.40.1" zstd
 
     .. code-tab:: console HttpTransport (requires HTTP2Kafka)
 
-      $ pip install "openlineage-airflow>=1.37.0"
+      $ pip install "openlineage-airflow>=1.40.1"
 
 Setup
 -----

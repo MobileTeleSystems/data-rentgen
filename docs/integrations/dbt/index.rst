@@ -9,7 +9,7 @@ Requirements
 ------------
 
 * `dbt <https://www.getdbt.com/>`_ 1.3 or higher
-* OpenLineage 1.19.0 or higher, recommended 1.37.0+
+* OpenLineage 1.19.0 or higher, recommended 1.40.1+
 * Running :ref:`message-broker`
 * (Optional) :ref:`http2kafka`
 
@@ -27,11 +27,11 @@ Install
 
   .. code-tab:: console KafkaTransport
 
-    $ pip install "openlineage-dbt>=1.37.0" "openlineage-python[kafka]>=1.37.0" zstd
+    $ pip install "openlineage-dbt>=1.40.1" "openlineage-python[kafka]>=1.40.1" zstd
 
   .. code-tab:: console HttpTransport (requires HTTP2Kafka)
 
-    $ pip install "openlineage-dbt>=1.37.0"
+    $ pip install "openlineage-dbt>=1.40.1"
 
 Setup
 -----
