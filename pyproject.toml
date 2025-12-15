@@ -109,7 +109,7 @@ test =[
   "psycopg2-binary~=2.9.11",
   "deepdiff~=8.6.1",
   "respx~=0.22.0",
-  "dirty_equals~=0.9.0",
+  "dirty_equals>=0.9,<0.12",
   "gevent~=25.9.1",
 ]
 dev = [
