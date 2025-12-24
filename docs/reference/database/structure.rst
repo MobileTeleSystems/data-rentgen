@@ -58,8 +58,8 @@ Database structure
     }
 
     entity run {
-        * created_at: timestamptz
         * id: uuid(v7)
+        * created_at: timestamptz
         ----
         * job_id: bigint
         status: smallint
@@ -84,8 +84,8 @@ Database structure
     }
 
     entity operation {
-        * created_at: timestamptz
         * id: uuid(v7)
+        * created_at: timestamptz
         ----
         * run_id: uuid(v7)
         status: smallint
