@@ -1,0 +1,8 @@
+0.4.5 (2025-12-24)
+==================
+
+Improvements
+------------
+
+- Allow disabling ``SessionMiddleware``, as it only required by ``KeycloakAuthProvider``.
+- Add `SyncMaster <https://github.com/MobileTeleSystems/syncmaster>`_ logo to UI.

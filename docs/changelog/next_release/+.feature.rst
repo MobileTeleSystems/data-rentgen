@@ -1,1 +1,0 @@
-Allow disabling ``SessionMiddleware``, as it only required by ``KeycloakAuthProvider``.
