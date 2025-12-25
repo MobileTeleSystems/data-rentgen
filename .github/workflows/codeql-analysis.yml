@@ -40,7 +40,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          make venv
+          export UV=$(which uv)
+          make venv-install
 
       - name: Run mypy
         run: uv run mypy ./data_rentgen --config-file ./pyproject.toml

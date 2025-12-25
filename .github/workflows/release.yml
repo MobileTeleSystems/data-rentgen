@@ -41,7 +41,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          make venv
+          export UV=$(which uv)
+          make venv-install
 
       - name: Generate OpenAPI Schema
         run: |

@@ -6,7 +6,7 @@ VERSION = develop
 VIRTUAL_ENV ?= .venv
 PYTHON = ${VIRTUAL_ENV}/bin/python
 PIP = ${VIRTUAL_ENV}/bin/pip
-UV = ${VIRTUAL_ENV}/bin/uv
+UV ?= ${VIRTUAL_ENV}/bin/uv
 PYTEST = ${VIRTUAL_ENV}/bin/pytest
 COVERAGE = ${VIRTUAL_ENV}/bin/coverage
 
