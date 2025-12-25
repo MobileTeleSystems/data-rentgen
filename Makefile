@@ -33,8 +33,8 @@ help: ##@Help Show this help
 venv: venv-cleanup venv-install##@Env Init venv and install uv dependencies
 
 venv-cleanup: ##@Env Cleanup venv
-	@rm -rf .venv || true
-	python3.12 -m venv .venv
+	@rm -rf ${VIRTUAL_ENV} || true
+	python3 -m venv ${VIRTUAL_ENV}
 	${PIP} install uv
 
 venv-install: ##@Env Install requirements to venv

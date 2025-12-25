@@ -4,7 +4,6 @@ FROM python:${PYTHON_VERSION}-slim AS base
 WORKDIR /app
 ENV PYTHONPATH=/app \
     PATH="/app/.venv/bin:$PATH" \
-    PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 RUN apt-get update \
