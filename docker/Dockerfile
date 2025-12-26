@@ -53,7 +53,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         --frozen \
         --no-install-project \
         --all-extras \
-        --no-default-groups \
         --compile-bytecode
 
 FROM base AS prod

@@ -38,7 +38,7 @@ venv-cleanup: ##@Env Cleanup venv
 	${PIP} install uv
 
 venv-install: ##@Env Install requirements to venv
-	${UV} sync --inexact --frozen --all-extras --all-groups --no-extra gssapi $(ARGS)
+	${UV} sync --inexact --no-install-project --frozen --all-extras --all-groups --no-extra gssapi $(ARGS)
 	${UV} pip install --no-deps sphinx-plantuml
 
 
