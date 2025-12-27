@@ -1,10 +1,11 @@
+# syntax = docker/dockerfile:1.4
+
 ARG PYTHON_VERSION=3.13
 FROM python:${PYTHON_VERSION}-slim AS base
 
 WORKDIR /app
 ENV PYTHONPATH=/app \
-    PATH="/app/.venv/bin:$PATH" \
-    PYTHONUNBUFFERED=1
+    PATH="/app/.venv/bin:$PATH"
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -15,21 +16,19 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* /var/cache/*
 
 # Logos
-COPY ./docs/_static/*.svg ./data_rentgen/server/static/
+COPY --chmod=644 ./docs/_static/*.svg ./data_rentgen/server/static/
 
 # Swagger UI
-ADD https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/swagger-ui-bundle.js https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/swagger-ui.css \
+ADD --chmod=644 https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/swagger-ui-bundle.js https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/swagger-ui.css \
     /app/data_rentgen/server/static/swagger/
 
 # Redoc
-ADD https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js /app/data_rentgen/server/static/redoc/redoc.standalone.js
+ADD --chmod=644 https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js /app/data_rentgen/server/static/redoc/redoc.standalone.js
 
 ENV DATA_RENTGEN__SERVER__OPENAPI__SWAGGER__JS_URL=/static/swagger/swagger-ui-bundle.js \
     DATA_RENTGEN__SERVER__OPENAPI__SWAGGER__CSS_URL=/static/swagger/swagger-ui.css \
     DATA_RENTGEN__SERVER__OPENAPI__REDOC__JS_URL=/static/redoc/redoc.standalone.js \
     DATA_RENTGEN__SERVER__STATIC_FILES__DIRECTORY=/app/data_rentgen/server/static
-
-RUN chmod +r -R /app/data_rentgen/server/static
 
 
 FROM base AS builder
