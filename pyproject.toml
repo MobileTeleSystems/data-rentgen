@@ -113,7 +113,7 @@ test = [
   "gevent~=25.9.1",
 ]
 dev = [
-  "pre-commit~=4.5.0",
+  "prek~=0.2.25",
   "mypy~=1.19.0",
   "sqlalchemy[mypy]~=2.0.44",
   "types-pyyaml~=6.0.12",
