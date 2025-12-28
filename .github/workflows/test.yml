@@ -78,9 +78,10 @@ jobs:
 
       - name: Upload Coverage Results
         uses: actions/upload-artifact@v6
+        if: always()
         with:
-          name: raw-coverage-${{ env.DEFAULT_PYTHON }}
-          path: reports/.coverage*
+          name: coverage-${{ env.DEFAULT_PYTHON }}
+          path: reports/*
           # https://github.com/actions/upload-artifact/issues/602
           include-hidden-files: true
 
@@ -112,6 +113,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v6
 
+      - name: Download all raw coverage data
+        uses: actions/download-artifact@v7
+        with:
+          path: coverage-data/
+          pattern: coverage-*
+
+      - name: Show test results
+        uses: mikepenz/action-junit-report@v5
+        if: success() || failure() # always run even if the previous step fails
+        with:
+          report_paths: reports/junit/*.xml
+
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         uses: actions/setup-python@v6
         with:
@@ -124,12 +137,6 @@ jobs:
         run: |
           export UV=$(which uv)
           make venv-install
-
-      - name: Download all raw coverage data
-        uses: actions/download-artifact@v7
-        with:
-          path: coverage-data/
-          pattern: raw-coverage-*
 
       - name: Combine Coverage Data
         run: |

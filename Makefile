@@ -9,6 +9,7 @@ PIP = ${VIRTUAL_ENV}/bin/pip
 UV ?= ${VIRTUAL_ENV}/bin/uv
 PYTEST = ${VIRTUAL_ENV}/bin/pytest
 COVERAGE = ${VIRTUAL_ENV}/bin/coverage
+GITHUB_RUN_ID ?= unknown
 
 # Fix docker build and docker compose build using different backends
 COMPOSE_DOCKER_CLI_BUILD = 1
@@ -100,7 +101,7 @@ test-broker-start: ##@TestBroker Start broker
 	docker compose -f docker-compose.test.yml up -d --wait broker $(DOCKER_COMPOSE_ARGS)
 
 test-ci: test-db test-broker ##@Test Run CI tests
-	${COVERAGE} run -m pytest $(PYTEST_ARGS)
+	${COVERAGE} run -m pytest --junitxml=reports/junit/${GITHUB_RUN_ID}.xml $(PYTEST_ARGS)
 
 test-check-fixtures: ##@Test Check declared fixtures
 	${PYTEST} --dead-fixtures $(PYTEST_ARGS)

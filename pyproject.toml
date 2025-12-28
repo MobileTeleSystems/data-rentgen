@@ -11,7 +11,7 @@ dirty_template = "{tag}.dev{env:GITHUB_RUN_ID:{ccount}}+git.{sha}.dirty"
 
 [project]
 name = "data-rentgen"
-license = "Apache-2.0"
+license = {text = "Apache-2.0"}
 description = "Data.Rentgen REST API + Kafka consumer"
 authors = [{name= "MWS Data Bridge", email = "onetools@mts.ru"}]
 readme = "README.rst"
@@ -155,10 +155,8 @@ markers = [
 asyncio_default_fixture_loop_scope = "session"
 asyncio_default_test_loop_scope = "session"
 
-[tool.coverage.paths]
-source = ["data_rentgen"]
-
 [tool.coverage.run]
+source_pkgs = ["data_rentgen"]
 branch = true
 parallel = true
 relative_files = true
