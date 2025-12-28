@@ -116,8 +116,9 @@ jobs:
       - name: Download all raw coverage data
         uses: actions/download-artifact@v7
         with:
-          path: coverage-data/
+          path: reports/
           pattern: coverage-*
+          merge-multiple: true
 
       - name: Show test results
         uses: mikepenz/action-junit-report@v5
@@ -140,14 +141,14 @@ jobs:
 
       - name: Combine Coverage Data
         run: |
-          uv run coverage combine coverage-data
-          uv run coverage xml -o combined_coverage.xml
+          uv run coverage combine
+          uv run coverage xml -o reports/coverage.xml -i
 
       - name: Coverage comment
         id: coverage
         uses: MishaKav/pytest-coverage-comment@v1
         with:
-          pytest-xml-coverage-path: ./combined_coverage.xml
+          pytest-xml-coverage-path: ./reports/coverage.xml
           default-branch: develop
           xml-skip-covered: true
           report-only-changed-files: true
