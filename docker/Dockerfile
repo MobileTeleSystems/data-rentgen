@@ -16,14 +16,14 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/* /var/cache/*
 
 # Logos
-COPY --chmod=644 ./docs/_static/*.svg ./data_rentgen/server/static/
+COPY --chmod=755 ./docs/_static/*.svg ./data_rentgen/server/static/
 
 # Swagger UI
-ADD --chmod=644 https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/swagger-ui-bundle.js https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/swagger-ui.css \
+ADD --chmod=755 https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/swagger-ui-bundle.js https://cdn.jsdelivr.net/npm/swagger-ui-dist@latest/swagger-ui.css \
     /app/data_rentgen/server/static/swagger/
 
 # Redoc
-ADD --chmod=644 https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js /app/data_rentgen/server/static/redoc/redoc.standalone.js
+ADD --chmod=755 https://cdn.jsdelivr.net/npm/redoc@latest/bundles/redoc.standalone.js /app/data_rentgen/server/static/redoc/redoc.standalone.js
 
 ENV DATA_RENTGEN__SERVER__OPENAPI__SWAGGER__JS_URL=/static/swagger/swagger-ui-bundle.js \
     DATA_RENTGEN__SERVER__OPENAPI__SWAGGER__CSS_URL=/static/swagger/swagger-ui.css \
@@ -50,6 +50,7 @@ COPY ./pyproject.toml ./uv.lock ./
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync \
         --frozen \
+        --link-mode copy \
         --no-install-project \
         --all-extras \
         --compile-bytecode
@@ -58,7 +59,7 @@ FROM base AS prod
 
 # We don't need uv and compilers in final image
 COPY --from=builder /app/.venv/ /app/.venv/
-COPY ./data_rentgen/ /app/data_rentgen/
+COPY --chmod=755 ./data_rentgen/ /app/data_rentgen/
 RUN python -m compileall data_rentgen
 
 # Do not run production as root, to improve security.
