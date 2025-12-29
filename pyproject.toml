@@ -64,7 +64,7 @@ exclude = ["docs", "tests"]
 
 [project.optional-dependencies]
 server = [
-  "fastapi>=0.123.10,<0.128.0",
+  "fastapi>=0.123.10,<0.129.0",
   "starlette~=0.50.0",
   "uvicorn>=0.38,<0.41",
   "starlette-exporter~=0.23.0",
@@ -72,14 +72,14 @@ server = [
   "pyjwt~=2.10.1 ",
   "itsdangerous~=2.2.0",
   "python-multipart~=0.0.20",
-  "python-keycloak~=5.8.1",
+  "python-keycloak>=5.8.1,<6.1.0",
 ]
 consumer = [
   "faststream[kafka,cli]~=0.6.3",
   "cramjam~=2.11.0",
 ]
 http2kafka = [
-  "fastapi>=0.123.10,<0.128.0",
+  "fastapi>=0.123.10,<0.129.0",
   "starlette~=0.50.0",
   "uvicorn>=0.38,<0.41",
   "starlette-exporter~=0.23.0",
@@ -94,7 +94,7 @@ gssapi = [
   "gssapi~=1.10.0",
 ]
 seed = [
-  "faker>=38.2,<39.1"
+  "faker>=38.2,<40.2"
 ]
 
 [dependency-groups]
