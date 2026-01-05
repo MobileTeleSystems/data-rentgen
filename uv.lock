@@ -116,15 +116,6 @@ wheels = [
 ]
 
 [[package]]
-name = "async-property"
-version = "0.2.2"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a7/12/900eb34b3af75c11b69d6b78b74ec0fd1ba489376eceb3785f787d1a0a1d/async_property-0.2.2.tar.gz", hash = "sha256:17d9bd6ca67e27915a75d92549df64b5c7174e9dc806b30a3934dc4ff0506380", size = 16523, upload-time = "2023-07-03T17:21:55.688Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c7/80/9f608d13b4b3afcebd1dd13baf9551c95fc424d6390e4b1cfd7b1810cd06/async_property-0.2.2-py2.py3-none-any.whl", hash = "sha256:8924d792b5843994537f8ed411165700b27b2bd966cefc4daeefc1253442a9d7", size = 9546, upload-time = "2023-07-03T17:21:54.293Z" },
-]
-
-[[package]]
 name = "async-timeout"
 version = "5.0.1"
 source = { registry = "https://pypi.org/simple" }
@@ -691,7 +682,7 @@ requires-dist = [
     { name = "pyjwt", marker = "extra == 'server'", specifier = "~=2.10.1" },
     { name = "python-dateutil", specifier = "~=2.9.0.post0" },
     { name = "python-json-logger", specifier = "~=4.0.0" },
-    { name = "python-keycloak", marker = "extra == 'server'", specifier = ">=5.8.1,<6.1.0" },
+    { name = "python-keycloak", marker = "extra == 'server'", specifier = ">=5.8.1,<7.1.0" },
     { name = "python-multipart", marker = "extra == 'server'", specifier = "~=0.0.20" },
     { name = "pyyaml", specifier = "~=6.0.3" },
     { name = "sqlalchemy", specifier = "~=2.0.44" },
@@ -1641,20 +1632,19 @@ wheels = [
 
 [[package]]
 name = "python-keycloak"
-version = "6.0.0"
+version = "7.0.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
-    { name = "async-property" },
     { name = "deprecation" },
     { name = "httpx" },
     { name = "jwcrypto" },
     { name = "requests" },
     { name = "requests-toolbelt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c4/95/df72437403eba9f96902ff3b3049a3e06d0f0e47e5bd71ab1b364d440cef/python_keycloak-6.0.0.tar.gz", hash = "sha256:87271d381639f4179a9add88afbb3dbbe9689509cf240d1cf883e44beff4d8f9", size = 71107, upload-time = "2025-12-28T17:57:52.208Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/68/3d/ce5bdb882fa326308fc1e3a5dc82e268f6805f3cda7d21fc467793da22f8/python_keycloak-7.0.1.tar.gz", hash = "sha256:3ebe55a68b101f9fa0a21b41046c9682a3c14edbb855ec6a3930057461110860", size = 78613, upload-time = "2026-01-05T17:56:58.964Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/44/7e/f51774cb30db61f04dc0920f27b3a2c50ac05c8819dc4086436decf95010/python_keycloak-6.0.0-py3-none-any.whl", hash = "sha256:6f6697a0a894d6ded077aa86e12aa41433a0afffa27aa0b9e38395dd69a94009", size = 80167, upload-time = "2025-12-28T17:57:50.869Z" },
+    { url = "https://files.pythonhosted.org/packages/67/c7/d3be9c5596fe322ec0b16e9184e85bee287df72ae3c87176bd04db171975/python_keycloak-7.0.1-py3-none-any.whl", hash = "sha256:345104b7ec4ef9f46c527745fb79bcce6f0f3114ebb31332b7fa688473879ba1", size = 87437, upload-time = "2026-01-05T17:56:56.716Z" },
 ]
 
 [[package]]

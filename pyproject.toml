@@ -72,7 +72,7 @@ server = [
   "pyjwt~=2.10.1 ",
   "itsdangerous~=2.2.0",
   "python-multipart~=0.0.20",
-  "python-keycloak>=5.8.1,<6.1.0",
+  "python-keycloak>=5.8.1,<7.1.0",
 ]
 consumer = [
   "faststream[kafka,cli]~=0.6.3",
