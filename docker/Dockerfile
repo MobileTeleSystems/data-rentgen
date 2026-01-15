@@ -53,7 +53,9 @@ RUN --mount=type=cache,target=/root/.cache/uv \
         --link-mode copy \
         --no-install-project \
         --all-extras \
-        --compile-bytecode
+        --compile-bytecode \
+    && uv pip install pip \
+    && uv cache prune --ci
 
 FROM base AS prod
 
