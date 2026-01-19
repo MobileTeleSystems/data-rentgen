@@ -1,5 +1,5 @@
 [build-system]
-requires = [ "setuptools>=41", "wheel", "setuptools-git-versioning>=3.0,<4", ]
+requires = [ "setuptools>=41", "wheel", "setuptools-git-versioning<4,>=3.0", ]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools-git-versioning]
@@ -103,7 +103,7 @@ test = [
   "httpx~=0.28.1",
   "pytest-asyncio~=1.3.0",
   "pytest-randomly~=4.0.0",
-  "pytest-deadfixtures~=3.0.0",
+  "pytest-deadfixtures>=3.0,<3.2",
   "pytest-rerunfailures~=16.1",
   "coverage>=7.12,<7.14",
   "psycopg2-binary~=2.9.11",
@@ -122,7 +122,7 @@ dev = [
   "types-cachetools~=6.2.0",
 ]
 docs = [
-  "setuptools-git-versioning~=2.1.0",
+  "setuptools-git-versioning>=2.1,<3.1",
   "autodoc-pydantic~=2.2.0",
   "numpydoc>=1.9,<1.11",
   # sphinx-design doesn't support sphinx 9
@@ -132,7 +132,7 @@ docs = [
   "sphinxcontrib-towncrier~=0.5.0a0",
   "towncrier~=25.8.0",
   "sphinx-issues~=5.0.1",
-  "sphinx-design~=0.6.1",
+  "sphinx-design>=0.6.1,<0.8.0",
   "sphinx-favicon~=1.0.1",
   "sphinx-last-updated-by-git~= 0.3.8",
   # uncomment after https://github.com/zqmillet/sphinx-plantuml/pull/4
