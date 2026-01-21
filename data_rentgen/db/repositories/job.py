@@ -16,6 +16,7 @@ from sqlalchemy import (
     bindparam,
     cast,
     desc,
+    distinct,
     func,
     select,
     tuple_,
@@ -23,7 +24,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import selectinload
 
-from data_rentgen.db.models import Address, Job, Location
+from data_rentgen.db.models import Address, Job, Location, TagValue
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.search import make_tsquery, ts_match, ts_rank
 from data_rentgen.dto import JobDTO, PaginationDTO
@@ -76,6 +77,7 @@ class JobRepository(Repository[Job]):
         page_size: int,
         job_ids: Collection[int],
         job_types: Collection[str],
+        tag_value_ids: Collection[int],
         location_ids: Collection[int],
         location_types: Collection[str],
         search_query: str | None,
@@ -91,6 +93,18 @@ class JobRepository(Repository[Job]):
         if location_types:
             location_type_lower = [location_type.lower() for location_type in location_types]
             where.append(Location.type == any_(location_type_lower))  # type: ignore[arg-type]
+
+        if tag_value_ids:
+            tv_ids = list(tag_value_ids)
+            job_ids_subq = (
+                select(Job.id)
+                .join(Job.tag_values)
+                .where(TagValue.id.in_(tv_ids))
+                .group_by(Job.id)
+                # If multiple tag values are passed, job should have both of them (AND, not OR)
+                .having(func.count(distinct(TagValue.id)) == len(tv_ids))
+            )
+            where.append(Job.id.in_(job_ids_subq))
 
         query: Select | CompoundSelect
         order_by: list[ColumnElement | SQLColumnExpression]
@@ -128,7 +142,10 @@ class JobRepository(Repository[Job]):
             query = select(Job).join(Location, location_join_clause).where(*where)
             order_by = [Job.name]
 
-        options = [selectinload(Job.location).selectinload(Location.addresses)]
+        options = [
+            selectinload(Job.location).selectinload(Location.addresses),
+            selectinload(Job.tag_values).selectinload(TagValue.tag),
+        ]
         return await self._paginate_by_query(
             query=query,
             order_by=order_by,

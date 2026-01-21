@@ -39,7 +39,10 @@ class Dataset(Base):
         doc="Dataset name, e.g. table name or filesystem path",
     )
 
-    tag_values: Mapped[set[TagValue]] = relationship(secondary=lambda: dataset_tags_table)
+    tag_values: Mapped[set[TagValue]] = relationship(
+        secondary=lambda: dataset_tags_table,
+        doc="Dataset tag values",
+    )
 
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,
@@ -63,9 +66,9 @@ class Dataset(Base):
 
 
 dataset_tags_table: Table = Table(
-    "dataset_tags",
+    "dataset_tag",
     Base.metadata,
     Column("dataset_id", ForeignKey("dataset.id", ondelete="CASCADE"), primary_key=True),
     Column("tag_value_id", ForeignKey("tag_value.id", ondelete="CASCADE"), primary_key=True),
-    Index("ix__dataset_tags__tag_value_id", "tag_value_id"),
+    Index("ix__dataset_tag__tag_value_id", "tag_value_id"),
 )

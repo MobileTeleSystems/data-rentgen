@@ -3,13 +3,14 @@
 
 from __future__ import annotations
 
-from sqlalchemy import BigInteger, Column, Computed, ForeignKey, Index, String, column, func, select
+from sqlalchemy import BigInteger, Column, Computed, ForeignKey, Index, String, Table, column, func, select
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from data_rentgen.db.models.base import Base
 from data_rentgen.db.models.job_type import JobType
 from data_rentgen.db.models.location import Location
+from data_rentgen.db.models.tag_value import TagValue
 
 
 class Job(Base):
@@ -47,6 +48,11 @@ class Job(Base):
         select(JobType.type).where(Column("type_id") == JobType.id).scalar_subquery(),
     )
 
+    tag_values: Mapped[set[TagValue]] = relationship(
+        secondary=lambda: job_tag_table,
+        doc="Job tag values",
+    )
+
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,
         Computed(
@@ -66,3 +72,12 @@ class Job(Base):
         deferred=True,
         doc="Full-text search vector",
     )
+
+
+job_tag_table: Table = Table(
+    "job_tag",
+    Base.metadata,
+    Column("job_id", ForeignKey("job.id", ondelete="CASCADE"), primary_key=True),
+    Column("tag_value_id", ForeignKey("tag_value.id", ondelete="CASCADE"), primary_key=True),
+    Index("ix__job_tag__tag_value_id", "tag_value_id"),
+)

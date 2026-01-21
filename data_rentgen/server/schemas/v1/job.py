@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from data_rentgen.server.schemas.v1.location import LocationResponseV1
 from data_rentgen.server.schemas.v1.pagination import PaginateQueryV1
+from data_rentgen.server.schemas.v1.tag import TagResponseV1
 
 
 class JobResponseV1(BaseModel):
@@ -22,6 +23,7 @@ class JobResponseV1(BaseModel):
 class JobDetailedResponseV1(BaseModel):
     id: str = Field(description="Job id", coerce_numbers_to_str=True)
     data: JobResponseV1 = Field(description="Job data")
+    tags: list[TagResponseV1] = Field(default_factory=list, description="Job tags")
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -54,6 +56,14 @@ class JobPaginateQueryV1(PaginateQueryV1):
         default_factory=list,
         description="Types of jobs",
         examples=[["SPARK_APPLICATION", "AIRFLOW_DAG"]],
+    )
+    tag_value_id: list[int] = Field(
+        default_factory=list,
+        description=(
+            "Get jobs having specific tag values assigned. "
+            "If multiple values are passed, job should have all of them (AND, not OR)"
+        ),
+        examples=[[123]],
     )
     location_id: list[int] = Field(
         default_factory=list,
