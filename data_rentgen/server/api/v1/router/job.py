@@ -43,6 +43,7 @@ async def paginate_jobs(
         page_size=query_args.page_size,
         job_ids=query_args.job_id,
         job_types=query_args.job_type,
+        tag_value_ids=query_args.tag_value_id,
         location_ids=query_args.location_id,
         location_types=query_args.location_type,
         search_query=query_args.search_query,

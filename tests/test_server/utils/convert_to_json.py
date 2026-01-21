@@ -10,6 +10,7 @@ from data_rentgen.db.models import (
 from data_rentgen.server.schemas.v1.lineage import OutputTypeV1
 
 if TYPE_CHECKING:
+    from collections.abc import Collection
     from datetime import datetime
 
     from data_rentgen.db.models import (
@@ -186,7 +187,7 @@ def tag_to_json(tag: Tag, values: list[TagValue] | None = None) -> dict:
     }
 
 
-def tag_values_to_json(tag_values: set[TagValue]) -> list[dict]:
+def tag_values_to_json(tag_values: Collection[TagValue]) -> list[dict]:
     sorted_tag_values = sorted(tag_values, key=lambda tv: tv.tag.name)
     tags = []
     for tag, group in groupby(sorted_tag_values, key=lambda tv: tv.tag):

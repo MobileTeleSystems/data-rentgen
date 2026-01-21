@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING
 
 import pytest_asyncio
 
-from data_rentgen.db.models import Job
+from data_rentgen.db.models import Job, TagValue
 from tests.test_server.fixtures.factories.base import random_string
 from tests.test_server.fixtures.factories.job_type import create_job_type
 from tests.test_server.fixtures.factories.location import create_location
@@ -35,6 +35,7 @@ async def create_job(
     location_id: int,
     job_type_id: int,
     job_kwargs: dict | None = None,
+    tag_values: set[TagValue] | None = None,
 ) -> Job:
     if job_kwargs:
         job_kwargs.update({"location_id": location_id, "type_id": job_type_id})
@@ -42,6 +43,8 @@ async def create_job(
         job_kwargs = {"location_id": location_id, "type_id": job_type_id}
     job = job_factory(**job_kwargs)
     del job.id
+    if tag_values:
+        job.tag_values |= tag_values
     async_session.add(job)
     await async_session.commit()
     await async_session.refresh(job)
@@ -267,6 +270,28 @@ async def jobs_with_locations_and_types(
         async_session.expunge_all()
 
     yield (spark_job, dag_job, task_job)
+
+    async with async_session_maker() as async_session:
+        await clean_db(async_session)
+
+
+@pytest_asyncio.fixture
+async def make_job(async_session_maker: Callable[[], AbstractAsyncContextManager[AsyncSession]]):
+    async def _create(tag_values: list[TagValue] | None = None, job_kwargs: dict | None = None) -> Job:
+        async with async_session_maker() as async_session:
+            location = await create_location(async_session)
+            job_type = await create_job_type(async_session)
+            job = await create_job(
+                async_session,
+                job_type_id=job_type.id,
+                location_id=location.id,
+                job_kwargs=job_kwargs,
+                tag_values=set(tag_values or []),
+            )
+            async_session.expunge_all()
+            return job
+
+    yield _create
 
     async with async_session_maker() as async_session:
         await clean_db(async_session)

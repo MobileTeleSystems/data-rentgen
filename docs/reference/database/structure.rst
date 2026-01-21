@@ -176,6 +176,13 @@ Database structure
         * tag_value_id: bigint
     }
 
+    entity job_tag {
+        * id: bigint
+        ----
+        * job_id: bigint
+        * tag_value_id: bigint
+    }
+
     entity personal_token {
         * id: uuid(v7)
         ----
@@ -223,6 +230,7 @@ Database structure
 
     tag_value ||--o{ tag
     dataset_tag ||--o{ tag_value
+    job_tag ||--o{ tag_value
 
     personal_token ||--o{ user
 
