@@ -1,8 +1,6 @@
 # SPDX-FileCopyrightText: 2024-present MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from __future__ import annotations
-
 from sqlalchemy import BigInteger, Column, Computed, ForeignKey, Index, String, Table, column, func, select
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
@@ -11,6 +9,14 @@ from data_rentgen.db.models.base import Base
 from data_rentgen.db.models.job_type import JobType
 from data_rentgen.db.models.location import Location
 from data_rentgen.db.models.tag_value import TagValue
+
+JobTagValue: Table = Table(
+    "job_tag_value",
+    Base.metadata,
+    Column("job_id", ForeignKey("job.id", ondelete="CASCADE"), primary_key=True),
+    Column("tag_value_id", ForeignKey("tag_value.id", ondelete="CASCADE"), primary_key=True),
+    Index("ix__job_tag_value__tag_value_id", "tag_value_id"),
+)
 
 
 class Job(Base):
@@ -49,7 +55,7 @@ class Job(Base):
     )
 
     tag_values: Mapped[set[TagValue]] = relationship(
-        secondary=lambda: JobTagValue,
+        secondary=JobTagValue,
         lazy="noload",
         doc="Job tag values",
     )
@@ -73,12 +79,3 @@ class Job(Base):
         deferred=True,
         doc="Full-text search vector",
     )
-
-
-JobTagValue: Table = Table(
-    "job_tag_value",
-    Base.metadata,
-    Column("job_id", ForeignKey("job.id", ondelete="CASCADE"), primary_key=True),
-    Column("tag_value_id", ForeignKey("tag_value.id", ondelete="CASCADE"), primary_key=True),
-    Index("ix__job_tag_value__tag_value_id", "tag_value_id"),
-)

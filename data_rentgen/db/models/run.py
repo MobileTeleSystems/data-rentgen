@@ -1,8 +1,6 @@
 # SPDX-FileCopyrightText: 2024-present MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from __future__ import annotations
-
 from datetime import datetime
 from enum import Enum, IntEnum
 from uuid import UUID
@@ -87,7 +85,7 @@ class Run(Base):
         nullable=True,
         doc="Parent of current run, e.g. Airflow task run which started Spark application",
     )
-    parent_run: Mapped[Run | None] = relationship(
+    parent_run: Mapped["Run | None"] = relationship(
         "Run",
         primaryjoin="Run.parent_run_id == Run.id",
         lazy="noload",

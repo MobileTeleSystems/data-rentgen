@@ -1,8 +1,6 @@
 # SPDX-FileCopyrightText: 2024-present MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from __future__ import annotations
-
 from sqlalchemy import BigInteger, Column, Computed, ForeignKey, Index, String, Table, column, func
 from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship
@@ -10,6 +8,14 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from data_rentgen.db.models.base import Base
 from data_rentgen.db.models.location import Location
 from data_rentgen.db.models.tag_value import TagValue
+
+DatasetTagValue: Table = Table(
+    "dataset_tag_value",
+    Base.metadata,
+    Column("dataset_id", ForeignKey("dataset.id", ondelete="CASCADE"), primary_key=True),
+    Column("tag_value_id", ForeignKey("tag_value.id", ondelete="CASCADE"), primary_key=True),
+    Index("ix__dataset_tag_value__tag_value_id", "tag_value_id"),
+)
 
 
 class Dataset(Base):
@@ -40,7 +46,7 @@ class Dataset(Base):
     )
 
     tag_values: Mapped[set[TagValue]] = relationship(
-        secondary=lambda: DatasetTagValue,
+        secondary=DatasetTagValue,
         lazy="noload",
         doc="Dataset tag values",
     )
@@ -64,12 +70,3 @@ class Dataset(Base):
         deferred=True,
         doc="Full-text search vector",
     )
-
-
-DatasetTagValue: Table = Table(
-    "dataset_tag_value",
-    Base.metadata,
-    Column("dataset_id", ForeignKey("dataset.id", ondelete="CASCADE"), primary_key=True),
-    Column("tag_value_id", ForeignKey("tag_value.id", ondelete="CASCADE"), primary_key=True),
-    Index("ix__dataset_tag_value__tag_value_id", "tag_value_id"),
-)
