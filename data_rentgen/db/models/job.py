@@ -49,7 +49,8 @@ class Job(Base):
     )
 
     tag_values: Mapped[set[TagValue]] = relationship(
-        secondary=lambda: job_tag_table,
+        secondary=lambda: JobTagValue,
+        lazy="noload",
         doc="Job tag values",
     )
 
@@ -74,10 +75,10 @@ class Job(Base):
     )
 
 
-job_tag_table: Table = Table(
-    "job_tag",
+JobTagValue: Table = Table(
+    "job_tag_value",
     Base.metadata,
     Column("job_id", ForeignKey("job.id", ondelete="CASCADE"), primary_key=True),
     Column("tag_value_id", ForeignKey("tag_value.id", ondelete="CASCADE"), primary_key=True),
-    Index("ix__job_tag__tag_value_id", "tag_value_id"),
+    Index("ix__job_tag_value__tag_value_id", "tag_value_id"),
 )

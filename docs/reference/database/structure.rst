@@ -169,14 +169,14 @@ Database structure
         * value: varchar(256)
     }
 
-    entity dataset_tag {
+    entity dataset_tag_value {
         * id: bigint
         ----
         * dataset_id: bigint
         * tag_value_id: bigint
     }
 
-    entity job_tag {
+    entity job_tag_value {
         * id: bigint
         ----
         * job_id: bigint
@@ -229,8 +229,8 @@ Database structure
     column_lineage "fingerprint" ||--o{ dataset_column_relation
 
     tag_value ||--o{ tag
-    dataset_tag ||--o{ tag_value
-    job_tag ||--o{ tag_value
+    dataset_tagvalue ||--o{ tag_value
+    job_tagvalue ||--o{ tag_value
 
     personal_token ||--o{ user
 

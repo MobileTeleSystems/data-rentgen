@@ -18,10 +18,32 @@ depends_on = None
 
 
 def upgrade() -> None:
-    op.rename_table("dataset_tags", "dataset_tag")
-    op.execute("ALTER INDEX ix__dataset_tags__tag_value_id RENAME TO ix__dataset_tag__tag_value_id")
+    op.rename_table("dataset_tags", "dataset_tag_value")
+    op.execute("ALTER TABLE dataset_tag_value RENAME CONSTRAINT pk__dataset_tags TO pk__dataset_tag_value")
+    op.execute(
+        "ALTER TABLE dataset_tag_value "
+        "RENAME CONSTRAINT fk__dataset_tags__tag_value_id__tag_value "
+        "TO fk__dataset_tag_value__tag_value_id__tag_value"
+    )
+    op.execute(
+        "ALTER TABLE dataset_tag_value "
+        "RENAME CONSTRAINT fk__dataset_tags__dataset_id__dataset "
+        "TO fk__dataset_tag_value__dataset_id__dataset"
+    )
+    op.execute("ALTER INDEX ix__dataset_tags__tag_value_id RENAME TO ix__dataset_tag_value__tag_value_id")
 
 
 def downgrade() -> None:
-    op.rename_table("dataset_tag", "dataset_tags")
-    op.execute("ALTER INDEX ix__dataset_tag__tag_value_id RENAME TO ix__dataset_tags__tag_value_id")
+    op.rename_table("dataset_tag_value", "dataset_tags")
+    op.execute("ALTER TABLE dataset_tags RENAME CONSTRAINT pk__dataset_tag_value TO pk__dataset_tags")
+    op.execute(
+        "ALTER TABLE dataset_tags "
+        "RENAME CONSTRAINT fk__dataset_tag_value__tag_value_id__tag_value "
+        "TO fk__dataset_tags__tag_value_id__tag_value"
+    )
+    op.execute(
+        "ALTER TABLE dataset_tags "
+        "RENAME CONSTRAINT fk__dataset_tag_value__dataset_id__dataset "
+        "TO fk__dataset_tags__dataset_id__dataset"
+    )
+    op.execute("ALTER INDEX ix__dataset_tag_value__tag_value_id RENAME TO ix__dataset_tags__tag_value_id")

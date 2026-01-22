@@ -40,7 +40,8 @@ class Dataset(Base):
     )
 
     tag_values: Mapped[set[TagValue]] = relationship(
-        secondary=lambda: dataset_tags_table,
+        secondary=lambda: DatasetTagValue,
+        lazy="noload",
         doc="Dataset tag values",
     )
 
@@ -65,10 +66,10 @@ class Dataset(Base):
     )
 
 
-dataset_tags_table: Table = Table(
-    "dataset_tag",
+DatasetTagValue: Table = Table(
+    "dataset_tag_value",
     Base.metadata,
     Column("dataset_id", ForeignKey("dataset.id", ondelete="CASCADE"), primary_key=True),
     Column("tag_value_id", ForeignKey("tag_value.id", ondelete="CASCADE"), primary_key=True),
-    Index("ix__dataset_tag__tag_value_id", "tag_value_id"),
+    Index("ix__dataset_tag_value__tag_value_id", "tag_value_id"),
 )

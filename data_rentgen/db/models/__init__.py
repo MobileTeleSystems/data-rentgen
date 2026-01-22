@@ -6,14 +6,14 @@ from data_rentgen.db.models.base import Base
 from data_rentgen.db.models.column_lineage import ColumnLineage
 from data_rentgen.db.models.custom_properties import CustomProperties
 from data_rentgen.db.models.custom_user_properties import CustomUserProperties
-from data_rentgen.db.models.dataset import Dataset, dataset_tags_table
+from data_rentgen.db.models.dataset import Dataset, DatasetTagValue
 from data_rentgen.db.models.dataset_column_relation import (
     DatasetColumnRelation,
     DatasetColumnRelationType,
 )
 from data_rentgen.db.models.dataset_symlink import DatasetSymlink, DatasetSymlinkType
 from data_rentgen.db.models.input import Input
-from data_rentgen.db.models.job import Job
+from data_rentgen.db.models.job import Job, JobTagValue
 from data_rentgen.db.models.job_type import JobType
 from data_rentgen.db.models.location import Location
 from data_rentgen.db.models.operation import Operation, OperationStatus, OperationType
@@ -37,8 +37,10 @@ __all__ = [
     "DatasetColumnRelationType",
     "DatasetSymlink",
     "DatasetSymlinkType",
+    "DatasetTagValue",
     "Input",
     "Job",
+    "JobTagValue",
     "JobType",
     "Location",
     "Operation",
@@ -55,5 +57,4 @@ __all__ = [
     "Tag",
     "TagValue",
     "User",
-    "dataset_tags_table",
 ]
