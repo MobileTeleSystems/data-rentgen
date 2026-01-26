@@ -20,6 +20,8 @@ from data_rentgen.openlineage.job import OpenLineageJob
 from data_rentgen.openlineage.job_facets import (
     OpenLineageJobFacets,
     OpenLineageJobProcessingType,
+    OpenLineageJobTagsFacet,
+    OpenLineageJobTagsFacetField,
     OpenLineageJobTypeJobFacet,
 )
 from data_rentgen.openlineage.run import OpenLineageRun
@@ -30,6 +32,8 @@ from data_rentgen.openlineage.run_event import (
 from data_rentgen.openlineage.run_facets import (
     OpenLineageProcessingEngineRunFacet,
     OpenLineageRunFacets,
+    OpenLineageRunTagsFacet,
+    OpenLineageRunTagsFacetField,
     OpenLineageSparkApplicationDetailsRunFacet,
     OpenLineageSparkDeployMode,
 )
@@ -49,6 +53,20 @@ def test_extractors_extract_run_spark_app_yarn():
                     processingType=OpenLineageJobProcessingType.NONE,
                     integration="SPARK",
                     jobType="APPLICATION",
+                ),
+                tags=OpenLineageJobTagsFacet(
+                    tags=[
+                        OpenLineageJobTagsFacetField(
+                            key="from.job.config",
+                            value="somevalue1",
+                            source="CONFIG",  # ignored
+                        ),
+                        OpenLineageJobTagsFacetField(
+                            key="from.job.config",
+                            value="anothervalue1",
+                            source="CUSTOM",  # ignored
+                        ),
+                    ],
                 ),
             ),
         ),
@@ -71,6 +89,20 @@ def test_extractors_extract_run_spark_app_yarn():
                     proxyUrl="http://yarn-proxy:8088/proxy/application_1234_5678,http://yarn-proxy:18088/proxy/application_1234_5678",
                     historyUrl="http://history-server:18080/history/application_1234_5678,http://history-server:18081/history/application_1234_5678",
                 ),
+                tags=OpenLineageRunTagsFacet(
+                    tags=[
+                        OpenLineageRunTagsFacetField(
+                            key="from.run.config",
+                            value="somevalue2",
+                            source="CONFIG",  # ignored
+                        ),
+                        OpenLineageRunTagsFacetField(
+                            key="from.run.config",
+                            value="anothervalue2",
+                            source="CUSTOM",  # ignored
+                        ),
+                    ],
+                ),
             ),
         ),
     )
@@ -88,6 +120,22 @@ def test_extractors_extract_run_spark_app_yarn():
                 TagValueDTO(
                     tag=TagDTO(name="openlineage_adapter.version"),
                     value="1.19.0",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="from.job.config"),
+                    value="somevalue1",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="from.job.config"),
+                    value="anothervalue1",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="from.run.config"),
+                    value="somevalue2",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="from.run.config"),
+                    value="anothervalue2",
                 ),
             },
         ),
