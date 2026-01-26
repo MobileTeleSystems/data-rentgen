@@ -55,7 +55,7 @@ class HiveExtractor(GenericExtractor):
         if hive_session.username not in ("anonymous", "hive"):
             user = UserDTO(name=hive_session.username)
 
-        return RunDTO(
+        result = RunDTO(
             id=run_id,
             job=JobDTO(
                 name=job_name,
@@ -68,6 +68,8 @@ class HiveExtractor(GenericExtractor):
             external_id=hive_session.sessionId,
             user=user,
         )
+        self._enrich_run_tags(result, event)
+        return result
 
     def extract_operation(self, event: OpenLineageRunEvent) -> OperationDTO:
         run = self.extract_run(event)

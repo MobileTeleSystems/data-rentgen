@@ -8,6 +8,7 @@ from dataclasses import dataclass, field
 
 from data_rentgen.dto.job_type import JobTypeDTO
 from data_rentgen.dto.location import LocationDTO
+from data_rentgen.dto.tag import TagValueDTO
 
 
 @dataclass(slots=True)
@@ -15,6 +16,7 @@ class JobDTO:
     name: str
     location: LocationDTO
     type: JobTypeDTO | None = None
+    tag_values: set[TagValueDTO] = field(default_factory=set)
     id: int | None = field(default=None, compare=False)
 
     @property
@@ -29,6 +31,8 @@ class JobDTO:
             self.type = self.type.merge(new.type)
         else:
             self.type = new.type or self.type
+
+        self.tag_values.update(new.tag_values)
 
         if self.name == "unknown" and new.name != "unknown":
             # Workaround for https://github.com/OpenLineage/OpenLineage/issues/3846

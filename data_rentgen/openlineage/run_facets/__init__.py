@@ -29,6 +29,7 @@ from data_rentgen.openlineage.run_facets.parent_run import (
 from data_rentgen.openlineage.run_facets.processing_engine import (
     OpenLineageProcessingEngineRunFacet,
 )
+from data_rentgen.openlineage.run_facets.run_tags import OpenLineageRunTagsFacet, OpenLineageRunTagsFacetField
 from data_rentgen.openlineage.run_facets.spark_application import (
     OpenLineageSparkApplicationDetailsRunFacet,
     OpenLineageSparkDeployMode,
@@ -56,6 +57,8 @@ __all__ = [
     "OpenLineageProcessingEngineRunFacet",
     "OpenLineageRunFacet",
     "OpenLineageRunFacets",
+    "OpenLineageRunTagsFacet",
+    "OpenLineageRunTagsFacetField",
     "OpenLineageSparkApplicationDetailsRunFacet",
     "OpenLineageSparkDeployMode",
     "OpenLineageSparkJobDetailsRunFacet",
@@ -69,6 +72,7 @@ class OpenLineageRunFacets(OpenLineageBase):
 
     parent: OpenLineageParentRunFacet | None = None
     processing_engine: OpenLineageProcessingEngineRunFacet | None = None
+    tags: OpenLineageRunTagsFacet | None = None
     dataRentgen_run: DataRentgenRunInfoFacet | None = None
     dataRentgen_operation: DataRentgenOperationInfoFacet | None = None
     spark_applicationDetails: OpenLineageSparkApplicationDetailsRunFacet | None = None

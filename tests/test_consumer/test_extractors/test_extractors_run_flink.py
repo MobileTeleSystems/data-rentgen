@@ -12,6 +12,8 @@ from data_rentgen.dto import (
     LocationDTO,
     RunDTO,
     RunStatusDTO,
+    TagDTO,
+    TagValueDTO,
 )
 from data_rentgen.openlineage.job import OpenLineageJob
 from data_rentgen.openlineage.job_facets import (
@@ -68,6 +70,16 @@ def test_extractors_extract_run_flink():
             name="myjob",
             location=LocationDTO(type="http", name="localhost:18081", addresses={"http://localhost:18081"}),
             type=JobTypeDTO(type="FLINK_JOB"),
+            tag_values={
+                TagValueDTO(
+                    tag=TagDTO(name="flink.version"),
+                    value="1.19.0",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_adapter.version"),
+                    value="1.34.0",
+                ),
+            },
         ),
         status=RunStatusDTO.STARTED,
         started_at=now,

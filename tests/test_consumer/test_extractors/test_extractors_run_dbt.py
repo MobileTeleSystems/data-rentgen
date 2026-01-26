@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+from packaging.version import Version
 from uuid6 import UUID
 
 from data_rentgen.consumer.extractors.impl import DbtExtractor
@@ -11,6 +12,8 @@ from data_rentgen.dto import (
     LocationDTO,
     RunDTO,
     RunStatusDTO,
+    TagDTO,
+    TagValueDTO,
 )
 from data_rentgen.openlineage.job import OpenLineageJob
 from data_rentgen.openlineage.job_facets import (
@@ -24,6 +27,8 @@ from data_rentgen.openlineage.run_event import (
     OpenLineageRunEventType,
 )
 from data_rentgen.openlineage.run_facets import OpenLineageDbtRunRunFacet, OpenLineageRunFacets
+from data_rentgen.openlineage.run_facets.processing_engine import OpenLineageProcessingEngineRunFacet
+from data_rentgen.openlineage.run_facets.run_tags import OpenLineageRunTagsFacet, OpenLineageRunTagsFacetField
 
 
 def test_extractors_extract_run_job():
@@ -45,6 +50,13 @@ def test_extractors_extract_run_job():
         ),
         run=OpenLineageRun(
             runId=run_id,
+            facets=OpenLineageRunFacets(
+                processing_engine=OpenLineageProcessingEngineRunFacet(
+                    version=Version("1.9.4"),
+                    name="dbt",
+                    openlineageAdapterVersion=Version("1.38.0"),
+                ),
+            ),
         ),
     )
 
@@ -58,6 +70,16 @@ def test_extractors_extract_run_job():
                 addresses={"local://somehost"},
             ),
             type=JobTypeDTO(type="DBT_JOB"),
+            tag_values={
+                TagValueDTO(
+                    tag=TagDTO(name="dbt.version"),
+                    value="1.9.4",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_adapter.version"),
+                    value="1.38.0",
+                ),
+            },
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
@@ -95,6 +117,20 @@ def test_extractors_extract_run_job_openlineage_1_34_plus():
                 dbt_run=OpenLineageDbtRunRunFacet(
                     invocation_id="93c69fcd-10d0-4639-a4f8-95be0da4476b",
                 ),
+                processing_engine=OpenLineageProcessingEngineRunFacet(
+                    version=Version("1.9.4"),
+                    name="dbt",
+                    openlineageAdapterVersion=Version("1.38.0"),
+                ),
+                tags=OpenLineageRunTagsFacet(
+                    tags=[
+                        OpenLineageRunTagsFacetField(
+                            key="openlineage_client_version",
+                            value="1.38.0",
+                            source="OPENLINEAGE_CLIENT",
+                        ),
+                    ],
+                ),
             ),
         ),
     )
@@ -109,6 +145,20 @@ def test_extractors_extract_run_job_openlineage_1_34_plus():
                 addresses={"local://somehost"},
             ),
             type=JobTypeDTO(type="DBT_JOB"),
+            tag_values={
+                TagValueDTO(
+                    tag=TagDTO(name="dbt.version"),
+                    value="1.9.4",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_adapter.version"),
+                    value="1.38.0",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_client.version"),
+                    value="1.38.0",
+                ),
+            },
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,

@@ -23,6 +23,8 @@ from data_rentgen.dto import (
     RunDTO,
     RunStatusDTO,
     SchemaDTO,
+    TagDTO,
+    TagValueDTO,
 )
 from data_rentgen.utils.uuid import generate_new_uuid
 
@@ -87,6 +89,16 @@ def generate_flink_run(
         name="user_metrics_flow",
         location=LOCATIONS["flink"],
         type=JobTypeDTO(type="FLINK_JOB"),
+        tag_values={
+            TagValueDTO(
+                tag=TagDTO(name="flink.version"),
+                value="2.2.0",
+            ),
+            TagValueDTO(
+                tag=TagDTO(name="openlineage_adapter.version"),
+                value="1.42.1",
+            ),
+        },
     )
     address = next(iter(job.location.addresses))
 

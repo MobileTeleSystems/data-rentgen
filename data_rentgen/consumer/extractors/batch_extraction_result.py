@@ -18,23 +18,27 @@ from data_rentgen.dto import (
     RunDTO,
     SchemaDTO,
     SQLQueryDTO,
+    TagDTO,
+    TagValueDTO,
     UserDTO,
 )
 
 T = TypeVar(
     "T",
-    LocationDTO,
-    DatasetDTO,
     ColumnLineageDTO,
+    DatasetDTO,
     DatasetSymlinkDTO,
+    InputDTO,
     JobDTO,
     JobTypeDTO,
-    RunDTO,
+    LocationDTO,
     OperationDTO,
-    InputDTO,
     OutputDTO,
+    RunDTO,
     SchemaDTO,
     SQLQueryDTO,
+    TagDTO,
+    TagValueDTO,
     UserDTO,
 )
 
@@ -70,6 +74,8 @@ class BatchExtractionResult:
         self._column_lineage: dict[tuple, ColumnLineageDTO] = {}
         self._schemas: dict[tuple, SchemaDTO] = {}
         self._sql_queries: dict[tuple, SQLQueryDTO] = {}
+        self._tags: dict[tuple, TagDTO] = {}
+        self._tag_values: dict[tuple, TagValueDTO] = {}
         self._users: dict[tuple, UserDTO] = {}
 
     def __repr__(self):
@@ -87,6 +93,8 @@ class BatchExtractionResult:
             f"column_lineage={len(self._column_lineage)}, "
             f"schemas={len(self._schemas)}, "
             f"sql_queries={len(self._sql_queries)}, "
+            f"tag_values={len(self._tags)}, "
+            f"tag_values={len(self._tag_values)}, "
             f"users={len(self._users)}"
             ")"
         )
@@ -125,6 +133,7 @@ class BatchExtractionResult:
         job.location = self.add_location(job.location)
         if job.type:
             job.type = self.add_job_type(job.type)
+        job.tag_values = {self.add_tag_value(tag_value) for tag_value in job.tag_values}
         return self._add(self._jobs, job)
 
     def add_run(self, run: RunDTO):
@@ -167,6 +176,13 @@ class BatchExtractionResult:
     def add_sql_query(self, sql_query: SQLQueryDTO):
         return self._add(self._sql_queries, sql_query)
 
+    def add_tag(self, tag: TagDTO):
+        return self._add(self._tags, tag)
+
+    def add_tag_value(self, tag_value: TagValueDTO):
+        tag_value.tag = self.add_tag(tag_value.tag)
+        return self._add(self._tag_values, tag_value)
+
     def add_user(self, user: UserDTO):
         return self._add(self._users, user)
 
@@ -181,6 +197,12 @@ class BatchExtractionResult:
 
     def get_user(self, user_key: tuple) -> UserDTO:
         return self._users[user_key]
+
+    def get_tag(self, tag_key: tuple) -> TagDTO:
+        return self._tags[tag_key]
+
+    def get_tag_value(self, tag_value_key: tuple) -> TagValueDTO:
+        return self._tag_values[tag_value_key]
 
     def get_dataset(self, dataset_key: tuple) -> DatasetDTO:
         dataset = self._datasets[dataset_key]
@@ -201,6 +223,7 @@ class BatchExtractionResult:
         job.location = self.get_location(job.location.unique_key)
         if job.type:
             job.type = self.get_job_type(job.type.unique_key)
+        job.tag_values = {self.get_tag_value(tag_value.unique_key) for tag_value in job.tag_values}
         return job
 
     def get_run(self, run_key: tuple) -> RunDTO:
@@ -282,6 +305,12 @@ class BatchExtractionResult:
     def sql_queries(self) -> list[SQLQueryDTO]:
         return self._resolve(self.get_sql_query, self._sql_queries)
 
+    def tags(self) -> list[TagDTO]:
+        return self._resolve(self.get_tag, self._tags)
+
+    def tag_values(self) -> list[TagValueDTO]:
+        return self._resolve(self.get_tag_value, self._tag_values)
+
     def users(self) -> list[UserDTO]:
         return self._resolve(self.get_user, self._users)
 
@@ -321,6 +350,12 @@ class BatchExtractionResult:
 
         for sql_query in other.sql_queries():
             self.add_sql_query(sql_query)
+
+        for tag in other.tags():
+            self.add_tag(tag)
+
+        for tag_value in other.tag_values():
+            self.add_tag_value(tag_value)
 
         for user in other.users():
             self.add_user(user)

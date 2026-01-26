@@ -11,6 +11,8 @@ from data_rentgen.dto import (
     RunDTO,
     RunStartReasonDTO,
     RunStatusDTO,
+    TagDTO,
+    TagValueDTO,
 )
 from data_rentgen.utils.uuid import generate_new_uuid
 
@@ -27,6 +29,20 @@ def generate_airflow_run(dag_id: str, task_id: str, created_at: datetime, ended_
         name=dag_id,
         location=location,
         type=JobTypeDTO(type="AIRFLOW_DAG"),
+        tag_values={
+            TagValueDTO(
+                tag=TagDTO(name="airflow.version"),
+                value="2.11.0",
+            ),
+            TagValueDTO(
+                tag=TagDTO(name="openlineage_adapter.version"),
+                value="2.10.0",
+            ),
+            TagValueDTO(
+                tag=TagDTO(name="openlineage_client.version"),
+                value="1.42.1",
+            ),
+        },
     )
     dag_run_id = f"scheduled__{created_at.isoformat()}"
     dag_ui = address + f"/dags/{dag_job.name}/runs/{dag_run_id}"
@@ -45,6 +61,20 @@ def generate_airflow_run(dag_id: str, task_id: str, created_at: datetime, ended_
         name=f"{dag_id}.{task_id}",
         location=location,
         type=JobTypeDTO(type="AIRFLOW_TASK"),
+        tag_values={
+            TagValueDTO(
+                tag=TagDTO(name="airflow.version"),
+                value="2.11.0",
+            ),
+            TagValueDTO(
+                tag=TagDTO(name="openlineage_adapter.version"),
+                value="2.10.0",
+            ),
+            TagValueDTO(
+                tag=TagDTO(name="openlineage_client.version"),
+                value="1.42.1",
+            ),
+        },
     )
     return RunDTO(
         id=generate_new_uuid(created_at),

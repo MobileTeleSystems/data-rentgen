@@ -24,6 +24,8 @@ class DatabaseSaver:
         self.logger.info("Saving to database")
 
         await self.create_locations(data)
+        await self.create_tags(data)
+        await self.create_tag_values(data)
         await self.create_datasets(data)
         await self.create_dataset_symlinks(data)
         await self.create_job_types(data)
@@ -51,7 +53,7 @@ class DatabaseSaver:
         for location_dto in data.locations():
             async with self.unit_of_work:
                 location = await self.unit_of_work.location.create_or_update(location_dto)
-                location_dto.id = location.id
+            location_dto.id = location.id
 
     # To avoid deadlocks when parallel consumer instances insert/update the same row,
     # commit changes for each row instead of committing the whole batch. Yes, this cloud be slow.
@@ -92,7 +94,7 @@ class DatabaseSaver:
                     job = await self.unit_of_work.job.create_or_update(job_dto)  # noqa: PLW2901
                 else:
                     job = await self.unit_of_work.job.update(job, job_dto)  # noqa: PLW2901
-                job_dto.id = job.id
+            job_dto.id = job.id
 
     async def create_users(self, data: BatchExtractionResult):
         self.logger.debug("Creating users")
@@ -124,6 +126,24 @@ class DatabaseSaver:
                     schema_dto.id = schema.id
             else:
                 schema_dto.id = schema_id
+
+    async def create_tags(self, data: BatchExtractionResult):
+        self.logger.debug("Creating tags")
+        tag_pairs = await self.unit_of_work.tag.fetch_bulk(data.tags())
+        for tag_dto, tag in tag_pairs:
+            if not tag:
+                async with self.unit_of_work:
+                    tag = await self.unit_of_work.tag.create(tag_dto)  # noqa: PLW2901
+            tag_dto.id = tag.id
+
+    async def create_tag_values(self, data: BatchExtractionResult):
+        self.logger.debug("Creating tag values")
+        tag_value_pairs = await self.unit_of_work.tag_value.fetch_bulk(data.tag_values())
+        for tag_value_dto, tag_value in tag_value_pairs:
+            if not tag_value:
+                async with self.unit_of_work:
+                    tag_value = await self.unit_of_work.tag_value.create(tag_value_dto)  # noqa: PLW2901
+            tag_value_dto.id = tag_value.id
 
     # In most cases, all the run tree created by some parent is send into one
     # Kafka partition, and thus handled by just one worker.

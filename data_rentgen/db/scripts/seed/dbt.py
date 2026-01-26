@@ -27,6 +27,8 @@ from data_rentgen.dto import (
     RunStatusDTO,
     SchemaDTO,
     SQLQueryDTO,
+    TagDTO,
+    TagValueDTO,
 )
 from data_rentgen.utils.uuid import generate_new_uuid
 
@@ -84,6 +86,20 @@ def generate_dbt_run(
         name="dbt-run-user_metrics",
         location=LOCATIONS["local"],
         type=JobTypeDTO(type="DBT_JOB"),
+        tag_values={
+            TagValueDTO(
+                tag=TagDTO(name="dbt.version"),
+                value="1.9.4",
+            ),
+            TagValueDTO(
+                tag=TagDTO(name="openlineage_adapter.version"),
+                value="1.42.1",
+            ),
+            TagValueDTO(
+                tag=TagDTO(name="openlineage_client.version"),
+                value="1.42.1",
+            ),
+        },
     )
 
     run_created_at = faker.date_time_between(start, end, tzinfo=UTC)

@@ -28,6 +28,7 @@ from data_rentgen.db.models import (
     RunStatus,
     Schema,
     SQLQuery,
+    TagValue,
     User,
 )
 
@@ -66,10 +67,22 @@ async def test_runs_handler_airflow(
     for event in input_transformation(events_airflow):
         await test_broker.publish(event, "input.runs")
 
-    # both Spark application & jobs are in the same cluster/host, thus the same location
-    job_query = select(Job).order_by(Job.name).options(selectinload(Job.location).selectinload(Location.addresses))
+    # both Airflow DAG in Task have the same location
+    job_query = (
+        select(Job)
+        .order_by(Job.name)
+        .options(
+            selectinload(Job.location).selectinload(Location.addresses),
+            selectinload(Job.tag_values).selectinload(TagValue.tag),
+        )
+    )
     job_scalars = await async_session.scalars(job_query)
     jobs = job_scalars.all()
+
+    expected_tag_values = {
+        "airflow.version": "2.10.5",
+        "openlineage_adapter.version": "2.2.0",
+    }
 
     assert len(jobs) == 2
     assert jobs[0].name == "mydag"
@@ -78,10 +91,12 @@ async def test_runs_handler_airflow(
     assert jobs[0].location.name == "airflow-host:8081"
     assert len(jobs[0].location.addresses) == 1
     assert jobs[0].location.addresses[0].url == "http://airflow-host:8081"
+    assert {tv.tag.name: tv.value for tv in jobs[0].tag_values} == expected_tag_values
 
     assert jobs[1].name == "mydag.mytask"
     assert jobs[1].type == "AIRFLOW_TASK"
     assert jobs[1].location == jobs[0].location
+    assert {tv.tag.name: tv.value for tv in jobs[1].tag_values} == expected_tag_values
 
     run_query = select(Run).order_by(Run.id)
     run_scalars = await async_session.scalars(run_query)
