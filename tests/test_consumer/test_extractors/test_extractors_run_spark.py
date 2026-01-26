@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
+from packaging.version import Version
 from uuid6 import UUID
 
 from data_rentgen.consumer.extractors.impl import SparkExtractor
@@ -11,6 +12,8 @@ from data_rentgen.dto import (
     LocationDTO,
     RunDTO,
     RunStatusDTO,
+    TagDTO,
+    TagValueDTO,
     UserDTO,
 )
 from data_rentgen.openlineage.job import OpenLineageJob
@@ -25,6 +28,7 @@ from data_rentgen.openlineage.run_event import (
     OpenLineageRunEventType,
 )
 from data_rentgen.openlineage.run_facets import (
+    OpenLineageProcessingEngineRunFacet,
     OpenLineageRunFacets,
     OpenLineageSparkApplicationDetailsRunFacet,
     OpenLineageSparkDeployMode,
@@ -51,6 +55,11 @@ def test_extractors_extract_run_spark_app_yarn():
         run=OpenLineageRun(
             runId=run_id,
             facets=OpenLineageRunFacets(
+                processing_engine=OpenLineageProcessingEngineRunFacet(
+                    version=Version("3.4.3"),
+                    name="spark",
+                    openlineageAdapterVersion=Version("1.19.0"),
+                ),
                 spark_applicationDetails=OpenLineageSparkApplicationDetailsRunFacet(
                     master="yarn",
                     appName="myapp",
@@ -71,6 +80,16 @@ def test_extractors_extract_run_spark_app_yarn():
             name="myjob",
             location=LocationDTO(type="yarn", name="cluster", addresses={"yarn://cluster"}),
             type=JobTypeDTO(type="SPARK_APPLICATION"),
+            tag_values={
+                TagValueDTO(
+                    tag=TagDTO(name="spark.version"),
+                    value="3.4.3",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_adapter.version"),
+                    value="1.19.0",
+                ),
+            },
         ),
         status=RunStatusDTO.STARTED,
         started_at=now,
@@ -104,6 +123,11 @@ def test_extractors_extract_run_spark_app_local():
         run=OpenLineageRun(
             runId=run_id,
             facets=OpenLineageRunFacets(
+                processing_engine=OpenLineageProcessingEngineRunFacet(
+                    version=Version("3.4.3"),
+                    name="spark",
+                    openlineageAdapterVersion=Version("1.19.0"),
+                ),
                 spark_applicationDetails=OpenLineageSparkApplicationDetailsRunFacet(
                     master="local[4]",
                     appName="myapp",
@@ -123,6 +147,16 @@ def test_extractors_extract_run_spark_app_local():
             name="myjob",
             location=LocationDTO(type="host", name="some.host.com", addresses={"host://some.host.com"}),
             type=JobTypeDTO(type="SPARK_APPLICATION"),
+            tag_values={
+                TagValueDTO(
+                    tag=TagDTO(name="spark.version"),
+                    value="3.4.3",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_adapter.version"),
+                    value="1.19.0",
+                ),
+            },
         ),
         status=RunStatusDTO.STARTED,
         started_at=None,

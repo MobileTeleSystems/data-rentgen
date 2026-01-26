@@ -12,6 +12,8 @@ from data_rentgen.dto import (
     LocationDTO,
     RunDTO,
     RunStatusDTO,
+    TagDTO,
+    TagValueDTO,
     UserDTO,
 )
 from data_rentgen.openlineage.job import OpenLineageJob
@@ -64,7 +66,7 @@ def test_extractors_extract_run_hive():
                 ),
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("3.1.3"),
-                    name="myuser",
+                    name="Hive",
                     openlineageAdapterVersion=Version("1.35.0"),
                 ),
             ),
@@ -76,6 +78,16 @@ def test_extractors_extract_run_hive():
             name="myuser@11.22.33.44",
             location=LocationDTO(type="hive", name="test-hadoop:10000", addresses={"hive://test-hadoop:10000"}),
             type=JobTypeDTO(type="HIVE_SESSION"),
+            tag_values={
+                TagValueDTO(
+                    tag=TagDTO(name="hive.version"),
+                    value="3.1.3",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_adapter.version"),
+                    value="1.35.0",
+                ),
+            },
         ),
         status=RunStatusDTO.STARTED,  # always started
         started_at=session_creation_time,
@@ -120,7 +132,7 @@ def test_extractors_extract_run_hive_custom_job_name():
                 ),
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("3.1.3"),
-                    name="myuser",
+                    name="Hive",
                     openlineageAdapterVersion=Version("1.35.0"),
                 ),
             ),
@@ -132,6 +144,16 @@ def test_extractors_extract_run_hive_custom_job_name():
             name="my_job_name",
             location=LocationDTO(type="hive", name="test-hadoop:10000", addresses={"hive://test-hadoop:10000"}),
             type=JobTypeDTO(type="HIVE_SESSION"),
+            tag_values={
+                TagValueDTO(
+                    tag=TagDTO(name="hive.version"),
+                    value="3.1.3",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_adapter.version"),
+                    value="1.35.0",
+                ),
+            },
         ),
         status=RunStatusDTO.STARTED,
         started_at=session_creation_time,
@@ -170,7 +192,7 @@ def test_extractors_extract_run_hive_openlineage_1_34():
                 ),
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("3.1.3"),
-                    name="myuser",
+                    name="Hive",
                     openlineageAdapterVersion=Version("1.34.0"),
                 ),
             ),
@@ -182,6 +204,16 @@ def test_extractors_extract_run_hive_openlineage_1_34():
             name="myuser@11.22.33.44",
             location=LocationDTO(type="hive", name="test-hadoop:10000", addresses={"hive://test-hadoop:10000"}),
             type=JobTypeDTO(type="HIVE_SESSION"),
+            tag_values={
+                TagValueDTO(
+                    tag=TagDTO(name="hive.version"),
+                    value="3.1.3",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_adapter.version"),
+                    value="1.34.0",
+                ),
+            },
         ),
         status=RunStatusDTO.STARTED,
         started_at=session_creation_time,

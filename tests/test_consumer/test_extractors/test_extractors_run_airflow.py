@@ -14,6 +14,8 @@ from data_rentgen.dto import (
     RunDTO,
     RunStartReasonDTO,
     RunStatusDTO,
+    TagDTO,
+    TagValueDTO,
     UserDTO,
 )
 from data_rentgen.openlineage.job import OpenLineageJob
@@ -38,6 +40,7 @@ from data_rentgen.openlineage.run_facets import (
     OpenLineageProcessingEngineRunFacet,
     OpenLineageRunFacets,
 )
+from data_rentgen.openlineage.run_facets.run_tags import OpenLineageRunTagsFacet, OpenLineageRunTagsFacetField
 
 
 def test_extractors_extract_run_airflow_dag_log_url_3_x_plus():
@@ -63,7 +66,7 @@ def test_extractors_extract_run_airflow_dag_log_url_3_x_plus():
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("3.0.1"),
                     name="Airflow",
-                    openlineageAdapterVersion=Version("2.3.0"),
+                    openlineageAdapterVersion=Version("2.7.3"),
                 ),
                 airflowDagRun=OpenLineageAirflowDagRunFacet(
                     dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="airflow"),
@@ -73,6 +76,15 @@ def test_extractors_extract_run_airflow_dag_log_url_3_x_plus():
                         data_interval_start=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
                         data_interval_end=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
                     ),
+                ),
+                tags=OpenLineageRunTagsFacet(
+                    tags=[
+                        OpenLineageRunTagsFacetField(
+                            key="openlineage_client_version",
+                            value="1.38.0",
+                            source="OPENLINEAGE_CLIENT",
+                        ),
+                    ],
                 ),
             ),
         ),
@@ -88,6 +100,20 @@ def test_extractors_extract_run_airflow_dag_log_url_3_x_plus():
                 addresses={"http://airflow-host:8081"},
             ),
             type=JobTypeDTO(type="AIRFLOW_DAG"),
+            tag_values={
+                TagValueDTO(
+                    tag=TagDTO(name="airflow.version"),
+                    value="3.0.1",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_adapter.version"),
+                    value="2.7.3",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_client.version"),
+                    value="1.38.0",
+                ),
+            },
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
@@ -149,6 +175,16 @@ def test_extractors_extract_run_airflow_dag_log_url_2_3_plus():
                 addresses={"http://airflow-host:8081"},
             ),
             type=JobTypeDTO(type="AIRFLOW_DAG"),
+            tag_values={
+                TagValueDTO(
+                    tag=TagDTO(name="airflow.version"),
+                    value="2.9.2",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_adapter.version"),
+                    value="1.10.0",
+                ),
+            },
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
@@ -212,6 +248,16 @@ def test_extractors_extract_run_airflow_dag_log_url_2_x():
                 addresses={"http://airflow-host:8081"},
             ),
             type=JobTypeDTO(type="AIRFLOW_DAG"),
+            tag_values={
+                TagValueDTO(
+                    tag=TagDTO(name="airflow.version"),
+                    value="2.1.4",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_adapter.version"),
+                    value="1.10.0",
+                ),
+            },
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
@@ -285,6 +331,16 @@ def test_extractors_extract_run_airflow_task_log_url_preserve_original():
                 addresses={"http://airflow-host:8081"},
             ),
             type=JobTypeDTO(type="AIRFLOW_TASK"),
+            tag_values={
+                TagValueDTO(
+                    tag=TagDTO(name="airflow.version"),
+                    value="2.9.2",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_adapter.version"),
+                    value="1.10.0",
+                ),
+            },
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
@@ -323,7 +379,7 @@ def test_extractors_extract_run_airflow_task_log_url_3_x():
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("3.0.1"),
                     name="Airflow",
-                    openlineageAdapterVersion=Version("2.3.0"),
+                    openlineageAdapterVersion=Version("2.7.3"),
                 ),
                 airflow=OpenLineageAirflowTaskRunFacet(
                     dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="airflow"),
@@ -341,6 +397,15 @@ def test_extractors_extract_run_airflow_task_log_url_3_x():
                         try_number=1,
                     ),
                 ),
+                tags=OpenLineageRunTagsFacet(
+                    tags=[
+                        OpenLineageRunTagsFacetField(
+                            key="openlineage_client_version",
+                            value="1.38.0",
+                            source="OPENLINEAGE_CLIENT",
+                        ),
+                    ],
+                ),
             ),
         ),
     )
@@ -355,6 +420,20 @@ def test_extractors_extract_run_airflow_task_log_url_3_x():
                 addresses={"http://airflow-host:8081"},
             ),
             type=JobTypeDTO(type="AIRFLOW_TASK"),
+            tag_values={
+                TagValueDTO(
+                    tag=TagDTO(name="airflow.version"),
+                    value="3.0.1",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_adapter.version"),
+                    value="2.7.3",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_client.version"),
+                    value="1.38.0",
+                ),
+            },
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
@@ -425,6 +504,16 @@ def test_extractors_extract_run_airflow_task_log_url_2_9_plus():
                 addresses={"http://airflow-host:8081"},
             ),
             type=JobTypeDTO(type="AIRFLOW_TASK"),
+            tag_values={
+                TagValueDTO(
+                    tag=TagDTO(name="airflow.version"),
+                    value="2.9.2",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_adapter.version"),
+                    value="1.9.0",
+                ),
+            },
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
@@ -562,6 +651,16 @@ def test_extractors_extract_run_airflow_dag_owner(owner: str, extracted_user: Us
                 addresses={"http://airflow-host:8081"},
             ),
             type=JobTypeDTO(type="AIRFLOW_DAG"),
+            tag_values={
+                TagValueDTO(
+                    tag=TagDTO(name="airflow.version"),
+                    value="2.1.4",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_adapter.version"),
+                    value="1.10.0",
+                ),
+            },
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,
@@ -674,7 +773,7 @@ def test_extractors_extract_run_airflow_3_x_task_map_index():
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("3.0.1"),
                     name="Airflow",
-                    openlineageAdapterVersion=Version("2.3.0"),
+                    openlineageAdapterVersion=Version("2.7.3"),
                 ),
                 airflow=OpenLineageAirflowTaskRunFacet(
                     dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="airflow"),
@@ -693,6 +792,15 @@ def test_extractors_extract_run_airflow_3_x_task_map_index():
                         map_index=10,
                     ),
                 ),
+                tags=OpenLineageRunTagsFacet(
+                    tags=[
+                        OpenLineageRunTagsFacetField(
+                            key="openlineage_client_version",
+                            value="1.38.0",
+                            source="OPENLINEAGE_CLIENT",
+                        ),
+                    ],
+                ),
             ),
         ),
     )
@@ -707,6 +815,20 @@ def test_extractors_extract_run_airflow_3_x_task_map_index():
                 addresses={"http://airflow-host:8081"},
             ),
             type=JobTypeDTO(type="AIRFLOW_TASK"),
+            tag_values={
+                TagValueDTO(
+                    tag=TagDTO(name="airflow.version"),
+                    value="3.0.1",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_adapter.version"),
+                    value="2.7.3",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_client.version"),
+                    value="1.38.0",
+                ),
+            },
         ),
         status=RunStatusDTO.SUCCEEDED,
         started_at=None,

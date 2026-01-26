@@ -28,6 +28,7 @@ from data_rentgen.db.models import (
     RunStatus,
     Schema,
     SQLQuery,
+    TagValue,
 )
 
 RESOURCES_PATH = Path(__file__).parent.parent.parent.joinpath("resources").resolve()
@@ -65,8 +66,14 @@ async def test_runs_handler_hive(
     for event in input_transformation(events_hive):
         await test_broker.publish(event, "input.runs")
 
-    job_query = select(Job).order_by(Job.name).options(selectinload(Job.location).selectinload(Location.addresses))
-
+    job_query = (
+        select(Job)
+        .order_by(Job.name)
+        .options(
+            selectinload(Job.location).selectinload(Location.addresses),
+            selectinload(Job.tag_values).selectinload(TagValue.tag),
+        )
+    )
     job_scalars = await async_session.scalars(job_query)
     jobs = job_scalars.all()
     assert len(jobs) == 1
@@ -76,6 +83,10 @@ async def test_runs_handler_hive(
     assert jobs[0].location.name == "test-hadoop:10000"
     assert len(jobs[0].location.addresses) == 1
     assert jobs[0].location.addresses[0].url == "hive://test-hadoop:10000"
+    assert {tv.tag.name: tv.value for tv in jobs[0].tag_values} == {
+        "hive.version": "3.1.3",
+        "openlineage_adapter.version": "1.35.0",
+    }
 
     run_query = select(Run).order_by(Run.id).options(selectinload(Run.started_by_user))
     run_scalars = await async_session.scalars(run_query)

@@ -29,6 +29,8 @@ from data_rentgen.dto import (
     RunStatusDTO,
     SchemaDTO,
     SQLQueryDTO,
+    TagDTO,
+    TagValueDTO,
     UserDTO,
 )
 from data_rentgen.utils.uuid import generate_new_uuid
@@ -144,6 +146,16 @@ def generate_spark_run_local(
         name="raw_layer_loader",
         location=LOCATIONS["local"],
         type=JobTypeDTO(type="SPARK_APPLICATION"),
+        tag_values={
+            TagValueDTO(
+                tag=TagDTO(name="hive.version"),
+                value="4.1.1",
+            ),
+            TagValueDTO(
+                tag=TagDTO(name="openlineage_adapter.version"),
+                value="1.42.1",
+            ),
+        },
     )
 
     run_created_at = faker.date_time_between(start, end, tzinfo=UTC)

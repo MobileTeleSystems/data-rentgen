@@ -21,10 +21,12 @@ from sqlalchemy import (
     select,
     tuple_,
     union,
+    update,
 )
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import selectinload
 
-from data_rentgen.db.models import Address, Job, Location, TagValue
+from data_rentgen.db.models import Address, Job, JobTagValue, Location, TagValue
 from data_rentgen.db.repositories.base import Repository
 from data_rentgen.db.utils.search import make_tsquery, ts_match, ts_rank
 from data_rentgen.dto import JobDTO, PaginationDTO
@@ -67,6 +69,19 @@ get_stats_query = (
         Job.location_id == any_(bindparam("location_ids")),
     )
     .group_by(Job.location_id)
+)
+
+update_job_type_query = update(Job).where(Job.id == bindparam("job_id")).values(type_id=bindparam("type_id"))
+
+insert_tag_value_query = (
+    insert(JobTagValue)
+    .values(
+        {
+            "job_id": bindparam("job_id"),
+            "tag_value_id": bindparam("tag_value_id"),
+        }
+    )
+    .on_conflict_do_nothing(index_elements=["job_id", "tag_value_id"])
 )
 
 
@@ -175,11 +190,15 @@ class JobRepository(Repository[Job]):
         ]
 
     async def create_or_update(self, job: JobDTO) -> Job:
-        # if another worker already created the same row, just use it. if not - create with holding the lock.
-        await self._lock(job.location.id, job.name.lower())
         result = await self._get(job)
         if not result:
-            return await self._create(job)
+            # try one more time, but with lock acquired.
+            # if another worker already created the same row, just use it. if not - create with holding the lock.
+            await self._lock(job.location.id, job.name.lower())
+            result = await self._get(job)
+
+        if not result:
+            result = await self._create(job)
         return await self.update(result, job)
 
     async def _get(self, job: JobDTO) -> Job | None:
@@ -204,8 +223,30 @@ class JobRepository(Repository[Job]):
     async def update(self, existing: Job, new: JobDTO) -> Job:
         # almost of fields are immutable, so we can avoid UPDATE statements if row is unchanged
         if new.type and new.type.id and existing.type_id != new.type.id:
-            existing.type_id = new.type.id
-            await self._session.flush([existing])
+            await self._session.execute(
+                update_job_type_query,
+                {
+                    "job_id": existing.id,
+                    "type_id": new.type.id,
+                },
+            )
+
+        if not new.tag_values:
+            # in cases when jobs have no tag values we can avoid INSERT statements
+            return existing
+
+        # Lock to prevent inserting the same rows from multiple workers
+        await self._lock(existing.location_id, existing.name)
+        await self._session.execute(
+            insert_tag_value_query,
+            [
+                {
+                    "job_id": existing.id,
+                    "tag_value_id": tag_value_dto.id,
+                }
+                for tag_value_dto in new.tag_values
+            ],
+        )
         return existing
 
     async def list_by_ids(self, job_ids: Collection[int]) -> list[Job]:

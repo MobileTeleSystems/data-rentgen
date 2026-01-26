@@ -24,6 +24,7 @@ from data_rentgen.db.repositories.run import RunRepository
 from data_rentgen.db.repositories.schema import SchemaRepository
 from data_rentgen.db.repositories.sql_query import SQLQueryRepository
 from data_rentgen.db.repositories.tag import TagRepository
+from data_rentgen.db.repositories.tag_value import TagValueRepository
 from data_rentgen.db.repositories.user import UserRepository
 from data_rentgen.dependencies import Stub
 
@@ -51,6 +52,7 @@ class UnitOfWork:
         self.user = UserRepository(session)
         self.personal_token = PersonalTokenRepository(session)
         self.tag = TagRepository(session)
+        self.tag_value = TagValueRepository(session)
 
     async def __aenter__(self):
         return self
