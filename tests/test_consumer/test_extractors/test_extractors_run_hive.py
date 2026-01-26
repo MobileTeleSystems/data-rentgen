@@ -49,6 +49,7 @@ def test_extractors_extract_run_hive():
                     integration="HIVE",
                     jobType="QUERY",
                 ),
+                # job tags are missing due to https://github.com/OpenLineage/OpenLineage/issues/4280
             ),
         ),
         run=OpenLineageRun(
@@ -69,6 +70,7 @@ def test_extractors_extract_run_hive():
                     name="Hive",
                     openlineageAdapterVersion=Version("1.35.0"),
                 ),
+                # job tags are missing due to https://github.com/OpenLineage/OpenLineage/issues/4280
             ),
         ),
     )

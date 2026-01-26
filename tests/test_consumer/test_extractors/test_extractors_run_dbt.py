@@ -54,7 +54,7 @@ def test_extractors_extract_run_job():
                 processing_engine=OpenLineageProcessingEngineRunFacet(
                     version=Version("1.9.4"),
                     name="dbt",
-                    openlineageAdapterVersion=Version("1.38.0"),
+                    openlineageAdapterVersion=Version("1.33.0"),
                 ),
             ),
         ),
@@ -77,7 +77,7 @@ def test_extractors_extract_run_job():
                 ),
                 TagValueDTO(
                     tag=TagDTO(name="openlineage_adapter.version"),
-                    value="1.38.0",
+                    value="1.33.0",
                 ),
             },
         ),

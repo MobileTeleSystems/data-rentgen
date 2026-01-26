@@ -155,6 +155,10 @@ def generate_spark_run_local(
                 tag=TagDTO(name="openlineage_adapter.version"),
                 value="1.42.1",
             ),
+            TagValueDTO(
+                tag=TagDTO(name="environment"),
+                value="test",
+            ),
         },
     )
 

@@ -173,6 +173,10 @@ def generate_spark_run_yarn(
                 tag=TagDTO(name="openlineage_adapter.version"),
                 value="1.38.0",
             ),
+            TagValueDTO(
+                tag=TagDTO(name="environment"),
+                value="prod",
+            ),
         },
     )
 
