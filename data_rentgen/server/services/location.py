@@ -57,6 +57,13 @@ class LocationService:
     def __init__(self, uow: Annotated[UnitOfWork, Depends()]):
         self._uow = uow
 
+    async def __aenter__(self):
+        await self._uow.__aenter__()
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        await self._uow.__aexit__(exc_type, exc_value, traceback)
+
     async def paginate(
         self,
         page: int,

@@ -56,7 +56,8 @@ async def update_location(
     location_service: Annotated[LocationService, Depends()],
     current_user: Annotated[User, Depends(get_user())],
 ) -> LocationDetailedResponseV1:
-    location = await location_service.update_external_id(location_id, location_data.external_id)
+    async with location_service:
+        location = await location_service.update_external_id(location_id, location_data.external_id)
     return LocationDetailedResponseV1.model_validate(location)
 
 

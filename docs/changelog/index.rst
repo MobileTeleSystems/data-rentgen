@@ -3,6 +3,7 @@
     :caption: Changelog
 
     DRAFT
+    0.4.8
     0.4.7
     0.4.6
     0.4.5
