@@ -119,6 +119,7 @@ class BatchExtractionResult:
 
     def add_dataset(self, dataset: DatasetDTO):
         dataset.location = self.add_location(dataset.location)
+        dataset.tag_values = {self.add_tag_value(tag_value) for tag_value in dataset.tag_values}
         return self._add(self._datasets, dataset)
 
     def add_dataset_symlink(self, dataset_symlink: DatasetSymlinkDTO):
@@ -207,6 +208,7 @@ class BatchExtractionResult:
     def get_dataset(self, dataset_key: tuple) -> DatasetDTO:
         dataset = self._datasets[dataset_key]
         dataset.location = self.get_location(dataset.location.unique_key)
+        dataset.tag_values = {self.get_tag_value(tag_value.unique_key) for tag_value in dataset.tag_values}
         return dataset
 
     def get_dataset_symlink(self, dataset_symlink_key: tuple) -> DatasetSymlinkDTO:
