@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from data_rentgen.consumer.extractors.generic import GenericExtractor
+from data_rentgen.consumer.extractors.impl.utils import parse_kv_tag
 from data_rentgen.dto import DatasetDTO, OperationDTO, OutputTypeDTO, RunDTO
 from data_rentgen.openlineage.dataset import OpenLineageDataset, OpenLineageOutputDataset
 from data_rentgen.openlineage.dataset_facets import (
@@ -56,3 +57,16 @@ class DbtExtractor(GenericExtractor):
         # by default, model is not materialized, and is either VIEW or INSERT INTO
         result = super()._extract_output_type(operation, dataset)
         return result or OutputTypeDTO.APPEND
+
+    def _enrich_run_tags(self, run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
+        if event.run.facets.tags:
+            # https://github.com/OpenLineage/OpenLineage/pull/4022
+            for raw_tag in event.run.facets.tags.tags:
+                if ":" in raw_tag.key:
+                    # https://github.com/OpenLineage/OpenLineage/issues/4281
+                    raw_tag.key, raw_tag.value = parse_kv_tag(raw_tag.key)
+
+                    if not raw_tag.source:
+                        raw_tag.source = "DBT"
+
+        return super()._enrich_run_tags(run, event)
