@@ -62,9 +62,11 @@ class DatabaseSaver:
         self.logger.debug("Creating datasets")
         dataset_pairs = await self.unit_of_work.dataset.fetch_bulk(data.datasets())
         for dataset_dto, dataset in dataset_pairs:
-            if not dataset:
-                async with self.unit_of_work:
-                    dataset = await self.unit_of_work.dataset.create(dataset_dto)  # noqa: PLW2901
+            async with self.unit_of_work:
+                if not dataset:
+                    dataset = await self.unit_of_work.dataset.create_or_update(dataset_dto)  # noqa: PLW2901
+                else:
+                    dataset = await self.unit_of_work.dataset.update(dataset, dataset_dto)  # noqa: PLW2901
             dataset_dto.id = dataset.id
 
     async def create_dataset_symlinks(self, data: BatchExtractionResult):
