@@ -65,7 +65,7 @@ class JobExtractorMixin:
 
         for raw_tag in job.facets.tags.tags:
             tag_value = TagValueDTO(
-                tag=TagDTO(name=raw_tag.key.lower().replace(" ", "_")),
+                tag=TagDTO(name=raw_tag.key),
                 value=raw_tag.value,
             )
             job_dto.tag_values.add(tag_value)
