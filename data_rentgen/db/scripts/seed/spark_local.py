@@ -75,6 +75,16 @@ DATASETS = {
     "hive_raw_user_metrics": DatasetDTO(
         name="raw.user_metrics",
         location=LOCATIONS["hive_metastore"],
+        tag_values={
+            TagValueDTO(
+                tag=TagDTO(name="storage.layer"),
+                value="silver",
+            ),
+            TagValueDTO(
+                tag=TagDTO(name="owner.team"),
+                value="DE Team 1",
+            ),
+        },
     ),
     "hdfs_raw_user_metrics": DatasetDTO(
         name="/user/hive/warehouse/raw.db/user_metrics",
@@ -153,7 +163,7 @@ def generate_spark_run_local(
             ),
             TagValueDTO(
                 tag=TagDTO(name="openlineage_adapter.version"),
-                value="1.42.1",
+                value="1.43.0",
             ),
             TagValueDTO(
                 tag=TagDTO(name="environment"),

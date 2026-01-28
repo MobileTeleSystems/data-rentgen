@@ -13,6 +13,11 @@ Requirements
 * Running :ref:`message-broker`
 * (Optional) :ref:`http2kafka`
 
+Limitations
+-----------
+
+* Currently there is no way to pass dataset tags, `see issue <https://github.com/OpenLineage/OpenLineage/issues/3500>`_.
+
 Entity mapping
 --------------
 
@@ -135,3 +140,29 @@ Operation lineage
 ~~~~~~~~~~~~~~~~~
 
 .. image:: ./operation_lineage.png
+
+Extra configuration
+-------------------
+
+Collecting model tags
+~~~~~~~~~~~~~~~~~~~~~
+
+By default, following job tags are created:
+
+- ``dbt.version``
+- ``openlineage_adapter.version``
+- ``openlineage_client.version`` (using OpenLineage client 1.38.0+)
+
+It is possible to provide custom tags via model config:
+
+.. code-block:: yaml
+    :caption: dbt_project.yaml
+
+    models:
+    jaffle_shop:
+        materialized: table
+        staging:
+            materialized: view
+        +tags:
+            - environment:production
+            - layer:bronze

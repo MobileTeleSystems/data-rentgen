@@ -68,6 +68,12 @@ DATASETS = {
     "hive_raw_user_metrics": DatasetDTO(
         name="raw.user_metrics",
         location=LOCATIONS["hive_metastore"],
+        tag_values={
+            TagValueDTO(
+                tag=TagDTO(name="storage.layer"),
+                value="silver",
+            ),
+        },
     ),
     "hdfs_raw_user_metrics": DatasetDTO(
         name="/user/hive/warehouse/raw.db/user_metrics",
@@ -84,6 +90,16 @@ DATASETS = {
     "hive_mart_user_metrics_agg": DatasetDTO(
         name="mart.user_metrics_agg",
         location=LOCATIONS["hive_metastore"],
+        tag_values={
+            TagValueDTO(
+                tag=TagDTO(name="storage.layer"),
+                value="gold",
+            ),
+            TagValueDTO(
+                tag=TagDTO(name="owner.team"),
+                value="DE Team 2",
+            ),
+        },
     ),
     "hdfs_mart_user_metrics_agg": DatasetDTO(
         name="/user/hive/warehouse/mart.db/user_metrics_agg",
@@ -175,7 +191,7 @@ def generate_spark_run_yarn(
             ),
             TagValueDTO(
                 tag=TagDTO(name="environment"),
-                value="prod",
+                value="production",
             ),
         },
     )

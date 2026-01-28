@@ -40,7 +40,11 @@ def generate_airflow_run(dag_id: str, task_id: str, created_at: datetime, ended_
             ),
             TagValueDTO(
                 tag=TagDTO(name="openlineage_client.version"),
-                value="1.42.1",
+                value="1.43.0",
+            ),
+            TagValueDTO(
+                tag=TagDTO(name="environment"),
+                value="production",
             ),
         },
     )
@@ -72,7 +76,11 @@ def generate_airflow_run(dag_id: str, task_id: str, created_at: datetime, ended_
             ),
             TagValueDTO(
                 tag=TagDTO(name="openlineage_client.version"),
-                value="1.42.1",
+                value="1.43.0",
+            ),
+            TagValueDTO(
+                tag=TagDTO(name="environment"),
+                value="production",
             ),
         },
     )

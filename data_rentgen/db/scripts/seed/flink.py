@@ -50,6 +50,16 @@ DATASETS = {
     "postgres_user_metrics": DatasetDTO(
         name="streaming.user_metrics",
         location=LOCATIONS["postgres"],
+        tag_values={
+            TagValueDTO(
+                tag=TagDTO(name="owner.product"),
+                value="Calls History",
+            ),
+            TagValueDTO(
+                tag=TagDTO(name="storage.layer"),
+                value="bronze",
+            ),
+        },
     ),
     "kafka_user_metrics": DatasetDTO(
         name="user_metrics",
@@ -96,8 +106,10 @@ def generate_flink_run(
             ),
             TagValueDTO(
                 tag=TagDTO(name="openlineage_adapter.version"),
-                value="1.42.1",
+                value="1.43.0",
             ),
+            # no custom tags support for now
+            # https://github.com/OpenLineage/OpenLineage/issues/4280
         },
     )
     address = next(iter(job.location.addresses))

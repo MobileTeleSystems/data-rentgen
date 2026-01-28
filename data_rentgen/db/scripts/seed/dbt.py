@@ -53,6 +53,16 @@ DATASETS = {
     "clickhouse_user_metrics": DatasetDTO(
         name="batch.user_metrics",
         location=LOCATIONS["clickhouse"],
+        tag_values={
+            TagValueDTO(
+                tag=TagDTO(name="owner.product"),
+                value="DataPlans Store",
+            ),
+            TagValueDTO(
+                tag=TagDTO(name="storage.layer"),
+                value="bronze",
+            ),
+        },
     ),
 }
 
@@ -93,11 +103,15 @@ def generate_dbt_run(
             ),
             TagValueDTO(
                 tag=TagDTO(name="openlineage_adapter.version"),
-                value="1.42.1",
+                value="1.43.0",
             ),
             TagValueDTO(
                 tag=TagDTO(name="openlineage_client.version"),
-                value="1.42.1",
+                value="1.43.0",
+            ),
+            TagValueDTO(
+                tag=TagDTO(name="environment"),
+                value="production",
             ),
         },
     )
