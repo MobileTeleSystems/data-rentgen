@@ -277,3 +277,30 @@ Operation level lineage
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 .. image:: ./operation_lineage.png
+
+Extra configuration
+-------------------
+
+Collecting job tags
+~~~~~~~~~~~~~~~~~~~
+
+By default, following job tags are created:
+
+- ``spark.version``
+- ``openlineage_adapter.version``
+
+It is possible to provide custom job tags using OpenLineage configuration:
+
+.. code-block:: yaml
+    :caption: openlineage.yaml
+
+    jobs:
+        tags:
+            - environment:production
+            - layer:bronze
+
+
+.. code-block:: python
+    :caption: etl.py
+
+    SparkSession.builder.config("spark.openlineage.jobs.tags", "environment:production;layer:bronze")

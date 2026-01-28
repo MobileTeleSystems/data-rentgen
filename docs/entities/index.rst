@@ -146,18 +146,6 @@ It contains following fields:
 
 .. image:: dataset_schema.png
 
-Dataset tags
-^^^^^^^^^^^^
-
-Dataset can have multiple tags which are arbitrary ``key: value`` pairs.
-
-- ``id: int`` - tag identifier
-- ``name: str`` - tag name, usually in format ``source.name``, e.g. ``airflow.tag``,  ``company.team``
-- ``values: list[TagValue]`` - tag values bound to dataset:
-
-  - ``id: int`` - tag value identifier
-  -  ``value: str`` - tag value, e.g. ``production``, ``Some team``
-
 Job
 ~~~
 
@@ -187,7 +175,23 @@ It contains following fields:
   - ``DBT_JOB``
   - ``UNKNOWN``
 
+- ``tags: list[Tag]`` - tags of job.
+
 .. image:: job_list.png
+
+Tags
+~~~~
+
+Datasets and jobs can have multiple tags which are arbitrary ``key: value`` pairs.
+
+- ``id: int`` - tag identifier
+- ``name: str`` - tag name, usually in format ``source.name``, e.g. ``airflow.version``,  ``company.team``
+- ``values: list[TagValue]`` - tag values bound to dataset/job:
+
+  - ``id: int`` - tag value identifier
+  -  ``value: str`` - tag value, e.g. ``1.3.4``, ``production``, ``Some team``
+
+.. image:: tags.png
 
 User
 ~~~~
