@@ -1,12 +1,13 @@
 # SPDX-FileCopyrightText: 2024-present MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from data_rentgen.openlineage.base import OpenLineageBase
 from data_rentgen.openlineage.job_facets.base import OpenLineageJobFacet
 
 
-class OpenLineageJobTagsFacetField(BaseModel):
+class OpenLineageJobTagsFacetField(OpenLineageBase):
     """Job tags field type.
     See [TagsJobFacet](https://github.com/OpenLineage/OpenLineage/blob/main/spec/facets/TagsJobFacet.json).
     """

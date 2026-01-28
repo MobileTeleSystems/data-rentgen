@@ -20,6 +20,7 @@ from data_rentgen.openlineage.run_facets import (
     OpenLineageParentJob,
     OpenLineageParentRunFacet,
 )
+from data_rentgen.openlineage.run_facets.run_tags import OpenLineageRunTagsFacetField
 
 
 class RunExtractorMixin(ABC):
@@ -103,8 +104,10 @@ class RunExtractorMixin(ABC):
         if not event.run.facets.tags:
             return run
 
-        for i, raw_tag in enumerate(event.run.facets.tags.tags.copy()):
+        run_tags: list[OpenLineageRunTagsFacetField] = []
+        for raw_tag in event.run.facets.tags.tags:
             if raw_tag.key != "openlineage_client_version":
+                run_tags.append(raw_tag)
                 continue
 
             # https://github.com/OpenLineage/OpenLineage/blob/1.42.1/client/python/src/openlineage/client/client.py#L460
@@ -113,8 +116,9 @@ class RunExtractorMixin(ABC):
                 value=raw_tag.value,
             )
             run.job.tag_values.add(client_tag_value)
-            # avoid passing this tag to _enrich_run_tags
-            event.run.facets.tags.tags.pop(i)
+
+        # avoid passing this tag to _enrich_run_tags
+        event.run.facets.tags.tags[:] = run_tags
         return run
 
     # Job and Run tags are different from OpenLineage spec perspective,

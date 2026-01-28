@@ -11,6 +11,7 @@ from data_rentgen.openlineage.dataset_facets import (
     OpenLineageSymlinkIdentifier,
 )
 from data_rentgen.openlineage.run_event import OpenLineageRunEvent
+from data_rentgen.openlineage.run_facets import OpenLineageRunTagsFacet, OpenLineageRunTagsFacetField
 
 
 class DbtExtractor(GenericExtractor):
@@ -62,14 +63,19 @@ class DbtExtractor(GenericExtractor):
         if not event.run.facets.tags:
             return run
 
+        run_tags: list[OpenLineageRunTagsFacetField] = []
         for raw_tag in event.run.facets.tags.tags:
             if raw_tag.value == "true" and ":" in raw_tag.key:
                 # not implemented in OpenLineage yet
                 # https://github.com/OpenLineage/OpenLineage/issues/4281
 
-                raw_tag.key, raw_tag.value, raw_tag.source = parse_kv_tag(
+                key, value, source = parse_kv_tag(
                     raw_tag.key,
                     default_source=raw_tag.source or "DBT",
                 )
+                run_tags.append(OpenLineageRunTagsFacetField(key=key, value=value, source=source))
+            else:
+                run_tags.append(raw_tag)
 
+        object.__setattr__(event.run.facets, "tags", OpenLineageRunTagsFacet(tags=run_tags))
         return super()._enrich_run_tags(run, event)

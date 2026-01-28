@@ -1,12 +1,13 @@
 # SPDX-FileCopyrightText: 2024-present MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from data_rentgen.openlineage.base import OpenLineageBase
 from data_rentgen.openlineage.dataset_facets.base import OpenLineageDatasetFacet
 
 
-class OpenLineageDatasetTagsFacetField(BaseModel):
+class OpenLineageDatasetTagsFacetField(OpenLineageBase):
     """Dataset tags field type.
     See [TagsDatasetFacet](https://github.com/OpenLineage/OpenLineage/blob/main/spec/facets/TagsDatasetFacet.json).
     """

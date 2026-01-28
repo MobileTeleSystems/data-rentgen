@@ -1,12 +1,13 @@
 # SPDX-FileCopyrightText: 2024-present MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
-from pydantic import BaseModel, Field
+from pydantic import Field
 
+from data_rentgen.openlineage.base import OpenLineageBase
 from data_rentgen.openlineage.run_facets.base import OpenLineageRunFacet
 
 
-class OpenLineageRunTagsFacetField(BaseModel):
+class OpenLineageRunTagsFacetField(OpenLineageBase):
     """Run tags field type.
     See [TagsRunFacet](https://github.com/OpenLineage/OpenLineage/blob/main/spec/facets/TagsRunFacet.json).
     """
