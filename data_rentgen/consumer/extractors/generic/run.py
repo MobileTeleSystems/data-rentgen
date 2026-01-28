@@ -41,6 +41,9 @@ class RunExtractorMixin(ABC):
             parent_run=self.extract_parent_run(event.run.facets.parent) if event.run.facets.parent else None,
         )
         self._enrich_run_status(run, event)
+        self._add_engine_version_tag(run, event)
+        self._add_openlineage_adapter_version_tag(run, event)
+        self._add_openlineage_client_version_tag(run, event)
         self._enrich_run_tags(run, event)
         return run
 
@@ -74,38 +77,55 @@ class RunExtractorMixin(ABC):
                 pass
         return run
 
+    def _add_engine_version_tag(self, run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
+        if not event.run.facets.processing_engine:
+            return run
+
+        engine_tag_value = TagValueDTO(
+            tag=TagDTO(name=f"{event.run.facets.processing_engine.name.lower()}.version"),
+            value=str(event.run.facets.processing_engine.version),
+        )
+        run.job.tag_values.add(engine_tag_value)
+        return run
+
+    def _add_openlineage_adapter_version_tag(self, run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
+        if not event.run.facets.processing_engine:
+            return run
+
+        adapter_tag_value = TagValueDTO(
+            tag=TagDTO(name="openlineage_adapter.version"),
+            value=str(event.run.facets.processing_engine.openlineageAdapterVersion),
+        )
+        run.job.tag_values.add(adapter_tag_value)
+        return run
+
+    def _add_openlineage_client_version_tag(self, run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
+        if not event.run.facets.tags:
+            return run
+
+        for i, raw_tag in enumerate(event.run.facets.tags.tags.copy()):
+            if raw_tag.key != "openlineage_client_version":
+                continue
+
+            # https://github.com/OpenLineage/OpenLineage/blob/1.42.1/client/python/src/openlineage/client/client.py#L460
+            client_tag_value = TagValueDTO(
+                tag=TagDTO(name="openlineage_client.version"),
+                value=raw_tag.value,
+            )
+            run.job.tag_values.add(client_tag_value)
+            # avoid passing this tag to _enrich_run_tags
+            event.run.facets.tags.tags.pop(i)
+        return run
+
     # Job and Run tags are different from OpenLineage spec perspective,
     # but are messed up in integrations, so all tags are merged into job
     def _enrich_run_tags(self, run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
-        if event.run.facets.processing_engine:
-            engine_tag_value = TagValueDTO(
-                tag=TagDTO(name=f"{event.run.facets.processing_engine.name.lower()}.version"),
-                value=str(event.run.facets.processing_engine.version),
-            )
-            adapter_tag_value = TagValueDTO(
-                tag=TagDTO(name="openlineage_adapter.version"),
-                value=str(event.run.facets.processing_engine.openlineageAdapterVersion),
-            )
-            # we don't store run tags, everything is merged into job tags
-            run.job.tag_values.add(engine_tag_value)
-            run.job.tag_values.add(adapter_tag_value)
-
         if not event.run.facets.tags:
             return run
 
         for raw_tag in event.run.facets.tags.tags:
-            source = raw_tag.source
-            if source in ("USER", "CONFIG"):
-                # https://github.com/OpenLineage/OpenLineage/blob/1.42.1/client/python/src/openlineage/client/client.py#L462
-                source = None
-
-            key = raw_tag.key
-            if key == "openlineage_client_version":
-                # https://github.com/OpenLineage/OpenLineage/blob/1.42.1/client/python/src/openlineage/client/client.py#L460
-                key = "openlineage_client.version"
-
             tag_value = TagValueDTO(
-                tag=TagDTO(name=key.lower().replace(" ", "_")),
+                tag=TagDTO(name=raw_tag.key.lower().replace(" ", "_")),
                 value=raw_tag.value,
             )
             run.job.tag_values.add(tag_value)
