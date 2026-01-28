@@ -65,10 +65,22 @@ DATASETS = {
     "file_sandbox_raw_user_info": DatasetDTO(
         name="/app/sandbox/user_info.csv",
         location=LOCATIONS["file"],
+        tag_values={
+            TagValueDTO(
+                tag=TagDTO(name="storage.layer"),
+                value="bronze",
+            ),
+        },
     ),
     "hive_ref_user_info": DatasetDTO(
         name="ref.user_info",
         location=LOCATIONS["hive"],
+        tag_values={
+            TagValueDTO(
+                tag=TagDTO(name="storage.layer"),
+                value="silver",
+            ),
+        },
     ),
     "hdfs_ref_user_info": DatasetDTO(
         name="/user/hive/warehouse/ref.db/user_info",
@@ -115,8 +127,10 @@ def generate_hive_run(
             ),
             TagValueDTO(
                 tag=TagDTO(name="openlineage_adapter.version"),
-                value="1.42.1",
+                value="1.43.0",
             ),
+            # no custom tags support for now
+            # https://github.com/OpenLineage/OpenLineage/issues/4280
         },
     )
 

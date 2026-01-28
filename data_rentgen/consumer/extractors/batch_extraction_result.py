@@ -93,7 +93,7 @@ class BatchExtractionResult:
             f"column_lineage={len(self._column_lineage)}, "
             f"schemas={len(self._schemas)}, "
             f"sql_queries={len(self._sql_queries)}, "
-            f"tag_values={len(self._tags)}, "
+            f"tags={len(self._tags)}, "
             f"tag_values={len(self._tag_values)}, "
             f"users={len(self._users)}"
             ")"
