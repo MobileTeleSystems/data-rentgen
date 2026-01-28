@@ -59,14 +59,17 @@ class DbtExtractor(GenericExtractor):
         return result or OutputTypeDTO.APPEND
 
     def _enrich_run_tags(self, run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
-        if event.run.facets.tags:
-            # https://github.com/OpenLineage/OpenLineage/pull/4022
-            for raw_tag in event.run.facets.tags.tags:
-                if ":" in raw_tag.key:
-                    # https://github.com/OpenLineage/OpenLineage/issues/4281
-                    raw_tag.key, raw_tag.value = parse_kv_tag(raw_tag.key)
+        if not event.run.facets.tags:
+            return run
 
-                    if not raw_tag.source:
-                        raw_tag.source = "DBT"
+        for raw_tag in event.run.facets.tags.tags:
+            if raw_tag.value == "true" and ":" in raw_tag.key:
+                # not implemented in OpenLineage yet
+                # https://github.com/OpenLineage/OpenLineage/issues/4281
+
+                raw_tag.key, raw_tag.value, raw_tag.source = parse_kv_tag(
+                    raw_tag.key,
+                    default_source=raw_tag.source or "DBT",
+                )
 
         return super()._enrich_run_tags(run, event)
