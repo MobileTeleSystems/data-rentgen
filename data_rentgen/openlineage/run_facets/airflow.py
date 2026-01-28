@@ -1,10 +1,12 @@
 # SPDX-FileCopyrightText: 2024-present MTS PJSC
 # SPDX-License-Identifier: Apache-2.0
 
+import ast
+from contextlib import suppress
 from datetime import datetime
 from enum import Enum
 
-from pydantic import Field
+from pydantic import Field, field_validator
 
 from data_rentgen.openlineage.base import OpenLineageBase
 from data_rentgen.openlineage.run_facets.base import OpenLineageRunFacet
@@ -17,6 +19,28 @@ class OpenLineageAirflowDagInfo(OpenLineageBase):
 
     dag_id: str = Field(examples=["my_dag"])
     owner: str | None = Field(default=None, examples=["user:myuser"])
+    tags: list[str] = Field(default_factory=list, examples=["tag1", "tag2"])
+
+    @field_validator("tags", mode="before")
+    @classmethod
+    def _validate_tags(cls, value: list[str] | str) -> list[str]:
+        """
+
+        At different moments time tags could be passed in formats:
+        * ``["tag1", "tag2"]`` - as expected by JSON spec
+        * ``"['tag1', 'tag2']"`` - `str(list)` representation
+        * ``'["tag1", "tag2"]'`` - `str(list)` representation if tag contains single quotes
+
+        See:
+        * https://github.com/apache/airflow/pull/40371
+        * https://github.com/apache/airflow/pull/40854
+        * https://github.com/apache/airflow/pull/41786
+        """
+        if isinstance(value, list):
+            return value
+        with suppress(SyntaxError):
+            return ast.literal_eval(value)
+        return []
 
 
 class OpenLineageAirflowDagRunType(Enum):
