@@ -1,0 +1,2 @@
+Now ``GET /v1/tags`` returns only list of tag names (and perform search only by tag names).
+New endpoint ``GET /v1/tag-values`` handles tag values, e.g. getting paginated list of all values of specific tag, or searching by tag value.

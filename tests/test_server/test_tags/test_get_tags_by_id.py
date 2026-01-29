@@ -2,7 +2,6 @@ from http import HTTPStatus
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Tag
 from tests.fixtures.mocks import MockedUser
@@ -40,8 +39,7 @@ async def test_get_tags_by_unknown_id(
 
 async def test_get_tags_by_one_id(
     test_client: AsyncClient,
-    tags: Tag,
-    async_session: AsyncSession,
+    tags: list[Tag],
     mocked_user: MockedUser,
 ):
     tag = tags[0]
@@ -75,7 +73,6 @@ async def test_get_tags_by_one_id(
 async def test_get_tags_by_multiple_ids(
     test_client: AsyncClient,
     tags: list[Tag],
-    async_session: AsyncSession,
     mocked_user: MockedUser,
 ):
     selected_tags = tags[:2]

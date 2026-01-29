@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Job
 from tests.fixtures.mocks import MockedUser
-from tests.test_server.utils.convert_to_json import job_to_json, tag_values_to_json
+from tests.test_server.utils.convert_to_json import job_to_json, tags_with_values_to_json
 from tests.test_server.utils.enrich import enrich_jobs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -44,7 +44,7 @@ async def test_search_jobs_by_address_url(
             {
                 "id": str(job.id),
                 "data": job_to_json(job),
-                "tags": tag_values_to_json(job.tag_values) if job.tag_values else [],
+                "tags": tags_with_values_to_json(job.tag_values) if job.tag_values else [],
             }
             for job in jobs
         ],
@@ -83,7 +83,7 @@ async def test_search_jobs_by_location_name(
             {
                 "id": str(job.id),
                 "data": job_to_json(job),
-                "tags": tag_values_to_json(job.tag_values) if job.tag_values else [],
+                "tags": tags_with_values_to_json(job.tag_values) if job.tag_values else [],
             }
             for job in jobs
         ],
@@ -122,7 +122,7 @@ async def test_search_jobs_by_location_external_id(
             {
                 "id": str(job.id),
                 "data": job_to_json(job),
-                "tags": tag_values_to_json(job.tag_values) if job.tag_values else [],
+                "tags": tags_with_values_to_json(job.tag_values) if job.tag_values else [],
             }
             for job in jobs
         ],
@@ -172,7 +172,7 @@ async def test_search_jobs_by_job_name(
             {
                 "id": str(job.id),
                 "data": job_to_json(job),
-                "tags": tag_values_to_json(job.tag_values) if job.tag_values else [],
+                "tags": tags_with_values_to_json(job.tag_values) if job.tag_values else [],
             }
             for job in jobs
         ],
@@ -218,7 +218,7 @@ async def test_search_jobs_by_location_name_and_address_url(
             {
                 "id": str(job.id),
                 "data": job_to_json(job),
-                "tags": tag_values_to_json(job.tag_values) if job.tag_values else [],
+                "tags": tags_with_values_to_json(job.tag_values) if job.tag_values else [],
             }
             for job in jobs
         ],

@@ -2,7 +2,6 @@ from http import HTTPStatus
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Tag
 from tests.fixtures.mocks import MockedUser
@@ -14,7 +13,6 @@ pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 async def test_get_tags_no_filters(
     test_client: AsyncClient,
     tags: list[Tag],
-    async_session: AsyncSession,
     mocked_user: MockedUser,
 ):
     response = await test_client.get(

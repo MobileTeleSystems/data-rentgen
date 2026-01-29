@@ -2,12 +2,21 @@
 # SPDX-License-Identifier: Apache-2.0
 from __future__ import annotations
 
+from collections.abc import Collection
+
 from sqlalchemy import (
     ARRAY,
+    ColumnElement,
+    CompoundSelect,
     Integer,
+    Select,
+    SQLColumnExpression,
     String,
+    any_,
+    asc,
     bindparam,
     cast,
+    desc,
     func,
     select,
     tuple_,
@@ -15,6 +24,8 @@ from sqlalchemy import (
 
 from data_rentgen.db.models.tag_value import TagValue
 from data_rentgen.db.repositories.base import Repository
+from data_rentgen.db.utils.search import make_tsquery, ts_match, ts_rank
+from data_rentgen.dto.pagination import PaginationDTO
 from data_rentgen.dto.tag import TagValueDTO
 
 fetch_bulk_query = select(TagValue).where(
@@ -33,6 +44,46 @@ get_one_query = select(TagValue).where(TagValue.tag_id == bindparam("tag_id"), T
 
 
 class TagValueRepository(Repository[TagValue]):
+    async def paginate(
+        self,
+        page: int,
+        page_size: int,
+        tag_id: int | None,
+        tag_value_ids: Collection[int],
+        search_query: str | None,
+    ) -> PaginationDTO[TagValue]:
+        query: Select | CompoundSelect
+        order_by: list[ColumnElement | SQLColumnExpression]
+        if search_query:
+            tsquery = make_tsquery(search_query)
+            query = (
+                select(
+                    TagValue.id,
+                    TagValue.tag_id,
+                    TagValue.value,
+                    ts_rank(TagValue.search_vector, tsquery).label("search_rank"),
+                )
+                .where(ts_match(TagValue.search_vector, tsquery))
+                .order_by(desc("search_rank"))
+            )
+            order_by = [desc("search_rank"), asc("value")]
+        else:
+            query = select(TagValue)
+            order_by = [TagValue.value]
+
+        if tag_id is not None:
+            query = query.where(TagValue.tag_id == tag_id)
+
+        if tag_value_ids:
+            query = query.where(TagValue.id == any_(list(tag_value_ids)))  # type: ignore[arg-type]
+
+        return await self._paginate_by_query(
+            query=query,
+            order_by=order_by,
+            page=page,
+            page_size=page_size,
+        )
+
     async def fetch_bulk(self, tag_values_dto: list[TagValueDTO]) -> list[tuple[TagValueDTO, TagValue | None]]:
         if not tag_values_dto:
             return []

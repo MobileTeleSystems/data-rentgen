@@ -2,25 +2,23 @@ from http import HTTPStatus
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from data_rentgen.db.models import Job
+from data_rentgen.db.models import TagValue
 from tests.fixtures.mocks import MockedUser
-from tests.test_server.utils.convert_to_json import job_to_json, tags_with_values_to_json
-from tests.test_server.utils.enrich import enrich_jobs
+from tests.test_server.utils.convert_to_json import tag_value_to_json
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
-async def test_get_jobs_by_unknown_id(
+async def test_get_tag_values_by_unknown_tag_value_id(
     test_client: AsyncClient,
-    new_job: Job,
+    new_tag_value: TagValue,
     mocked_user: MockedUser,
 ):
     response = await test_client.get(
-        "v1/jobs",
+        "v1/tag-values",
         headers={"Authorization": f"Bearer {mocked_user.access_token}"},
-        params={"job_id": new_job.id},
+        params={"tag_value_id": new_tag_value.id},
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
@@ -39,19 +37,16 @@ async def test_get_jobs_by_unknown_id(
     }
 
 
-async def test_get_jobs_by_one_id(
+async def test_get_tag_values_by_one_tag_id(
     test_client: AsyncClient,
-    job: Job,
-    async_session: AsyncSession,
+    tag_values: list[TagValue],
     mocked_user: MockedUser,
 ):
-    jobs = await enrich_jobs([job], async_session)
-    job = jobs[0]
-
+    tag_value = tag_values[0]
     response = await test_client.get(
-        "v1/jobs",
+        "v1/tag-values",
         headers={"Authorization": f"Bearer {mocked_user.access_token}"},
-        params={"job_id": job.id},
+        params={"tag_value_id": tag_value.id},
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
@@ -68,27 +63,23 @@ async def test_get_jobs_by_one_id(
         },
         "items": [
             {
-                "id": str(job.id),
-                "data": job_to_json(job),
-                "tags": tags_with_values_to_json(job.tag_values) if job.tag_values else [],
+                "id": tag_value.id,
+                "data": tag_value_to_json(tag_value),
             },
         ],
     }
 
 
-async def test_get_jobs_by_multiple_ids(
+async def test_get_tag_values_by_multiple_ids(
     test_client: AsyncClient,
-    jobs: list[Job],
-    async_session: AsyncSession,
+    tag_values: list[TagValue],
     mocked_user: MockedUser,
 ):
-    # create more objects than pass to endpoint, to test filtering
-    selected_jobs = await enrich_jobs(jobs[:2], async_session)
-
+    selected_tag_values = tag_values[:2]
     response = await test_client.get(
-        "v1/jobs",
+        "v1/tag-values",
         headers={"Authorization": f"Bearer {mocked_user.access_token}"},
-        params={"job_id": [job.id for job in selected_jobs]},
+        params={"tag_value_id": [tag_value.id for tag_value in selected_tag_values]},
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
@@ -96,7 +87,7 @@ async def test_get_jobs_by_multiple_ids(
         "meta": {
             "page": 1,
             "page_size": 20,
-            "total_count": 2,
+            "total_count": len(selected_tag_values),
             "pages_count": 1,
             "has_next": False,
             "has_previous": False,
@@ -105,10 +96,9 @@ async def test_get_jobs_by_multiple_ids(
         },
         "items": [
             {
-                "id": str(job.id),
-                "data": job_to_json(job),
-                "tags": tags_with_values_to_json(job.tag_values) if job.tag_values else [],
+                "id": tag_value.id,
+                "data": tag_value_to_json(tag_value),
             }
-            for job in sorted(selected_jobs, key=lambda x: x.name)
+            for tag_value in sorted(selected_tag_values, key=lambda tag: tag.value)
         ],
     }

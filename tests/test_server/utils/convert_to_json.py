@@ -178,8 +178,22 @@ def _get_dataset_schema(dataset: Dataset, outputs: list[OutputRow | Output], inp
     return schema_to_json(schema, "EXACT_MATCH")
 
 
-def tag_to_json(tag: Tag, values: list[TagValue] | None = None) -> dict:
-    values = values or tag.tag_values
+def tag_to_json(tag: Tag) -> dict:
+    return {
+        "id": tag.id,
+        "name": tag.name,
+    }
+
+
+def tag_value_to_json(tag_value: TagValue) -> dict:
+    return {
+        "id": tag_value.id,
+        "tag_id": tag_value.tag_id,
+        "value": tag_value.value,
+    }
+
+
+def tag_with_nested_values_to_json(tag: Tag, values: list[TagValue]) -> dict:
     return {
         "id": tag.id,
         "name": tag.name,
@@ -187,11 +201,11 @@ def tag_to_json(tag: Tag, values: list[TagValue] | None = None) -> dict:
     }
 
 
-def tag_values_to_json(tag_values: Collection[TagValue]) -> list[dict]:
+def tags_with_values_to_json(tag_values: Collection[TagValue]) -> list[dict]:
     sorted_tag_values = sorted(tag_values, key=lambda tv: tv.tag.name)
     tags = []
     for tag, group in groupby(sorted_tag_values, key=lambda tv: tv.tag):
-        tags.append(tag_to_json(tag, values=list(group)))
+        tags.append(tag_with_nested_values_to_json(tag, values=list(group)))
     return tags
 
 

@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import Dataset, Location
 from tests.fixtures.mocks import MockedUser
-from tests.test_server.utils.convert_to_json import dataset_to_json, tag_values_to_json
+from tests.test_server.utils.convert_to_json import dataset_to_json, tags_with_values_to_json
 from tests.test_server.utils.enrich import enrich_datasets
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -46,7 +46,7 @@ async def test_get_datasets_by_location_id(
             {
                 "id": str(dataset.id),
                 "data": dataset_to_json(dataset),
-                "tags": tag_values_to_json(dataset.tag_values) if dataset.tag_values else [],
+                "tags": tags_with_values_to_json(dataset.tag_values) if dataset.tag_values else [],
             },
         ],
     }

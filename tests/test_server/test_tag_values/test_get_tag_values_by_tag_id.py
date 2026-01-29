@@ -3,70 +3,69 @@ from http import HTTPStatus
 import pytest
 from httpx import AsyncClient
 
-from data_rentgen.db.models import Tag
+from data_rentgen.db.models import Tag, TagValue
 from tests.fixtures.mocks import MockedUser
-from tests.test_server.utils.convert_to_json import tag_to_json
+from tests.test_server.utils.convert_to_json import tag_value_to_json
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
 
 
-async def test_search_tags(
+async def test_get_tag_values_by_unknown_tag_id(
     test_client: AsyncClient,
-    tags_search: dict[str, Tag],
+    new_tag: Tag,
     mocked_user: MockedUser,
-) -> None:
-    tags = [tags_search["company.product"]]
-
+):
     response = await test_client.get(
-        "/v1/tags",
+        "v1/tag-values",
         headers={"Authorization": f"Bearer {mocked_user.access_token}"},
-        params={"search_query": "product"},
+        params={"tag_id": new_tag.id},
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
+            "page": 1,
+            "page_size": 20,
+            "total_count": 0,
+            "pages_count": 1,
             "has_next": False,
             "has_previous": False,
             "next_page": None,
-            "page": 1,
-            "page_size": 20,
-            "pages_count": 1,
             "previous_page": None,
-            "total_count": 1,
         },
-        "items": [
-            {
-                "id": tag.id,
-                "data": tag_to_json(tag),
-            }
-            for tag in sorted(tags, key=lambda tag: tag.name)
-        ],
+        "items": [],
     }
 
 
-async def test_search_tags_no_results(
+async def test_get_tag_values_by_tag_id(
     test_client: AsyncClient,
-    tags_search: dict[str, Tag],
+    tag_values: list[TagValue],
     mocked_user: MockedUser,
-) -> None:
+):
+    tag_value = tag_values[0]
     response = await test_client.get(
-        "/v1/tags",
+        "v1/tag-values",
         headers={"Authorization": f"Bearer {mocked_user.access_token}"},
-        params={"search_query": "not-found"},
+        params={"tag_id": tag_value.tag_id},
     )
 
     assert response.status_code == HTTPStatus.OK, response.json()
     assert response.json() == {
         "meta": {
+            "page": 1,
+            "page_size": 20,
+            "total_count": len(tag_values),
+            "pages_count": 1,
             "has_next": False,
             "has_previous": False,
             "next_page": None,
-            "page": 1,
-            "page_size": 20,
-            "pages_count": 1,
             "previous_page": None,
-            "total_count": 0,
         },
-        "items": [],
+        "items": [
+            {
+                "id": tag_value.id,
+                "data": tag_value_to_json(tag_value),
+            }
+            for tag_value in sorted(tag_values, key=lambda item: item.value)
+        ],
     }

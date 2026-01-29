@@ -8,6 +8,8 @@ from data_rentgen.server.services.location import LocationService
 from data_rentgen.server.services.operation import OperationService
 from data_rentgen.server.services.personal_token import PersonalTokenService
 from data_rentgen.server.services.run import RunService
+from data_rentgen.server.services.tag import TagService
+from data_rentgen.server.services.tag_value import TagValueService
 
 __all__ = [
     "DatasetService",
@@ -18,5 +20,7 @@ __all__ = [
     "PersonalTokenPolicy",
     "PersonalTokenService",
     "RunService",
+    "TagService",
+    "TagValueService",
     "get_user",
 ]

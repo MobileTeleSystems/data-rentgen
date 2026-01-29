@@ -9,7 +9,7 @@ from fastapi import Depends
 
 from data_rentgen.db.models import Location
 from data_rentgen.dto.pagination import PaginationDTO
-from data_rentgen.server.services.tag import TagData, TagValueData
+from data_rentgen.server.services.tag import TagValueData, TagWithValuesData
 from data_rentgen.services.uow import UnitOfWork
 
 
@@ -25,7 +25,7 @@ class JobData:
 class JobServiceResult:
     id: int
     data: JobData
-    tags: list[TagData]
+    tags: list[TagWithValuesData]
 
 
 class JobServicePaginatedResult(PaginationDTO[JobServiceResult]):
@@ -72,7 +72,7 @@ class JobService:
                         location=job.location,
                     ),
                     tags=[
-                        TagData(
+                        TagWithValuesData(
                             id=tag.id,
                             name=tag.name,
                             values=[

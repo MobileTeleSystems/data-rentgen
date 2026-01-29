@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from data_rentgen.db.models import TagValue
 from tests.fixtures.mocks import MockedUser
-from tests.test_server.utils.convert_to_json import job_to_json, tag_values_to_json
+from tests.test_server.utils.convert_to_json import job_to_json, tags_with_values_to_json
 from tests.test_server.utils.enrich import enrich_jobs
 
 pytestmark = [pytest.mark.server, pytest.mark.asyncio]
@@ -46,7 +46,7 @@ async def test_get_jobs_by_one_id_with_tags(
             {
                 "id": str(job.id),
                 "data": job_to_json(job),
-                "tags": tag_values_to_json(tag_values),
+                "tags": tags_with_values_to_json(tag_values),
             },
         ],
     }
@@ -86,7 +86,7 @@ async def test_get_jobs_by_tag_value_id(
             {
                 "id": str(job.id),
                 "data": job_to_json(job),
-                "tags": tag_values_to_json(job.tag_values) if job.tag_values else [],
+                "tags": tags_with_values_to_json(job.tag_values) if job.tag_values else [],
             },
         ],
     }
@@ -128,7 +128,7 @@ async def test_get_jobs_by_multiple_tag_value_ids(
             {
                 "id": str(wanted_job.id),
                 "data": job_to_json(wanted_job),
-                "tags": tag_values_to_json(wanted_job.tag_values),
+                "tags": tags_with_values_to_json(wanted_job.tag_values),
             },
         ],
     }

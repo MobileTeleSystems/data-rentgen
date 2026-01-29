@@ -13,33 +13,21 @@ from data_rentgen.services.uow import UnitOfWork
 @dataclass
 class TagValueData:
     id: int
+    tag_id: int
     value: str
 
 
 @dataclass
-class TagData:
+class TagValueServiceResult:
     id: int
-    name: str
+    data: TagValueData
 
 
-@dataclass
-class TagWithValuesData:
-    id: int
-    name: str
-    values: list[TagValueData]
-
-
-@dataclass
-class TagServiceResult:
-    id: int
-    data: TagData
-
-
-class TagServicePaginatedResult(PaginationDTO[TagServiceResult]):
+class TagValueServicePaginatedResult(PaginationDTO[TagValueServiceResult]):
     pass
 
 
-class TagService:
+class TagValueService:
     def __init__(self, uow: Annotated[UnitOfWork, Depends()]):
         self._uow = uow
 
@@ -47,28 +35,31 @@ class TagService:
         self,
         page: int,
         page_size: int,
-        tag_ids: Collection[int],
+        tag_id: int | None,
+        tag_value_ids: Collection[int],
         search_query: str | None,
-    ) -> TagServicePaginatedResult:
-        pagination = await self._uow.tag.paginate(
+    ) -> TagValueServicePaginatedResult:
+        pagination = await self._uow.tag_value.paginate(
             page=page,
             page_size=page_size,
-            tag_ids=tag_ids,
+            tag_id=tag_id,
+            tag_value_ids=tag_value_ids,
             search_query=search_query,
         )
 
-        return TagServicePaginatedResult(
+        return TagValueServicePaginatedResult(
             page=pagination.page,
             page_size=pagination.page_size,
             total_count=pagination.total_count,
             items=[
-                TagServiceResult(
-                    id=tag.id,
-                    data=TagData(
-                        id=tag.id,
-                        name=tag.name,
+                TagValueServiceResult(
+                    id=tag_value.id,
+                    data=TagValueData(
+                        id=tag_value.id,
+                        tag_id=tag_value.tag_id,
+                        value=tag_value.value,
                     ),
                 )
-                for tag in pagination.items
+                for tag_value in pagination.items
             ],
         )

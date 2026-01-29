@@ -9,7 +9,7 @@ from fastapi import Depends
 
 from data_rentgen.db.models import Location
 from data_rentgen.dto.pagination import PaginationDTO
-from data_rentgen.server.services.tag import TagData, TagValueData
+from data_rentgen.server.services.tag import TagValueData, TagWithValuesData
 from data_rentgen.services.uow import UnitOfWork
 
 
@@ -24,7 +24,7 @@ class DatasetData:
 class DatasetServiceResult:
     id: int
     data: DatasetData
-    tags: list[TagData]
+    tags: list[TagWithValuesData]
 
 
 class DatasetServicePaginatedResult(PaginationDTO[DatasetServiceResult]):
@@ -68,7 +68,7 @@ class DatasetService:
                         location=dataset.location,
                     ),
                     tags=[
-                        TagData(
+                        TagWithValuesData(
                             id=tag.id,
                             name=tag.name,
                             values=[

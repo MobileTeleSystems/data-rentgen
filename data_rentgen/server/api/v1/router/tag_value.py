@@ -9,29 +9,29 @@ from data_rentgen.server.errors import get_error_responses
 from data_rentgen.server.errors.schemas import InvalidRequestSchema, NotAuthorizedRedirectSchema, NotAuthorizedSchema
 from data_rentgen.server.schemas.v1 import (
     PageResponseV1,
-    TagDetailedResponseV1,
-    TagPaginateQueryV1,
+    TagValueDetailedResponseV1,
+    TagValuePaginateQueryV1,
 )
-from data_rentgen.server.services import get_user
-from data_rentgen.server.services.tag import TagService
+from data_rentgen.server.services import TagValueService, get_user
 
 router = APIRouter(
-    prefix="/tags",
-    tags=["Tags"],
+    prefix="/tag-values",
+    tags=["TagValues"],
     responses=get_error_responses(include={NotAuthorizedSchema, NotAuthorizedRedirectSchema, InvalidRequestSchema}),
 )
 
 
-@router.get("", summary="Paginated list of Tags")
-async def paginate_tags(
-    query_args: Annotated[TagPaginateQueryV1, Query()],
-    tag_service: Annotated[TagService, Depends()],
+@router.get("", summary="Paginated list of TagValues")
+async def paginate_tag_values(
+    query_args: Annotated[TagValuePaginateQueryV1, Query()],
+    tag_value_service: Annotated[TagValueService, Depends()],
     current_user: Annotated[User, Depends(get_user())],
-) -> PageResponseV1[TagDetailedResponseV1]:
-    pagination = await tag_service.paginate(
+) -> PageResponseV1[TagValueDetailedResponseV1]:
+    pagination = await tag_value_service.paginate(
         page=query_args.page,
         page_size=query_args.page_size,
-        tag_ids=query_args.tag_id,
+        tag_id=query_args.tag_id,
+        tag_value_ids=query_args.tag_value_id,
         search_query=query_args.search_query,
     )
-    return PageResponseV1[TagDetailedResponseV1].from_pagination(pagination)
+    return PageResponseV1[TagValueDetailedResponseV1].from_pagination(pagination)

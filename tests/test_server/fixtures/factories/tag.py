@@ -78,6 +78,17 @@ async def new_tag(
     yield item
 
 
+@pytest_asyncio.fixture(params=[{}])
+async def new_tag_value(
+    request: pytest.FixtureRequest,
+    tags: list[Tag],
+) -> AsyncGenerator[TagValue, None]:
+    params = request.param
+    item = tag_value_factory(**params, tag_id=tags[0].id)
+
+    yield item
+
+
 @pytest_asyncio.fixture(params=[(3, {})])
 async def tags(
     request: pytest.FixtureRequest,
@@ -148,6 +159,7 @@ async def tags_search(
         tags = []
         for tag_name, values in tag_data.items():
             tag = await create_tag(async_session, tag_kwargs={"name": tag_name})
+            tag_values = []
             for value in values:
                 item = await create_tag_value(
                     async_session,
@@ -155,6 +167,8 @@ async def tags_search(
                     tag_value_kwargs={"value": value},
                 )
                 item.tag = tag
+                tag_values.append(item)
+            tag.tag_values = tag_values
             tags.append(tag)
         async_session.expunge_all()
 
