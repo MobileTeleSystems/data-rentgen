@@ -144,6 +144,8 @@ class DatasetRepository(Repository[Dataset]):
                 for tag_value_dto in new.tag_values
             ],
         )
+        # unlike job tags, OL integrations may provide only part of dataset tags.
+        # so we only insert them, but never delete old ones
         return existing
 
     async def paginate(
