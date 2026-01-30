@@ -182,7 +182,7 @@ def generate_spark_run_yarn(
         type=JobTypeDTO(type="SPARK_APPLICATION"),
         tag_values={
             TagValueDTO(
-                tag=TagDTO(name="hive.version"),
+                tag=TagDTO(name="spark.version"),
                 value="3.5.7",
             ),
             TagValueDTO(
