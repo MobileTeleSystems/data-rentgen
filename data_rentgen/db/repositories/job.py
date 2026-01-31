@@ -15,6 +15,7 @@ from sqlalchemy import (
     asc,
     bindparam,
     cast,
+    delete,
     desc,
     distinct,
     func,
@@ -82,6 +83,10 @@ insert_tag_value_query = (
         }
     )
     .on_conflict_do_nothing(index_elements=["job_id", "tag_value_id"])
+)
+delete_tag_value_query = delete(JobTagValue).where(
+    JobTagValue.c.job_id == bindparam("job_id"),
+    ~(JobTagValue.c.tag_value_id == any_(bindparam("tag_value_ids"))),
 )
 
 
@@ -232,7 +237,8 @@ class JobRepository(Repository[Job]):
             )
 
         if not new.tag_values:
-            # in cases when jobs have no tag values we can avoid INSERT statements
+            # in case when jobs have no tag values we can avoid INSERT statements.
+            # also parent jobs may have no tag values, so we skip updating them.
             return existing
 
         # Lock to prevent inserting the same rows from multiple workers
@@ -246,6 +252,14 @@ class JobRepository(Repository[Job]):
                 }
                 for tag_value_dto in new.tag_values
             ],
+        )
+
+        # To avoid accumulating too many tag values,
+        # e.g. upgrading version of Airflow/Spark/OL/etc will keep both old and new version tags,
+        # we keep only tags for the most recent job run.
+        await self._session.execute(
+            delete_tag_value_query,
+            {"job_id": existing.id, "tag_value_ids": [tag_value_dto.id for tag_value_dto in new.tag_values]},
         )
         return existing
 
