@@ -33,16 +33,16 @@ dependencies = [
   "pydantic~=2.12.5",
   "pydantic-settings~=2.12.0",
   "typing-extensions~=4.15.0",
-  "alembic>=1.17.2,<1.19.0",
+  "alembic~=1.18.3",
   "sqlalchemy~=2.0.44",
   "sqlalchemy-utils~=0.42.0",
-  "greenlet>=3.2.4,<3.4.0",
+  "greenlet~=3.3.1",
   "pyyaml~=6.0.3",
   "python-json-logger~=4.0.0",
   "coloredlogs~=15.0.1",
   "uuid6~=2025.0.0",
   "python-dateutil~=2.9.0.post0",
-  "packaging>=25,<27",
+  "packaging~=26.0",
   "cachetools~=6.2.2",
 ]
 dynamic = ["version"]
@@ -64,27 +64,25 @@ exclude = ["docs", "tests"]
 
 [project.optional-dependencies]
 server = [
-  "fastapi>=0.123.10,<0.129.0",
-  "starlette~=0.50.0",
-  "uvicorn>=0.38,<0.41",
+  "fastapi~=0.128.0",
+  "uvicorn~=0.40.0",
   "starlette-exporter~=0.23.0",
   "asgi-correlation-id~=4.3.4",
-  "pyjwt~=2.10.1 ",
+  "pyjwt~=2.11.0",
   "itsdangerous~=2.2.0",
   "python-multipart~=0.0.20",
-  "python-keycloak>=5.8.1,<7.1.0",
+  "python-keycloak~=7.0.3",
 ]
 consumer = [
   "faststream[kafka,cli]~=0.6.3",
   "cramjam~=2.11.0",
 ]
 http2kafka = [
-  "fastapi>=0.123.10,<0.129.0",
-  "starlette~=0.50.0",
-  "uvicorn>=0.38,<0.41",
+  "fastapi~=0.128.0",
+  "uvicorn~=0.40.0",
   "starlette-exporter~=0.23.0",
   "asgi-correlation-id~=4.3.4",
-  "faststream[kafka,cli]~=0.6.3",
+  "faststream[kafka,cli]~=0.6.5",
   "cramjam~=2.11.0",
 ]
 postgres = [
@@ -94,7 +92,7 @@ gssapi = [
   "gssapi~=1.10.0",
 ]
 seed = [
-  "faker>=38.2,<40.2"
+  "faker~=40.1.2"
 ]
 
 [dependency-groups]
@@ -103,17 +101,18 @@ test = [
   "httpx~=0.28.1",
   "pytest-asyncio~=1.3.0",
   "pytest-randomly~=4.0.0",
-  "pytest-deadfixtures>=3.0,<3.2",
+  "pytest-deadfixtures~=3.1.0",
   "pytest-rerunfailures~=16.1",
-  "coverage>=7.12,<7.14",
+  "coverage~=7.13.2",
   "psycopg2-binary~=2.9.11",
   "deepdiff~=8.6.1",
   "respx~=0.22.0",
-  "dirty_equals>=0.9,<0.12",
+  "dirty_equals~=0.11",
   "gevent~=25.9.1",
 ]
 dev = [
-  "prek>=0.2.25,<0.4.0",
+  "prek~=0.3.0",
+  "ruff~=0.14.14",
   "mypy~=1.19.0",
   "sqlalchemy[mypy]~=2.0.44",
   "types-pyyaml~=6.0.12",
@@ -122,19 +121,19 @@ dev = [
   "types-cachetools~=6.2.0",
 ]
 docs = [
-  "setuptools-git-versioning>=2.1,<3.1",
+  "setuptools-git-versioning~=3.0.1",
   "autodoc-pydantic~=2.2.0",
-  "numpydoc>=1.9,<1.11",
+  "numpydoc~=1.10.0",
   # sphinx-design doesn't support sphinx 9
-  "sphinx>=8.2.3,<9.2.0",
-  "furo>=2025.9.25,<2025.13.0",
+  "sphinx~=9.1.0",
+  "furo~=2025.12.19",
   "sphinx-copybutton~=0.5.2",
   "sphinxcontrib-towncrier~=0.5.0a0",
   "towncrier~=25.8.0",
   "sphinx-issues~=5.0.1",
-  "sphinx-design>=0.6.1,<0.8.0",
+  "sphinx-design~=0.7.0",
   "sphinx-favicon~=1.0.1",
-  "sphinx-last-updated-by-git~= 0.3.8",
+  "sphinx-last-updated-by-git~=0.3.8",
   # uncomment after https://github.com/zqmillet/sphinx-plantuml/pull/4
   # "sphinx-plantuml~=1.0.0",
   "sphinx-argparse~=0.5.2",
