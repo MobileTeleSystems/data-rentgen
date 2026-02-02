@@ -124,8 +124,8 @@ async def test_runs_handler_airflow(
     assert dag_run.persistent_log_url == (
         "http://airflow-host:8081/dags/mydag/grid?dag_run_id=manual__2024-07-05T09%3A04%3A12.162809%2B00%3A00"
     )
-    assert dag_run.nominal_start_time == datetime(2024, 7, 5, 9, 4, 12, 162809, tzinfo=timezone.utc)
-    assert dag_run.nominal_end_time is None
+    assert dag_run.expected_start_time == datetime(2024, 7, 5, 9, 4, 12, 162809, tzinfo=timezone.utc)
+    assert dag_run.expected_end_time is None
 
     task_run = runs[1]
     assert task_run.id == UUID("01908223-0782-7fc0-9d69-b1df9dac2c60")
@@ -145,8 +145,8 @@ async def test_runs_handler_airflow(
         "http://airflow-host:8081/dags/mydag/grid?tab=logs&dag_run_id=manual__2024-07-05T09%3A04%3A12.162809%2B00%3A00&task_id=mytask&map_index=-1"
     )
     assert task_run.running_log_url is None
-    assert task_run.nominal_start_time == datetime(2024, 7, 5, 9, 4, 12, 162809, tzinfo=timezone.utc)
-    assert task_run.nominal_end_time is None
+    assert task_run.expected_start_time == datetime(2024, 7, 5, 9, 4, 12, 162809, tzinfo=timezone.utc)
+    assert task_run.expected_end_time is None
 
     sql_query = select(SQLQuery).order_by(SQLQuery.id)
     sql_query_scalars = await async_session.scalars(sql_query)

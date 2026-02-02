@@ -61,8 +61,8 @@ insert_statement = insert(Run).values(
     started_by_user_id=bindparam("started_by_user_id"),
     start_reason=bindparam("start_reason"),
     ended_at=bindparam("ended_at"),
-    expected_start_time=bindparam("nominal_start_time"),
-    expected_end_time=bindparam("nominal_end_time"),
+    expected_start_time=bindparam("expected_start_time"),
+    expected_end_time=bindparam("expected_end_time"),
 )
 inserted_row = insert_statement.excluded
 insert_statement = insert_statement.on_conflict_do_update(
@@ -79,8 +79,8 @@ insert_statement = insert_statement.on_conflict_do_update(
         "attempt": func.coalesce(inserted_row.attempt, Run.attempt),
         "persistent_log_url": func.coalesce(inserted_row.persistent_log_url, Run.persistent_log_url),
         "running_log_url": func.coalesce(inserted_row.running_log_url, Run.running_log_url),
-        "expected_start_time": func.coalesce(inserted_row.nominal_start_time, Run.expected_start_time),
-        "expected_end_time": func.coalesce(inserted_row.nominal_end_time, Run.expected_end_time),
+        "expected_start_time": func.coalesce(inserted_row.expected_start_time, Run.expected_start_time),
+        "expected_end_time": func.coalesce(inserted_row.expected_end_time, Run.expected_end_time),
     },
 )
 
