@@ -61,6 +61,8 @@ insert_statement = insert(Run).values(
     started_by_user_id=bindparam("started_by_user_id"),
     start_reason=bindparam("start_reason"),
     ended_at=bindparam("ended_at"),
+    nominal_start_time=bindparam("nominal_start_time"),
+    nominal_end_time=bindparam("nominal_end_time"),
 )
 inserted_row = insert_statement.excluded
 insert_statement = insert_statement.on_conflict_do_update(
@@ -77,6 +79,8 @@ insert_statement = insert_statement.on_conflict_do_update(
         "attempt": func.coalesce(inserted_row.attempt, Run.attempt),
         "persistent_log_url": func.coalesce(inserted_row.persistent_log_url, Run.persistent_log_url),
         "running_log_url": func.coalesce(inserted_row.running_log_url, Run.running_log_url),
+        "nominal_start_time": func.coalesce(inserted_row.nominal_start_time, Run.nominal_start_time),
+        "nominal_end_time": func.coalesce(inserted_row.nominal_end_time, Run.nominal_end_time),
     },
 )
 
@@ -271,6 +275,8 @@ class RunRepository(Repository[Run]):
             attempt=run.attempt,
             persistent_log_url=run.persistent_log_url,
             running_log_url=run.running_log_url,
+            nominal_start_time=run.nominal_start_time,
+            nominal_end_time=run.nominal_end_time,
         )
         self._session.add(result)
         await self._session.flush([result])
@@ -298,6 +304,8 @@ class RunRepository(Repository[Run]):
             "attempt": new.attempt,
             "persistent_log_url": new.persistent_log_url,
             "running_log_url": new.running_log_url,
+            "nominal_start_time": new.nominal_start_time,
+            "nominal_end_time": new.nominal_end_time,
         }
         for col_name, value in optional_fields.items():
             if value is not None:
@@ -327,6 +335,8 @@ class RunRepository(Repository[Run]):
                     "attempt": run.attempt,
                     "persistent_log_url": run.persistent_log_url,
                     "running_log_url": run.running_log_url,
+                    "nominal_start_time": run.nominal_start_time,
+                    "nominal_end_time": run.nominal_end_time,
                 }
                 for run in runs
             ],

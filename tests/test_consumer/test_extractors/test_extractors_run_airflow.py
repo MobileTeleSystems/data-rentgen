@@ -39,6 +39,7 @@ from data_rentgen.openlineage.run_facets import (
     OpenLineageAirflowTaskInfo,
     OpenLineageAirflowTaskInstanceInfo,
     OpenLineageAirflowTaskRunFacet,
+    OpenLineageNominalTimeRunFacet,
     OpenLineageProcessingEngineRunFacet,
     OpenLineageRunFacets,
 )
@@ -1369,4 +1370,118 @@ def test_extractors_extract_run_airflow_task_tags_below_2_10(tags: list[str] | s
             "http://airflow-host:8081/dags/mydag/grid?tab=logs&dag_run_id=scheduled__2024-07-05T09%3A04%3A13%3A979349%2B00%3A00&task_id=mytask&map_index=-1"
         ),
         running_log_url=None,
+    )
+
+
+@pytest.mark.parametrize(
+    ["start_time", "end_time", "expected_start_time", "expected_end_time"],
+    [
+        (
+            datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
+            None,
+            datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
+            None,
+        ),
+        (
+            datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
+            datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
+            datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
+            None,
+        ),
+        (
+            datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
+            datetime(2024, 7, 5, 9, 4, 31, 979349, tzinfo=timezone.utc),
+            datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
+            datetime(2024, 7, 5, 9, 4, 31, 979349, tzinfo=timezone.utc),
+        ),
+    ],
+)
+def test_extractors_extract_run_airflow_task_nominal_times(
+    start_time: datetime | None,
+    end_time: datetime | None,
+    expected_start_time: datetime | None,
+    expected_end_time: datetime | None,
+):
+    now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
+    run_id = UUID("01908223-0782-79b8-9495-b1c38aaee839")
+    run = OpenLineageRunEvent(
+        eventType=OpenLineageRunEventType.COMPLETE,
+        eventTime=now,
+        job=OpenLineageJob(
+            namespace="http://airflow-host:8081",
+            name="mydag.mytask",
+            facets=OpenLineageJobFacets(
+                jobType=OpenLineageJobTypeJobFacet(
+                    processingType=OpenLineageJobProcessingType.BATCH,
+                    integration="AIRFLOW",
+                    jobType="TASK",
+                ),
+            ),
+        ),
+        run=OpenLineageRun(
+            runId=run_id,
+            facets=OpenLineageRunFacets(
+                processing_engine=OpenLineageProcessingEngineRunFacet(
+                    version=Version("2.9.2"),
+                    name="Airflow",
+                    openlineageAdapterVersion=Version("2.3.0"),
+                ),
+                airflow=OpenLineageAirflowTaskRunFacet(
+                    dag=OpenLineageAirflowDagInfo(dag_id="mydag", owner="airflow"),
+                    dagRun=OpenLineageAirflowDagRunInfo(
+                        run_id="scheduled__2024-07-05T09:04:13:979349+00:00",
+                        run_type=OpenLineageAirflowDagRunType.SCHEDULED,
+                        data_interval_start=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
+                        data_interval_end=datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
+                    ),
+                    task=OpenLineageAirflowTaskInfo(
+                        task_id="mytask",
+                        operator_class="BashOperator",
+                    ),
+                    taskInstance=OpenLineageAirflowTaskInstanceInfo(
+                        try_number=1,
+                    ),
+                ),
+                nominalTime=OpenLineageNominalTimeRunFacet(
+                    nominalStartTime=start_time,
+                    nominalEndTime=end_time,
+                ),
+            ),
+        ),
+    )
+
+    assert AirflowTaskExtractor().extract_run(run) == RunDTO(
+        id=run_id,
+        job=JobDTO(
+            name="mydag.mytask",
+            location=LocationDTO(
+                type="http",
+                name="airflow-host:8081",
+                addresses={"http://airflow-host:8081"},
+            ),
+            type=JobTypeDTO(type="AIRFLOW_TASK"),
+            tag_values={
+                TagValueDTO(
+                    tag=TagDTO(name="airflow.version"),
+                    value="2.9.2",
+                ),
+                TagValueDTO(
+                    tag=TagDTO(name="openlineage_adapter.version"),
+                    value="2.3.0",
+                ),
+            },
+        ),
+        status=RunStatusDTO.SUCCEEDED,
+        started_at=None,
+        start_reason=RunStartReasonDTO.AUTOMATIC,
+        user=None,
+        ended_at=now,
+        external_id="scheduled__2024-07-05T09:04:13:979349+00:00",
+        attempt="1",
+        persistent_log_url=(
+            "http://airflow-host:8081/dags/mydag/grid?tab=logs&dag_run_id=scheduled__2024-07-05T09%3A04%3A13%3A979349%2B00%3A00&task_id=mytask&map_index=-1"
+        ),
+        running_log_url=None,
+        nominal_start_time=expected_start_time,
+        nominal_end_time=expected_end_time,
     )

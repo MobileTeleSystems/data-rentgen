@@ -21,6 +21,7 @@ from data_rentgen.openlineage.run_facets.flink_job import (
 )
 from data_rentgen.openlineage.run_facets.hive_query import OpenLineageHiveQueryInfoRunFacet
 from data_rentgen.openlineage.run_facets.hive_session import OpenLineageHiveSessionInfoRunFacet
+from data_rentgen.openlineage.run_facets.nominal_time import OpenLineageNominalTimeRunFacet
 from data_rentgen.openlineage.run_facets.parent_run import (
     OpenLineageParentJob,
     OpenLineageParentRun,
@@ -51,6 +52,7 @@ __all__ = [
     "OpenLineageAirflowTaskRunFacet",
     "OpenLineageDbtRunRunFacet",
     "OpenLineageFlinkJobDetailsRunFacet",
+    "OpenLineageNominalTimeRunFacet",
     "OpenLineageParentJob",
     "OpenLineageParentRun",
     "OpenLineageParentRunFacet",
@@ -83,3 +85,4 @@ class OpenLineageRunFacets(OpenLineageBase):
     flink_job: OpenLineageFlinkJobDetailsRunFacet | None = None
     hive_query: OpenLineageHiveQueryInfoRunFacet | None = None
     hive_session: OpenLineageHiveSessionInfoRunFacet | None = None
+    nominalTime: OpenLineageNominalTimeRunFacet | None = None

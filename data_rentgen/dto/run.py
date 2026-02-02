@@ -44,6 +44,8 @@ class RunDTO:
     attempt: str | None = None
     running_log_url: str | None = None
     persistent_log_url: str | None = None
+    nominal_start_time: datetime | None = None
+    nominal_end_time: datetime | None = None
 
     def __post_init__(self):
         self.created_at = extract_timestamp_from_uuid(self.id)
@@ -72,4 +74,6 @@ class RunDTO:
         self.attempt = new.attempt or self.attempt
         self.running_log_url = new.running_log_url or self.running_log_url
         self.persistent_log_url = new.persistent_log_url or self.persistent_log_url
+        self.nominal_start_time = new.nominal_start_time or self.nominal_start_time
+        self.nominal_end_time = new.nominal_end_time or self.nominal_end_time
         return self
