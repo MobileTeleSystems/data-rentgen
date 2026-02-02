@@ -46,6 +46,7 @@ class RunExtractorMixin(ABC):
         self._add_openlineage_adapter_version_tag(run, event)
         self._add_openlineage_client_version_tag(run, event)
         self._enrich_run_tags(run, event)
+        self._enrich_nominal_times(run, event)
         return run
 
     def extract_parent_run(self, facet: OpenLineageParentRunFacet | OpenLineageRunEvent) -> RunDTO:
@@ -133,4 +134,15 @@ class RunExtractorMixin(ABC):
                 value=raw_tag.value,
             )
             run.job.tag_values.add(tag_value)
+        return run
+
+    def _enrich_nominal_times(self, run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
+        if not event.run.facets.nominalTime:
+            return run
+
+        run.nominal_start_time = event.run.facets.nominalTime.nominalStartTime
+        run.nominal_end_time = event.run.facets.nominalTime.nominalEndTime
+        if run.nominal_start_time == run.nominal_end_time:
+            run.nominal_end_time = None
+
         return run

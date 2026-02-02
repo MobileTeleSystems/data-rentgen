@@ -152,6 +152,19 @@ class Run(Base):
         nullable=True,
         doc="End reason of the run, e.g. exception string",
     )
+    expected_start_time: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        doc="Timestamp representing the nominal start time (included) of the run. AKA the schedule time",
+    )
+    expected_end_time: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        doc=(
+            "Timestamp representing the nominal end time (excluded) of the run."
+            "Represents the scheduled/expected time, not the actual end time."
+        ),
+    )
 
     search_vector: Mapped[str] = mapped_column(
         TSVECTOR,
