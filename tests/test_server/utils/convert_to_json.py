@@ -256,6 +256,8 @@ def run_to_json(run: Run):
         "start_reason": run.start_reason.value if run.start_reason else None,
         "ended_at": format_datetime(run.ended_at) if run.ended_at else None,
         "end_reason": run.end_reason,
+        "expected_start_time": format_datetime(run.expected_start_time) if run.expected_start_time else None,
+        "expected_end_time": format_datetime(run.expected_end_time) if run.expected_end_time else None,
     }
 
 
