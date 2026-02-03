@@ -183,7 +183,7 @@ DAG run details page
 .. image:: ./dag_run_details.png
 
 Task job details page
-~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~
 
 .. image:: ./task_job_details.png
 
