@@ -152,12 +152,12 @@ class Run(Base):
         nullable=True,
         doc="End reason of the run, e.g. exception string",
     )
-    expected_start_time: Mapped[datetime] = mapped_column(
+    expected_start_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
         doc="Timestamp representing the nominal start time (included) of the run. AKA the schedule time",
     )
-    expected_end_time: Mapped[datetime] = mapped_column(
+    expected_end_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
         doc=(

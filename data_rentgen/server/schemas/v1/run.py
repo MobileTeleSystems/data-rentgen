@@ -81,8 +81,8 @@ class RunResponseV1(BaseModel):
     start_reason: str | None = Field(description="Start reason of the Run", default=None)
     ended_at: datetime | None = Field(description="End time of the Run", default=None)
     end_reason: str | None = Field(description="End reason of the Run", default=None)
-    expected_start_time: datetime | None = Field(description="Run expected start time", default=None)
-    expected_end_time: datetime | None = Field(description="Run expected end time", default=None)
+    expected_start_at: datetime | None = Field(description="Run expected start time", default=None)
+    expected_end_at: datetime | None = Field(description="Run expected end time", default=None)
 
     model_config = ConfigDict(from_attributes=True)
 

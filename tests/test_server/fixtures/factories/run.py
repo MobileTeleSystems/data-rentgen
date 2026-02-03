@@ -41,7 +41,7 @@ def run_factory(**kwargs):
         "start_reason": choice(list(RunStartReason)),
         "ended_at": random_datetime(),
         "end_reason": random_string(8),
-        "expected_start_time": random_datetime(),
+        "expected_start_at": random_datetime(),
     }
     data.update(kwargs)
     return Run(**data)
