@@ -43,7 +43,7 @@ dependencies = [
   "uuid6~=2025.0.0",
   "python-dateutil~=2.9.0.post0",
   "packaging~=26.0",
-  "cachetools~=6.2.2",
+  "cachetools>=6.2.2,<7.1.0",
 ]
 dynamic = ["version"]
 
@@ -89,7 +89,7 @@ postgres = [
   "asyncpg~=0.31.0",
 ]
 gssapi = [
-  "gssapi~=1.10.0",
+  "gssapi>=1.10,<1.12",
 ]
 seed = [
   "faker~=40.1.2"
@@ -125,7 +125,7 @@ docs = [
   "autodoc-pydantic~=2.2.0",
   "numpydoc~=1.10.0",
   # sphinx-design doesn't support sphinx 9
-  "sphinx~=8.2.3",
+  "sphinx>=8.2.3,<9.2.0",
   "furo~=2025.12.19",
   "sphinx-copybutton~=0.5.2",
   "sphinxcontrib-towncrier~=0.5.0a0",
