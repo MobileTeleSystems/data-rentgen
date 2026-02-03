@@ -69,8 +69,8 @@ Database structure
         start_reason: varchar(32)
         ended_at: timestamptz null
         end_reason: text null
-        expected_start_time: timestamptz null
-        expected_end_time: timestamptz null
+        expected_start_at: timestamptz null
+        expected_end_at: timestamptz null
         external_id: text null
         attempt: varchar(64) null
         persistent_log_url: timestamptz null

@@ -59,8 +59,8 @@ def generate_airflow_run(dag_id: str, task_id: str, created_at: datetime, ended_
         persistent_log_url=dag_ui,
         status=RunStatusDTO.SUCCEEDED,
         start_reason=RunStartReasonDTO.AUTOMATIC,
-        nominal_start_time=created_at.replace(minute=(created_at.minute // 5) * 5, second=0, microsecond=0),
-        nominal_end_time=ended_at.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1),
+        expected_start_at=created_at.replace(minute=(created_at.minute // 5) * 5, second=0, microsecond=0),
+        expected_end_at=ended_at.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1),
     )
 
     task_job = JobDTO(

@@ -140,9 +140,9 @@ class RunExtractorMixin(ABC):
         if not event.run.facets.nominalTime:
             return run
 
-        run.nominal_start_time = event.run.facets.nominalTime.nominalStartTime
-        run.nominal_end_time = event.run.facets.nominalTime.nominalEndTime
-        if run.nominal_start_time == run.nominal_end_time:
-            run.nominal_end_time = None
+        run.expected_start_at = event.run.facets.nominalTime.nominalStartTime
+        run.expected_end_at = event.run.facets.nominalTime.nominalEndTime
+        if run.expected_start_at == run.expected_end_at:
+            run.expected_end_at = None
 
         return run

@@ -223,8 +223,8 @@ It contains following fields:
 - ``started_at: timestamp | None`` - timestamp when OpenLineage event with ``eventType=START`` was received.
 - ``started_by user: User | None`` - Spark session started as specific OS user/Kerberos principal.
 - ``start_reason: Enum | None`` - "why this Run was started?":
-- ``expected_start_time: timestamp | None`` - scheduled/expected start time of the run, which may differ from ``started_at`` (actual start time).
-- ``expected_end_time: timestamp | None`` - scheduled/expected end time of the run, which may differ from ``ended_at`` (actual end time).
+- ``expected_start_at: timestamp | None`` - scheduled/expected start time of the run, which may differ from ``started_at`` (actual start time).
+- ``expected_end_at: timestamp | None`` - scheduled/expected end time of the run, which may differ from ``ended_at`` (actual end time).
 
   - ``MANUAL``
   - ``AUTOMATIC`` - e.g. by schedule or triggered by another run.

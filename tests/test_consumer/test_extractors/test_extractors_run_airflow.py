@@ -1374,7 +1374,7 @@ def test_extractors_extract_run_airflow_task_tags_below_2_10(tags: list[str] | s
 
 
 @pytest.mark.parametrize(
-    ["start_time", "end_time", "expected_start_time", "expected_end_time"],
+    ["start_time", "end_time", "expected_start_at", "expected_end_at"],
     [
         (
             datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc),
@@ -1399,8 +1399,8 @@ def test_extractors_extract_run_airflow_task_tags_below_2_10(tags: list[str] | s
 def test_extractors_extract_run_airflow_task_nominal_times(
     start_time: datetime | None,
     end_time: datetime | None,
-    expected_start_time: datetime | None,
-    expected_end_time: datetime | None,
+    expected_start_at: datetime | None,
+    expected_end_at: datetime | None,
 ):
     now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
     run_id = UUID("01908223-0782-79b8-9495-b1c38aaee839")
@@ -1482,6 +1482,6 @@ def test_extractors_extract_run_airflow_task_nominal_times(
             "http://airflow-host:8081/dags/mydag/grid?tab=logs&dag_run_id=scheduled__2024-07-05T09%3A04%3A13%3A979349%2B00%3A00&task_id=mytask&map_index=-1"
         ),
         running_log_url=None,
-        nominal_start_time=expected_start_time,
-        nominal_end_time=expected_end_time,
+        expected_start_at=expected_start_at,
+        expected_end_at=expected_end_at,
     )
