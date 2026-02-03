@@ -86,15 +86,19 @@ def generate_airflow_run(dag_id: str, task_id: str, created_at: datetime, ended_
             ),
         },
     )
+    task_created_at = created_at + timedelta(seconds=1)
+    task_ended_at = ended_at - timedelta(seconds=1)
     return RunDTO(
-        id=generate_new_uuid(created_at),
+        id=generate_new_uuid(task_created_at),
         job=task_job,
         parent_run=dag_run,
-        started_at=created_at + timedelta(seconds=1),
-        ended_at=ended_at - timedelta(seconds=1),
+        started_at=task_created_at,
+        ended_at=task_ended_at,
         external_id=dag_run_id,
         attempt="1",
         persistent_log_url=dag_ui + f"/tasks/{task_job.name}?try_number=1",
         status=RunStatusDTO.SUCCEEDED,
         start_reason=RunStartReasonDTO.AUTOMATIC,
+        expected_start_at=dag_run.expected_start_at,
+        expected_end_at=dag_run.expected_end_at,
     )
