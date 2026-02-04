@@ -90,7 +90,7 @@ postgres = [
   "asyncpg~=0.31.0",
 ]
 gssapi = [
-  "gssapi~=1.11.0",
+  "gssapi~=1.11.1",
 ]
 seed = [
   "faker~=40.1.2"
@@ -113,7 +113,7 @@ test = [
 ]
 dev = [
   "prek~=0.3.0",
-  "ruff~=0.14.14",
+  "ruff~=0.15.0",
   "mypy~=1.19.0",
   "sqlalchemy[mypy]~=2.0.44",
   "types-pyyaml~=6.0.12",
