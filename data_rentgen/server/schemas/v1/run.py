@@ -218,7 +218,7 @@ class RunsPaginateQueryV1(PaginateQueryV1):
     @classmethod
     def _check_until(cls, value: datetime | None, info: ValidationInfo) -> datetime | None:
         since = info.data.get("since")
-        if since and value and since >= value:
+        if since and value and since.timestamp() >= value.timestamp():
             msg = "'since' should be less than 'until'"
             raise ValueError(msg)
         return value
