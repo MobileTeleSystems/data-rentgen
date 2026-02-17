@@ -70,7 +70,7 @@ class Job(Base):
         primaryjoin=(
             "and_(Job.id == foreign(Run.job_id), "
             "Run.id == select(Run.id).where(Run.job_id == Job.id)"
-            ".order_by(Run.started_at.desc(), Run.created_at.desc())"
+            ".order_by(Run.created_at.desc(), Run.id.desc())"
             ".limit(1).correlate_except(Run).scalar_subquery())"
         ),
         lazy="noload",

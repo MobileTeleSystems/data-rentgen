@@ -54,7 +54,7 @@ async def test_get_jobs_with_last_run(
     async_session: AsyncSession,
     mocked_user: MockedUser,
 ):
-    last_run = max(runs_with_same_job, key=lambda x: x.started_at)
+    last_run = max(runs_with_same_job, key=lambda x: x.created_at)
     [last_run] = await enrich_runs([last_run], async_session)
     [job] = await enrich_jobs([last_run.job], async_session)
     response = await test_client.get(
