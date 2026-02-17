@@ -7,7 +7,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from data_rentgen.db.models import Location
+from data_rentgen.db.models import Location, Run
 from data_rentgen.dto.pagination import PaginationDTO
 from data_rentgen.server.services.tag import TagData, TagValueData
 from data_rentgen.services.uow import UnitOfWork
@@ -26,6 +26,7 @@ class JobServiceResult:
     id: int
     data: JobData
     tags: list[TagData]
+    last_run: Run | None
 
 
 class JobServicePaginatedResult(PaginationDTO[JobServiceResult]):
@@ -71,6 +72,7 @@ class JobService:
                         type=job.type,
                         location=job.location,
                     ),
+                    last_run=job.last_run,
                     tags=[
                         TagData(
                             id=tag.id,

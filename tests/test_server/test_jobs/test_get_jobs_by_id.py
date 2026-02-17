@@ -71,6 +71,7 @@ async def test_get_jobs_by_one_id(
                 "id": str(job.id),
                 "data": job_to_json(job),
                 "tags": tag_values_to_json(job.tag_values) if job.tag_values else [],
+                "last_run": None,
             },
         ],
     }
@@ -108,6 +109,7 @@ async def test_get_jobs_by_multiple_ids(
                 "id": str(job.id),
                 "data": job_to_json(job),
                 "tags": tag_values_to_json(job.tag_values) if job.tag_values else [],
+                "last_run": None,
             }
             for job in sorted(selected_jobs, key=lambda x: x.name)
         ],

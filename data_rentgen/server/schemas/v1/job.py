@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from data_rentgen.server.schemas.v1.location import LocationResponseV1
 from data_rentgen.server.schemas.v1.pagination import PaginateQueryV1
+from data_rentgen.server.schemas.v1.run import RunResponseV1
 from data_rentgen.server.schemas.v1.tag import TagResponseV1
 
 
@@ -24,6 +25,7 @@ class JobDetailedResponseV1(BaseModel):
     id: str = Field(description="Job id", coerce_numbers_to_str=True)
     data: JobResponseV1 = Field(description="Job data")
     tags: list[TagResponseV1] = Field(default_factory=list, description="Job tags")
+    last_run: RunResponseV1 | None = Field(description="Last run of the job", default=None)
 
     model_config = ConfigDict(from_attributes=True)
 
