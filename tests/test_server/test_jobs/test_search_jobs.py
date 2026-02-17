@@ -45,6 +45,7 @@ async def test_search_jobs_by_address_url(
                 "id": str(job.id),
                 "data": job_to_json(job),
                 "tags": tag_values_to_json(job.tag_values) if job.tag_values else [],
+                "last_run": None,
             }
             for job in jobs
         ],
@@ -84,6 +85,7 @@ async def test_search_jobs_by_location_name(
                 "id": str(job.id),
                 "data": job_to_json(job),
                 "tags": tag_values_to_json(job.tag_values) if job.tag_values else [],
+                "last_run": None,
             }
             for job in jobs
         ],
@@ -123,6 +125,7 @@ async def test_search_jobs_by_location_external_id(
                 "id": str(job.id),
                 "data": job_to_json(job),
                 "tags": tag_values_to_json(job.tag_values) if job.tag_values else [],
+                "last_run": None,
             }
             for job in jobs
         ],
@@ -173,6 +176,7 @@ async def test_search_jobs_by_job_name(
                 "id": str(job.id),
                 "data": job_to_json(job),
                 "tags": tag_values_to_json(job.tag_values) if job.tag_values else [],
+                "last_run": None,
             }
             for job in jobs
         ],
@@ -219,6 +223,7 @@ async def test_search_jobs_by_location_name_and_address_url(
                 "id": str(job.id),
                 "data": job_to_json(job),
                 "tags": tag_values_to_json(job.tag_values) if job.tag_values else [],
+                "last_run": None,
             }
             for job in jobs
         ],

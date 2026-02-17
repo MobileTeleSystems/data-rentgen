@@ -47,6 +47,7 @@ async def test_get_jobs_by_one_id_with_tags(
                 "id": str(job.id),
                 "data": job_to_json(job),
                 "tags": tag_values_to_json(tag_values),
+                "last_run": None,
             },
         ],
     }
@@ -87,6 +88,7 @@ async def test_get_jobs_by_tag_value_id(
                 "id": str(job.id),
                 "data": job_to_json(job),
                 "tags": tag_values_to_json(job.tag_values) if job.tag_values else [],
+                "last_run": None,
             },
         ],
     }
@@ -129,6 +131,7 @@ async def test_get_jobs_by_multiple_tag_value_ids(
                 "id": str(wanted_job.id),
                 "data": job_to_json(wanted_job),
                 "tags": tag_values_to_json(wanted_job.tag_values),
+                "last_run": None,
             },
         ],
     }
