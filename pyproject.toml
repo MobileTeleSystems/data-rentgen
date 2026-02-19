@@ -32,7 +32,7 @@ keywords = ["Lineage", "FastAPI", "REST", "FastStream"]
 requires-python = ">=3.12"
 dependencies = [
   "pydantic~=2.12.5",
-  "pydantic-settings~=2.12.0",
+  "pydantic-settings>=2.12,<2.14",
   "typing-extensions~=4.15.0",
   "alembic~=1.18.3",
   "sqlalchemy~=2.0.44",
