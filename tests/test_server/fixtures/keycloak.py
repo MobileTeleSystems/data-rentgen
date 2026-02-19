@@ -225,7 +225,7 @@ def mock_keycloak_certs(server_app_settings, rsa_keys, respx_mock):
         ]
     }
 
-    respx_mock.post(f"{openid_url}/certs").respond(
+    respx_mock.get(f"{openid_url}/certs").respond(
         status_code=200,
         json=payload,
         content_type="application/json",
