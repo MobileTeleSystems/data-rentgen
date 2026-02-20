@@ -215,3 +215,55 @@ def test_extractors_extract_run_spark_app_local():
         persistent_log_url=None,
         running_log_url="http://localhost:4040",
     )
+
+
+def test_extractors_extract_run_spark_app_no_openlineage_adapter_version():
+    now = datetime(2024, 7, 5, 9, 4, 13, 979349, tzinfo=timezone.utc)
+    run_id = UUID("01908223-0e9b-7c52-9856-6cecfc842610")
+    run = OpenLineageRunEvent(
+        eventType=OpenLineageRunEventType.RUNNING,
+        eventTime=now,
+        job=OpenLineageJob(
+            namespace="host://some.host.com",
+            name="myjob",
+            facets=OpenLineageJobFacets(
+                jobType=OpenLineageJobTypeJobFacet(
+                    processingType=OpenLineageJobProcessingType.NONE,
+                    integration="SPARK",
+                    jobType="APPLICATION",
+                ),
+            ),
+        ),
+        run=OpenLineageRun(
+            runId=run_id,
+            facets=OpenLineageRunFacets(
+                processing_engine=OpenLineageProcessingEngineRunFacet(
+                    version=Version("3.4.3"),
+                    name="spark",
+                ),
+            ),
+        ),
+    )
+
+    assert SparkExtractor().extract_run(run) == RunDTO(
+        id=run_id,
+        job=JobDTO(
+            name="myjob",
+            location=LocationDTO(type="host", name="some.host.com", addresses={"host://some.host.com"}),
+            type=JobTypeDTO(type="SPARK_APPLICATION"),
+            tag_values={
+                TagValueDTO(
+                    tag=TagDTO(name="spark.version"),
+                    value="3.4.3",
+                ),
+            },
+        ),
+        status=RunStatusDTO.STARTED,
+        started_at=None,
+        start_reason=None,
+        user=None,
+        external_id=None,
+        attempt=None,
+        persistent_log_url=None,
+        running_log_url=None,
+    )

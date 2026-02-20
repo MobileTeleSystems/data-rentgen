@@ -91,14 +91,12 @@ class RunExtractorMixin(ABC):
         return run
 
     def _add_openlineage_adapter_version_tag(self, run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
-        if not event.run.facets.processing_engine:
-            return run
-
-        adapter_tag_value = TagValueDTO(
-            tag=TagDTO(name="openlineage_adapter.version"),
-            value=str(event.run.facets.processing_engine.openlineageAdapterVersion),
-        )
-        run.job.tag_values.add(adapter_tag_value)
+        if event.run.facets.processing_engine and event.run.facets.processing_engine.openlineageAdapterVersion:
+            adapter_tag_value = TagValueDTO(
+                tag=TagDTO(name="openlineage_adapter.version"),
+                value=str(event.run.facets.processing_engine.openlineageAdapterVersion),
+            )
+            run.job.tag_values.add(adapter_tag_value)
         return run
 
     def _add_openlineage_client_version_tag(self, run: RunDTO, event: OpenLineageRunEvent) -> RunDTO:
