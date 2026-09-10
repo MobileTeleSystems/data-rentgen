@@ -28,10 +28,8 @@ class Job(Base):
             "ix__job__parent_job_id",
             "parent_job_id",
             postgresql_where="parent_job_id IS NOT NULL",
-            postgres_with={"fillfactor": 70},
         ),
         Index("ix__job__search_vector", "search_vector", postgresql_using="gin"),
-        {"postgresql_with": {"fillfactor": 70}},
     )
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True)
