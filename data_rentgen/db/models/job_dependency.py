@@ -11,6 +11,7 @@ from data_rentgen.db.models.job import Job
 
 class JobDependency(Base):
     __tablename__ = "job_dependency"
+    __table_args__ = ({"postgresql_with": {"fillfactor": 70}},)
 
     from_job_id: Mapped[int] = mapped_column(
         BigInteger,

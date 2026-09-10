@@ -116,7 +116,12 @@ async def create_partition(start: date, end: date, granularity: Granularity, ses
     end_str = end.isoformat()
 
     for table in PARTITIONED_TABLES:
-        statement = f"CREATE TABLE IF NOT EXISTS {table}_{partition_name} PARTITION OF {table} FOR VALUES FROM ('{start_str}') TO ('{end_str}')"  # noqa: E501
+        statement = (
+            f"CREATE TABLE IF NOT EXISTS {table}_{partition_name} "
+            f"PARTITION OF {table} FOR VALUES FROM ('{start_str}') TO ('{end_str}') "
+            # These tables have high number of UPDATEs, so we need extra space for new tuples
+            f"WITH (fillfactor = 70)"
+        )
         logger.debug("Executing statement: %s", statement)
         await session.execute(text(statement))
 
