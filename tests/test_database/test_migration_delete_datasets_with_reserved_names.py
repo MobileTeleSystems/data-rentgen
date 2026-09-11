@@ -60,8 +60,6 @@ def test_migration_delete_datasets_with_reserved_names(empty_db_url: str, alembi
 
                         (5, 'mydb.information_schema.tables'),
                         (5, 'mydb.sys.all_tables'),
-                        (5, 'mydb.all_tables'),
-                        (5, 'mydb.user_tables'),
                         (5, 'mydb.dba_tables'),
                         (5, 'mydb.dual'),
                         (5, 'mydb.v$session'),

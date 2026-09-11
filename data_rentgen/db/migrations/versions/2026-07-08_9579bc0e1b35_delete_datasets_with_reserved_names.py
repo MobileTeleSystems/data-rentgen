@@ -24,12 +24,10 @@ RESERVED_DATASET_NAME_PATTERNS = [
     r"system\.[\w_.]+",  # Clickhouse
     r"sys\.[\w_.]+",  # Oracle
     "dual",
-    r"all_[\w_]+",
-    r"user_[\w_]+",
-    r"dba_[\w_]+",
     r"v\$[\w_]+",
     r"v_\$[\w_]+",
     r"gv_\$[\w_]+",
+    r"dba_[\w_]+",
 ]
 RESERVED_DATASET_NAME_PATTERN = "^" + OPTIONAL_DATABASE_PATTERN + "(" + "|".join(RESERVED_DATASET_NAME_PATTERNS) + ")$"
 

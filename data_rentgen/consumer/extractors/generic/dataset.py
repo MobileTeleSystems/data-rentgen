@@ -38,23 +38,21 @@ LOCATION_REPLACEMENTS = {
     re.compile(r"^postgresql://"): "postgres://",
 }
 
-OPTIONAL_DATABASE_PATTERN = r"([\w\d_\-\.]+\.)?"
-RESERVED_DATASET_NAME_PATTERNS = [
-    r"information_schema\.[\w_.]+",  # common for all databases
-    r"pg_[\w_.]+",  # PostgreSQL
-    r"system\.[\w_.]+",  # Clickhouse
-    r"sys\.[\w_.]+",  # Oracle
+RESERVED_DATASET_NAMES = {
+    "information_schema",  # common for all databases
+    "pg_catalog",  # PostgreSQL
+    "system",  # Clickhouse
+    "sys",  # Oracle
     "dual",
-    r"all_[\w_]+",
-    r"user_[\w_]+",
-    r"dba_[\w_]+",
-    r"v\$[\w_]+",
-    r"v_\$[\w_]+",
-    r"gv_\$[\w_]+",
-]
-RESERVED_DATASET_NAME_PATTERN = re.compile(
-    "^" + OPTIONAL_DATABASE_PATTERN + "(" + "|".join(RESERVED_DATASET_NAME_PATTERNS) + ")$",
-    re.IGNORECASE | re.ASCII,
+}
+# https://docs.oracle.com/en/database/oracle/oracle-database/19/refrn/dynamic-performance-views.html
+# https://docs.oracle.com/en/database/oracle/oracle-database/19/refrn/static-data-dictionary-views.html
+# https://docs.oracle.com/en/database/oracle/oracle-database/19/refrn/awr_pdb_-views.html
+# https://docs.oracle.com/en/database/oracle/oracle-database/19/refrn/awr_root_-views.html
+# excep ones start with all_ - this cam conflict with user tables
+RESERVED_DATASET_PATTERN = re.compile(
+    r"^(v\$|v_\$|gv_\$|dba_)[\w_]+$",
+    re.ASCII,
 )
 
 # https://github.com/OpenLineage/OpenLineage/issues/4496
@@ -87,7 +85,7 @@ class DatasetExtractorMixin:
     ) -> DatasetDTO | None:
         location = self._extract_dataset_location(dataset)
         name = dataset.name
-        if RESERVED_DATASET_NAME_PATTERN.match(name):
+        if self._is_dataset_name_reserved(name):
             return None
         if location.type in SCHEMALESS_DATABASES and name.count(".") == 2:  # noqa: PLR2004
             name = name.split(".", maxsplit=1)[1]
@@ -95,6 +93,15 @@ class DatasetExtractorMixin:
             name=name,
             location=location,
         )
+
+    def _is_dataset_name_reserved(self, name: str) -> bool:
+        parts = name.lower().split(".")
+
+        if RESERVED_DATASET_NAMES.intersection(parts):
+            return True
+
+        table = parts[-1]
+        return bool(RESERVED_DATASET_PATTERN.match(table))
 
     def _extract_dataset_location(
         self,

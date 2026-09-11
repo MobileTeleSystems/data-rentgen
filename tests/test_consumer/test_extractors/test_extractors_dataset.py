@@ -462,8 +462,6 @@ def test_extractors_extract_dataset_unknown():
         ("clickhouse://myhost:8123", "system.tables"),
         ("oracle://myhost:1521", "mydb.dual"),
         ("oracle://myhost:1521", "mydb.sys.all_tables"),
-        ("oracle://myhost:1521", "mydb.all_tables"),
-        ("oracle://myhost:1521", "mydb.user_tables"),
         ("oracle://myhost:1521", "mydb.dba_tables"),
         ("oracle://myhost:1521", "mydb.v$session"),
         ("oracle://myhost:1521", "mydb.v_$session"),
